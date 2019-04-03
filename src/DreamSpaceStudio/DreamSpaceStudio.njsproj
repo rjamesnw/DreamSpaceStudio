@@ -94,10 +94,15 @@
     <TypeScriptCompile Include="typescript\server\app.ts" />
     <TypeScriptCompile Include="routes\index.ts" />
     <TypeScriptCompile Include="routes\user.ts" />
+    <Content Include="..\..\LICENSE">
+      <Link>LICENSE</Link>
+    </Content>
+    <Content Include="..\..\README.md">
+      <Link>README.md</Link>
+    </Content>
     <Content Include="tsconfig.json" />
     <Content Include="package.json" />
     <Content Include="public\stylesheets\main.css" />
-    <Content Include="README.md" />
     <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\.gitignore" />
     <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\custom-message\index.html" />
     <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\hash-trick\index.html" />

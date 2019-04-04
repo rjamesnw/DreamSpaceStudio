@@ -24,16 +24,16 @@ var DreamSpace;
                     Base64Modes[Base64Modes["Custom"] = 2] = "Custom";
                 })(Base64Modes = Encoding.Base64Modes || (Encoding.Base64Modes = {}));
                 ;
-                Encoding.__64BASE_ENCODING_CHARS_STANDARD = global.String("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=");
-                Encoding.__64BASE_ENCODING_CHARS_URI = global.String("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_%3D"); // (note: %3D is treaded as one char [an % encoded '='])
+                Encoding.__64BASE_ENCODING_CHARS_STANDARD = DreamSpace.global.String("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=");
+                Encoding.__64BASE_ENCODING_CHARS_URI = DreamSpace.global.String("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_%3D"); // (note: %3D is treaded as one char [an % encoded '='])
                 Encoding.__64BASE_ENCODING_CHARS_CUSTOM = Encoding.__64BASE_ENCODING_CHARS_STANDARD;
                 // (Note: There must be exactly 65 characters [64 + 1 for padding])
                 // (Note: 'String' objects MUST be used in order for the encoding functions to populate the reverse lookup indexes)
                 function __CreateCharIndex(str) {
                     if (str.length < 65)
-                        throw System.Exception.from("65 characters expected for base64 encoding characters (last character is for padding), but only " + str.length + " were specified.", str);
-                    if (typeof str !== "object" && !(str instanceof System.String.$__type))
-                        throw System.Exception.from("The encoding characters must be set in a valid 'String' OBJECT (not as a string VALUE).");
+                        throw Exception.from("65 characters expected for base64 encoding characters (last character is for padding), but only " + str.length + " were specified.", str);
+                    if (typeof str !== "object" && !(str instanceof String.$__type))
+                        throw Exception.from("The encoding characters must be set in a valid 'String' OBJECT (not as a string VALUE).");
                     if (!str['charIndex']) {
                         var index = {};
                         for (var i = 0, n = str.length; i < n; ++i)
@@ -66,7 +66,7 @@ var DreamSpace;
                     for (var i = value.length - 1; i >= 0; --i)
                         if (value.charCodeAt(i) > 255) {
                             srcCharBitDepth = 16; // (Unicode mode [16-bit])
-                            value = global.String.fromCharCode(0) + value; // (note: 0 is usually understood to be a null character, and is used here to flag Unicode encoding [two 0 bytes at the beginning])
+                            value = DreamSpace.global.String.fromCharCode(0) + value; // (note: 0 is usually understood to be a null character, and is used here to flag Unicode encoding [two 0 bytes at the beginning])
                             break;
                         }
                     var shiftCount = srcCharBitDepth - 1;
@@ -148,7 +148,7 @@ var DreamSpace;
                             readBitIndex = 0;
                             code = readIndex < value.length ? encodingChars['charIndex'][value.charAt(readIndex++)] : 0;
                             if (code === void 0)
-                                throw System.Exception.from("The value '" + value + "' has one or more invalid characters.  Valid characters for the specified encoding mode '" + Base64Modes[mode] + "' are: '" + encodingChars + "'");
+                                throw Exception.from("The value '" + value + "' has one or more invalid characters.  Valid characters for the specified encoding mode '" + Base64Modes[mode] + "' are: '" + encodingChars + "'");
                         }
                         bit = code >> 5; // (read left most bit; base64 values are always 6 bit)
                         code = (code & 31) << 1; // (clear left most bit and shift left)
@@ -158,7 +158,7 @@ var DreamSpace;
                         if (writeBitIndex == srcCharBitDepth) {
                             writeBitIndex = 0;
                             if (baseCode) // (should never be 0 [null char])
-                                result += global.String.fromCharCode(baseCode);
+                                result += DreamSpace.global.String.fromCharCode(baseCode);
                             if (++charCount >= resultLength)
                                 break; // (all expected characters written)
                             baseCode = 0;

@@ -133,7 +133,7 @@ var DreamSpace;
                             func = handler;
                         }
                         else
-                            throw System.Exception.error("_getHandlerIndex()", "The given handler is not valid.  A Delegate type or function was expected.", this);
+                            throw Exception.error("_getHandlerIndex()", "The given handler is not valid.  A Delegate type or function was expected.", this);
                         for (var i = 0, n = this.__listeners.length; i < n; ++i) {
                             var h = this.__listeners[i];
                             if (h.object == object && h.func == func)
@@ -196,7 +196,7 @@ var DreamSpace;
                     __exception(msg, error) {
                         if (error)
                             msg += "\r\nInner error: " + getErrorMessage(error);
-                        return System.Exception.error("{EventDispatcher}.dispatchEvent():", "Error in event " + this.__eventName + " on object type '" + getTypeName(this.owner) + "': " + msg, { exception: error, event: this, handler: this.__handlerCallInProgress });
+                        return Exception.error("{EventDispatcher}.dispatchEvent():", "Error in event " + this.__eventName + " on object type '" + getTypeName(this.owner) + "': " + msg, { exception: error, event: this, handler: this.__handlerCallInProgress });
                     }
                     /** Calls the event handlers that match the event mode on the current event instance. */
                     onDispatchEvent(args, mode) {
@@ -318,7 +318,7 @@ var DreamSpace;
                             var onEventProxy = function () {
                                 var instance = this; // (instance is the object instance on which this event property reference was made)
                                 if (typeof instance !== 'object') //?  || !(instance instanceof DomainObject.$type))
-                                    throw System.Exception.error("{Object}." + eventName, "Must be called on an object instance.", instance);
+                                    throw Exception.error("{Object}." + eventName, "Must be called on an object instance.", instance);
                                 // ... check if the instance already created the event property for registering events specific to this instance ...
                                 var eventProperty = instance[privateEventName];
                                 if (typeof eventProperty !== 'object') // (undefined or not valid, so attempt to create one now)
@@ -338,7 +338,7 @@ var DreamSpace;
                                     get: onEventProxy
                                 });
                             else
-                                throw System.Exception.error("registerEvent: " + eventName, "This browser does not support 'Object.defineProperty()'. To support older browsers, call '_" + customEventPropName + "()' instead to get an instance specific reference to the EventDispatcher for that event (i.e. for 'click' event, do 'obj._onClick().attach(...)').", type);
+                                throw Exception.error("registerEvent: " + eventName, "This browser does not support 'Object.defineProperty()'. To support older browsers, call '_" + customEventPropName + "()' instead to get an instance specific reference to the EventDispatcher for that event (i.e. for 'click' event, do 'obj._onClick().attach(...)').", type);
                             return { _eventMode: eventMode, _eventName: eventName, _removeOnTrigger: removeOnTrigger }; // (the return doesn't matter at this time)
                         };
                     }

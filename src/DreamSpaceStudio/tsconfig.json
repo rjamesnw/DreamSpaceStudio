@@ -8,7 +8,9 @@
   },
   "exclude": [
     "node_modules",
+    "public",
     "TypeScript/DreamSpaceJS",
+    "TypeScript/types/DreamSpace*.*",
     "htmlreader.ts"
   ]
 }

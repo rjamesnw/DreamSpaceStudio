@@ -15,36 +15,36 @@ var DreamSpace;
          * Note: TimeSpan exposes the results as properties for fast access (rather than getters/setters), but changing individual properties does not
          * cause the other values to update.  Use the supplied functions for manipulating the values.
          */
-        class TimeSpan extends FactoryBase(System.CoreObject) {
+        class TimeSpan extends FactoryBase(CoreObject) {
             //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
             /** Returns the time zone offset in milliseconds ({Date}.getTimezoneOffset() returns it in minutes). */
-            static getTimeZoneOffset() { return Time.__localTimeZoneOffset; }
+            static getTimeZoneOffset() { return DreamSpace.Time.__localTimeZoneOffset; }
             /** Creates a TimeSpan object from the current value returned by calling 'Date.now()', or 'new Date().getTime()' if 'now()' is not supported. */
             static now() { return Date.now ? System.TimeSpan.new(Date.now()) : TimeSpan.fromDate(new Date()); }
             //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
             static utcTimeToLocalYear(timeInMs) {
-                return Time.__EpochYear + Math.floor(((timeInMs || 0) - Time.__localTimeZoneOffset) / (Time.__actualDaysPerYear * Time.__millisecondsPerDay));
+                return DreamSpace.Time.__EpochYear + Math.floor(((timeInMs || 0) - DreamSpace.Time.__localTimeZoneOffset) / (DreamSpace.Time.__actualDaysPerYear * DreamSpace.Time.__millisecondsPerDay));
             }
             static utcTimeToLocalDayOfYear(timeInMs) {
-                timeInMs = (timeInMs || 0) - Time.__localTimeZoneOffset;
-                var days = TimeSpan.daysSinceEpoch(Time.__EpochYear + Math.floor(timeInMs / (Time.__actualDaysPerYear * Time.__millisecondsPerDay)));
-                var timeInMs = timeInMs - days * Time.__millisecondsPerDay;
-                return 1 + Math.floor(timeInMs / Time.__millisecondsPerDay);
+                timeInMs = (timeInMs || 0) - DreamSpace.Time.__localTimeZoneOffset;
+                var days = TimeSpan.daysSinceEpoch(DreamSpace.Time.__EpochYear + Math.floor(timeInMs / (DreamSpace.Time.__actualDaysPerYear * DreamSpace.Time.__millisecondsPerDay)));
+                var timeInMs = timeInMs - days * DreamSpace.Time.__millisecondsPerDay;
+                return 1 + Math.floor(timeInMs / DreamSpace.Time.__millisecondsPerDay);
             }
             static utcTimeToLocalHours(timeInMs) {
-                return Math.floor(((timeInMs || 0) - Time.__localTimeZoneOffset) / Time.__millisecondsPerDay % 1 * Time.__hoursPerDay);
+                return Math.floor(((timeInMs || 0) - DreamSpace.Time.__localTimeZoneOffset) / DreamSpace.Time.__millisecondsPerDay % 1 * DreamSpace.Time.__hoursPerDay);
             }
             static utcTimeToLocalMinutes(timeInMs) {
-                return Math.floor(((timeInMs || 0) - Time.__localTimeZoneOffset) / Time.__millisecondsPerHour % 1 * Time.__minsPerHour);
+                return Math.floor(((timeInMs || 0) - DreamSpace.Time.__localTimeZoneOffset) / DreamSpace.Time.__millisecondsPerHour % 1 * DreamSpace.Time.__minsPerHour);
             }
             static utcTimeToLocalSeconds(timeInMs) {
-                return Math.floor(((timeInMs || 0) - Time.__localTimeZoneOffset) / Time.__millisecondsPerMinute % 1 * Time.__secondsPerMinute);
+                return Math.floor(((timeInMs || 0) - DreamSpace.Time.__localTimeZoneOffset) / DreamSpace.Time.__millisecondsPerMinute % 1 * DreamSpace.Time.__secondsPerMinute);
             }
             static utcTimeToLocalMilliseconds(timeInMs) {
-                return Math.floor(((timeInMs || 0) - Time.__localTimeZoneOffset) / Time.__millisecondsPerSecond % 1 * Time.__millisecondsPerSecond);
+                return Math.floor(((timeInMs || 0) - DreamSpace.Time.__localTimeZoneOffset) / DreamSpace.Time.__millisecondsPerSecond % 1 * DreamSpace.Time.__millisecondsPerSecond);
             }
             static utcTimeToLocalTime(timeInMs) {
-                return System.TimeSpan.new((timeInMs || 0) - Time.__localTimeZoneOffset);
+                return System.TimeSpan.new((timeInMs || 0) - DreamSpace.Time.__localTimeZoneOffset);
             }
             /** Creates and returns a TimeSpan that represents the date object.
                * This relates to the 'date.getTime()' function, which returns the internal date span in milliseconds (from Epoch) with the time zone added.
@@ -69,7 +69,7 @@ var DreamSpace;
             static __parseSQLDateTime(dateString) {
                 dateString = dateString.replace(' ', 'T'); // TODO: Make more compliant.
                 var ms = Date.parse(dateString);
-                ms += Time.__localTimeZoneOffset;
+                ms += DreamSpace.Time.__localTimeZoneOffset;
                 return System.TimeSpan.new(ms); // (the parsed date will have the time zone added)
             }
             /** Creates and returns a TimeSpan that represents the specified date string as the local time.
@@ -107,7 +107,7 @@ var DreamSpace;
                  * Note: This returns true if the date string matches at least the first parts of the format (i.e. date, or date+time, or date+time+timezone).
                  */
             static isISO8601(dateStr) {
-                return Time.__ISO8601RegEx.test(dateStr);
+                return DreamSpace.Time.__ISO8601RegEx.test(dateStr);
             }
             /** Returns true if the specified date is in the standard SQL based Date/Time format (YYYY-MM-DD HH:mm:ss.sss+ZZ).
                 * Note: This returns true if the date string matches at least the first parts of the format (i.e. date, or date+time).
@@ -117,14 +117,14 @@ var DreamSpace;
                 */
             static isSQLDateTime(dateStr, requireTimeMatch = false) {
                 return requireTimeMatch ?
-                    Time.__SQLDateTimeStrictRegEx.test(dateStr)
-                    : Time.__SQLDateTimeRegEx.test(dateStr);
+                    DreamSpace.Time.__SQLDateTimeStrictRegEx.test(dateStr)
+                    : DreamSpace.Time.__SQLDateTimeRegEx.test(dateStr);
             }
             /** Calculates the number of leap days since Epoch up to a given year (note: cannot be less than the Epoch year [1970]). */
             static daysSinceEpoch(year) {
-                if (year < Time.__EpochYear)
-                    throw System.Exception.from("Invalid year: Must be <= " + Time.__EpochYear);
-                year = Math.floor(year - Time.__EpochYear); // (NOTE: 'year' is a DIFFERENCE after this, NOT the actual year)
+                if (year < DreamSpace.Time.__EpochYear)
+                    throw Exception.from("Invalid year: Must be <= " + DreamSpace.Time.__EpochYear);
+                year = Math.floor(year - DreamSpace.Time.__EpochYear); // (NOTE: 'year' is a DIFFERENCE after this, NOT the actual year)
                 return 365 * year
                     + Math.floor((year + 1) / 4)
                     - Math.floor((year + 69) / 100)
@@ -132,52 +132,52 @@ var DreamSpace;
             }
             /** Calculates the number of years from the specified milliseconds, taking leap years into account. */
             static yearsSinceEpoch(ms) {
-                var mpy = Time.__millisecondsPerYear, mpd = Time.__millisecondsPerDay;
-                return Time.__EpochYear + Math.floor((ms - Math.floor((ms + mpy) / (4 * mpy)) * mpd
+                var mpy = DreamSpace.Time.__millisecondsPerYear, mpd = DreamSpace.Time.__millisecondsPerDay;
+                return DreamSpace.Time.__EpochYear + Math.floor((ms - Math.floor((ms + mpy) / (4 * mpy)) * mpd
                     - Math.floor((ms + 69 * mpy) / (100 * mpy)) * mpd
                     + Math.floor((ms + 369 * mpy) / (400 * mpy)) * mpd) / mpy);
             }
             static isLeapYear(year) {
                 return (((year % 4 == 0) && (year % 100 != 0)) || year % 400 == 0);
             }
-            static msFromTime(year = Time.__EpochYear, dayOfYear = 1, hours = 0, minutes = 0, seconds = 0, milliseconds = 0) {
-                return TimeSpan.daysSinceEpoch(year) * Time.__millisecondsPerDay
-                    + (dayOfYear - 1) * Time.__millisecondsPerDay
-                    + hours * Time.__millisecondsPerHour
-                    + minutes * Time.__millisecondsPerMinute
-                    + seconds * Time.__millisecondsPerSecond
+            static msFromTime(year = DreamSpace.Time.__EpochYear, dayOfYear = 1, hours = 0, minutes = 0, seconds = 0, milliseconds = 0) {
+                return TimeSpan.daysSinceEpoch(year) * DreamSpace.Time.__millisecondsPerDay
+                    + (dayOfYear - 1) * DreamSpace.Time.__millisecondsPerDay
+                    + hours * DreamSpace.Time.__millisecondsPerHour
+                    + minutes * DreamSpace.Time.__millisecondsPerMinute
+                    + seconds * DreamSpace.Time.__millisecondsPerSecond
                     + milliseconds;
             }
             //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
             /** Returns the time zone as a string in the format "UTC[+/-]####".
                 * @param {number} timezoneOffsetInMs The number of milliseconds to offset from local time to UTC time (eg. UTC-05:00 would be -(-5*60*60*1000), or 18000000).
                 */
-            static getTimeZoneSuffix(timezoneOffsetInMs = Time.__localTimeZoneOffset) {
-                var tzInHours = -(timezoneOffsetInMs / Time.__millisecondsPerHour);
+            static getTimeZoneSuffix(timezoneOffsetInMs = DreamSpace.Time.__localTimeZoneOffset) {
+                var tzInHours = -(timezoneOffsetInMs / DreamSpace.Time.__millisecondsPerHour);
                 var hours = Math.abs(tzInHours);
                 return "UTC" + (tzInHours >= 0 ? "+" : "-")
-                    + System.String.pad(Math.floor(hours), 2, '0')
-                    + System.String.pad(Math.floor(hours % 1 * Time.__minsPerHour), 2, '0');
+                    + String.pad(Math.floor(hours), 2, '0')
+                    + String.pad(Math.floor(hours % 1 * DreamSpace.Time.__minsPerHour), 2, '0');
             }
             /** Returns the ISO-8601 time zone as a string in the format "[+/-]hh:mm:ss.sssZ".
                 * @param {number} timezoneOffsetInMs The number of milliseconds to offset from local time to UTC time (eg. UTC-05:00 would be -(-5*60*60*1000), or 18000000).
                 */
-            static getISOTimeZoneSuffix(timezoneOffsetInMs = Time.__localTimeZoneOffset) {
-                var tzInHours = -(timezoneOffsetInMs / Time.__millisecondsPerHour);
+            static getISOTimeZoneSuffix(timezoneOffsetInMs = DreamSpace.Time.__localTimeZoneOffset) {
+                var tzInHours = -(timezoneOffsetInMs / DreamSpace.Time.__millisecondsPerHour);
                 var hours = Math.abs(tzInHours);
-                var minutes = Math.abs(hours % 1 * Time.__minsPerHour);
-                var seconds = minutes % 1 * Time.__secondsPerMinute;
+                var minutes = Math.abs(hours % 1 * DreamSpace.Time.__minsPerHour);
+                var seconds = minutes % 1 * DreamSpace.Time.__secondsPerMinute;
                 return (tzInHours >= 0 ? "+" : "-")
-                    + System.String.pad(hours, 2, '0') + ":"
-                    + System.String.pad(minutes, 2, '0') + ":"
-                    + System.String.pad(Math.floor(seconds), 2, '0') + "."
-                    + System.String.pad(Math.floor(seconds % 1 * 1000), 3, null, '0') // (1000th decimal precision)
+                    + String.pad(hours, 2, '0') + ":"
+                    + String.pad(minutes, 2, '0') + ":"
+                    + String.pad(Math.floor(seconds), 2, '0') + "."
+                    + String.pad(Math.floor(seconds % 1 * 1000), 3, null, '0') // (1000th decimal precision)
                     + "Z";
             }
         }
         System.TimeSpan = TimeSpan;
         (function (TimeSpan) {
-            class $__type extends FactoryType(System.CoreObject) {
+            class $__type extends FactoryType(CoreObject) {
                 //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
                 /** Set the time of this TimeSpan, in milliseconds.
                     * Note: This function assumes that milliseconds representing leap year days are included (same as the JavaScript 'Date' object).
@@ -187,15 +187,15 @@ var DreamSpace;
                         var ms = this.__ms = timeInMs || 0;
                         this.__date = null;
                         var daysToYear = TimeSpan.daysSinceEpoch(this.year = TimeSpan.yearsSinceEpoch(ms));
-                        var msRemaining = ms - daysToYear * Time.__millisecondsPerDay;
-                        this.dayOfYear = 1 + Math.floor(msRemaining / Time.__millisecondsPerDay);
-                        msRemaining -= (this.dayOfYear - 1) * Time.__millisecondsPerDay;
-                        this.hours = Math.floor(msRemaining / Time.__millisecondsPerHour);
-                        msRemaining -= this.hours * Time.__millisecondsPerHour;
-                        this.minutes = Math.floor(msRemaining / Time.__millisecondsPerMinute);
-                        msRemaining -= this.minutes * Time.__millisecondsPerMinute;
-                        this.seconds = Math.floor(msRemaining / Time.__millisecondsPerSecond);
-                        msRemaining -= this.seconds * Time.__millisecondsPerSecond;
+                        var msRemaining = ms - daysToYear * DreamSpace.Time.__millisecondsPerDay;
+                        this.dayOfYear = 1 + Math.floor(msRemaining / DreamSpace.Time.__millisecondsPerDay);
+                        msRemaining -= (this.dayOfYear - 1) * DreamSpace.Time.__millisecondsPerDay;
+                        this.hours = Math.floor(msRemaining / DreamSpace.Time.__millisecondsPerHour);
+                        msRemaining -= this.hours * DreamSpace.Time.__millisecondsPerHour;
+                        this.minutes = Math.floor(msRemaining / DreamSpace.Time.__millisecondsPerMinute);
+                        msRemaining -= this.minutes * DreamSpace.Time.__millisecondsPerMinute;
+                        this.seconds = Math.floor(msRemaining / DreamSpace.Time.__millisecondsPerSecond);
+                        msRemaining -= this.seconds * DreamSpace.Time.__millisecondsPerSecond;
                         this.milliseconds = msRemaining;
                     }
                     return this;
@@ -208,14 +208,14 @@ var DreamSpace;
                     if (arguments.length == 1)
                         this.setTime(this.__ms += (yearOrTimeInMS || 0));
                     else
-                        this.setTime(this.__ms += TimeSpan.msFromTime(Time.__EpochYear + yearOrTimeInMS, 1 + dayOfYearOffset, hoursOffset, minutesOffset, secondsOffset, msOffset));
+                        this.setTime(this.__ms += TimeSpan.msFromTime(DreamSpace.Time.__EpochYear + yearOrTimeInMS, 1 + dayOfYearOffset, hoursOffset, minutesOffset, secondsOffset, msOffset));
                     return this;
                 }
                 subtract(yearOrTimeInMS = 0, dayOfYearOffset = 0, hoursOffset = 0, minutesOffset = 0, secondsOffset = 0, msOffset = 0) {
                     if (arguments.length == 1)
                         this.setTime(this.__ms -= (yearOrTimeInMS || 0));
                     else
-                        this.setTime(this.__ms -= TimeSpan.msFromTime(Time.__EpochYear + yearOrTimeInMS, 1 + dayOfYearOffset, hoursOffset, minutesOffset, secondsOffset, msOffset));
+                        this.setTime(this.__ms -= TimeSpan.msFromTime(DreamSpace.Time.__EpochYear + yearOrTimeInMS, 1 + dayOfYearOffset, hoursOffset, minutesOffset, secondsOffset, msOffset));
                     return this;
                 }
                 /** Returns the time span as a string (note: this is NOT a date string).
@@ -228,10 +228,10 @@ var DreamSpace;
                     */
                 toString(includeTime = true, includeMilliseconds = true, includeTimezone = true) {
                     if (!this.__localTS)
-                        this.__localTS = System.TimeSpan.new(this.toValue() - Time.__localTimeZoneOffset);
+                        this.__localTS = System.TimeSpan.new(this.toValue() - DreamSpace.Time.__localTimeZoneOffset);
                     var localTS = this.__localTS;
-                    return "Year " + System.String.pad(localTS.year, 4, '0') + ", Day " + System.String.pad(localTS.dayOfYear, 3, '0')
-                        + (includeTime ? " " + System.String.pad(localTS.hours, 2, '0') + ":" + System.String.pad(localTS.minutes, 2, '0') + ":" + System.String.pad(localTS.seconds, 2, '0')
+                    return "Year " + String.pad(localTS.year, 4, '0') + ", Day " + String.pad(localTS.dayOfYear, 3, '0')
+                        + (includeTime ? " " + String.pad(localTS.hours, 2, '0') + ":" + String.pad(localTS.minutes, 2, '0') + ":" + String.pad(localTS.seconds, 2, '0')
                             + (includeMilliseconds && localTS.milliseconds ? ":" + localTS.milliseconds : "")
                             + (includeTimezone ? " " + TimeSpan.getTimeZoneSuffix() : "")
                             : "");
@@ -243,8 +243,8 @@ var DreamSpace;
                     * Note: This is ignored if 'includeTime' is false.
                     */
                 toUTCString(includeTime = true, includeMilliseconds = true) {
-                    return "Year " + System.String.pad(this.year, 4, '0') + ", Day " + System.String.pad(this.dayOfYear, 3, '0')
-                        + (includeTime ? " " + System.String.pad(this.hours, 2, '0') + ":" + System.String.pad(this.minutes, 2, '0') + ":" + System.String.pad(this.seconds, 2, '0')
+                    return "Year " + String.pad(this.year, 4, '0') + ", Day " + String.pad(this.dayOfYear, 3, '0')
+                        + (includeTime ? " " + String.pad(this.hours, 2, '0') + ":" + String.pad(this.minutes, 2, '0') + ":" + String.pad(this.seconds, 2, '0')
                             + (includeMilliseconds && this.milliseconds ? ":" + this.milliseconds : "")
                             : "");
                 }
@@ -259,8 +259,8 @@ var DreamSpace;
                 toISODateString(includeTime = true, includeMilliseconds = true, includeTimezone = true) {
                     if (!this.__date)
                         this.__date = new Date(this.toValue());
-                    return System.String.pad(this.__date.getFullYear(), 4, '0') + "-" + System.String.pad(1 + this.__date.getMonth(), 2, '0') + "-" + System.String.pad(this.__date.getDate(), 2, '0')
-                        + (includeTime ? "T" + System.String.pad(this.__date.getHours(), 2, '0') + ":" + System.String.pad(this.__date.getMinutes(), 2, '0') + ":" + System.String.pad(this.__date.getSeconds(), 2, '0')
+                    return String.pad(this.__date.getFullYear(), 4, '0') + "-" + String.pad(1 + this.__date.getMonth(), 2, '0') + "-" + String.pad(this.__date.getDate(), 2, '0')
+                        + (includeTime ? "T" + String.pad(this.__date.getHours(), 2, '0') + ":" + String.pad(this.__date.getMinutes(), 2, '0') + ":" + String.pad(this.__date.getSeconds(), 2, '0')
                             + (includeMilliseconds && this.__date.getMilliseconds() ? "." + this.__date.getMilliseconds() : "")
                             + (includeTimezone ? TimeSpan.getISOTimeZoneSuffix() : "")
                             : "");
@@ -276,8 +276,8 @@ var DreamSpace;
                 toUTCISODateString(includeTime = true, includeMilliseconds = true, includeTimezone = true) {
                     if (!this.__date)
                         this.__date = new Date(this.toValue());
-                    return System.String.pad(this.year, 4, '0') + "-" + System.String.pad(1 + this.__date.getUTCMonth(), 2, '0') + "-" + System.String.pad(this.__date.getUTCDate(), 2, '0')
-                        + (includeTime ? "T" + System.String.pad(this.hours, 2, '0') + ":" + System.String.pad(this.minutes, 2, '0') + ":" + System.String.pad(this.seconds, 2, '0')
+                    return String.pad(this.year, 4, '0') + "-" + String.pad(1 + this.__date.getUTCMonth(), 2, '0') + "-" + String.pad(this.__date.getUTCDate(), 2, '0')
+                        + (includeTime ? "T" + String.pad(this.hours, 2, '0') + ":" + String.pad(this.minutes, 2, '0') + ":" + String.pad(this.seconds, 2, '0')
                             + (includeMilliseconds && this.milliseconds ? "." + this.milliseconds : "")
                             + (includeTimezone ? TimeSpan.getISOTimeZoneSuffix(0) : "")
                             : "");
@@ -286,7 +286,7 @@ var DreamSpace;
                     return this.__ms;
                 }
                 //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-                static [constructor](factory) {
+                static [DreamSpace.constructor](factory) {
                     factory.init = function (o, isnew, year, dayOfYear, hours, minutes, seconds, milliseconds) {
                         factory.super.init(o, isnew);
                         if (arguments.length <= 3)

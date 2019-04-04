@@ -1,4 +1,3 @@
-"use strict";
 // ###########################################################################################################################
 // These are functions for creating global scope variables/references that eliminate/minimize collisions between conflicting scripts.
 // Normally, each manifest and module gets its own local-global scope; however, in some cases, 3rd-party libraries do not 
@@ -7,7 +6,8 @@
 // Note: There's no need to use any of these functions directly from within manifest and module scripts.  Each has a local reference
 // using the identifiers 'this', 'manifest', or 'module' (accordingly), which provides functions for local-global scope storage.
 // ###########################################################################################################################
-Object.defineProperty(exports, "__esModule", { value: true });
+/** The root namespace name as a string constant. */
+const $__ROOT_DREAMSPACE_NAMESPACE_NAME = "DreamSpace";
 /**
  * An empty object whose sole purpose is to store global properties by resource namespace (usual a URL). It exists as an
  * alternative to using the global JavaScript host environment, but also supports it as well.  The get/set methods always use
@@ -18,11 +18,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
  */
 var DreamSpace;
 (function (DreamSpace) {
-    var Globals;
+    /** A reference to the host's global environment (convenient for nested TypeScript code, or when using strict mode [where this=undefined]).
+    * This provides a faster, cleaner, consistent, and reliable method of referencing the global environment scope without having to resort to workarounds.
+    */
+    DreamSpace.global = (function () { }.constructor("return this"))(); // (note: this is named as 'global' to support the NodeJS "global" object as well [for compatibility, or to ease portability])
+    DreamSpace.host = (() => {
+        // ... make sure the host object is valid for at least checking client/server/studio states
+        if (typeof DreamSpace.host !== 'object' || typeof DreamSpace.host.isClient == 'undefined' || typeof DreamSpace.host.isServer == 'undefined' || typeof DreamSpace.host.isStudio == 'undefined')
+            return new __NonDreamSpaceHost__();
+        else
+            return DreamSpace.host; // (running in a valid host (or emulator? ;) )
+    })();
+    let Globals;
     (function (Globals) {
-        namespace("DreamSpace", "Globals");
         /** Internal: used when initializing DreamSpace. */
-        var _globals = DreamSpace.Globals;
+        var _globals = Globals;
         var _namespaces = {};
         var _nsCount = 1;
         function register(namespace, name, initialValue, asHostGlobal = false) {
@@ -42,10 +52,10 @@ var DreamSpace;
             //?    throw System.Exception.from("The global variable name '" + name + "' already exists in the global namespace '" + namespace + "'.", namespace);
             if (asHostGlobal) {
                 // ... set and return a host global reference ...
-                var hostGlobalName = "_" + DreamSpace.ROOT_NAMESPACE + nsID + "_" + name;
+                var hostGlobalName = "_" + $__ROOT_DREAMSPACE_NAMESPACE_NAME + nsID + "_" + name;
                 if (!alreadyRegistered) {
-                    nsglobals[name] = { "global": global, "hostGlobalName": hostGlobalName }; // (any namespace global value referencing the global [window] scope is a redirect to lookup the value name there instead)
-                    global[hostGlobalName] = initialValue;
+                    nsglobals[name] = { "global": DreamSpace.global, "hostGlobalName": hostGlobalName }; // (any namespace global value referencing the global [window] scope is a redirect to lookup the value name there instead)
+                    DreamSpace.global[hostGlobalName] = initialValue;
                 }
                 return hostGlobalName;
             }
@@ -54,9 +64,9 @@ var DreamSpace;
                 if (!alreadyRegistered)
                     nsglobals[name] = initialValue;
                 if (/^[A-Z_\$]+[A-Z0-9_\$]*$/gim.test(name)) // (if 'name' contains invalid identifier characters, then it needs to be referenced by index)
-                    return DreamSpace.ROOT_NAMESPACE + ".Globals." + nsID + "." + name;
+                    return $__ROOT_DREAMSPACE_NAMESPACE_NAME + ".Globals." + nsID + "." + name;
                 else
-                    return DreamSpace.ROOT_NAMESPACE + ".Globals." + nsID + "['" + name.replace(/'/g, "\\'") + "']";
+                    return $__ROOT_DREAMSPACE_NAMESPACE_NAME + ".Globals." + nsID + "['" + name.replace(/'/g, "\\'") + "']";
             }
         }
         Globals.register = register;
@@ -80,9 +90,9 @@ var DreamSpace;
             if (!(name in nsglobals))
                 return false;
             var existingValue = nsglobals[name];
-            if (existingValue && existingValue["global"] == global) {
+            if (existingValue && existingValue["global"] == DreamSpace.global) {
                 var hgname = existingValue["hostGlobalName"];
-                delete global[hgname];
+                delete DreamSpace.global[hgname];
             }
             return nsglobals[name] === void 0;
         }
@@ -96,8 +106,8 @@ var DreamSpace;
             nsglobals = _globals[nsID];
             for (var name in nsglobals) { // (clear any root globals first before resetting the namespace global instance)
                 var existingValue = nsglobals[name];
-                if (existingValue && existingValue["global"] == global)
-                    delete global[existingValue["hostGlobalName"]];
+                if (existingValue && existingValue["global"] == DreamSpace.global)
+                    delete DreamSpace.global[existingValue["hostGlobalName"]];
             }
             _globals[nsID] = {};
             return true;
@@ -116,8 +126,8 @@ var DreamSpace;
             //?if (!(name in nsglobals))
             //?    throw System.Exception.from("The global variable name '" + name + "' was not found in the global namespace '" + namespace + "' - did you remember to call 'DreamSpace.Globals.register()' first?", namespace);
             var existingValue = nsglobals[name];
-            if (existingValue && existingValue["global"] == global) {
-                return global[existingValue["hostGlobalName"]] = value;
+            if (existingValue && existingValue["global"] == DreamSpace.global) {
+                return DreamSpace.global[existingValue["hostGlobalName"]] = value;
             }
             else
                 return nsglobals[name] = value;
@@ -128,13 +138,13 @@ var DreamSpace;
             var namespace = namespace.url || ('' + namespace), nsID, nsglobals;
             nsID = _namespaces[namespace];
             if (!nsID)
-                throw System.Exception.from("The namespace '" + namespace + "' does not exist - did you remember to call 'DreamSpace.Globals.register()' first?", namespace);
+                throw DreamSpace.System.Exception.from("The namespace '" + namespace + "' does not exist - did you remember to call 'DreamSpace.Globals.register()' first?", namespace);
             nsglobals = _globals[nsID];
             if (!(name in nsglobals))
                 return void 0;
             var existingValue = nsglobals[name];
-            if (existingValue && existingValue["global"] == global) {
-                return global[existingValue["hostGlobalName"]];
+            if (existingValue && existingValue["global"] == DreamSpace.global) {
+                return DreamSpace.global[existingValue["hostGlobalName"]];
             }
             else
                 return nsglobals[name];

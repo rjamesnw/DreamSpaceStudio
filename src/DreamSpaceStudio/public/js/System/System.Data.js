@@ -31,7 +31,7 @@ var DreamSpace;
                             window.JSON.parse(jsonText) : (new Function("return " + jsonText))();
                     }
                     else {
-                        throw System.Exception.from('Invalid JSON: "' + jsonText + '"');
+                        throw Exception.from('Invalid JSON: "' + jsonText + '"');
                     }
                 }
                 JSON.ToObject = ToObject;
@@ -117,7 +117,7 @@ var DreamSpace;
                         return null;
                     var i = 0, endpoint = existingEndpoint || new PropertyPathEndpoint();
                     if (typeof endpoint.getValue != 'function')
-                        throw System.Exception.from("The existing endpoint object is not a valid 'PropertyPathEndpoint' instance.", this);
+                        throw Exception.from("The existing endpoint object is not a valid 'PropertyPathEndpoint' instance.", this);
                     endpoint.object = origin;
                     endpoint.propertyName = this.namePath[0];
                     endpoint.propertyIndex = this.indexes[0];
@@ -125,7 +125,7 @@ var DreamSpace;
                     while (i < this.namePath.length) {
                         endpoint.object = endpoint.getValue();
                         if (endpoint.object === void 0)
-                            throw System.Exception.from("Invalid property path: " + this.__getPathString(i), this);
+                            throw Exception.from("Invalid property path: " + this.__getPathString(i), this);
                         i++;
                         endpoint.propertyName = this.namePath[i];
                         endpoint.propertyIndex = this.indexes[i];

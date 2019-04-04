@@ -88,7 +88,7 @@ var DreamSpace;
                                     if (DreamSpace.host.isClient())
                                         html = this.loadTemplate(); // (returns "<html>...</html>" from the DOM)
                                     else
-                                        throw System.Exception.from("Unable to parse the client side HTML on the server side (no HTML is loaded).  Call 'loadTemplate()' instead.");
+                                        throw Exception.from("Unable to parse the client side HTML on the server side (no HTML is loaded).  Call 'loadTemplate()' instead.");
                                 // ... parse the HTML "body" section for the graph tree ("body" is the application root) ...
                                 // (quickly scan the template text to create the required objects [using <body> as the application root])
                                 document.body.innerHTML = ""; // (clear this if not already done so [will be dynamically rebuilt using the graph tree before the user sees any changes])

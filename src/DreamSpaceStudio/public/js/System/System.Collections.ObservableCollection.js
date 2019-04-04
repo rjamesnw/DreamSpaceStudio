@@ -9,7 +9,7 @@ var DreamSpace;
         (function (Collections) {
             namespace(() => DreamSpace.System.Collections);
             /** Holds an array of items, and implements notification functionality for when the collection changes. */
-            class ObservableCollection extends FactoryBase(System.Array) {
+            class ObservableCollection extends FactoryBase(Array) {
                 static 'new'(...items) { return null; }
                 static init(o, isnew, ...items) {
                     this.super.init(o, isnew, ...items);
@@ -17,7 +17,7 @@ var DreamSpace;
             }
             Collections.ObservableCollection = ObservableCollection;
             (function (ObservableCollection) {
-                class $__type extends FactoryType(System.Array) {
+                class $__type extends FactoryType(Array) {
                     // --------------------------------------------------------------------------------------------------------------------------
                     static [constructor](factory) {
                         //factory.init = (o, isnew) => {

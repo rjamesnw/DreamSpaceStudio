@@ -221,7 +221,7 @@ var DreamSpace;
                         if (this.owner.__propertyChangedHandlers)
                             this.owner.__DoOnAnyPropertyChanged(this);
                         // ... return true if a visual state property was updated - this means a redraw() callback may be required ...
-                        return this.staticProperty && this.staticProperty.isVisual && host.isClient();
+                        return this.staticProperty && this.staticProperty.isVisual && DreamSpace.host.isClient();
                     }
                     // -------------------------------------------------------------------------------------------------------------------
                     toString() { return (this.__value || "").toString(); }

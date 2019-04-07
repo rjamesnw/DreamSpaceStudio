@@ -1,6 +1,9 @@
 ﻿import { log, error } from "./Logging";
 import { Exception } from "./System/Exception";
 import { IResourceRequest } from "./IO";
+import { IDomainObjectInfo, IADBridge, AppDomain } from "./System/AppDomain";
+import Utilities from "./Utilities";
+import Delegate from "./System/System.Delegate";
 
 // ###########################################################################################################################
 // Types for event management.
@@ -343,7 +346,7 @@ export namespace Types {
         if (typeof this != 'function' || !this.init && !this.new)
             error("__new(): Constructor call operation on a non-constructor function.", "Using the 'new' operator is only valid on class and class-factory types. Just call the '{FactoryType}.new()' factory *function* without the 'new' operator.", this);
 
-        var bridge = <System.IADBridge><any>this; // (note: this should be either a bridge, or a class factory object, or undefined)
+        var bridge = <IADBridge><any>this; // (note: this should be either a bridge, or a class factory object, or undefined)
         var factory = this;
         var classType: IType = factory.$__type;
         var classTypeInfo = <ITypeInfo>classType; // TODO: Follow up: cannot do 'IType & ITypeInfo' and still retain the 'new' signature.
@@ -351,7 +354,7 @@ export namespace Types {
         if (typeof classType != 'function')
             error("__new(): Missing class type on class factory.", "The factory '" + getFullTypeName(factory) + "' is missing the internal '$__type' class reference.", this);
 
-        var appDomain = bridge.$__appDomain || System.AppDomain && System.AppDomain.default || void 0;
+        var appDomain = bridge.$__appDomain || AppDomain && AppDomain.default || void 0;
         var instance: NativeTypes.IObject & IDomainObjectInfo;
         var isNew = false;
 
@@ -379,10 +382,10 @@ export namespace Types {
 
         // ... insert [instance, isNew] without having to create a new array ...
         // TODO: Clean up the following when ...rest is more widely supported. Also needs testing to see which is actually more efficient when compiled for ES6.
-        if (ES6Targeted) {
+        if (DreamSpace.ES6Targeted) {
             if (typeof this.init == 'function')
-                if (System.Delegate)
-                    System.Delegate.fastCall(this.init, this, instance, isNew, ...arguments);
+                if (Delegate)
+                    Delegate.fastCall(this.init, this, instance, isNew, ...arguments);
                 else
                     this.init.call(this, instance, isNew, ...arguments);
         } else {
@@ -392,8 +395,8 @@ export namespace Types {
             arguments[1] = isNew;
             arguments.length += 2;
             if (typeof this.init == 'function')
-                if (System.Delegate)
-                    System.Delegate.fastApply(this.init, this, arguments);
+                if (Delegate)
+                    Delegate.fastApply(this.init, this, arguments);
                 else
                     this.init.apply(this, arguments);
         }
@@ -576,7 +579,7 @@ export namespace Types {
                 + " Please double check you have the correct namespace/type names.", root);
         }
 
-        if (!root) root = global;
+        if (!root) root = DreamSpace.global;
 
         var rootTypeName = getTypeName(root);
         var nsOrTypeName = rootTypeName;
@@ -585,7 +588,7 @@ export namespace Types {
         var currentNamespace = <INamespaceInfo>root;
         var fullname = (<ITypeInfo>root).$__fullname || "";
 
-        if (root != global && !fullname)
+        if (root != DreamSpace.global && !fullname)
             exception("has not been registered in the type system. Make sure to call 'namespace()' at the top of namespace scopes before defining classes.");
 
         for (var i = 0, n = namespaces.length; i < n; ++i) {
@@ -719,7 +722,7 @@ export function isPrimitiveType(o: object) {
  */
 export function DisposableFromBase<TBaseClass extends IType=ObjectConstructor>(baseClass: TBaseClass, isPrimitiveOrHostBase?: boolean) {
     if (!baseClass) {
-        baseClass = <any>global.Object;
+        baseClass = <any>DreamSpace.global.Object;
         isPrimitiveOrHostBase = true;
     }
     else if (typeof isPrimitiveOrHostBase == 'undefined') isPrimitiveOrHostBase = isPrimitiveType(baseClass);
@@ -729,7 +732,7 @@ export function DisposableFromBase<TBaseClass extends IType=ObjectConstructor>(b
         * Don't create objects using the 'new' operator. Use '{NameSpaces...ClassType}.new()' static methods instead.
         */
         constructor(...args: any[]) {
-            if (!ES6Targeted && isPrimitiveOrHostBase)
+            if (!DreamSpace.ES6Targeted && isPrimitiveOrHostBase)
                 eval("var _super = function() { return null; };"); // (ES6 fix for extending built-in types [calling constructor not supported prior] when compiling for ES5; more details on it here: https://github.com/Microsoft/TypeScript/wiki/FAQ#why-doesnt-extending-built-ins-like-error-array-and-map-work)
             super();
         }
@@ -809,7 +812,7 @@ export function FactoryBase<TBaseFactory extends IFactory, TBaseType extends ITy
     (baseFactoryType?: TBaseFactory, staticBaseClass?: TBaseType) {
 
     if (typeof staticBaseClass != 'function')
-        staticBaseClass = <any>global.Object;
+        staticBaseClass = <any>DreamSpace.global.Object;
 
     var cls = class FactoryBase extends staticBaseClass {
         /** The underlying type associated with this factory type. */
@@ -891,19 +894,17 @@ export function namespace<A extends keyof T, B extends keyof T[A], C extends key
 export function namespace(namespacePathSelector: () => object, root?: object): void;
 export function namespace(...args: any[]): void {
     if (typeof args[0] == 'function') {
-        var root = args.length >= 2 ? args[args.length - 1] || global : global;
-        if (typeof root != 'object' && typeof root != 'function') root = global;
+        var root = args.length >= 2 ? args[args.length - 1] || DreamSpace.global : DreamSpace.global;
+        if (typeof root != 'object' && typeof root != 'function') root = DreamSpace.global;
         var items = nameof(args[0], true).split('.');
         if (!items.length) error("namespace()", "A valid namespace path selector function was expected (i.e. '()=>First.Second.Third.Etc').");
-        DreamSpace.Types.__registerNamespace(root, ...items);
+        Types.__registerNamespace(root, ...items);
     } else {
         var root = args[args.length - 1];
-        var lastIndex = (typeof root == 'object' || typeof root == 'function' ? args.length - 1 : (root = global, args.length));
-        DreamSpace.Types.__registerNamespace(root, ...global.Array.prototype.slice.call(arguments, 0, lastIndex));
+        var lastIndex = (typeof root == 'object' || typeof root == 'function' ? args.length - 1 : (root = DreamSpace.global, args.length));
+        Types.__registerNamespace(root, ...DreamSpace.global.Array.prototype.slice.call(arguments, 0, lastIndex));
     }
 }
-
-namespace("DreamSpace", "Types"); // ('DreamSpace.Types' will become the first registered namespace)
 
 // =======================================================================================================================
 

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Logging_1 = require("./Logging");
 const Resources_1 = require("./Resources");
+const Path_1 = require("./Path");
 // ------------------------------------------------------------------------------------------------------------------------
 /** Used to strip out script source mappings. Used with 'extractSourceMapping()'. */
 exports.SCRIPT_SOURCE_MAPPING_REGEX = /^\s*(\/\/[#@])\s*([A-Za-z0-9$_]+)\s*=\s*([^;/]*)(.*)/gim;
@@ -81,7 +82,7 @@ function fixSourceMappingsPragmas(sourcePragmaInfo, scriptURL) {
                 script += "\r\n" + pragma; // (not for source mapping, so leave as is)
             else
                 script += "\r\n" + pragma.prefix + " " + pragma.name + "="
-                    + Path.resolve(pragma.value, Path.map(scriptURL), exports.serverWebRoot ? exports.serverWebRoot : exports.baseScriptsURL) + pragma.extras;
+                    + Path_1.default.resolve(pragma.value, Path_1.default.map(scriptURL), exports.serverWebRoot ? exports.serverWebRoot : exports.baseScriptsURL) + pragma.extras;
         }
     return script;
 }
@@ -92,17 +93,17 @@ exports.fixSourceMappingsPragmas = fixSourceMappingsPragmas;
  * .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called before all scripts in the header section of your layout view.
  * If no 'siteBaseURL' global property exists, the current page location is assumed.
  */
-exports.baseURL = Path.fix(global.siteBaseURL || exports.baseURL || location.origin); // (example: "https://calendar.google.com/")
+exports.baseURL = Path_1.default.fix(DreamSpace.global.siteBaseURL || exports.baseURL || location.origin); // (example: "https://calendar.google.com/")
 /**
  * Returns the base URL used by the system for loading scripts.  This can be configured by setting the global 'scriptBaseURL' property.
  * If no 'siteBaseURL' global property exists, the current page location is assumed.
  */
-exports.baseScriptsURL = global.scriptsBaseURL ? Path.fix(global.scriptsBaseURL || exports.baseScriptsURL) : exports.baseURL + "js/";
+exports.baseScriptsURL = DreamSpace.global.scriptsBaseURL ? Path_1.default.fix(DreamSpace.global.scriptsBaseURL || exports.baseScriptsURL) : exports.baseURL + "js/";
 /**
  * Returns the base URL used by the system for loading scripts.  This can be configured by setting the global 'scriptBaseURL' property.
  * If no 'siteBaseURL' global property exists, the current page location is assumed.
  */
-exports.baseCSSURL = global.cssBaseURL ? Path.fix(global.cssBaseURL || exports.baseCSSURL) : exports.baseURL + "css/";
+exports.baseCSSURL = DreamSpace.global.cssBaseURL ? Path_1.default.fix(DreamSpace.global.cssBaseURL || exports.baseCSSURL) : exports.baseURL + "css/";
 Logging_1.log("DreamSpace.baseURL", exports.baseURL + " (If this is wrong, set a global 'siteBaseURL' variable to the correct path, or if using DreamSpace.JS for .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called in the header section of your layout view)"); // (requires the exception object, which is the last one to be defined above; now we start the first log entry with the base URI of the site)
 Logging_1.log("DreamSpace.baseScriptsURL", exports.baseScriptsURL + " (If this is wrong, set a global 'scriptsBaseURL' variable to the correct path)");
 if (exports.serverWebRoot)

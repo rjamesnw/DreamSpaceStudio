@@ -34,7 +34,7 @@ namespace Platform {
      * On the client side, this is accomplished by using IFrame objects.  On the server side, this is accomplished using
      * workers.  As well, on the client side, workers can be used to simulate server side communication during development.
      */
-    export class Context extends FactoryBase(CoreObject) {
+    export class Context extends FactoryBase(DSObject) {
 
         /** Abstract: Cannot create instances of this abstract class. */
         static 'new'?(): void {
@@ -47,7 +47,7 @@ namespace Platform {
         }
     }
     export namespace Context {
-        export class $__type extends FactoryType(CoreObject) {
+        export class $__type extends FactoryType(DSObject) {
             protected _contextType: Contexts;
             protected _url: string;
             private x = 1;

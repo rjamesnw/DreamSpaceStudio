@@ -40,7 +40,7 @@ namespace DreamSpace {
               * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
               * instance level event handler registration on the class only when necessary.
               */
-            export class EventDispatcher extends FactoryBase(CoreObject) {
+            export class EventDispatcher extends FactoryBase(DSObject) {
                 /** Creates an event object for a specific even type.
                     * @param {TOwner} owner The owner which owns this event object.
                     * @param {string} eventName The name of the event which this event object represents.
@@ -451,10 +451,10 @@ namespace DreamSpace {
             doPropertyChanged(name: string, oldValue: any): void;
         }
 
-        export class EventObject extends FactoryBase(CoreObject) {
+        export class EventObject extends FactoryBase(DSObject) {
             /**
             * Constructs a new Delegate object.
-            * @param {CoreObject} object The instance on which the associated function will be called.  This should be undefined/null for static functions.
+            * @param {DSObject} object The instance on which the associated function will be called.  This should be undefined/null for static functions.
             * @param {Function} func The function to be called on the associated object.
             */
             static 'new'(): IEventObject { return null; }
@@ -471,7 +471,7 @@ namespace DreamSpace {
             }
         }
         export namespace EventObject {
-            export class $__type extends FactoryType(CoreObject) implements INotifyPropertyChanged<IEventObject> {
+            export class $__type extends FactoryType(DSObject) implements INotifyPropertyChanged<IEventObject> {
                 /** Triggered when a supported property is about to change.  This does not work for all properties by default, but only those
                  * which call 'doPropertyChanging' in their implementation.
                  */

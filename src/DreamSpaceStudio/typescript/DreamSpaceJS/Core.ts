@@ -1,5 +1,6 @@
 import { log, LogTypes } from "./Logging";
 import { ResourceTypes } from "./Resources";
+import Path from "./Path";
 
 // ------------------------------------------------------------------------------------------------------------------------
 
@@ -98,19 +99,19 @@ export function fixSourceMappingsPragmas(sourcePragmaInfo: IExtractedPragmaDetai
  * .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called before all scripts in the header section of your layout view.
  * If no 'siteBaseURL' global property exists, the current page location is assumed.
  */
-export var baseURL: string = Path.fix(global.siteBaseURL || baseURL || location.origin); // (example: "https://calendar.google.com/")
+export var baseURL: string = Path.fix(DreamSpace.global.siteBaseURL || baseURL || location.origin); // (example: "https://calendar.google.com/")
 
 /**
  * Returns the base URL used by the system for loading scripts.  This can be configured by setting the global 'scriptBaseURL' property.
  * If no 'siteBaseURL' global property exists, the current page location is assumed.
  */
-export var baseScriptsURL: string = global.scriptsBaseURL ? Path.fix(global.scriptsBaseURL || baseScriptsURL) : baseURL + "js/";
+export var baseScriptsURL: string = DreamSpace.global.scriptsBaseURL ? Path.fix(DreamSpace.global.scriptsBaseURL || baseScriptsURL) : baseURL + "js/";
 
 /**
  * Returns the base URL used by the system for loading scripts.  This can be configured by setting the global 'scriptBaseURL' property.
  * If no 'siteBaseURL' global property exists, the current page location is assumed.
  */
-export var baseCSSURL: string = global.cssBaseURL ? Path.fix(global.cssBaseURL || baseCSSURL) : baseURL + "css/";
+export var baseCSSURL: string = DreamSpace.global.cssBaseURL ? Path.fix(DreamSpace.global.cssBaseURL || baseCSSURL) : baseURL + "css/";
 
 /**
  * This is set by default when '@RenderDreamSpaceJSConfigurations()' is called at the top of the layout page and a debugger is attached. It is

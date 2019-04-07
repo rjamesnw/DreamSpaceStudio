@@ -6,7 +6,7 @@ import { Query } from "./Query";
 import { log, error, LogTypes } from "./Logging";
 import { basePathFromResourceType } from "./Core";
 import { getErrorMessage } from "./ErrorHandling";
-import { CoreObject } from "./System/PrimitiveTypes";
+import { DSObject } from "./System/PrimitiveTypes";
 
 // ===============================================================================================================================
 
@@ -407,7 +407,7 @@ export namespace ResourceRequest {
 
             try {
                 var payload: any = _body || this.body;
-                if (typeof payload == 'object' && payload.__proto__ == CoreObject.prototype) {
+                if (typeof payload == 'object' && payload.__proto__ == DSObject.prototype) {
                     // (can't send object literals! convert to something else ...)
                     if (_method == 'GET') {
                         var q = Query.new(payload);

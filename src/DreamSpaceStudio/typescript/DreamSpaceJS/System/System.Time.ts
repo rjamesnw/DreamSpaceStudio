@@ -14,7 +14,7 @@ namespace DreamSpace.System {
      * Note: TimeSpan exposes the results as properties for fast access (rather than getters/setters), but changing individual properties does not
      * cause the other values to update.  Use the supplied functions for manipulating the values.
      */
-    export class TimeSpan extends FactoryBase(CoreObject) {
+    export class TimeSpan extends FactoryBase(DSObject) {
         static 'new': {
             (timeInMS: number): ITimeSpan;
             (year: number, dayOfYear?: number, hours?: number, minutes?: number, seconds?: number, milliseconds?: number): ITimeSpan;
@@ -207,7 +207,7 @@ namespace DreamSpace.System {
         }
     }
     export namespace TimeSpan {
-        export class $__type extends FactoryType(CoreObject) {
+        export class $__type extends FactoryType(DSObject) {
 
             //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
 

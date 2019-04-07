@@ -20,13 +20,13 @@ namespace Windows {
     //      */
     //    Native
     //}
-    export class Window extends FactoryBase(CoreObject) {
+    export class Window extends FactoryBase(DSObject) {
         /** Creates a new window object.  If null is passed as the root element, then a new pop-up window is created when the window is shown. */
         static 'new'(rootElement?: HTMLElement, url?: string): IWindow { return null; }
         static init(o: IWindow, isnew: boolean, rootElement?: HTMLElement, url?: string) { }
     }
     export namespace Window {
-        export class $__type extends FactoryType(CoreObject) {
+        export class $__type extends FactoryType(DSObject) {
             private _guid: string = Utilities.createGUID(false);
             private _target: any; // (this is either a DIV element [for system windows], IFrame element, or native pop-up Window reference)
             private _header: HTMLElement; // (the HTML-style header contents for this window)

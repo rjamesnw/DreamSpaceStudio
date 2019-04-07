@@ -78,7 +78,7 @@ export interface IADBridge extends IDomainObjectInfo {
  * logins, payment details, etc.
  * Note: While script isolation is the default, trusted scripts can run in the system context, and are thus not secured.
  */
-export class AppDomain extends FactoryBase(CoreObject) {
+export class AppDomain extends FactoryBase(DSObject) {
     /** Get a new app domain instance.
         * @param application An optional application to add to the new domain.
         */
@@ -100,7 +100,7 @@ export class AppDomain extends FactoryBase(CoreObject) {
     static readonly appDomains: IAppDomain[] = [AppDomain.default];
 }
 export namespace AppDomain {
-    export class $__type extends FactoryType(CoreObject) {
+    export class $__type extends FactoryType(DSObject) {
         private _applications: IApplication[]; // (allows nesting/embedding child applications which usually run in their own global execution environment)
         private _modules: Scripts.IModule[];
 
@@ -311,7 +311,7 @@ export interface IAppDomain extends AppDomain.$__type { }
 /** Applications wrap window reference targets, and any specified HTML for configuration and display. There can be many
   * applications in a single AppDomain.
   */
-export class Application extends FactoryBase(CoreObject) {
+export class Application extends FactoryBase(DSObject) {
     static 'new': (title: string, description: string, appID: number) => IApplication;
     static init: (o: IApplication, isnew: boolean, title: string, description: string, appID: number) => void;
 
@@ -354,7 +354,7 @@ export class Application extends FactoryBase(CoreObject) {
     private static _focused: IApplication = null;
 }
 export namespace Application {
-    export class $__type extends FactoryType(CoreObject) {
+    export class $__type extends FactoryType(DSObject) {
         // --------------------------------------------------------------------------------------------------------------------------
 
         /** Returns true if this application is focused. */

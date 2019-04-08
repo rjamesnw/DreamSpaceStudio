@@ -10,7 +10,7 @@ const AppDomain_1 = require("./AppDomain");
 // Thing that gets passed a function and makes a decorator:
 // =======================================================================================================================
 /** The base type for many DreamSpace classes. */
-class CoreObject extends Types_1.FactoryBase(void 0, global.Object) {
+class DSObject extends Types_1.FactoryBase(void 0, global.Object) {
     /**
     * Create a new basic object type.
     * @param value If specified, the value will be wrapped in the created object.
@@ -18,9 +18,9 @@ class CoreObject extends Types_1.FactoryBase(void 0, global.Object) {
     */
     static 'new'(value, makeValuePrivate = false) { return null; }
 }
-CoreObject.s = 3;
-exports.CoreObject = CoreObject;
-(function (CoreObject) {
+DSObject.s = 3;
+exports.DSObject = DSObject;
+(function (DSObject) {
     class $__type extends Types_1.DisposableFromBase(global.Object) {
         // -------------------------------------------------------------------------------------------------------------------
         /** Returns the type information for this object instance. */
@@ -120,16 +120,16 @@ exports.CoreObject = CoreObject;
             };
         }
     }
-    CoreObject.$__type = $__type;
-    CoreObject.$__register(System);
-})(CoreObject = exports.CoreObject || (exports.CoreObject = {}));
+    DSObject.$__type = $__type;
+    DSObject.$__register(System);
+})(DSObject = exports.DSObject || (exports.DSObject = {}));
 // =======================================================================================================================
 /** Copies over prototype properties from the $Object type to other base primitive types. */
 function _addObjectPrototypeProperties(type) {
-    for (var p in CoreObject.prototype)
-        if (CoreObject.prototype.hasOwnProperty.call(CoreObject.prototype, p) && p.charAt(0) != "$" && p.charAt(0) != "_")
+    for (var p in DSObject.prototype)
+        if (DSObject.prototype.hasOwnProperty.call(DSObject.prototype, p) && p.charAt(0) != "$" && p.charAt(0) != "_")
             if (!(p in type.prototype))
-                type.prototype[p] = CoreObject.prototype[p];
+                type.prototype[p] = DSObject.prototype[p];
     return type;
 }
 /* Note: This is a DreamSpace system string object, and not the native JavaScript object. */
@@ -323,7 +323,7 @@ exports.Array = Array;
 //}
 // ====================================================================================================================================
 /** Represents an object that can have a parent object. */
-class DependentObject extends CoreObject.$__type {
+class DependentObject extends DSObject.$__type {
     get parent() { return this.__parent; }
 }
 exports.DependentObject = DependentObject;

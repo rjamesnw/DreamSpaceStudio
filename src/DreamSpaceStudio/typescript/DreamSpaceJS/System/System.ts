@@ -1,4 +1,6 @@
-﻿// ###########################################################################################################################
+﻿import { IDisposable } from "../Globals";
+
+// ###########################################################################################################################
 // Types for event management.
 // ###########################################################################################################################
 
@@ -10,7 +12,7 @@
 *                          can allow quick initialization of a group of objects, instead of having to pull each one
 *                          from the object pool each time.
 */
-export function dispose(obj: DS.IDisposable, release?: boolean): void;
+export function dispose(obj: IDisposable, release?: boolean): void;
 /** Calls the 'dispose()' function on each object in the specified array.  Any array items (nested arrays) are traversed for objects to disposed as well. 
 * Note: Once 'dispose()' is called on an object, the function is replaced with 'noop()' so it cannot be called again.
 * @param {object[]} obj The objects to dispose.
@@ -41,7 +43,7 @@ export function dispose(obj: any, release: boolean = true): void {
 *                          can allow quick initialization of a group of objects, instead of having to pull each one
 *                          from the object pool each time.
 */
-export function disposeProperties(obj: {}, skipObjects?: IDisposable[], release: boolean = true): void {
+export function disposeProperties(obj: Object, skipObjects?: IDisposable[], release: boolean = true): void {
     for (var p in obj) {
         var item = obj[p];
         if (skipObjects && skipObjects.indexOf(item) >= 0) continue;

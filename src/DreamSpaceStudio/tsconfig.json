@@ -2,10 +2,11 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es6",
-    "lib": ["es6"],
+    "lib": [ "es6" ],
     "sourceMap": true,
     "noImplicitAny": true
   },
+  "include": [ "TypeScript/DreamSpaceJS/Polyfills.ts" ],
   "exclude": [
     "node_modules",
     "public",

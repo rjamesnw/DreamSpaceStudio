@@ -53,7 +53,7 @@ var DreamSpace;
                             // --------------------------------------------------------------------------------------------------------------------
                             /** This generates/updates the HTML elements required to display the application. */
                             updateLayout(recursive = true) {
-                                var log = isDebugging() ? System.Diagnostics.log(ApplicationElement, "Application is updating its layout ...").beginCapture() : null;
+                                var log = isDebugging() ? Diagnostics.log(ApplicationElement, "Application is updating its layout ...").beginCapture() : null;
                                 super.updateLayout(recursive);
                                 if (this.__element != null) {
                                     var node = this._targetElement.firstChild;
@@ -83,7 +83,7 @@ var DreamSpace;
                             * files and NOT inline within the HTML.
                             */
                             parseTemplate(html = null) {
-                                var log = System.Diagnostics.log(ApplicationElement, "Parsing application HTML template ...").beginCapture();
+                                var log = Diagnostics.log(ApplicationElement, "Parsing application HTML template ...").beginCapture();
                                 if (!html)
                                     if (DreamSpace.host.isClient())
                                         html = this.loadTemplate(); // (returns "<html>...</html>" from the DOM)
@@ -108,7 +108,7 @@ var DreamSpace;
                             */
                             loadTemplate(htmlFileURI, fallbackToDOM = true) {
                                 var contents = null;
-                                var log = System.Diagnostics.log("Application.loadTemplate()", "Loading template from '" + htmlFileURI + "' ...").beginCapture();
+                                var log = Diagnostics.log("Application.loadTemplate()", "Loading template from '" + htmlFileURI + "' ...").beginCapture();
                                 // ... load the file ...
                                 if (DreamSpace.host.isClient()) {
                                     if (htmlFileURI) {
@@ -116,7 +116,7 @@ var DreamSpace;
                                         var request = new XMLHttpRequest();
                                         request.open("get", htmlFileURI + "!", false);
                                         request.onerror = (ev) => {
-                                            System.Diagnostics.log("Application.loadTemplate()", getErrorMessage(ev), LogTypes.Error);
+                                            Diagnostics.log("Application.loadTemplate()", getErrorMessage(ev), LogTypes.Error);
                                         };
                                         request.onreadystatechange = () => {
                                             if (request.readyState == (XMLHttpRequest.DONE || 4)) {

@@ -1,4 +1,10 @@
-﻿import { IDisposable, dispose, FactoryBase, FactoryType, __disposeValidate } from "../Types";
+﻿import { FactoryBase, FactoryType } from "../Types";
+import { error } from "../Logging";
+import { DreamSpace as DS, IDisposable, ITypeInfo } from "../Globals";
+import { DSObject } from "./PrimitiveTypes";
+import { Exception } from "./Exception";
+import { IndexedObjectCollection } from "./Collections.IndexedObjectCollection";
+import { dispose } from "./System";
 
 // ############################################################################################################################################
 // Application Domains
@@ -282,11 +288,11 @@ export namespace AppDomain {
             }
         }
 
-        private static [constructor](factory: typeof AppDomain) {
+        private static [DS.constructor](factory: typeof AppDomain) {
             factory.init = (o, isnew, application) => {
                 factory.super.init(o, isnew);
                 (<IDomainObjectInfo><any>o).$__appDomain = o;
-                o.__objects = Collections.IndexedObjectCollection.new<IDomainObjectInfo>();
+                o.__objects = IndexedObjectCollection.new<IDomainObjectInfo>();
                 o.__objects.__IDPropertyName = <KeyOf<IDomainObjectInfo>>"$__appDomainId";
                 o.applications = typeof application == 'object' ? [application] : [];
                 //? if (global.Object.freeze)
@@ -412,7 +418,7 @@ export namespace Application {
 
         // -------------------------------------------------------------------------------------------------------------------------------
 
-        private static [constructor](factory: typeof Application) {
+        private static [DS.constructor](factory: typeof Application) {
             factory.init = (o, isnew, title, description, appID) => {
                 factory.super.init(o, isnew);
                 (<IDomainObjectInfo><any>o).$__app = o;
@@ -435,7 +441,7 @@ export interface IApplication extends Application.$__type { }
 AppDomain.default = AppDomain.new();
 Application.default = Application.new(window.document.title, "Default Application", 0);
 
-frozen(AppDomain);
-frozen(Application);
+DS.frozen(AppDomain);
+DS.frozen(Application);
 
 // ========================================================================================================================================

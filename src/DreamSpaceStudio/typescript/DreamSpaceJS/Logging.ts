@@ -67,17 +67,17 @@ export function log(title: string, message: string, type: LogTypes = LogTypes.No
                 break;
         }
 
-    if (useLogger && System) {
+    if (useLogger && Diagnostics) {
         if (type == LogTypes.Error) {
             if (throwOnError)
-                if (System.Exception) {
-                    throw System.Exception.error(title, message, source); // (logs automatically)
+                if (Exception) {
+                    throw Exception.error(title, message, source); // (logs automatically)
                 }
                 else
                     throw new Error(compositeMessage); // (fallback, then try the diagnostics debugger)
         }
-        if (System.Diagnostics && System.Diagnostics.log)
-            System.Diagnostics.log(title, message, type, false); // (if 'System.Exception' is thrown it will also auto log and this line is never reached)
+        if (Diagnostics && Diagnostics.log)
+            Diagnostics.log(title, message, type, false); // (if 'System.Exception' is thrown it will also auto log and this line is never reached)
     }
     else
         if (throwOnError && type == LogTypes.Error)

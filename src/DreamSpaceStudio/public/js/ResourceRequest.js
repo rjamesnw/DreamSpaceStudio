@@ -329,7 +329,7 @@ exports.ResourceRequest = ResourceRequest;
             }
             try {
                 var payload = _body || this.body;
-                if (typeof payload == 'object' && payload.__proto__ == CoreObject.prototype) {
+                if (typeof payload == 'object' && payload.__proto__ == DSObject.prototype) {
                     // (can't send object literals! convert to something else ...)
                     if (_method == 'GET') {
                         var q = Query_1.Query.new(payload);

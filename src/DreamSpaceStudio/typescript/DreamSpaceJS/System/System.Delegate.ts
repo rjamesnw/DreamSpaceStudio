@@ -2,8 +2,9 @@
 // Callback Delegates (serializable - closures should not be used)
 // ###########################################################################################################################
 
-import { FactoryBase, INamespaceInfo, IFunctionInfo } from "../Types";
+import { FactoryBase } from "../Types";
 import { DSObject, IObject } from "./PrimitiveTypes";
+import { INamespaceInfo, IFunctionInfo } from "../Globals";
 
 // ============================================================================================================================
 

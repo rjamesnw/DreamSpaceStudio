@@ -1,5 +1,6 @@
 // ###########################################################################################################################
 // Browser detection (for special cases).
+// This file also adds in any browser-only features as needed by the system within NodeJS (such as setTimeout, etc.).
 // ###########################################################################################################################
 
 // ===========================================================================================================================
@@ -41,25 +42,6 @@ declare namespace NativeTypes { // ('declare' used so no code is actually export
     export interface IWindow extends Window { }
 }
 
-//x export declare module NativeStaticTypes {
-//    export var StaticFunction: FunctionConstructor;
-//    export var StaticObject: ObjectConstructor;
-//    export var StaticArray: ArrayConstructor;
-//    export var StaticString: StringConstructor;
-//    export var StaticNumber: NumberConstructor;
-//    export var StaticBoolean: BooleanConstructor;
-//    export var StaticRegExp: RegExpConstructor;
-//    export var StaticDate: DateConstructor;
-//    export var StaticMath: typeof Math;
-//    export var StaticError: ErrorConstructor;
-//    export var StaticXMLHttpRequest: typeof XMLHttpRequest;
-//    export var StaticNode: typeof Node;
-//    export var StaticElement: typeof Element;
-//    export var StaticHTMLElement: typeof HTMLElement;
-//    export var StaticText: typeof Text;
-//    export var StaticWindow: typeof Window;
-//x }
-
 interface IStaticGlobals extends Window {
     [index: string]: any;
     Function: FunctionConstructor;
@@ -87,7 +69,8 @@ interface IStaticGlobals extends Window {
     /** Root location of the CSS files, which by default is {site URL}+"/css/". */
     cssBaseURL: string;
 }
-type KeyOf<T> = keyof Required<T>;
+
+type KeyOf<T> = keyof Required<T>; //?
 
 // ... add in some simply polyfills required by the system just in case ...
 
@@ -106,6 +89,8 @@ Array.prototype.select = function (func: (a: any) => any) { if (!func) return th
 Array.prototype.where = function (func: (a: any) => boolean) { if (!func) return this; var _: any[] = [], __: any; for (var i = 0; i < this.length; ++i) if (func(__ = this[i])) _.push(__); return _; };
 
 (() => {
+    // =======================================================================================================================
+
     //declare function Symbol(desc?: string): string;
 
     if (typeof this['Symbol'] == 'undefined') { // (mainly for IE 11)
@@ -115,9 +100,9 @@ Array.prototype.where = function (func: (a: any) => boolean) { if (!func) return
 
     // -------------------------------------------------------------------------------------------------------------------
 
-    var String = global.String;
-    var Array = global.Array;
-    var RegExp = global.RegExp;
+    //var String = global.String;
+    //var Array = global.Array;
+    //var RegExp = global.RegExp;
 
     if (!Number.MAX_SAFE_INTEGER)
         (<any>Number).MAX_SAFE_INTEGER = 9007199254740991;

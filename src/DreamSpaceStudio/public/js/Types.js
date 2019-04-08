@@ -1,34 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Logging_1 = require("./Logging");
-const Exception_1 = require("./System/Exception");
 const AppDomain_1 = require("./System/AppDomain");
 const Utilities_1 = require("./Utilities");
 const System_Delegate_1 = require("./System/System.Delegate");
-///** Represents a static property on a class module. */
-//? export interface IStaticProperty<TDataType> { }
-///** Stores static property registration details. */
-//?export interface IStaticPropertyInfo<TDataType> {
-//    parent: IStaticPropertyInfo<any>; // References the parent static property list (if any).  This is null on most base type.
-//    owner: IClassInfo<{}>; // The class type that owns this static property list.
-//    namedIndex: { [index: string]: IStaticProperty<any> }; // A named hash table used to quickly lookup a static property by name (shared by all type levels).
-//}
-// ===================================================================================================================
-/**
- * Supports Iteration for ES5/ES3. To use, create a new type derived from this one, or implement the IEnumerable<T> interface.
- */
-class Enumerable {
-    next(value) {
-        throw Exception_1.Exception.notImplemented('next', this);
-    }
-    return(value) {
-        throw Exception_1.Exception.notImplemented('return', this);
-    }
-    throw(e) {
-        throw Exception_1.Exception.notImplemented('throw', this);
-    }
-}
-exports.Enumerable = Enumerable;
+const Globals_1 = require("./Globals");
+// ###########################################################################################################################
+// Types for event management.
 // ###########################################################################################################################
 /** Returns the name of a namespace or variable reference at runtime. */
 function nameof(selector, fullname = false) {
@@ -193,7 +171,7 @@ var Types;
             isNew = true;
         }
         // ... initialize DreamSpace and app domain references ...
-        instance.$__corext = DreamSpace;
+        instance.$__corext = Globals_1.DreamSpace;
         instance.$__id = getNextObjectId();
         if (Types.autoTrackInstances && (!appDomain || appDomain.autoTrackInstances === void 0 || appDomain.autoTrackInstances))
             instance.$__globalId = Utilities_1.default.createGUID(false);
@@ -205,7 +183,7 @@ var Types;
             instance.$__disposed = false; // (only reset if exists)
         // ... insert [instance, isNew] without having to create a new array ...
         // TODO: Clean up the following when ...rest is more widely supported. Also needs testing to see which is actually more efficient when compiled for ES6.
-        if (DreamSpace.ES6Targeted) {
+        if (Globals_1.DreamSpace.ES6Targeted) {
             if (typeof this.init == 'function')
                 if (System_Delegate_1.default)
                     System_Delegate_1.default.fastCall(this.init, this, instance, isNew, ...arguments);
@@ -273,10 +251,10 @@ var Types;
         //x classType.$__fullname = factoryTypeInfo.$__fullname + "." + classType.$__name; // (the '$__fullname' property on a class should allow absolute reference back to it [note: '__proto__' could work here also due to static inheritance])
         // ... if the user supplied a static constructor then call it now before we do anything more ...
         // (note: the static constructor may be where 'new' and 'init' factory functions are provided, so we MUST call them first before we hook into anything)
-        if (typeof factoryType[constructor] == 'function')
-            factoryType[constructor].call(classType);
-        if (typeof classType[constructor] == 'function')
-            classType[constructor](factoryType);
+        if (typeof factoryType[Globals_1.DreamSpace.constructor] == 'function')
+            factoryType[Globals_1.DreamSpace.constructor].call(classType);
+        if (typeof classType[Globals_1.DreamSpace.constructor] == 'function')
+            classType[Globals_1.DreamSpace.constructor](factoryType);
         // ... hook into the 'init' and 'new' factory methods ...
         // (note: if no 'init()' function is specified, just call the base by default)
         if (classType.init)
@@ -364,13 +342,13 @@ var Types;
                 + " Please double check you have the correct namespace/type names.", root);
         }
         if (!root)
-            root = DreamSpace.global;
+            root = Globals_1.DreamSpace.global;
         var rootTypeName = getTypeName(root);
         var nsOrTypeName = rootTypeName;
         Logging_1.log("Registering namespace for root '" + rootTypeName + "'", namespaces.join());
         var currentNamespace = root;
         var fullname = root.$__fullname || "";
-        if (root != DreamSpace.global && !fullname)
+        if (root != Globals_1.DreamSpace.global && !fullname)
             exception("has not been registered in the type system. Make sure to call 'namespace()' at the top of namespace scopes before defining classes.");
         for (var i = 0, n = namespaces.length; i < n; ++i) {
             nsOrTypeName = namespaces[i];
@@ -378,7 +356,7 @@ var Types;
             if (!nsOrTypeName || !trimmedName)
                 exception("is not a valid namespace name. A namespace must not be empty or only whitespace");
             nsOrTypeName = trimmedName; // (storing the trimmed name at this point allows showing any whitespace-only characters in the error)
-            if (root == DreamSpace && nsOrTypeName == "DreamSpace")
+            if (root == Globals_1.DreamSpace && nsOrTypeName == "DreamSpace")
                 exception("is not valid - 'DreamSpace' must not exist as a nested name under DreamSpace");
             var subNS = currentNamespace[nsOrTypeName];
             if (!subNS)
@@ -390,7 +368,7 @@ var Types;
             (currentNamespace.$__namespaces || (currentNamespace.$__namespaces = [])).push(subNS);
             currentNamespace = subNS;
         }
-        Logging_1.log("Registered namespace for root '" + rootTypeName + "'", fullname, LogTypes.Info);
+        Logging_1.log("Registered namespace for root '" + rootTypeName + "'", fullname, Logging_1.LogTypes.Info);
         return currentNamespace;
     }
     Types.__registerNamespace = __registerNamespace;
@@ -406,7 +384,7 @@ var Types;
             Logging_1.error(title, "The argument given is not an object.", source);
         if (!object.$__corext)
             Logging_1.error(title, "The object instance '" + getFullTypeName(object) + "' is not a DreamSpace created object.", source);
-        if (object.$__corext != DreamSpace)
+        if (object.$__corext != Globals_1.DreamSpace)
             Logging_1.error(title, "The object instance '" + getFullTypeName(object) + "' was created in a different DreamSpace instance and cannot be disposed by this one.", source); // (if loaded as a module perhaps, where other instance may exist [just in case])
         if (typeof object.dispose != 'function')
             Logging_1.error(title, "The object instance '" + getFullTypeName(object) + "' does not contain a 'dispose()' function.", source);
@@ -467,7 +445,7 @@ class Disposable {
 exports.Disposable = Disposable;
 /** Returns true if the specified object can be disposed using this DreamSpace system. */
 function isDisposable(instance) {
-    if (instance.$__corext != DreamSpace)
+    if (instance.$__corext != Globals_1.DreamSpace)
         return false;
     return typeof instance.dispose == 'function';
 }
@@ -491,7 +469,7 @@ exports.isPrimitiveType = isPrimitiveType;
  */
 function DisposableFromBase(baseClass, isPrimitiveOrHostBase) {
     if (!baseClass) {
-        baseClass = DreamSpace.global.Object;
+        baseClass = Globals_1.DreamSpace.global.Object;
         isPrimitiveOrHostBase = true;
     }
     else if (typeof isPrimitiveOrHostBase == 'undefined')
@@ -501,7 +479,7 @@ function DisposableFromBase(baseClass, isPrimitiveOrHostBase) {
         * Don't create objects using the 'new' operator. Use '{NameSpaces...ClassType}.new()' static methods instead.
         */
         constructor(...args) {
-            if (!DreamSpace.ES6Targeted && isPrimitiveOrHostBase)
+            if (!Globals_1.DreamSpace.ES6Targeted && isPrimitiveOrHostBase)
                 eval("var _super = function() { return null; };"); // (ES6 fix for extending built-in types [calling constructor not supported prior] when compiling for ES5; more details on it here: https://github.com/Microsoft/TypeScript/wiki/FAQ#why-doesnt-extending-built-ins-like-error-array-and-map-work)
             super();
         }
@@ -515,55 +493,11 @@ function DisposableFromBase(baseClass, isPrimitiveOrHostBase) {
         */
         dispose(release) { }
     };
-    cls.prototype.dispose = DreamSpace.Disposable.prototype.dispose; // (make these functions both the same function reference by default)
+    cls.prototype.dispose = Disposable.prototype.dispose; // (make these functions both the same function reference by default)
     return cls;
 }
 exports.DisposableFromBase = DisposableFromBase;
-///** 
-// * Registers a type in the DreamSpace system and associates a type with a parent type or namespace. 
-// * This decorator is also responsible for calling the static '[constructor]()' function on a type, if one exists.
-// * Usage: 
-// *      @factory(ForSomeNamespace)
-// *      class MyFactory {
-// *          static 'new': (...args:any[]) => IMyFactory;
-// *          static init: (o: IMyFactory, isnew: boolean, ...args: any[]) => void;
-// *      }
-// *      namespace MyFactory {
-// *          @factoryInstance(MyFactory)
-// *          export class $__type {
-// *              private static [constructor](factory: typeof MyFactory) {
-// *                  factory.init = (o, isnew) => { };
-// *              }
-// *          }
-// *      }
-// *      interface IMyFactory extends MyFactory.$__type {}
-// */
-//export function type(parentType: IType | object) {
-//    return (cls: IType) => <any>cls; // (not used yet)
-//}
-///** Constructs factory objects. */
-//x export function ClassFactory<TBaseClass extends object, TClass extends IType, TFactory extends IFactoryTypeInfo, TNamespace extends object>
-//    (namespace: TNamespace, base: IClassFactory & { $__type: TBaseClass }, getType: (base: TBaseClass) => [TClass, TFactory], exportName?: keyof TNamespace, addMemberTypeInfo = true)
-//    : ClassFactoryType<TClass, TFactory> {
-//    function _error(msg: string) {
-//        error("ClassFactory()", msg, namespace);
-//    }
-//    if (!getType) _error("A 'getType' selector function is required.");
-//    if (!namespace) _error("A 'namespace' value is required.");
-//    var types = getType(base && base.$__type || <any>base); // ('$__type' is essentially the same reference as base, but with the original type)
-//    var cls = types[0];
-//    var factory = types[1];
-//    if (!cls) _error("'getType: (base: TBaseClass) => [TClass, TFactory]' did not return a class instance, which is required.");
-//    if (typeof cls != 'function') _error("'getType: (base: TBaseClass) => [TClass, TFactory]' did not return a class (function) type object, which is required.");
-//    var name = <string>exportName || getTypeName(cls);
-//    if (name.charAt(0) == '$') name = name.substr(1); // TODO: May not need to do this anymore.
-//    if (!factory) log("ClassFactory()", "Warning: No factory was supplied for class type '" + name + "' in namespace '" + getFullTypeName(namespace) + "'.", LogTypes.Warning, cls);
-//    return Types.__registerFactoryType(<any>cls, <any>factory, namespace, addMemberTypeInfo, exportName);
-//}
-function FactoryType(baseFactory) {
-    return baseFactory.$__type;
-}
-exports.FactoryType = FactoryType;
+//function FactoryType<T extends IType, K extends keyof T>(base: T): FactoryBaseType<T> { return <any>base; }
 /**
  * Builds and returns a base type to be used with creating type factories. This function stores some type
  * information in static properties for reference.
@@ -572,7 +506,7 @@ exports.FactoryType = FactoryType;
 */
 function FactoryBase(baseFactoryType, staticBaseClass) {
     if (typeof staticBaseClass != 'function')
-        staticBaseClass = DreamSpace.global.Object;
+        staticBaseClass = Globals_1.DreamSpace.global.Object;
     var cls = class FactoryBase extends staticBaseClass {
         /** References the base factory. */
         static get super() { return baseFactoryType || void 0; } // ('|| void 0' keeps things consistent in case 'null' is given)
@@ -608,23 +542,6 @@ function FactoryBase(baseFactoryType, staticBaseClass) {
     return cls;
 }
 exports.FactoryBase = FactoryBase;
-function namespace(...args) {
-    if (typeof args[0] == 'function') {
-        var root = args.length >= 2 ? args[args.length - 1] || DreamSpace.global : DreamSpace.global;
-        if (typeof root != 'object' && typeof root != 'function')
-            root = DreamSpace.global;
-        var items = nameof(args[0], true).split('.');
-        if (!items.length)
-            Logging_1.error("namespace()", "A valid namespace path selector function was expected (i.e. '()=>First.Second.Third.Etc').");
-        Types.__registerNamespace(root, ...items);
-    }
-    else {
-        var root = args[args.length - 1];
-        var lastIndex = (typeof root == 'object' || typeof root == 'function' ? args.length - 1 : (root = DreamSpace.global, args.length));
-        Types.__registerNamespace(root, ...DreamSpace.global.Array.prototype.slice.call(arguments, 0, lastIndex));
-    }
-}
-exports.namespace = namespace;
 // =======================================================================================================================
 // ###########################################################################################################################
 // TODO: Consider adding a dependency injection system layer.

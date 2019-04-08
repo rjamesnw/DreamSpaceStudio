@@ -1,194 +1,12 @@
-﻿import { log, error } from "./Logging";
+﻿import { log, error, LogTypes } from "./Logging";
 import { Exception } from "./System/Exception";
-import { IResourceRequest } from "./IO";
 import { IDomainObjectInfo, IADBridge, AppDomain } from "./System/AppDomain";
 import Utilities from "./Utilities";
 import Delegate from "./System/System.Delegate";
+import { DreamSpace as DS, IDisposable, ITypeInfo, IFactoryTypeInfo, IType, IFactory, IClassInfo, IFunctionInfo, INamespaceInfo } from "./Globals";
 
 // ###########################################################################################################################
 // Types for event management.
-// ###########################################################################################################################
-
-// ===================================================================================================================
-// Some core basic interfaces to begin with (interfaces don't contribute to the resulting JS size).
-
-// =======================================================================================================================
-// Integrate native types
-
-/** Provides a mechanism for object cleanup.
-* See also: 'dispose(...)' helper functions. */
-export interface IDisposable {
-    /** Set to true when the object is being disposed. By default this is undefined.  This is only set to true when 'dispose()' is first call to prevent cyclical calls. */
-    $__disposing?: boolean;
-    /** Set to true once the object is disposed. By default this is undefined, which means "not disposed".  This is only set to true when disposed, and false when reinitialized. */
-    $__disposed?: boolean;
-    /** 
-     * Returns a reference to the DreamSpace system that created the object.  This is set automatically when creating instances from factories.
-     * Note: Setting this to null/undefined will prevent an instance from being disposable.
-     */
-    $__corext?: {};
-    /** 
-    * Releases the object back into the object pool. 
-    * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
-    *                          false to request that child objects remain connected after disposal (not released). This
-    *                          can allow quick initialization of a group of objects, instead of having to pull each one
-    *                          from the object pool each time.
-    */
-    dispose(release?: boolean): void;
-}
-
-/** Type-cast class references to this interface to access type specific information, where available. */
-export interface ITypeInfo {
-    /** The parent namespace object that contains the type (function instance).
-      * Note: This value is only set on types registered using '{AppDomain}.registerType()'.
-      */
-    $__parent?: ITypeInfo | INamespaceInfo | IClassInfo | IFunctionInfo;
-
-    /** Returns the name of this type.
-      * Note: This is the object type name taken from the constructor (if one exists), and is not the FULL type name (no namespace).
-      * Note: This value is only set on types registered using '{AppDomain}.registerType()'.
-      */
-    $__name?: string;
-
-    /** Returns the full name of this type (includes the namespace).
-      * Note: This value is only set on types registered using '{AppDomain}.registerType()'.
-      */
-    $__fullname?: string;
-}
-
-export interface IType<TInstance = object> {
-    new(...args: any[]): TInstance;
-}
-
-export interface IFunction<ReturnType = any> {
-    (...args: any[]): ReturnType;
-}
-
-/** Type-cast DreamSpace namespace objects to this interface to access namespace specific type information. */
-export interface INamespaceInfo extends ITypeInfo {
-    $__namespaces: NativeTypes.IArray<object>;
-}
-
-/** Type-cast function objects to this interface to access type specific information. */
-export interface IFunctionInfo extends Function, ITypeInfo {
-    (...args: any[]): any;
-
-    /** If specified, defines the expected types to use for injection into the function's parameters.
-     * Each entry is for a single parameter, and is a array of items where each item is either a string, naming the fully-qualified type name, or an object reference to the type (function) that is expected.
-     * To declare the parameter types for a constructor function (or any function), use the @
-     */
-    $__argumentTypes?: (IType<any> | string)[][];
-}
-
-/** Type-cast DreamSpace classes (functions) to this interface to access class specific type information. */
-export interface IClassInfo<TInstance extends object = object> extends ITypeInfo, IType<TInstance> {
-    /** This is a reference to the underlying class type for this factory type. */
-    $__type: IType<TInstance>
-
-    /** Represents the static properties on a factory type. */
-    $__factoryType?: IFactoryTypeInfo;
-
-    /** The base factory type of the factory in '$__factory'. This is provided to maintain a factory inheritance chain. */
-    $__baseFactoryType?: { new(): IFactory } & ITypeInfo;
-}
-
-export interface NewDelegate<TInstance extends NativeTypes.IObject> { (...args: any[]): void | null | TInstance }
-
-export interface InitDelegate<TInstance extends NativeTypes.IObject> { (o: TInstance, isnew: boolean, ...args: any[]): void }
-
-/** Represents the static properties on a factory type. */
-export interface IFactoryTypeInfo<TClass extends IType = IType/*, TFactory extends IFactory = IFactory*/> extends IClassInfo<InstanceType<TClass>>, IFactory<TClass> {
-    //x /** A factory instance created from this factory type which serves as a singleton for creating instances of the underlying 'TClass' type. */
-    //x $__factory?: TFactory;
-
-    /** The factory from the inherited base type, or null/undefined if this object does not inherit from an object with a factory pattern. */
-    $__baseFactoryType: IFactoryTypeInfo;
-
-    /** This is set to true when 'init()' is called. The flag is used to determine if 'super.init()' was called. If not then it is called automatically. */
-    $__initCalled?: boolean;
-}
-
-/** Represents the factory methods of a factory instance. */
-export interface IFactory<TClass extends IType = IType, TNew extends NewDelegate<InstanceType<TClass>> = NewDelegate<InstanceType<TClass>>, TInit extends InitDelegate<InstanceType<TClass>> = InitDelegate<InstanceType<TClass>>> {
-
-    /** Used in place of the constructor to create a new instance of the underlying object type for a specific domain.
-      * This allows the reuse of disposed objects to prevent garbage collection hits that may cause the application to lag, and
-      * also makes sure the object is associated with an application domain.
-      * Objects that derive from 'DomainObject' should register the type and supply a custom 'init' function instead of a
-      * constructor (in fact, only a default constructor should exist). This is done by creating a static property on the class
-      * that uses 'AppDomain.registerCall()' to register the type. See 'NativeTypes.IObject.__register' for more information.
-      *
-      * Performance note: When creating thousands of objects continually, proper DreamSpace object disposal (and subsequent cache of the
-      * instances) means the GC doesn't have to keep engaging to clear up the abandoned objects.  While using the "new" operator may
-      * be faster than using "{type}.new()" at first, the application actually becomes very lagged while the GC keeps eventually kicking
-      * in. This is why DreamSpace objects are cached and reused as much as possible, and why you should try to refrain from using the 'new',
-      * operator, or any other operation that creates objects that the GC has to manage on a blocking thread.
-      */
-    'new'?: TNew;
-
-    /** This is called internally to initialize a blank instance of the underlying type. Users should call the 'new()'
-      * constructor function to get new instances, and 'dispose()' to release them when done.
-      */
-    init?: TInit
-}
-
-/** Represents the factory methods of a factory instance, including other protected instance properties used by the factory methods. */
-export interface IFactoryInternal<TClass extends IType<object> = IType<object>, TFactory extends { new(): IFactory } = { new(): IFactory }>
-    extends IFactory<TClass> {
-    /** The underlying type associated with this factory instance. */
-    type: TClass; //x & InstanceType<TFactory> & { $__type: TClass }
-    //x /** The factory instance containing the methods for creating instances of the underlying type '$__type'. */
-    //x factory?: InstanceType<TFactory>;
-    /** The immediate base factory type to this factory. */
-    super: TFactory;
-}
-
-///** Represents a static property on a class module. */
-//? export interface IStaticProperty<TDataType> { }
-
-///** Stores static property registration details. */
-//?export interface IStaticPropertyInfo<TDataType> {
-//    parent: IStaticPropertyInfo<any>; // References the parent static property list (if any).  This is null on most base type.
-//    owner: IClassInfo<{}>; // The class type that owns this static property list.
-//    namedIndex: { [index: string]: IStaticProperty<any> }; // A named hash table used to quickly lookup a static property by name (shared by all type levels).
-//}
-
-// ===================================================================================================================
-
-/**
- * Supports Iteration for ES5/ES3. To use, create a new type derived from this one, or implement the IEnumerable<T> interface.
- */
-export abstract class Enumerable<T> implements Iterator<T>
-{
-    next(value?: any): IteratorResult<T> {
-        throw Exception.notImplemented('next', this);
-    }
-
-    return(value?: any): IteratorResult<T> {
-        throw Exception.notImplemented('return', this);
-    }
-
-    throw(e?: any): IteratorResult<T> {
-        throw Exception.notImplemented('throw', this);
-    }
-}
-
-/**
-* Supports Iteration for ES5/ES3. To use, implement this interface, or create a new type derived from Enumerable<T>.
-*/
-export interface IEnumerable<T> extends Enumerable<T> { }
-
-export interface ICallback<TSender> { (sender?: TSender): void }
-/** 
- * A handler that is called when a resource is loaded. 
- * The data supplied may not be the original data. Each handler can apply transformations to the data. Any data returned replaces the
- * underlying data for the request and gets passed to the next callback in the chain (if any), which is useful for filtering.
- * Another resource request can also be returned, in which case the 'transformedData' value of that request becomes the result (unless that
- * request failed, which would cascade the failure the current request as well).
- */
-export interface IResultCallback<TSender> { (sender?: TSender, data?: any): any | IResourceRequest }
-export interface IErrorCallback<TSender> { (sender?: TSender, error?: any): any }
-
 // ###########################################################################################################################
 
 /** Returns the name of a namespace or variable reference at runtime. */
@@ -371,7 +189,7 @@ export namespace Types {
         }
 
         // ... initialize DreamSpace and app domain references ...
-        instance.$__corext = DreamSpace;
+        instance.$__corext = DS;
         instance.$__id = getNextObjectId();
         if (autoTrackInstances && (!appDomain || appDomain.autoTrackInstances === void 0 || appDomain.autoTrackInstances))
             instance.$__globalId = Utilities.createGUID(false);
@@ -382,7 +200,7 @@ export namespace Types {
 
         // ... insert [instance, isNew] without having to create a new array ...
         // TODO: Clean up the following when ...rest is more widely supported. Also needs testing to see which is actually more efficient when compiled for ES6.
-        if (DreamSpace.ES6Targeted) {
+        if (DS.ES6Targeted) {
             if (typeof this.init == 'function')
                 if (Delegate)
                     Delegate.fastCall(this.init, this, instance, isNew, ...arguments);
@@ -468,11 +286,11 @@ export namespace Types {
         // ... if the user supplied a static constructor then call it now before we do anything more ...
         // (note: the static constructor may be where 'new' and 'init' factory functions are provided, so we MUST call them first before we hook into anything)
 
-        if (typeof factoryType[constructor] == 'function')
-            factoryType[constructor].call(classType);
+        if (typeof factoryType[DS.constructor] == 'function')
+            factoryType[DS.constructor].call(classType);
 
-        if (typeof classType[constructor] == 'function')
-            classType[constructor](factoryType);
+        if (typeof classType[DS.constructor] == 'function')
+            classType[DS.constructor](factoryType);
 
         // ... hook into the 'init' and 'new' factory methods ...
         // (note: if no 'init()' function is specified, just call the base by default)
@@ -579,7 +397,7 @@ export namespace Types {
                 + " Please double check you have the correct namespace/type names.", root);
         }
 
-        if (!root) root = DreamSpace.global;
+        if (!root) root = DS.global;
 
         var rootTypeName = getTypeName(root);
         var nsOrTypeName = rootTypeName;
@@ -588,7 +406,7 @@ export namespace Types {
         var currentNamespace = <INamespaceInfo>root;
         var fullname = (<ITypeInfo>root).$__fullname || "";
 
-        if (root != DreamSpace.global && !fullname)
+        if (root != DS.global && !fullname)
             exception("has not been registered in the type system. Make sure to call 'namespace()' at the top of namespace scopes before defining classes.");
 
         for (var i = 0, n = namespaces.length; i < n; ++i) {
@@ -596,7 +414,7 @@ export namespace Types {
             var trimmedName = nsOrTypeName.trim();
             if (!nsOrTypeName || !trimmedName) exception("is not a valid namespace name. A namespace must not be empty or only whitespace");
             nsOrTypeName = trimmedName; // (storing the trimmed name at this point allows showing any whitespace-only characters in the error)
-            if (root == DreamSpace && nsOrTypeName == "DreamSpace") exception("is not valid - 'DreamSpace' must not exist as a nested name under DreamSpace");
+            if (root == DS && nsOrTypeName == "DreamSpace") exception("is not valid - 'DreamSpace' must not exist as a nested name under DreamSpace");
 
             var subNS = <INamespaceInfo>currentNamespace[nsOrTypeName];
             if (!subNS) exception("cannot be found under namespace '" + currentNamespace.$__fullname + "'");
@@ -627,7 +445,7 @@ export namespace Types {
     export function __disposeValidate(object: IDisposable, title: string, source?: any) {
         if (typeof object != 'object') error(title, "The argument given is not an object.", source);
         if (!object.$__corext) error(title, "The object instance '" + getFullTypeName(object) + "' is not a DreamSpace created object.", source);
-        if (object.$__corext != DreamSpace) error(title, "The object instance '" + getFullTypeName(object) + "' was created in a different DreamSpace instance and cannot be disposed by this one.", source); // (if loaded as a module perhaps, where other instance may exist [just in case])
+        if (object.$__corext != DS) error(title, "The object instance '" + getFullTypeName(object) + "' was created in a different DreamSpace instance and cannot be disposed by this one.", source); // (if loaded as a module perhaps, where other instance may exist [just in case])
         if (typeof object.dispose != 'function') error(title, "The object instance '" + getFullTypeName(object) + "' does not contain a 'dispose()' function.", source);
         if (!isDisposable(object)) error(title, "The object instance '" + getFullTypeName(object) + "' is not disposable.", source);
     }
@@ -699,7 +517,7 @@ export class Disposable implements IDisposable {
 
 /** Returns true if the specified object can be disposed using this DreamSpace system. */
 export function isDisposable(instance: IDisposable) {
-    if (instance.$__corext != DreamSpace) return false;
+    if (instance.$__corext != DS) return false;
     return typeof instance.dispose == 'function';
 }
 
@@ -722,7 +540,7 @@ export function isPrimitiveType(o: object) {
  */
 export function DisposableFromBase<TBaseClass extends IType=ObjectConstructor>(baseClass: TBaseClass, isPrimitiveOrHostBase?: boolean) {
     if (!baseClass) {
-        baseClass = <any>DreamSpace.global.Object;
+        baseClass = <any>DS.global.Object;
         isPrimitiveOrHostBase = true;
     }
     else if (typeof isPrimitiveOrHostBase == 'undefined') isPrimitiveOrHostBase = isPrimitiveType(baseClass);
@@ -732,7 +550,7 @@ export function DisposableFromBase<TBaseClass extends IType=ObjectConstructor>(b
         * Don't create objects using the 'new' operator. Use '{NameSpaces...ClassType}.new()' static methods instead.
         */
         constructor(...args: any[]) {
-            if (!DreamSpace.ES6Targeted && isPrimitiveOrHostBase)
+            if (!DS.ES6Targeted && isPrimitiveOrHostBase)
                 eval("var _super = function() { return null; };"); // (ES6 fix for extending built-in types [calling constructor not supported prior] when compiling for ES5; more details on it here: https://github.com/Microsoft/TypeScript/wiki/FAQ#why-doesnt-extending-built-ins-like-error-array-and-map-work)
             super();
         }
@@ -746,61 +564,18 @@ export function DisposableFromBase<TBaseClass extends IType=ObjectConstructor>(b
         */
         dispose(release?: boolean): void { }
     }
-    cls.prototype.dispose = DreamSpace.Disposable.prototype.dispose; // (make these functions both the same function reference by default)
+    cls.prototype.dispose = Disposable.prototype.dispose; // (make these functions both the same function reference by default)
     return cls;
 }
 
-///** 
-// * Registers a type in the DreamSpace system and associates a type with a parent type or namespace. 
-// * This decorator is also responsible for calling the static '[constructor]()' function on a type, if one exists.
-// * Usage: 
-// *      @factory(ForSomeNamespace)
-// *      class MyFactory {
-// *          static 'new': (...args:any[]) => IMyFactory;
-// *          static init: (o: IMyFactory, isnew: boolean, ...args: any[]) => void;
-// *      }
-// *      namespace MyFactory {
-// *          @factoryInstance(MyFactory)
-// *          export class $__type {
-// *              private static [constructor](factory: typeof MyFactory) {
-// *                  factory.init = (o, isnew) => { };
-// *              }
-// *          }
-// *      }
-// *      interface IMyFactory extends MyFactory.$__type {}
-// */
-//export function type(parentType: IType | object) {
-//    return (cls: IType) => <any>cls; // (not used yet)
-//}
-
-///** Constructs factory objects. */
-//x export function ClassFactory<TBaseClass extends object, TClass extends IType, TFactory extends IFactoryTypeInfo, TNamespace extends object>
-//    (namespace: TNamespace, base: IClassFactory & { $__type: TBaseClass }, getType: (base: TBaseClass) => [TClass, TFactory], exportName?: keyof TNamespace, addMemberTypeInfo = true)
-//    : ClassFactoryType<TClass, TFactory> {
-//    function _error(msg: string) {
-//        error("ClassFactory()", msg, namespace);
-//    }
-//    if (!getType) _error("A 'getType' selector function is required.");
-//    if (!namespace) _error("A 'namespace' value is required.");
-
-//    var types = getType(base && base.$__type || <any>base); // ('$__type' is essentially the same reference as base, but with the original type)
-//    var cls = types[0];
-//    var factory = types[1];
-
-//    if (!cls) _error("'getType: (base: TBaseClass) => [TClass, TFactory]' did not return a class instance, which is required.");
-//    if (typeof cls != 'function') _error("'getType: (base: TBaseClass) => [TClass, TFactory]' did not return a class (function) type object, which is required.");
-
-//    var name = <string>exportName || getTypeName(cls);
-//    if (name.charAt(0) == '$') name = name.substr(1); // TODO: May not need to do this anymore.
-
-//    if (!factory) log("ClassFactory()", "Warning: No factory was supplied for class type '" + name + "' in namespace '" + getFullTypeName(namespace) + "'.", LogTypes.Warning, cls);
-
-//    return Types.__registerFactoryType(<any>cls, <any>factory, namespace, addMemberTypeInfo, exportName);
-//}
-
-export function FactoryType<TBaseFactory extends IType>(baseFactory?: { $__type: TBaseFactory }) {
-    return baseFactory.$__type;
-}
+type FactoryBaseType<T extends IType> =
+    {
+        new(...args: ConstructorParameters<T>): InstanceType<T>;
+        'new'?(...args: any[]): any;
+        init?(o: object, isnew: boolean, ...args: any[]): void;
+    }
+    & { [P in Exclude<keyof T, 'new' | 'init'>]: T[P] };
+//function FactoryType<T extends IType, K extends keyof T>(base: T): FactoryBaseType<T> { return <any>base; }
 
 /** 
  * Builds and returns a base type to be used with creating type factories. This function stores some type
@@ -809,15 +584,12 @@ export function FactoryType<TBaseFactory extends IType>(baseFactory?: { $__type:
  * @param {TBaseType} staticBaseClass An optional base type to inherit static types from.
 */
 export function FactoryBase<TBaseFactory extends IFactory, TBaseType extends IType = new () => object>
-    (baseFactoryType?: TBaseFactory, staticBaseClass?: TBaseType) {
+    (baseFactoryType?: TBaseFactory, staticBaseClass?: TBaseType): FactoryBaseType<TBaseFactory> {
 
     if (typeof staticBaseClass != 'function')
-        staticBaseClass = <any>DreamSpace.global.Object;
+        staticBaseClass = <any>DS.global.Object;
 
     var cls = class FactoryBase extends staticBaseClass {
-        /** The underlying type associated with this factory type. */
-        static $__type: IType;
-
         /** Set to true when the object is being disposed. By default this is undefined.  This is only set to true when 'dispose()' is first call to prevent cyclical calls. */
         $__disposing?: boolean;
         /** Set to true once the object is disposed. By default this is undefined, which means "not disposed".  This is only set to true when disposed, and false when reinitialized. */
@@ -862,48 +634,6 @@ export function FactoryBase<TBaseFactory extends IFactory, TBaseType extends ITy
     };
     (<IClassInfo><any>cls).$__baseFactoryType = <any>baseFactoryType;
     return cls;
-}
-
-// TODO: (call with context vs context as arg?: https://jsperf.com/call-this-vs-this-as-argument/1)
-
-/** Registers a namespace and optional class type. The type information is stored in the namespace objects.  Use 'ITypeInfo' to read the type information from namespaces and classes. */
-export function namespace<Z extends keyof T, T extends object = typeof DreamSpace.global>(firstNsOrClassName?: Z, root?: T): void;
-/** Registers a namespace and optional class type. The type information is stored in the namespace objects.  Use 'ITypeInfo' to read the type information from namespaces and classes. */
-export function namespace<A extends keyof T, Z extends keyof T[A], T extends object = typeof DreamSpace.global>(ns1: A, lastNsOrClassName?: Z, root?: T): void;
-/** Registers a namespace and optional class type. The type information is stored in the namespace objects.  Use 'ITypeInfo' to read the type information from namespaces and classes. */
-export function namespace<A extends keyof T, B extends keyof T[A], Z extends keyof T[A][B], T extends object = typeof DreamSpace.global>(ns1: A, ns2?: B, lastNsOrClassName?: Z, root?: T): void;
-/** Registers a namespace and optional class type. The type information is stored in the namespace objects.  Use 'ITypeInfo' to read the type information from namespaces and classes. */
-export function namespace<A extends keyof T, B extends keyof T[A], C extends keyof T[A][B], Z extends keyof T[A][B][C], T extends object = typeof DreamSpace>(ns1: A, ns2?: B, ns3?: C, lastNsOrClassName?: Z, root?: T): void;
-/** Registers a namespace and optional class type. The type information is stored in the namespace objects.  Use 'ITypeInfo' to read the type information from namespaces and classes. */
-export function namespace<A extends keyof T, B extends keyof T[A], C extends keyof T[A][B], D extends keyof T[A][B][C], Z extends keyof T[A][B][C][D], T extends object = typeof DreamSpace.global>(ns1: A, ns2?: B, ns3?: C, ns4?: D, lastNsOrClassName?: Z, root?: T): void;
-/** Registers a namespace and optional class type. The type information is stored in the namespace objects.  Use 'ITypeInfo' to read the type information from namespaces and classes. */
-export function namespace<A extends keyof T, B extends keyof T[A], C extends keyof T[A][B], D extends keyof T[A][B][C], E extends keyof T[A][B][C][D], Z extends keyof T[A][B][C][D][E], T extends object = typeof DreamSpace.global>(ns1: A, ns2?: B, ns3?: C, ns4?: D, ns5?: E, lastNsOrClassName?: Z, root?: T): void;
-/** Registers a namespace and optional class type. The type information is stored in the namespace objects.  Use 'ITypeInfo' to read the type information from namespaces and classes. */
-export function namespace<A extends keyof T, B extends keyof T[A], C extends keyof T[A][B], D extends keyof T[A][B][C], E extends keyof T[A][B][C][D], F extends keyof T[A][B][C][D][E], Z extends keyof T[A][B][C][D][E][F], T extends object = typeof DreamSpace.global>(ns1: A, ns2?: B, ns3?: C, ns4?: D, ns5?: E, ns6?: F, lastNsOrClassName?: Z, root?: T): void;
-/** Registers a namespace and optional class type. The type information is stored in the namespace objects.  Use 'ITypeInfo' to read the type information from namespaces and classes. */
-export function namespace<A extends keyof T, B extends keyof T[A], C extends keyof T[A][B], D extends keyof T[A][B][C], E extends keyof T[A][B][C][D], F extends keyof T[A][B][C][D][E], G extends keyof T[A][B][C][D][E][F], Z extends keyof T[A][B][C][D][E][F][G], T extends object = typeof DreamSpace.global>(ns1: A, ns2?: B, ns3?: C, ns4?: D, ns5?: E, ns6?: F, ns7?: G, lastNsOrClassName?: Z, root?: T): void;
-/** Registers a namespace and optional class type. The type information is stored in the namespace objects.  Use 'ITypeInfo' to read the type information from namespaces and classes. */
-export function namespace<A extends keyof T, B extends keyof T[A], C extends keyof T[A][B], D extends keyof T[A][B][C], E extends keyof T[A][B][C][D], F extends keyof T[A][B][C][D][E], G extends keyof T[A][B][C][D][E][F], H extends keyof T[A][B][C][D][E][F][G], Z extends keyof T[A][B][C][D][E][F][G][H], T extends object = typeof DreamSpace.global>(ns1: A, ns2?: B, ns3?: C, ns4?: D, ns5?: E, ns6?: F, ns7?: G, ns8?: H, lastNsOrClassName?: Z, root?: T): void;
-/** Registers a namespace and optional class type. The type information is stored in the namespace objects.  Use 'ITypeInfo' to read the type information from namespaces and classes. */
-export function namespace<A extends keyof T, B extends keyof T[A], C extends keyof T[A][B], D extends keyof T[A][B][C], E extends keyof T[A][B][C][D], F extends keyof T[A][B][C][D][E], G extends keyof T[A][B][C][D][E][F], H extends keyof T[A][B][C][D][E][F][G], I extends keyof T[A][B][C][D][E][F][G][H], Z extends keyof T[A][B][C][D][E][F][G][H][I], T extends object = typeof DreamSpace.global>(ns1: A, ns2?: B, ns3?: C, ns4?: D, ns5?: E, ns6?: F, ns7?: G, ns8?: H, ns9?: I, lastNsOrClassName?: Z, root?: T): void;
-/** Registers a namespace and optional class type. The type information is stored in the namespace objects.  Use 'ITypeInfo' to read the type information from namespaces and classes. */
-export function namespace<A extends keyof T, B extends keyof T[A], C extends keyof T[A][B], D extends keyof T[A][B][C], E extends keyof T[A][B][C][D], F extends keyof T[A][B][C][D][E], G extends keyof T[A][B][C][D][E][F], H extends keyof T[A][B][C][D][E][F][G], I extends keyof T[A][B][C][D][E][F][G][H], J extends keyof T[A][B][C][D][E][F][G][H][I], Z extends keyof T[A][B][C][D][E][F][G][H][I][J]= any, T extends object = typeof DreamSpace.global>(ns1: A, ns2?: B, ns3?: C, ns4?: D, ns5?: E, ns6?: F, ns7?: G, ns8?: H, ns9?: I, ns10?: J, lastNsOrClassName?: Z, root?: T): void;
-/** Registers a namespace and optional class type. The type information is stored in the namespace objects.  Use 'ITypeInfo' to read the type information from namespaces and classes. 
- * @param {function} namespacePathSelector A selector in the format '()=>A.B.C' or 'function(){A.B.C}' that specifies the FULL namespace path from the root object on global.
- */
-export function namespace(namespacePathSelector: () => object, root?: object): void;
-export function namespace(...args: any[]): void {
-    if (typeof args[0] == 'function') {
-        var root = args.length >= 2 ? args[args.length - 1] || DreamSpace.global : DreamSpace.global;
-        if (typeof root != 'object' && typeof root != 'function') root = DreamSpace.global;
-        var items = nameof(args[0], true).split('.');
-        if (!items.length) error("namespace()", "A valid namespace path selector function was expected (i.e. '()=>First.Second.Third.Etc').");
-        Types.__registerNamespace(root, ...items);
-    } else {
-        var root = args[args.length - 1];
-        var lastIndex = (typeof root == 'object' || typeof root == 'function' ? args.length - 1 : (root = DreamSpace.global, args.length));
-        Types.__registerNamespace(root, ...DreamSpace.global.Array.prototype.slice.call(arguments, 0, lastIndex));
-    }
 }
 
 // =======================================================================================================================

@@ -1,4 +1,8 @@
-﻿// ###########################################################################################################################
+﻿import IO from "./IO";
+import { Exception } from "./System/Exception";
+import { IResourceRequest } from "./ResourceRequest";
+
+// ###########################################################################################################################
 // These are functions for creating global scope variables/references that eliminate/minimize collisions between conflicting scripts.
 // Normally, each manifest and module gets its own local-global scope; however, in some cases, 3rd-party libraries do not 
 // expect or support dot-delimited object paths, so unfortunately a root global callback reference may be required in such cases.
@@ -7,20 +11,24 @@
 // using the identifiers 'this', 'manifest', or 'module' (accordingly), which provides functions for local-global scope storage.
 // ###########################################################################################################################
 
-/** The root namespace name as a string constant. */
-const $__ROOT_DREAMSPACE_NAMESPACE_NAME = "DreamSpace";
-
-/**
- * An empty object whose sole purpose is to store global properties by resource namespace (usual a URL). It exists as an
- * alternative to using the global JavaScript host environment, but also supports it as well.  The get/set methods always use
- * named index based lookups, so no string concatenation is used, which makes the process many times faster. 
- * Note: It's never a good idea to put anything in the global HOST scope, as various frameworks/scripts might set conflicting
- * property names.  To be safe, make sure to always use the 'DreamSpace.Globals.register()' function.  It can create isolated 
- * global variables, and if necessary, also create a safer unique host global scope name.
+/** The default global namespace name if no name is specified when calling 'registerGlobal()'.
+ * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.
  */
-namespace DreamSpace {
+export const DEFAULT_GLOBAL_NS_NAME = "$__DREAMSPACE_GLBOALS_A756B156811A44E59329E44CAA6AFA98";
+ var USER_GIVEN_GLOBAL_NS_NAME: string;
+
+export abstract class DreamSpace {
+    static get globalNamespaceName() { return USER_GIVEN_GLOBAL_NS_NAME || DEFAULT_GLOBAL_NS_NAME; }
+}
+
+/** This is a global object used by all other modules in the system for sharing and updating global states. It is registered on the global
+ * scope by calling 'registerGlobal(uniqueGlobalVarName)', which uses the NAME+GUID constant value stored in the exported
+ * 'DEFAULT_ROOT_NS_NAME' by default.
+ */
+export namespace DreamSpace {
+
     /** The current application version (user defined). */
-    var appVersion: string;
+    export var appVersion: string;
 
     /**
      * The root namespace for the DreamSpace system.
@@ -42,42 +50,9 @@ namespace DreamSpace {
 
     // ------------------------------------------------------------------------------------------------------------------------
 
-    export var constructor = Symbol("static constructor");
+    export const constructor = Symbol("static constructor");
 
     // ------------------------------------------------------------------------------------------------------------------------
-
-    // =======================================================================================================================
-
-    /** The "fake" host object is only used when there is no .NET host wrapper integration available.
-    * In this case, the environment is running as a simple web application.
-    */
-    class __NonDreamSpaceHost__ implements IHostBridge {
-
-        constructor() { }
-
-        getCurrentDir(): string { return document.location.href; }
-
-        isStudio(): boolean { return false; }
-        isServer(): boolean { return false; }
-        isClient(): boolean { return !this.isServer() && !this.isStudio(); }
-
-        setTitle(title: string) { document.title = title; }
-        getTitle(): string { return document.title; }
-
-        isDebugMode(): boolean { return false; }
-    }
-
-    var $ICE: IHostBridge_ICE = null;
-    // TODO: $ICE loads as a module, and should do this differently.
-    //??else
-    //??    $ICE = <IHostBridge_ICE>host;
-
-    // =======================================================================================================================
-    // If the host is in debug mode, then this script should try to wait on it.
-    // Note: This many only work if the debugger is actually open when this script executes.
-
-    if (typeof host === 'object' && host.isDebugMode && host.isDebugMode())
-        debugger;
 
     // ===========================================================================================================================
     // Setup some preliminary settings before the core scope, including the "safe" and "global" 'eval()' functions.
@@ -271,12 +246,38 @@ namespace DreamSpace {
         export var __localTimeZoneOffset = (new Date()).getTimezoneOffset() * __millisecondsPerMinute; // ('getTimezoneOffset()' returns minutes, which is converted to ms for '__localTimeZoneOffset')
     }
 
+    // =======================================================================================================================
+
+    /** The "fake" host object is only used when there is no .NET host wrapper integration available.
+    * In this case, the environment is running as a simple web application.
+    */
+    class __NonDreamSpaceHost__ implements IHostBridge {
+
+        constructor() { }
+
+        getCurrentDir(): string { return document.location.href; }
+
+        isStudio(): boolean { return false; }
+        isServer(): boolean { return false; }
+        isClient(): boolean { return !this.isServer() && !this.isStudio(); }
+
+        setTitle(title: string) { document.title = title; }
+        getTitle(): string { return document.title; }
+
+        isDebugMode(): boolean { return false; }
+    }
+
+    //var $ICE: IHostBridge_ICE = null;
+    // TODO: $ICE loads as a module, and should do this differently.
+    //??else
+    //??    $ICE = <IHostBridge_ICE>host;
+
     // ========================================================================================================================================
 
     /** A reference to the host's global environment (convenient for nested TypeScript code, or when using strict mode [where this=undefined]).
     * This provides a faster, cleaner, consistent, and reliable method of referencing the global environment scope without having to resort to workarounds.
     */
-    export var global: IStaticGlobals = (function () { }.constructor("return this"))(); // (note: this is named as 'global' to support the NodeJS "global" object as well [for compatibility, or to ease portability])
+    export var global: IStaticGlobals = global || (function () { }.constructor("return this"))(); // (note: this is named as 'global' to support the NodeJS "global" object as well [for compatibility, or to ease portability])
 
     export var host: IHostBridge = (() => {
         // ... make sure the host object is valid for at least checking client/server/studio states
@@ -286,6 +287,20 @@ namespace DreamSpace {
             return host; // (running in a valid host (or emulator? ;) )
     })();
 
+    // If the host is in debug mode, then this script should try to wait on it.
+    // Note: This many only work if the debugger is actually open when this script executes.
+
+    if (typeof host === 'object' && host.isDebugMode && host.isDebugMode())
+        debugger;
+
+    /**
+     * An empty object whose sole purpose is to store global properties by resource namespace (usual a URL). It exists as an
+     * alternative to using the global JavaScript host environment, but also supports it as well.  The get/set methods always use
+     * named index based lookups, so no string concatenation is used, which makes the process many times faster. 
+     * Note: It's never a good idea to put anything in the global HOST scope, as various frameworks/scripts might set conflicting
+     * property names.  To be safe, make sure to always use the 'DreamSpace.Globals.register()' function.  It can create isolated 
+     * global variables, and if necessary, also create a safer unique host global scope name.
+     */
     export namespace Globals {
         /** Internal: used when initializing DreamSpace. */
         var _globals: IndexedObject = Globals;
@@ -305,7 +320,7 @@ namespace DreamSpace {
         *                                Some frameworks, such as the Google Maps API, support callbacks with dot-delimited names for nested objects to help
         *                                prevent global scope pollution.
         */
-        export function register<T>(resource: System.IO.IResourceRequest, name: string, initialValue: T, asHostGlobal?: boolean): string;
+        export function register<T>(resource: IO.IResourceRequest, name: string, initialValue: T, asHostGlobal?: boolean): string;
         /**
         * Registers and initializes a global property for the specified namespace, and returns the dot-delimited string reference (see DreamSpace.Globals).
         * Subsequent calls with the same namespace and identifier name ignores the 'initialValue' and 'asHostGlobal' arguments, and simply returns the
@@ -338,26 +353,26 @@ namespace DreamSpace {
             //?    throw System.Exception.from("The global variable name '" + name + "' already exists in the global namespace '" + namespace + "'.", namespace);
             if (asHostGlobal) {
                 // ... set and return a host global reference ...
-                var hostGlobalName = "_" + $__ROOT_DREAMSPACE_NAMESPACE_NAME + nsID + "_" + name;
+                var hostGlobalName = "_" + DEFAULT_GLOBAL_NS_NAME + nsID + "_" + name;
                 if (!alreadyRegistered) {
-                    nsglobals[name] = { "global": DreamSpace.global, "hostGlobalName": hostGlobalName };// (any namespace global value referencing the global [window] scope is a redirect to lookup the value name there instead)
-                    DreamSpace.global[hostGlobalName] = initialValue;
+                    nsglobals[name] = { "global": global, "hostGlobalName": hostGlobalName };// (any namespace global value referencing the global [window] scope is a redirect to lookup the value name there instead)
+                    global[hostGlobalName] = initialValue;
                 }
                 return hostGlobalName;
             } else {
                 // ... set and return a namespace global reference (only works for routines that support dot-delimited callback references) ...
                 if (!alreadyRegistered) nsglobals[name] = initialValue;
                 if (/^[A-Z_\$]+[A-Z0-9_\$]*$/gim.test(name)) // (if 'name' contains invalid identifier characters, then it needs to be referenced by index)
-                    return $__ROOT_DREAMSPACE_NAMESPACE_NAME + ".Globals." + nsID + "." + name;
+                    return DEFAULT_GLOBAL_NS_NAME + ".Globals." + nsID + "." + name;
                 else
-                    return $__ROOT_DREAMSPACE_NAMESPACE_NAME + ".Globals." + nsID + "['" + name.replace(/'/g, "\\'") + "']";
+                    return DEFAULT_GLOBAL_NS_NAME + ".Globals." + nsID + "['" + name.replace(/'/g, "\\'") + "']";
             }
         };
 
         /**
           * Returns true if the specified global variable name is registered.
           */
-        export function exists<T>(resource: System.IO.IResourceRequest, name: string): boolean;
+        export function exists<T>(resource: IO.IResourceRequest, name: string): boolean;
         /**
           * Returns true if the specified global variable name is registered.
          */
@@ -374,7 +389,7 @@ namespace DreamSpace {
           * Erases the registered global variable (by setting it to 'undefined' - which is faster than deleting it).
           * Returns true if successful.
           */
-        export function erase<T>(resource: System.IO.IResourceRequest, name: string): boolean;
+        export function erase<T>(resource: IO.IResourceRequest, name: string): boolean;
         export function erase<T>(namespace: string, name: string): boolean;
         export function erase<T>(namespace: any, name: string): boolean {
             var namespace = namespace.url || ('' + namespace), nsID: string, nsglobals: { [index: string]: any };
@@ -396,7 +411,7 @@ namespace DreamSpace {
           * and creating a new object.  Any host globals are deleted first.
           * Return true on success, and false if the namespace doesn't exist.
           */
-        export function clear<T>(resource: System.IO.IResourceRequest): boolean;
+        export function clear<T>(resource: IO.IResourceRequest): boolean;
         /**
           * Clears all registered globals by releasing the associated global object for the specified resource's namespace
           * and creating a new object.  Any host globals are deleted first.
@@ -420,7 +435,7 @@ namespace DreamSpace {
         /**
           * Sets and returns a global property value.
           */
-        export function setValue<T>(resource: System.IO.IResourceRequest, name: string, value: T): T;
+        export function setValue<T>(resource: IO.IResourceRequest, name: string, value: T): T;
         /**
           * Sets and returns a global property value.
           */
@@ -438,7 +453,7 @@ namespace DreamSpace {
             //?    throw System.Exception.from("The global variable name '" + name + "' was not found in the global namespace '" + namespace + "' - did you remember to call 'DreamSpace.Globals.register()' first?", namespace);
             var existingValue = nsglobals[name];
             if (existingValue && existingValue["global"] == global) {
-                return DreamSpace.global[existingValue["hostGlobalName"]] = value;
+                return global[existingValue["hostGlobalName"]] = value;
             }
             else return nsglobals[name] = value;
         };
@@ -446,7 +461,7 @@ namespace DreamSpace {
         /**
         * Gets a global property value.
         */
-        export function getValue<T>(resource: System.IO.IResourceRequest, name: string): T;
+        export function getValue<T>(resource: IO.IResourceRequest, name: string): T;
         /**
         * Gets a global property value.
         */
@@ -455,17 +470,210 @@ namespace DreamSpace {
             var namespace = namespace.url || ('' + namespace), nsID: string, nsglobals: { [index: string]: any };
             nsID = _namespaces[namespace];
             if (!nsID)
-                throw System.Exception.from("The namespace '" + namespace + "' does not exist - did you remember to call 'DreamSpace.Globals.register()' first?", namespace);
+                throw "The namespace '" + namespace + "' does not exist - did you remember to call 'DreamSpace.Globals.register()' first?";
             nsglobals = _globals[nsID];
             if (!(name in nsglobals))
                 return void 0;
             var existingValue = nsglobals[name];
             if (existingValue && existingValue["global"] == global) {
-                return DreamSpace.global[existingValue["hostGlobalName"]];
+                return global[existingValue["hostGlobalName"]];
             }
             else return nsglobals[name];
         };
     }
 }
 
+// ########################################################################################################################
+// Some core basic interfaces to begin with (interfaces don't contribute to the resulting JS size).
+
+/** Provides a mechanism for object cleanup.
+* See also: 'dispose(...)' helper functions. */
+export interface IDisposable {
+    /** Set to true when the object is being disposed. By default this is undefined.  This is only set to true when 'dispose()' is first call to prevent cyclical calls. */
+    $__disposing?: boolean;
+    /** Set to true once the object is disposed. By default this is undefined, which means "not disposed".  This is only set to true when disposed, and false when reinitialized. */
+    $__disposed?: boolean;
+    /** 
+     * Returns a reference to the DreamSpace system that created the object.  This is set automatically when creating instances from factories.
+     * Note: Setting this to null/undefined will prevent an instance from being disposable.
+     */
+    $__corext?: {};
+    /** 
+    * Releases the object back into the object pool. 
+    * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
+    *                          false to request that child objects remain connected after disposal (not released). This
+    *                          can allow quick initialization of a group of objects, instead of having to pull each one
+    *                          from the object pool each time.
+    */
+    dispose(release?: boolean): void;
+}
+
+/** Type-cast class references to this interface to access type specific information, where available. */
+export interface ITypeInfo {
+    /** The parent namespace object that contains the type (function instance).
+      * Note: This value is only set on types registered using '{AppDomain}.registerType()'.
+      */
+    $__parent?: ITypeInfo | INamespaceInfo | IClassInfo | IFunctionInfo;
+
+    /** Returns the name of this type.
+      * Note: This is the object type name taken from the constructor (if one exists), and is not the FULL type name (no namespace).
+      * Note: This value is only set on types registered using '{AppDomain}.registerType()'.
+      */
+    $__name?: string;
+
+    /** Returns the full name of this type (includes the namespace).
+      * Note: This value is only set on types registered using '{AppDomain}.registerType()'.
+      */
+    $__fullname?: string;
+}
+
+export interface IType<TInstance = object> {
+    new(...args: any[]): TInstance;
+}
+
+export interface IFunction<ReturnType = any> {
+    (...args: any[]): ReturnType;
+}
+
+/** Type-cast DreamSpace namespace objects to this interface to access namespace specific type information. */
+export interface INamespaceInfo extends ITypeInfo {
+    $__namespaces: NativeTypes.IArray<object>;
+}
+
+/** Type-cast function objects to this interface to access type specific information. */
+export interface IFunctionInfo extends Function, ITypeInfo {
+    (...args: any[]): any;
+
+    /** If specified, defines the expected types to use for injection into the function's parameters.
+     * Each entry is for a single parameter, and is a array of items where each item is either a string, naming the fully-qualified type name, or an object reference to the type (function) that is expected.
+     * To declare the parameter types for a constructor function (or any function), use the @
+     */
+    $__argumentTypes?: (IType<any> | string)[][];
+}
+
+/** Type-cast DreamSpace classes (functions) to this interface to access class specific type information. */
+export interface IClassInfo<TInstance extends object = object> extends ITypeInfo, IType<TInstance> {
+    /** This is a reference to the underlying class type for this factory type. */
+    $__type: IType<TInstance>
+
+    /** Represents the static properties on a factory type. */
+    $__factoryType?: IFactoryTypeInfo;
+
+    /** The base factory type of the factory in '$__factory'. This is provided to maintain a factory inheritance chain. */
+    $__baseFactoryType?: { new(): IFactory } & ITypeInfo;
+}
+
+export interface NewDelegate<TInstance extends NativeTypes.IObject> { (...args: any[]): void | null | TInstance }
+
+export interface InitDelegate<TInstance extends NativeTypes.IObject> { (o: TInstance, isnew: boolean, ...args: any[]): void }
+
+/** Represents the static properties on a factory type. */
+export interface IFactoryTypeInfo<TClass extends IType = IType/*, TFactory extends IFactory = IFactory*/> extends IClassInfo<InstanceType<TClass>>, IFactory<TClass> {
+    //x /** A factory instance created from this factory type which serves as a singleton for creating instances of the underlying 'TClass' type. */
+    //x $__factory?: TFactory;
+
+    /** The factory from the inherited base type, or null/undefined if this object does not inherit from an object with a factory pattern. */
+    $__baseFactoryType: IFactoryTypeInfo;
+
+    /** This is set to true when 'init()' is called. The flag is used to determine if 'super.init()' was called. If not then it is called automatically. */
+    $__initCalled?: boolean;
+}
+
+/** Represents the factory methods of a factory instance. */
+export interface IFactory<TClass extends IType = IType, TNew extends NewDelegate<InstanceType<TClass>> = NewDelegate<InstanceType<TClass>>, TInit extends InitDelegate<InstanceType<TClass>> = InitDelegate<InstanceType<TClass>>> extends IType {
+
+    /** Used in place of the constructor to create a new instance of the underlying object type for a specific domain.
+      * This allows the reuse of disposed objects to prevent garbage collection hits that may cause the application to lag, and
+      * also makes sure the object is associated with an application domain.
+      * Objects that derive from 'DomainObject' should register the type and supply a custom 'init' function instead of a
+      * constructor (in fact, only a default constructor should exist). This is done by creating a static property on the class
+      * that uses 'AppDomain.registerCall()' to register the type. See 'NativeTypes.IObject.__register' for more information.
+      *
+      * Performance note: When creating thousands of objects continually, proper DreamSpace object disposal (and subsequent cache of the
+      * instances) means the GC doesn't have to keep engaging to clear up the abandoned objects.  While using the "new" operator may
+      * be faster than using "{type}.new()" at first, the application actually becomes very lagged while the GC keeps eventually kicking
+      * in. This is why DreamSpace objects are cached and reused as much as possible, and why you should try to refrain from using the 'new',
+      * operator, or any other operation that creates objects that the GC has to manage on a blocking thread.
+      */
+    'new'?: TNew;
+
+    /** This is called internally to initialize a blank instance of the underlying type. Users should call the 'new()'
+      * constructor function to get new instances, and 'dispose()' to release them when done.
+      */
+    init?: TInit
+}
+
+/** Represents the factory methods of a factory instance, including other protected instance properties used by the factory methods. */
+export interface IFactoryInternal<TClass extends IType<object> = IType<object>, TFactory extends { new(): IFactory } = { new(): IFactory }>
+    extends IFactory<TClass> {
+    /** The underlying type associated with this factory instance. */
+    type: TClass; //x & InstanceType<TFactory> & { $__type: TClass }
+    //x /** The factory instance containing the methods for creating instances of the underlying type '$__type'. */
+    //x factory?: InstanceType<TFactory>;
+    /** The immediate base factory type to this factory. */
+    super: TFactory;
+}
+
+///** Represents a static property on a class module. */
+//? export interface IStaticProperty<TDataType> { }
+
+///** Stores static property registration details. */
+//?export interface IStaticPropertyInfo<TDataType> {
+//    parent: IStaticPropertyInfo<any>; // References the parent static property list (if any).  This is null on most base type.
+//    owner: IClassInfo<{}>; // The class type that owns this static property list.
+//    namedIndex: { [index: string]: IStaticProperty<any> }; // A named hash table used to quickly lookup a static property by name (shared by all type levels).
+//}
+
+
+// ===================================================================================================================
+
+/**
+ * Supports Iteration for ES5/ES3. To use, create a new type derived from this one, or implement the IEnumerable<T> interface.
+ */
+export abstract class Enumerable<T> implements Iterator<T>
+{
+    next(value?: any): IteratorResult<T> {
+        throw Exception.notImplemented('next', this);
+    }
+
+    return(value?: any): IteratorResult<T> {
+        throw Exception.notImplemented('return', this);
+    }
+
+    throw(e?: any): IteratorResult<T> {
+        throw Exception.notImplemented('throw', this);
+    }
+}
+
+/**
+* Supports Iteration for ES5/ES3. To use, implement this interface, or create a new type derived from Enumerable<T>.
+*/
+export interface IEnumerable<T> extends Enumerable<T> { }
+
+export interface ICallback<TSender> { (sender?: TSender): void }
+/** 
+ * A handler that is called when a resource is loaded. 
+ * The data supplied may not be the original data. Each handler can apply transformations to the data. Any data returned replaces the
+ * underlying data for the request and gets passed to the next callback in the chain (if any), which is useful for filtering.
+ * Another resource request can also be returned, in which case the 'transformedData' value of that request becomes the result (unless that
+ * request failed, which would cascade the failure the current request as well).
+ */
+export interface IResultCallback<TSender> { (sender?: TSender, data?: any): any | IResourceRequest }
+export interface IErrorCallback<TSender> { (sender?: TSender, error?: any): any }
+
 // ###########################################################################################################################
+
+/** Registers this global module in the global scope.
+ * This helps to support:
+ * 1. A single object to store global DreamSpace states, such as the host application version, base paths, etc.
+ * 2. A global object to store callback functions for API initialization, such as Google Maps.
+ * @param uniqueGlobalVarName The global name to use.  By default this is the constant 'DEFAULT_ROOT_NS_NAME', which uses a NAME + GUID to guarantee no collisions.
+ */
+export default function registerGlobal(uniqueGlobalVarName?: string) {
+    if (uniqueGlobalVarName)
+        USER_GIVEN_GLOBAL_NS_NAME = uniqueGlobalVarName;
+    return DreamSpace.global[DreamSpace.globalNamespaceName] = DreamSpace;
+}
+
+// ###########################################################################################################################
+

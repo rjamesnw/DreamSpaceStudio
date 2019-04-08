@@ -28,7 +28,7 @@ var HTMLReaderModes;
   * Performance note: Since HTML can be large, it's not efficient to scan the HTML character by character. Instead, the HTML reader uses the native
   * RegEx engine to split up the HTML into chunks of delimiter text, which makes reading it much faster.
   */
-class HTMLReader extends FactoryBase(CoreObject) {
+class HTMLReader extends FactoryBase(DSObject) {
     /**
          * Create a new HTMLReader instance to parse the given HTML text.
          * @param html The HTML text to parse.
@@ -38,7 +38,7 @@ class HTMLReader extends FactoryBase(CoreObject) {
 }
 exports.HTMLReader = HTMLReader;
 (function (HTMLReader) {
-    class $__type extends FactoryType(CoreObject) {
+    class $__type extends FactoryType(DSObject) {
         constructor() {
             // -------------------------------------------------------------------------------------------------------------------
             super(...arguments);

@@ -20,14 +20,14 @@ var Windows;
     //      */
     //    Native
     //}
-    class Window extends FactoryBase(CoreObject) {
+    class Window extends FactoryBase(DSObject) {
         /** Creates a new window object.  If null is passed as the root element, then a new pop-up window is created when the window is shown. */
         static 'new'(rootElement, url) { return null; }
         static init(o, isnew, rootElement, url) { }
     }
     Windows.Window = Window;
     (function (Window) {
-        class $__type extends FactoryType(CoreObject) {
+        class $__type extends FactoryType(DSObject) {
             constructor() {
                 super(...arguments);
                 this._guid = Utilities.createGUID(false);

@@ -7,12 +7,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
   * Note: While it's always better to check objects for supported functions, sometimes an existing function may take different
   * parameters based on the browser (such as 'Worker.postMessage()' using transferable objects with IE vs All Others [as usual]).
   */
-var Browser;
-(function (Browser) {
+exports.default = namespace;
+Browser;
+{
     // (Browser detection is a highly modified version of "http://www.quirksmode.org/js/detect.html".)
     // (Note: This is only required for quirk detection in special circumstances [such as IE's native JSON whitespace parsing issue], and not for object feature support)
     /** A list of browsers that can be currently detected. */
-    let BrowserTypes;
+    export let BrowserTypes;
     (function (BrowserTypes) {
         /** Browser is not yet detected, or detection failed. */
         BrowserTypes[BrowserTypes["Unknown"] = 0] = "Unknown";
@@ -28,9 +29,9 @@ var Browser;
         BrowserTypes[BrowserTypes["iCab"] = 8] = "iCab";
         BrowserTypes[BrowserTypes["Konqueror"] = 9] = "Konqueror";
         BrowserTypes[BrowserTypes["Camino"] = 10] = "Camino";
-    })(BrowserTypes = Browser.BrowserTypes || (Browser.BrowserTypes = {}));
+    })(BrowserTypes = BrowserTypes || (BrowserTypes = {}));
     /** A list of operating systems that can be currently detected. */
-    let OperatingSystems;
+    export let OperatingSystems;
     (function (OperatingSystems) {
         /** OS is not yet detected, or detection failed. */
         OperatingSystems[OperatingSystems["Unknown"] = 0] = "Unknown";
@@ -38,7 +39,7 @@ var Browser;
         OperatingSystems[OperatingSystems["Mac"] = 2] = "Mac";
         OperatingSystems[OperatingSystems["Linux"] = 3] = "Linux";
         OperatingSystems[OperatingSystems["iOS"] = 4] = "iOS";
-    })(OperatingSystems = Browser.OperatingSystems || (Browser.OperatingSystems = {}));
+    })(OperatingSystems = OperatingSystems || (OperatingSystems = {}));
     var __browserList = (() => {
         var list = [];
         list[BrowserTypes.Chrome] =
@@ -62,7 +63,7 @@ var Browser;
                 versions: [{ nameTag: null, versionPrefix: "Version" }]
             };
         if (window.opera)
-            Browser.browserVersionInfo = __browserList[BrowserTypes.Opera].versions[0];
+            exports.browserVersionInfo = __browserList[BrowserTypes.Opera].versions[0];
         list[BrowserTypes.iCab] =
             {
                 name: "iCab", vendor: "Alexander Clauss", identity: BrowserTypes.iCab,
@@ -123,9 +124,9 @@ var Browser;
         }
     ];
     /** Holds a reference to the agent data detected regarding browser name and versions. */
-    Browser.browserVersionInfo = null;
+    export var browserVersionInfo = null;
     /** Holds a reference to the agent data detected regarding the host operating system. */
-    Browser.osInfo = null;
+    export var osInfo = null;
     var __findBrowser = () => {
         var agent = navigator.vendor + "," + navigator.userAgent, bInfo, version, versionPrefix;
         for (var i = 0, n = __browserList.length; i < n; ++i) {
@@ -155,30 +156,30 @@ var Browser;
         return parseFloat(versionStr.substring(index + versionPrefix.length));
     };
     /** The name of the detected browser. */
-    Browser.name = "";
+    export var name = "";
     /** The browser's vendor. */
-    Browser.vendor = "";
+    export var vendor = "";
     /** The operating system detected. */
-    Browser.os = OperatingSystems.Unknown;
+    export var os = OperatingSystems.Unknown;
     /** The browser version detected. */
-    Browser.version = -1;
+    export var version = -1;
     /** Set to true if ES2015 (aka ES6) is supported ('class', 'new.target', etc.). */
-    Browser.ES6 = DreamSpace.ES6;
+    export const ES6 = DreamSpace.ES6;
     // (Note: For extension of native types, the DreamSpace behavior changes depending on ES6 support due to the new 'new.target' feature changing how called native constructors behave)
     /** The type of browser detected. */
-    Browser.type = (() => {
+    export var type = (() => {
         var browserType = BrowserTypes.Unknown, browserInfo;
         if (Environment == Environments.Browser) {
-            if (!Browser.browserVersionInfo)
-                Browser.browserVersionInfo = __findBrowser();
-            browserInfo = Browser.browserVersionInfo.parent;
-            Browser.osInfo = __findOS();
+            if (!exports.browserVersionInfo)
+                exports.browserVersionInfo = __findBrowser();
+            browserInfo = exports.browserVersionInfo.parent;
+            exports.osInfo = __findOS();
             browserType = browserInfo.identity;
-            Browser.name = browserInfo.name;
-            Browser.vendor = Browser.browserVersionInfo.vendor || Browser.browserVersionInfo.parent.vendor;
+            exports.name = browserInfo.name;
+            exports.vendor = exports.browserVersionInfo.vendor || exports.browserVersionInfo.parent.vendor;
             browserType = browserInfo != null ? browserInfo.identity : BrowserTypes.Unknown;
-            Browser.version = __detectVersion(Browser.browserVersionInfo);
-            Browser.os = Browser.osInfo != null ? Browser.osInfo.identity : OperatingSystems.Unknown;
+            exports.version = __detectVersion(exports.browserVersionInfo);
+            exports.os = exports.osInfo != null ? exports.osInfo.identity : OperatingSystems.Unknown;
         }
         else
             browserType = BrowserTypes.None;
@@ -186,11 +187,10 @@ var Browser;
     })();
     // ------------------------------------------------------------------------------------------------------------------
     /** Uses cross-browser methods to return the browser window's viewport size. */
-    function getViewportSize() {
+    export function getViewportSize() {
         var w = window, d = document, e = d.documentElement, g = d.getElementsByTagName('body')[0], x = w.innerWidth || e.clientWidth || g.clientWidth, y = w.innerHeight || e.clientHeight || g.clientHeight;
         return { width: x, height: y };
     }
-    Browser.getViewportSize = getViewportSize;
     // ------------------------------------------------------------------------------------------------------------------
     /**
      * Browser benchmarking for various speed tests. The test uses the high-performance clock system, which exists in most modern browsers.
@@ -220,7 +220,7 @@ var Browser;
     }
     // -----------------------------------------------------------------------------------------------------------------------------------
     /** Contains utility functions and events related to the browser's Document Object Model (DOM). */
-    let DOM;
+    export let DOM;
     (function (DOM) {
         /** True when the HTML has completed loading and was parsed. */
         DOM.onDOMLoaded = DreamSpace.System.Events.EventDispatcher.new(Loader, "onDOMLoaded", true);
@@ -342,8 +342,8 @@ var Browser;
         else {
             _doOnPageLoaded(); // (no UI to wait for, so do this now)
         }
-    })(DOM = Browser.DOM || (Browser.DOM = {}));
+    })(DOM = exports.DOM || (exports.DOM = {}));
     // -----------------------------------------------------------------------------------------------------------------------------------
-})(Browser = exports.Browser || (exports.Browser = {}));
+}
 // ############################################################################################################################################
 //# sourceMappingURL=Browser.js.map

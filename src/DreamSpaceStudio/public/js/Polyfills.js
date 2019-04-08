@@ -1,5 +1,6 @@
 // ###########################################################################################################################
 // Browser detection (for special cases).
+// This file also adds in any browser-only features as needed by the system within NodeJS (such as setTimeout, etc.).
 // ###########################################################################################################################
 Array.prototype.last = function () { return this[this.length - 1]; };
 Array.prototype.first = function () { return this[0]; };
@@ -12,15 +13,16 @@ Array.prototype.where = function (func) { if (!func)
     if (func(__ = this[i]))
         _.push(__); return _; };
 (() => {
+    // =======================================================================================================================
     //declare function Symbol(desc?: string): string;
     if (typeof this['Symbol'] == 'undefined') { // (mainly for IE 11)
         // ... create a simple polyfill for this ...
         this['Symbol'] = function Symbol(desc) { var d = new Date().getTime(), dStr = '$' + d; this.valueOf = () => dStr; this.toString = () => dStr; return this; };
     }
     // -------------------------------------------------------------------------------------------------------------------
-    var String = global.String;
-    var Array = global.Array;
-    var RegExp = global.RegExp;
+    //var String = global.String;
+    //var Array = global.Array;
+    //var RegExp = global.RegExp;
     if (!Number.MAX_SAFE_INTEGER)
         Number.MAX_SAFE_INTEGER = 9007199254740991;
     if (!Number.MIN_SAFE_INTEGER)

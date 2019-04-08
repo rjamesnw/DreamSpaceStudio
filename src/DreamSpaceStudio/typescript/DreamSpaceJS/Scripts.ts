@@ -2,9 +2,20 @@
 // Types for time management.
 // ###########################################################################################################################
 
+import { DreamSpace as DS } from "./Globals";
+import { log, error } from "./Logging";
+import { FactoryBase, nameof, FactoryType } from "./Types";
+
+import Globals = DS.Globals;
+import IO from "./IO";
+import { ResourceTypes, RequestStatuses } from "./Resources";
+import { String, IAddLineNumbersFilter } from "./System/PrimitiveTypes";
+import { extractPragmas } from "./Core";
+import { renderHelperVarDeclarations } from "./TSHelpers";
+import { Exception } from "./System/Exception";
+
 /** Types and functions for loading scripts into the DreamSpace system. */
 
-namespace("DreamSpace", "Scripts");
 // =======================================================================================================================
 
 /** Used to strip out manifest dependencies. */
@@ -57,14 +68,14 @@ export function moduleNamespaceToFolderPath(nsName: string) {
 
 // ====================================================================================================================
 
-export class ScriptResource extends FactoryBase(System.IO.ResourceRequest) {
+export class ScriptResource extends FactoryBase(IO.ResourceRequest) {
     /** Returns a new module object only - does not load it. */
     static 'new': (url: string) => IScriptResource;
     /** Returns a new module object only - does not load it. */
     static init: (o: IScriptResource, isnew: boolean, url: string) => void;
 }
 export namespace ScriptResource {
-    export class $__type extends FactoryType(System.IO.ResourceRequest) {
+    export class $__type extends FactoryType(IO.ResourceRequest) {
         /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DreamSpace.Globals' and 'Globals.register()'. */
         registerGlobal<T>(name: string, initialValue: T, asHostGlobal?: boolean): string {
             return Globals.register(this, name, initialValue, asHostGlobal);
@@ -90,7 +101,7 @@ export namespace ScriptResource {
             return Globals.getValue<T>(this, name);
         }
 
-        private static [constructor](factory: typeof ScriptResource) {
+        private static [DS.constructor](factory: typeof ScriptResource) {
             factory.init = (o, isnew, url) => {
                 factory.super.init(o, isnew, url, ResourceTypes.Application_Script);
             };
@@ -143,7 +154,7 @@ export namespace Manifest {
             return Globals.getValue<T>(this, name);
         }
 
-        private static [constructor](factory: typeof ScriptResource) {
+        private static [DS.constructor](factory: typeof ScriptResource) {
             factory.init = (o, isnew, url) => {
                 factory.super.init(o, isnew, url, ResourceTypes.Application_Script);
             };
@@ -202,8 +213,8 @@ export class ScriptError implements Pick<ErrorEvent, "error" | "filename" | "mes
      * @param {string} source The script source code.
      * @param {Function} lineFilter See 'System.String.addLineNumbersToText()'.
      */
-    public getFormatedSource(lineFilter?: System.IAddLineNumbersFilter) {
-        var scriptWithLines = System.String.addLineNumbersToText(this.source, lineFilter || ((lineNumber, marginSize, paddedLineNumber, line) => {
+    public getFormatedSource(lineFilter?: IAddLineNumbersFilter) {
+        var scriptWithLines = String.addLineNumbersToText(this.source, lineFilter || ((lineNumber, marginSize, paddedLineNumber, line) => {
             if (lineNumber == this.lineno) return "\u25BA " + paddedLineNumber + " " + line.substr(0, this.colno) + " \xBB " + line.substr(this.colno);
         }));
         return scriptWithLines;
@@ -360,8 +371,8 @@ export namespace Module {
           * retrieve object references.  If performance is required to access non-reference values, the script must be applied to
           * the global scope as normal.
           */
-        getVar: <T extends any>(varName: string) => T = noop;
-        setVar: <T extends any>(varName: string, value: T) => T = noop;
+        getVar: <T extends any>(varName: string) => T = DS.noop;
+        setVar: <T extends any>(varName: string, value: T) => T = DS.noop;
 
         /** This 'exports' container exists to support loading client-side modules in a NodeJS-type fashion.  The main exception is that
           * 'require()' is not supported as it is synchronous, and an asynchronous method is required on the client side.  Instead, the
@@ -373,14 +384,14 @@ export namespace Module {
 
         /** A temp reference to the object returned from executing the generated '$__modFunc' wrapper function. */
         private _moduleGlobalAccessors: _IModuleAccessors;
-        private static readonly _globalaccessors: _IModuleAccessors = (() => { return safeEval("({ get: function(varName) { return p0.global[varName]; }, set: function(varName, val) { return p0.global[varName] = val; } })", DreamSpace); })();
+        private static readonly _globalaccessors: _IModuleAccessors = (() => { return DS.safeEval("({ get: function(varName) { return p0.global[varName]; }, set: function(varName, val) { return p0.global[varName] = val; } })", DreamSpace); })();
 
         private __onLoaded() {
             // ... script is loaded (not executed), but may be waiting on dependencies; for now, check for in-script dependencies/flags and apply those now ...
             return this;
         }
 
-        private __onReady(request: System.IO.IResourceRequest) {
+        private __onReady(request: IO.IResourceRequest) {
             // ... script is loaded (not executed) and ready to be applied ...
             if (this.fullname == "app" || this.fullname == "application") {
                 _appModule = this;
@@ -396,7 +407,7 @@ export namespace Module {
         /** Begin loading the module's script. After the loading is completed, any dependencies are automatically detected and loaded as well. */
         start(): this {
             if (this.status == RequestStatuses.Pending && !this._moduleGlobalAccessors) { // (make sure this module was not already started nor applied)
-                this.url = debugMode ? this.nonMinifiedURL : (this.minifiedURL || this.nonMinifiedURL); // (just in case the debugging flag changed)
+                this.url = DS.debugMode ? this.nonMinifiedURL : (this.minifiedURL || this.nonMinifiedURL); // (just in case the debugging flag changed)
                 return super.start();
             }
             return this;
@@ -406,13 +417,13 @@ export namespace Module {
         execute(useGlobalScope = false): void {
             if (this.status == RequestStatuses.Ready && !this._moduleGlobalAccessors) {
                 // ... first, make sure all parent modules have been executed first ...
-                for (var i = 0, n = this._parentRequests.length, dep: System.IO.IResourceRequest; i < n; ++i)
+                for (var i = 0, n = this._parentRequests.length, dep: IO.IResourceRequest; i < n; ++i)
                     if ((dep = this._parentRequests[i]).status == RequestStatuses.Ready)
                         (<IModule>dep).execute();
 
                 var accessors: _IModuleAccessors;
                 if (useGlobalScope) {
-                    this._moduleGlobalAccessors = (globalEval(this.response), $__type._globalaccessors); // (use the global accessors, as the module was run in the global scope)
+                    this._moduleGlobalAccessors = (DS.globalEval(this.response), $__type._globalaccessors); // (use the global accessors, as the module was run in the global scope)
                 } else {
                     var tsHelpers = renderHelperVarDeclarations("arguments[3]");
                     this.$__modFunc = <any>new Function("DreamSpace", "module", "exports", tsHelpers[0] + this.response + ";\r\n return { get: function(varName) { return eval(varName); }, set: function(varName, val) { return eval(varName + ' = val;'); } };");
@@ -426,12 +437,12 @@ export namespace Module {
             }
         }
 
-        private static [constructor](factory: typeof Module) {
+        private static [DS.constructor](factory: typeof Module) {
             factory.init = (o, isnew, fullname, url, minifiedUrl?) => {
-                factory.super.init(o, isnew, debugMode ? url : (minifiedUrl || url));
+                factory.super.init(o, isnew, [DS.debugMode ? url : (minifiedUrl || url));
 
                 if (!o.type) // (if the base resource loader fails to initialize, then another resource already exists for the same location)
-                    throw System.Exception.from("Duplicate module load request: A previous request for '" + url + "' was already made.", o);
+                    throw Exception.from("Duplicate module load request: A previous request for '" + url + "' was already made.", o);
 
                 o.fullname = fullname;
                 o.nonMinifiedURL = url;

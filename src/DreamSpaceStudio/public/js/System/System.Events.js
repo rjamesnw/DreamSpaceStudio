@@ -32,7 +32,7 @@ var Events;
       * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
       * instance level event handler registration on the class only when necessary.
       */
-    class EventDispatcher extends Types_1.FactoryBase(PrimitiveTypes_1.DSObject) {
+    class EventDispatcher extends Types_1.Factory(PrimitiveTypes_1.DSObject) {
         /** Creates an event object for a specific even type.
             * @param {TOwner} owner The owner which owns this event object.
             * @param {string} eventName The name of the event which this event object represents.
@@ -349,7 +349,7 @@ var Events;
         EventDispatcher.$__register(Events);
     })(EventDispatcher = Events.EventDispatcher || (Events.EventDispatcher = {}));
 })(Events = exports.Events || (exports.Events = {}));
-class EventObject extends Types_1.FactoryBase(PrimitiveTypes_1.DSObject) {
+class EventObject extends Types_1.Factory(PrimitiveTypes_1.DSObject) {
     /**
     * Constructs a new Delegate object.
     * @param {DSObject} object The instance on which the associated function will be called.  This should be undefined/null for static functions.

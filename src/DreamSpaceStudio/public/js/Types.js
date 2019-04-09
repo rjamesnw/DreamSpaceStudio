@@ -223,48 +223,48 @@ var Types;
      * This method should be called AFTER a factory type is fully defined.
      *
      * @param {IType} factoryType The factory type to associate with the type.
-     * @param {modules} namespace A list of all namespaces up to the current type, usually starting with 'DreamSpace' as the first namespace.
+     * @param {modules} moduleSpace A list of all namespaces up to the current type, usually starting with 'DreamSpace' as the first namespace.
      * @param {boolean} addMemberTypeInfo If true (default), all member functions on the type (function object) will have type information
      * applied (using the IFunctionInfo interface).
     */
-    function __registerFactoryType(factoryType, namespace, addMemberTypeInfo = true) {
-        var classType = factoryType.$__type;
+    function __registerFactoryType(instanceType, factoryType, moduleSpace, addMemberTypeInfo = true) {
+        var _instanceType = instanceType;
         var factoryTypeInfo = factoryType;
         if (typeof factoryType !== 'function')
             Logging_1.error("__registerFactoryType()", "The 'factoryType' argument is not a valid constructor function.", factoryType); // TODO: See if this can also be detected in ES2015 (ES6) using the specialized functions.
-        if (typeof namespace != 'object' && typeof namespace != 'function')
-            Logging_1.error("__registerFactoryType()", "No namespace was specified for factory type '" + getFullTypeName(factoryType) + "', which is required. If the type is in the global scope, then use 'this' or 'DreamSpace.global'.", factoryType);
-        if (!namespace.$__fullname)
-            Logging_1.error("__registerFactoryType()", "The specified namespace given for factory type '" + getFullTypeName(factoryType) + "' is not registered. Please call 'namespace()' to register it first (before the factory is defined).", factoryType); // TODO: See if this can also be detected in ES2015 (ES6) using the specialized functions.
-        if (typeof classType == 'undefined')
+        if (typeof moduleSpace != 'object')
+            Logging_1.error("__registerFactoryType()", "No module space reference was specified for factory type '" + getFullTypeName(factoryType) + "', which is required. If the type is in the global scope, then use 'DreamSpace.global' or other global reference.", factoryType);
+        //x if (!(<ITypeInfo>moduleSpace).$__fullname)
+        //x     error("__registerFactoryType()", "The specified namespace given for factory type '" + getFullTypeName(factoryType) + "' is not registered. Please call 'namespace()' to register it first (before the factory is defined).", factoryType); // TODO: See if this can also be detected in ES2015 (ES6) using the specialized functions.
+        if (typeof _instanceType == 'undefined')
             Logging_1.error("__registerFactoryType()", "Factory instance type '" + getFullTypeName(factoryType) + ".$__type' is not defined.", factoryType); // TODO: See if this can also be detected in ES2015 (ES6) using the specialized functions.
-        if (typeof classType != 'function')
+        if (typeof _instanceType != 'function')
             Logging_1.error("__registerFactoryType()", "'" + getFullTypeName(factoryType) + ".$__type' is not a valid constructor function.", factoryType); // TODO: See if this can also be detected in ES2015 (ES6) using the specialized functions.
         // ... register type information first BEFORER we call any static constructor (so it is available to the user)s ...
-        var registeredFactory = __registerType(factoryType, namespace, addMemberTypeInfo);
+        var registeredFactory = __registerType(factoryType, moduleSpace, addMemberTypeInfo);
         //x factoryTypeInfo.$__type = <any>classType; // (the class type AND factory type should both have a reference to the underlying type)
         //x classType.$__type = <any>classType; // (the class type AND factory type should both have a reference to the underlying type)
-        classType.$__factoryType = factoryTypeInfo; // (a properly registered class that supports the factory pattern should have a reference to its underlying factory type)
-        classType.$__baseFactoryType = factoryTypeInfo.$__baseFactoryType;
-        var registeredFactoryType = __registerType(classType, factoryType, addMemberTypeInfo);
+        _instanceType.$__factoryType = factoryTypeInfo; // (a properly registered class that supports the factory pattern should have a reference to its underlying factory type)
+        //x _instanceType.$__baseFactoryType = factoryTypeInfo.$__baseFactoryType;
+        var registeredFactoryType = __registerType(_instanceType, factoryType, addMemberTypeInfo);
         //x .. finally, update the class static properties also with the values set on the factory from the previous line (to be thorough) ...
         //x classType.$__fullname = factoryTypeInfo.$__fullname + "." + classType.$__name; // (the '$__fullname' property on a class should allow absolute reference back to it [note: '__proto__' could work here also due to static inheritance])
         // ... if the user supplied a static constructor then call it now before we do anything more ...
         // (note: the static constructor may be where 'new' and 'init' factory functions are provided, so we MUST call them first before we hook into anything)
         if (typeof factoryType[Globals_1.DreamSpace.constructor] == 'function')
-            factoryType[Globals_1.DreamSpace.constructor].call(classType);
-        if (typeof classType[Globals_1.DreamSpace.constructor] == 'function')
-            classType[Globals_1.DreamSpace.constructor](factoryType);
+            factoryType[Globals_1.DreamSpace.constructor].call(_instanceType);
+        if (typeof _instanceType[Globals_1.DreamSpace.constructor] == 'function')
+            _instanceType[Globals_1.DreamSpace.constructor](factoryType);
         // ... hook into the 'init' and 'new' factory methods ...
         // (note: if no 'init()' function is specified, just call the base by default)
-        if (classType.init)
-            Logging_1.error(getFullTypeName(classType), "You cannot create a static 'init' function directly on a class that implements the factory pattern (which could also create inheritance problems).");
+        if (_instanceType.init)
+            Logging_1.error(getFullTypeName(_instanceType), "You cannot create a static 'init' function directly on a class that implements the factory pattern (which could also create inheritance problems).");
         var originalInit = typeof factoryType.init == 'function' ? factoryType.init : null; // (take user defined, else set to null)
         factoryType.init = function _initProxy() {
             this.$__initCalled = true; // (flag that THIS init function was called on THIS factory type)
             originalInit && originalInit.apply(this, arguments);
             if (this.$__baseFactoryType && !this.$__baseFactoryType.$__initCalled)
-                Logging_1.error(getFullTypeName(classType) + ".init()", "You did not call 'this.super.init()' to complete the initialization chain.");
+                Logging_1.error(getFullTypeName(_instanceType) + ".init()", "You did not call 'this.super.init()' to complete the initialization chain.");
             // TODO: Once parsing of function parameters are in place we can detect this, but for now require it)
             factoryType.init = originalInit; // (everything is ok here, so bypass this check next time)
         };
@@ -283,7 +283,7 @@ var Types;
                     return factoryType.new.apply(factoryType, arguments);
                 }
                 else if (typeof result != 'object')
-                    Logging_1.error(getFullTypeName(classType) + ".new()", "An object instance was expected, but instead a value of type '" + (typeof result) + "' was received.");
+                    Logging_1.error(getFullTypeName(_instanceType) + ".new()", "An object instance was expected, but instead a value of type '" + (typeof result) + "' was received.");
                 // (else the call returned a valid value, so next time, just default directly to the user supplied factory function)
                 factoryType.new = originalNew;
                 return result;
@@ -467,7 +467,7 @@ exports.isPrimitiveType = isPrimitiveType;
  * This is only valid if compiling your .ts source for ES5 while also enabling support for ES6 environments.
  * If you compile your .ts source for ES6 then the 'class' syntax will be used and this value has no affect.
  */
-function DisposableFromBase(baseClass, isPrimitiveOrHostBase) {
+function makeDisposable(baseClass, isPrimitiveOrHostBase) {
     if (!baseClass) {
         baseClass = Globals_1.DreamSpace.global.Object;
         isPrimitiveOrHostBase = true;
@@ -481,7 +481,7 @@ function DisposableFromBase(baseClass, isPrimitiveOrHostBase) {
         constructor(...args) {
             if (!Globals_1.DreamSpace.ES6Targeted && isPrimitiveOrHostBase)
                 eval("var _super = function() { return null; };"); // (ES6 fix for extending built-in types [calling constructor not supported prior] when compiling for ES5; more details on it here: https://github.com/Microsoft/TypeScript/wiki/FAQ#why-doesnt-extending-built-ins-like-error-array-and-map-work)
-            super();
+            super(...args);
         }
         /**
         * Releases the object back into the object pool. This is the default implementation which simply calls 'Types.dispose(this, release)'.
@@ -496,20 +496,38 @@ function DisposableFromBase(baseClass, isPrimitiveOrHostBase) {
     cls.prototype.dispose = Disposable.prototype.dispose; // (make these functions both the same function reference by default)
     return cls;
 }
-exports.DisposableFromBase = DisposableFromBase;
-//function FactoryType<T extends IType, K extends keyof T>(base: T): FactoryBaseType<T> { return <any>base; }
+exports.makeDisposable = makeDisposable;
+//function Factory<T extends IType, K extends keyof T>(base: T): FactoryBaseType<T> { return <any>base; }
+/** Converts a non-factory object type into a factory type.
+ * This is used on primitive types when making the 'derived primitive types' for the system.
+ * WARNING: This adds a 'new()' and 'init()' function to the given type IF THEY DO NOT ALREADY EXIST. If one exists, that one is not added.
+ */
+function makeFactory(obj) {
+    obj.new = obj.new || function (...args) { return new obj(...args); };
+    obj.init = obj.init || function (o, isnew, ...args) {
+        if (isnew)
+            return o; // (else the object is from the cache of disposed objects)
+        Utilities_1.default.erase(o);
+        var newO = new obj(...args); // (this exists because we cannot assume the developer will create a better 'init()' for their derived factory type - which they should do)
+        for (var p in newO)
+            if (newO.hasOwnProperty(p))
+                o[p] = newO[p];
+    };
+    return obj;
+}
+exports.makeFactory = makeFactory;
 /**
  * Builds and returns a base type to be used with creating type factories. This function stores some type
  * information in static properties for reference.
  * @param {TBaseFactory} baseFactoryType The factory that this factory type derives from.
- * @param {TBaseType} staticBaseClass An optional base type to inherit static types from.
 */
-function FactoryBase(baseFactoryType, staticBaseClass) {
-    if (typeof staticBaseClass != 'function')
-        staticBaseClass = Globals_1.DreamSpace.global.Object;
-    var cls = class FactoryBase extends staticBaseClass {
+function Factory(baseFactoryType) {
+    if (typeof baseFactoryType != 'function')
+        baseFactoryType = Globals_1.DreamSpace.global.Object;
+    var cls = class FactoryBase extends baseFactoryType {
         /** References the base factory. */
-        static get super() { return baseFactoryType || void 0; } // ('|| void 0' keeps things consistent in case 'null' is given)
+        static get super() { return this.$__baseFactoryType || void 0; } // ('|| void 0' keeps things consistent in case 'null' is given)
+        static 'new'(...args) { return null; }
         /**
           * Don't create objects using the 'new' operator. Use '{NameSpaces...ClassType}.new()' static methods instead.
           */
@@ -517,31 +535,23 @@ function FactoryBase(baseFactoryType, staticBaseClass) {
             Logging_1.error("FactoryBase", "You cannot create instances of factory types.");
             super();
         }
-        ///** 
-        // * Releases the object back into the object pool. This is the default implementation which simply calls 'Types.dispose(this, release)'.
-        // * If overriding, make sure to call 'super.dispose()' or 'Types.dispose()' to complete the disposal process.
-        // * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
-        // *                          false to request that child objects remain connected after disposal (not released). This
-        // *                          can allow quick initialization of a group of objects, instead of having to pull each one
-        // *                          from the object pool each time.
-        // */
-        //dispose(release?: boolean): void { Types.dispose(this, release); }
-        /**
-          * Called to register factory types with the internal types system (see also 'Types.__registerType()' for non-factory supported types).
-          * Any static constructors defined will also be called at this point.
-          *
-          * @param {modules} namespace The parent namespace to the current type.
-          * @param {boolean} addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
-          * applied (using the IFunctionInfo interface).
-         */
-        static $__register(namespace, addMemberTypeInfo = true) {
-            return Types.__registerFactoryType(this, namespace, addMemberTypeInfo);
-        }
     };
-    cls.$__baseFactoryType = baseFactoryType;
+    cls.$__baseFactoryType = baseFactoryType; // (avoiding closures in case that becomes more efficient)
     return cls;
 }
-exports.FactoryBase = FactoryBase;
+exports.Factory = Factory;
+/**
+* Associates a class type with a factory class type (see also 'Types.__registerType()' for non-factory supported types).
+* Any static constructors defined will also be called at this point.
+*
+* @param moduleSpace A reference to the module that contains the factory.
+* @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
+* applied (using the IFunctionInfo interface).
+*/
+function usingFactory(factory, moduleSpace, addMemberTypeInfo = true) {
+    return function (cls) { return Types.__registerFactoryType(cls, factory, moduleSpace, addMemberTypeInfo); };
+}
+exports.usingFactory = usingFactory;
 // =======================================================================================================================
 // ###########################################################################################################################
 // TODO: Consider adding a dependency injection system layer.

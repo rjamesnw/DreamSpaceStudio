@@ -2,7 +2,7 @@
 // Collections: IndexedObjectCollection
 // ############################################################################################################################################
 
-import { FactoryBase } from "../Types";
+import { Factory } from "../Types";
 
 /** Returns an ID based on the index position of the added object, or from a list of previously released object IDs (indexes).
 * There are 2 main goals of this object: 1. to help prevent ID numbers from wrapping for server apps that may be running
@@ -11,7 +11,7 @@ import { FactoryBase } from "../Types";
 * Note: A property '$__id' is added/updated on the objects automatically.  You can change this property name by setting
 * a new value for 'IndexedObjectCollcetion.__IDPropertyName'.
 */
-export class IndexedObjectCollection extends FactoryBase(Array) {
+export class IndexedObjectCollection extends Factory(Array) {
     /** @param {TObject[]} objects Initial objects to add to the collection. */
     static 'new'<TObject extends object>(...objects: TObject[]): IIndexedObjectCollection<TObject> { return null; }
 

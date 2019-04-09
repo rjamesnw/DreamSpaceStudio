@@ -2,7 +2,7 @@
 // Collections: ObservableCollection
 // ############################################################################################################################################
 
-import { FactoryBase } from "../Types";
+import { Factory } from "../Types";
 
 // ========================================================================================================================================
 
@@ -18,7 +18,7 @@ export interface INotifyCollectionChanged<TOwner extends object, TItems> {
 }
 
 /** Holds an array of items, and implements notification functionality for when the collection changes. */
-export class ObservableCollection extends FactoryBase(Array) {
+export class ObservableCollection extends Factory(Array) {
     static 'new'<TOwner extends object, T>(...items: T[]): IObservableCollection<TOwner, T> { return null; }
 
     static init<TOwner extends object, T>(o: IObservableCollection<TOwner, T>, isnew: boolean, ...items: T[]): void {

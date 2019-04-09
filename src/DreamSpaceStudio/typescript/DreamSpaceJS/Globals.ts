@@ -50,7 +50,7 @@ export namespace DreamSpace {
 
     // ------------------------------------------------------------------------------------------------------------------------
 
-    export const constructor = Symbol("static constructor");
+    export const constructor: symbol = Symbol("static constructor");
 
     // ------------------------------------------------------------------------------------------------------------------------
 
@@ -521,10 +521,10 @@ export interface ITypeInfo {
       */
     $__name?: string;
 
-    /** Returns the full name of this type (includes the namespace).
-      * Note: This value is only set on types registered using '{AppDomain}.registerType()'.
-      */
-    $__fullname?: string;
+    ///** Returns the full name of this type (includes the namespace).
+    //  * Note: This value is only set on types registered using '{AppDomain}.registerType()'.
+    //  */
+    //$__fullname?: string;
 }
 
 export interface IType<TInstance = object> {
@@ -537,7 +537,7 @@ export interface IFunction<ReturnType = any> {
 
 /** Type-cast DreamSpace namespace objects to this interface to access namespace specific type information. */
 export interface INamespaceInfo extends ITypeInfo {
-    $__namespaces: NativeTypes.IArray<object>;
+    $__namespaces: NativeTypes.IArray<Object>;
 }
 
 /** Type-cast function objects to this interface to access type specific information. */
@@ -553,17 +553,17 @@ export interface IFunctionInfo extends Function, ITypeInfo {
 
 /** Type-cast DreamSpace classes (functions) to this interface to access class specific type information. */
 export interface IClassInfo<TInstance extends object = object> extends ITypeInfo, IType<TInstance> {
-    /** This is a reference to the underlying class type for this factory type. */
-    $__type: IType<TInstance>
+    ///** This is a reference to the underlying class type for this factory type. */
+    //$__type: IType<TInstance>
 
     /** Represents the static properties on a factory type. */
     $__factoryType?: IFactoryTypeInfo;
 
-    /** The base factory type of the factory in '$__factory'. This is provided to maintain a factory inheritance chain. */
-    $__baseFactoryType?: { new(): IFactory } & ITypeInfo;
+    ///** The base factory type of the factory in '$__factory'. This is provided to maintain a factory inheritance chain. */
+    //$__baseFactoryType?: { new(): IFactory } & ITypeInfo;
 }
 
-export interface NewDelegate<TInstance extends NativeTypes.IObject> { (...args: any[]): void | null | TInstance }
+export interface NewDelegate<TInstance extends NativeTypes.IObject> { (...args: any[]): TInstance }
 
 export interface InitDelegate<TInstance extends NativeTypes.IObject> { (o: TInstance, isnew: boolean, ...args: any[]): void }
 
@@ -580,7 +580,7 @@ export interface IFactoryTypeInfo<TClass extends IType = IType/*, TFactory exten
 }
 
 /** Represents the factory methods of a factory instance. */
-export interface IFactory<TClass extends IType = IType, TNew extends NewDelegate<InstanceType<TClass>> = NewDelegate<InstanceType<TClass>>, TInit extends InitDelegate<InstanceType<TClass>> = InitDelegate<InstanceType<TClass>>> extends IType {
+export interface IFactory<TClass extends IType = IType, TNew extends NewDelegate<InstanceType<TClass>> = NewDelegate<InstanceType<TClass>>, TInit extends InitDelegate<InstanceType<TClass>> = InitDelegate<InstanceType<TClass>>> {
 
     /** Used in place of the constructor to create a new instance of the underlying object type for a specific domain.
       * This allows the reuse of disposed objects to prevent garbage collection hits that may cause the application to lag, and
@@ -595,7 +595,7 @@ export interface IFactory<TClass extends IType = IType, TNew extends NewDelegate
       * in. This is why DreamSpace objects are cached and reused as much as possible, and why you should try to refrain from using the 'new',
       * operator, or any other operation that creates objects that the GC has to manage on a blocking thread.
       */
-    'new'?: TNew;
+    'new': TNew;
 
     /** This is called internally to initialize a blank instance of the underlying type. Users should call the 'new()'
       * constructor function to get new instances, and 'dispose()' to release them when done.

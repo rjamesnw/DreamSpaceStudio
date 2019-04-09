@@ -11,7 +11,7 @@ const Types_1 = require("../Types");
 * Note: A property '$__id' is added/updated on the objects automatically.  You can change this property name by setting
 * a new value for 'IndexedObjectCollcetion.__IDPropertyName'.
 */
-class IndexedObjectCollection extends Types_1.FactoryBase(Array) {
+class IndexedObjectCollection extends Types_1.Factory(Array) {
     /** @param {TObject[]} objects Initial objects to add to the collection. */
     static 'new'(...objects) { return null; }
     static init(o, isnew, ...objects) {

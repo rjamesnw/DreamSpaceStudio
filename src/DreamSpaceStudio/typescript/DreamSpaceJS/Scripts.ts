@@ -4,7 +4,7 @@
 
 import { DreamSpace as DS } from "./Globals";
 import { log, error } from "./Logging";
-import { FactoryBase, nameof, FactoryType } from "./Types";
+import { Factory, nameof, FactoryType } from "./Types";
 
 import Globals = DS.Globals;
 import IO from "./IO";
@@ -68,7 +68,7 @@ export function moduleNamespaceToFolderPath(nsName: string) {
 
 // ====================================================================================================================
 
-export class ScriptResource extends FactoryBase(IO.ResourceRequest) {
+export class ScriptResource extends Factory(IO.ResourceRequest) {
     /** Returns a new module object only - does not load it. */
     static 'new': (url: string) => IScriptResource;
     /** Returns a new module object only - does not load it. */
@@ -120,7 +120,7 @@ export interface IScriptResource extends ScriptResource.$__type { }
 * 'Manifest' inherits from 'ScriptResource', providing the loaded manifests the ability to register globals for the
 * DreamSpace context, instead of the global 'window' context.
 */
-export class Manifest extends FactoryBase(ScriptResource) {
+export class Manifest extends Factory(ScriptResource) {
     /** Holds variables required for manifest execution (for example, callback functions for 3rd party libraries, such as the Google Maps API). */
     static 'new': (url: string) => IManifest;
     /** Holds variables required for manifest execution (for example, callback functions for 3rd party libraries, such as the Google Maps API). */
@@ -338,7 +338,7 @@ var _appModule: IModule = null; // (becomes set to the app module when the app m
 interface _IModuleAccessors { get: (varName: string) => any; set: (varName: string, value: any) => any }
 
 /** Contains static module properties and functions. */
-export class Module extends FactoryBase(ScriptResource) {
+export class Module extends Factory(ScriptResource) {
     /** Returns a new module object only - does not load it. */
     static 'new': (fullname: string, url: string, minifiedUrl?: string) => IModule;
     /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */

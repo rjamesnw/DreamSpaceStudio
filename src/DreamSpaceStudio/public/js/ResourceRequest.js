@@ -16,7 +16,7 @@ const Query_1 = require("./Query");
  * Inheritance note: When creating via the 'new' factory method, any already existing instance with the same URL will be returned,
  * and NOT the new object instance.  For this reason, you should call 'loadResource()' instead.
  */
-class ResourceRequest extends Types_1.FactoryBase() {
+class ResourceRequest extends Types_1.Factory() {
     /** See the 'cacheBusting' property. */
     static get cacheBustingVar() { return this._cacheBustingVar || '_v_'; }
     ; // (note: ResourceInfo.cs uses this same default)

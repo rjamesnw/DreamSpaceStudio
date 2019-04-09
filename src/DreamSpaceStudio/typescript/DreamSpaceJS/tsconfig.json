@@ -9,7 +9,8 @@
     "declaration": true,
     "outDir": "../../public/js",
     "lib": [ "es6", "dom" ],
-    "noEmitHelpers": true
+    "noEmitHelpers": true,
+    "experimentalDecorators": true
   },
   "exclude": [
     "node_modules",

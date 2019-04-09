@@ -7,9 +7,9 @@ var DreamSpace;
     (function (System) {
         var Platform;
         (function (Platform) {
-            namespace(() => DreamSpace.System.Platform);
             // ========================================================================================================================
-            class PropertyEventBase extends FactoryBase(System.EventObject) {
+            // ========================================================================================================================
+            class PropertyEventBase extends FactoryBase(EventObject) {
                 /**
                    * Creates a new basic GraphNode type.  A graph node is the base type for all UI related elements.  It is a logical
                    * layout that can render a view, or partial view.
@@ -22,7 +22,7 @@ var DreamSpace;
             }
             Platform.PropertyEventBase = PropertyEventBase;
             (function (PropertyEventBase) {
-                class $__type extends FactoryType(System.EventObject) {
+                class $__type extends FactoryType(EventObject) {
                     constructor() {
                         // -------------------------------------------------------------------------------------------------------------------
                         super(...arguments);

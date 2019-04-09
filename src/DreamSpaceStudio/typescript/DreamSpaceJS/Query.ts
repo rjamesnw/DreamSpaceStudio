@@ -1,4 +1,4 @@
-import { FactoryBase } from "./Types";
+import { Factory } from "./Types";
 
 // ==========================================================================================================================
 
@@ -10,7 +10,7 @@ export var QUERY_STRING_REGEX: RegExp = /[?|&][a-zA-Z0-9-._]+(?:=[^&#$]*)?/gi;
   * with all values escaped and ready to be appended to a URI.
   * Note: Call 'Query.new()' to create new instances.
   */
-export class Query extends FactoryBase() {
+export class Query extends Factory() {
     /** Helps to build an object of 'name:value' pairs from a URI or 'location.search' string.
        * @param {string|object} query A full URI string, a query string (such as 'location.search'), or an object to create query values from.
        * @param {boolean} makeNamesLowercase If true, then all query names are made lower case when parsing (the default is false).

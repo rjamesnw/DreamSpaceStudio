@@ -22,7 +22,7 @@ var DreamSpace;
                 * Note: As with most DreamSpace graph objects, the objects are "logical" elements, and thus, a visual layout environment (eg. browser) is not required.
                 */
                 Twitter.Bootstrap_UI = module([Modules.System.UI_HTML], 'DreamSpace.System.Platform.UI.Bootstrap{min:.min}').ready((modInfo) => {
-                    DreamSpace.Browser.onReady.attach(() => {
+                    Browser.onReady.attach(() => {
                         using.Twitter.Bootstrap(null);
                     });
                     return true;

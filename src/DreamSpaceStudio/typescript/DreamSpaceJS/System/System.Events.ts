@@ -4,7 +4,7 @@
 
 import { DreamSpace as DS } from "../Globals";
 import { IDelegate } from "./System.Delegate";
-import { FactoryBase, FactoryType } from "../Types";
+import { Factory, FactoryType } from "../Types";
 import { Exception } from "./Exception";
 import { DSObject, Array, DependentObject } from "./PrimitiveTypes";
 
@@ -44,7 +44,7 @@ export namespace Events {
       * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
       * instance level event handler registration on the class only when necessary.
       */
-    export class EventDispatcher extends FactoryBase(DSObject) {
+    export class EventDispatcher extends Factory(DSObject) {
         /** Creates an event object for a specific even type.
             * @param {TOwner} owner The owner which owns this event object.
             * @param {string} eventName The name of the event which this event object represents.
@@ -455,7 +455,7 @@ export interface INotifyPropertyChanged<TSender extends IEventObject> {
     doPropertyChanged(name: string, oldValue: any): void;
 }
 
-export class EventObject extends FactoryBase(DSObject) {
+export class EventObject extends Factory(DSObject) {
     /**
     * Constructs a new Delegate object.
     * @param {DSObject} object The instance on which the associated function will be called.  This should be undefined/null for static functions.

@@ -61,7 +61,7 @@ namespace Utilities {
     * @param {boolean} ignore An optional list of properties to ignore when erasing. The properties to ignore should equate to 'true'.
     * This parameter expects an object type because that is faster for lookups than arrays, and developers can statically store these in most cases.
     */
-    export function erase(obj: Object, ignore: { [name: string]: any }): {} {
+    export function erase(obj: Object, ignore?: { [name: string]: any }): {} {
         for (var p in obj)
             if ((p != "__proto__" && p != 'constructor' && <NativeTypes.IObject>obj).hasOwnProperty(p))
                 if (!ignore || !ignore[name])

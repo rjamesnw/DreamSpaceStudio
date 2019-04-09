@@ -3,7 +3,6 @@
 // ###########################################################################################################################
 
 namespace DreamSpace.System.Platform {
-    namespace(() => DreamSpace.System.Platform);
     // ========================================================================================================================
 
     export interface PropertyChangedHandler { (item: IGraphNode, property: IProperty): void; }

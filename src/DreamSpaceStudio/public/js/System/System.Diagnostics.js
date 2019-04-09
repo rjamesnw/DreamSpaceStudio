@@ -18,7 +18,7 @@ var Diagnostics;
     var __logItemsSequenceCounter = 0;
     var __logCaptureStack = [];
     // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-    class LogItem extends Types_1.FactoryBase() {
+    class LogItem extends Types_1.Factory() {
         static 'new'(parent, title, message, type = Logging_1.LogTypes.Normal, outputToConsole = true) { return null; }
         static init(o, isnew, parent, title, message, type = Logging_1.LogTypes.Normal, outputToConsole = true) {
             if (title === void 0 || title === null) {

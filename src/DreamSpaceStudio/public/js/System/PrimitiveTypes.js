@@ -1,8 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+var Array_1;
 const Types_1 = require("../Types");
 const System_1 = require("./System");
 const AppDomain_1 = require("./AppDomain");
+const Globals_1 = require("../Globals");
+const Browser_1 = require("./Browser");
+const Utilities_1 = require("../Utilities");
 // ###########################################################################################################################
 // Primitive types designed for use with the DreamSpace system.
 // See 'DreamSpace.global' and 'DreamSpace.NativeTypes/NativeStaticTypes' for access to global scope native references and definitions.
@@ -10,119 +14,112 @@ const AppDomain_1 = require("./AppDomain");
 // Thing that gets passed a function and makes a decorator:
 // =======================================================================================================================
 /** The base type for many DreamSpace classes. */
-class DSObject extends Types_1.FactoryBase(void 0, global.Object) {
-    /**
-    * Create a new basic object type.
-    * @param value If specified, the value will be wrapped in the created object.
-    * @param makeValuePrivate If true, the value will not be exposed, making the value immutable.
-    */
-    static 'new'(value, makeValuePrivate = false) { return null; }
+class DSObjectFactory extends Types_1.Factory(Types_1.makeFactory(Globals_1.DreamSpace.global.Object)) {
 }
-DSObject.s = 3;
-exports.DSObject = DSObject;
-(function (DSObject) {
-    class $__type extends Types_1.DisposableFromBase(global.Object) {
-        // -------------------------------------------------------------------------------------------------------------------
-        /** Returns the type information for this object instance. */
-        getTypeInfo() {
-            if (!this.constructor.$__name && this.constructor.getTypeName)
-                this.constructor.getTypeName();
-            return this.constructor;
-        }
-        ;
-        /** Returns true if the specified value is equal to this object.
-          * The default implementation only compares if the types and references are equal.  Derived types should override this
-          * with a new more meaningful implementation where necessary.
-          */
-        equal(value) {
-            return this === value;
-        }
-        valueOf() { return this.$__value; }
-        ;
-        toString() { return '' + this; }
-        ;
-        // -------------------------------------------------------------------------------------------------------------------
-        /** Serializes the object's '$__id' value only. */
-        getData(data) {
-        }
-        /** Restores the object's '$__id' value (only works if '$__id' is undefined). */
-        setData(data) {
-        }
-        ///** 
-        // * Release the object back into the object pool. 
-        // * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
-        // *                          false to request that child objects remain connected after disposal (not released). This
-        // *                          can allow quick initialization of a group of objects, instead of having to pull each one
-        // *                          from the object pool each time.
-        // */
-        //x dispose(release?: boolean): void {
-        //    // ... this should be the final code executed in the disposal chain (from the derived types, since it should always be top down [opposite of construction]) ...
-        //    var appDomain = (<IDomainObjectInfo><any>this).$__appDomain; // (note: may be set to UNDEFINED if this is called from '{AppDomain}.dispose()')
-        //    this.dispose = noop; // (make sure 'appDomain.dispose(object)' doesn't call back; note: this only hides the prototype function)
-        //    if (appDomain)
-        //        appDomain.dispose(this, release);
-        //};
-        // -------------------------------------------------------------------------------------------------------------------
-        /**
-         * Disposes and reinitializes the current instance.
-         */
-        $__reset() {
-            // ... do a dispose and complete wipe ...
-            if (this.dispose !== DreamSpace.noop)
-                System_1.dispose(this, false); // 'false' also keeps the app domain (see 'dispose()' below), and only removes it from the "active" list.
-            //??if (!this.constructor.new)
-            //    throw Exception.error("{object}.new", "You need to register the class/type first: see 'AppDomain.registerClass()'.", this);
-            var instance = this.init.call(this, this, false, ...arguments);
-            instance.$__appDomain.objects.addObject(instance);
-            delete instance.dispose;
-            return this;
-        }
-        // -------------------------------------------------------------------------------------------------------------------
-        /** Returns the type name for an object instance registered with 'AppDomain.registerType()'.  If the object does not have
-        * type information, and the object is a function, then an attempt is made to pull the function name (if one exists).
-        * Note: This function returns the type name ONLY (not the FULL type name [no namespace path]).
-        * Note: The name will be undefined if a type name cannot be determined.
-        * @param {object} object The object to determine a type name for.  If the object type was not registered using 'AppDomain.registerType()',
-        * and the object is not a function, no type information will be available. Unregistered function objects simply
-        * return the function's name.
-        * @param {boolean} cacheTypeName (optional) If true (default), the name is cached using the 'ITypeInfo' interface via the '$__name' property.
-        * This helps to speed up future calls.
-        */
-        static getTypeName(object, cacheTypeName = true) {
-            this.getTypeName = Types_1.getTypeName;
-            return Types_1.getTypeName(object, cacheTypeName);
-        }
-        /** Returns true if the given object is empty. */
-        static isEmpty(obj) {
-            this.isEmpty = DreamSpace.isEmpty; // (make future calls use the root namespace function that already exists)
-            return DreamSpace.isEmpty(obj);
-        }
-        // -------------------------------------------------------------------------------------------------------------------
-        // This part uses the DreamSpace factory pattern
-        static [DreamSpace.constructor](factory) {
-            factory.init = (o, isnew, value, makeValuePrivate = false) => {
-                if (!isnew)
-                    o.$__reset();
-                if (o.$__appDomain == void 0 && AppDomain_1.AppDomain)
-                    o.$__appDomain = AppDomain_1.AppDomain.default;
-                if (o.$__app == void 0 && System.Application)
-                    o.$__app = Application.default;
-                // ... if a value is given, the behavior changes to latch onto the value ...
-                if (value != void 0) {
-                    if (makeValuePrivate) {
-                        o.valueOf = function () { return value; };
-                        o.toString = function () { return '' + value; };
-                    }
-                    else {
-                        o['$__value'] = value;
-                    }
-                }
-            };
-        }
+exports.DSObject = DSObjectFactory;
+let DSObject = class DSObject extends Types_1.makeDisposable(Globals_1.DreamSpace.global.Object) {
+    // -------------------------------------------------------------------------------------------------------------------
+    /** Returns the type information for this object instance. */
+    getTypeInfo() {
+        if (!this.constructor.$__name && this.constructor.getTypeName)
+            this.constructor.getTypeName();
+        return this.constructor;
     }
-    DSObject.$__type = $__type;
-    DSObject.$__register(System);
-})(DSObject = exports.DSObject || (exports.DSObject = {}));
+    ;
+    /** Returns true if the specified value is equal to this object.
+      * The default implementation only compares if the types and references are equal.  Derived types should override this
+      * with a new more meaningful implementation where necessary.
+      */
+    equal(value) {
+        return this === value;
+    }
+    valueOf() { return this.$__value; }
+    ;
+    toString() { return '' + this; }
+    ;
+    // -------------------------------------------------------------------------------------------------------------------
+    /** Serializes the object's '$__id' value only. */
+    getData(data) {
+    }
+    /** Restores the object's '$__id' value (only works if '$__id' is undefined). */
+    setData(data) {
+    }
+    ///** 
+    // * Release the object back into the object pool. 
+    // * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
+    // *                          false to request that child objects remain connected after disposal (not released). This
+    // *                          can allow quick initialization of a group of objects, instead of having to pull each one
+    // *                          from the object pool each time.
+    // */
+    //x dispose(release?: boolean): void {
+    //    // ... this should be the final code executed in the disposal chain (from the derived types, since it should always be top down [opposite of construction]) ...
+    //    var appDomain = (<IDomainObjectInfo><any>this).$__appDomain; // (note: may be set to UNDEFINED if this is called from '{AppDomain}.dispose()')
+    //    this.dispose = noop; // (make sure 'appDomain.dispose(object)' doesn't call back; note: this only hides the prototype function)
+    //    if (appDomain)
+    //        appDomain.dispose(this, release);
+    //};
+    // -------------------------------------------------------------------------------------------------------------------
+    /**
+     * Disposes and reinitializes the current instance.
+     */
+    $__reset() {
+        // ... do a dispose and complete wipe ...
+        if (this.dispose !== Globals_1.DreamSpace.noop)
+            System_1.dispose(this, false); // 'false' also keeps the app domain (see 'dispose()' below), and only removes it from the "active" list.
+        //??if (!this.constructor.new)
+        //    throw Exception.error("{object}.new", "You need to register the class/type first: see 'AppDomain.registerClass()'.", this);
+        var instance = this.init.call(this, this, false, ...arguments);
+        instance.$__appDomain.objects.addObject(instance);
+        delete instance.dispose;
+        return this;
+    }
+    // -------------------------------------------------------------------------------------------------------------------
+    /** Returns the type name for an object instance registered with 'AppDomain.registerType()'.  If the object does not have
+    * type information, and the object is a function, then an attempt is made to pull the function name (if one exists).
+    * Note: This function returns the type name ONLY (not the FULL type name [no namespace path]).
+    * Note: The name will be undefined if a type name cannot be determined.
+    * @param {object} object The object to determine a type name for.  If the object type was not registered using 'AppDomain.registerType()',
+    * and the object is not a function, no type information will be available. Unregistered function objects simply
+    * return the function's name.
+    * @param {boolean} cacheTypeName (optional) If true (default), the name is cached using the 'ITypeInfo' interface via the '$__name' property.
+    * This helps to speed up future calls.
+    */
+    static getTypeName(object, cacheTypeName = true) {
+        this.getTypeName = Types_1.getTypeName;
+        return Types_1.getTypeName(object, cacheTypeName);
+    }
+    /** Returns true if the given object is empty. */
+    static isEmpty(obj) {
+        this.isEmpty = Globals_1.DreamSpace.isEmpty; // (make future calls use the root namespace function that already exists)
+        return Globals_1.DreamSpace.isEmpty(obj);
+    }
+    // -------------------------------------------------------------------------------------------------------------------
+    // This part uses the DreamSpace factory pattern
+    static [Globals_1.DreamSpace.constructor](f) {
+        f.init = (o, isnew, value, makeValuePrivate = false) => {
+            if (!isnew)
+                o.$__reset();
+            if (o.$__appDomain == void 0 && AppDomain_1.AppDomain)
+                o.$__appDomain = AppDomain_1.AppDomain.default;
+            if (o.$__app == void 0 && AppDomain_1.Application)
+                o.$__app = AppDomain_1.Application.default;
+            // ... if a value is given, the behavior changes to latch onto the value ...
+            if (value != void 0) {
+                if (makeValuePrivate) {
+                    o.valueOf = function () { return value; };
+                    o.toString = function () { return '' + value; };
+                }
+                else {
+                    o['$__value'] = value;
+                }
+            }
+        };
+    }
+};
+DSObject = __decorate([
+    Types_1.usingFactory(DSObjectFactory, this)
+], DSObject);
+exports.DSObjectInstance = DSObject;
 // =======================================================================================================================
 /** Copies over prototype properties from the $Object type to other base primitive types. */
 function _addObjectPrototypeProperties(type) {
@@ -132,9 +129,10 @@ function _addObjectPrototypeProperties(type) {
                 type.prototype[p] = DSObject.prototype[p];
     return type;
 }
+eval("var PrimitiveString = DS.global.String;");
 /* Note: This is a DreamSpace system string object, and not the native JavaScript object. */
 /** Allows manipulation and formatting of text strings, including the determination and location of substrings within strings. */
-class String extends Types_1.FactoryBase(void 0, global.String) {
+class StringFactory extends Types_1.Factory(Types_1.makeFactory(PrimitiveString)) {
     /** Replaces one string with another in a given string.
         * This function is optimized to select the faster method in the current browser. For instance, 'split()+join()' is
         * faster in Chrome, and RegEx based 'replace()' in others.
@@ -148,11 +146,11 @@ class String extends Types_1.FactoryBase(void 0, global.String) {
         if (typeof replaceWith !== 'string')
             replaceWith = "" + replaceWith;
         if (ignoreCase)
-            return source.replace(new RegExp(Utilities.escapeRegex(replaceWhat), 'gi'), replaceWith);
-        else if (Browser.type == Browser.BrowserTypes.Chrome)
+            return source.replace(new RegExp(Utilities_1.default.escapeRegex(replaceWhat), 'gi'), replaceWith);
+        else if (Browser_1.default.type == Browser_1.default.BrowserTypes.Chrome)
             return source.split(replaceWhat).join(replaceWith); // (MUCH faster in Chrome [including Chrome mobile])
         else
-            return source.replace(new RegExp(Utilities.escapeRegex(replaceWhat), 'g'), replaceWith);
+            return source.replace(new RegExp(Utilities_1.default.escapeRegex(replaceWhat), 'g'), replaceWith);
     }
     /** Replaces all tags in the given 'HTML' string with 'tagReplacement' (an empty string by default) and returns the result. */
     static replaceTags(html, tagReplacement) {
@@ -221,7 +219,7 @@ class String extends Types_1.FactoryBase(void 0, global.String) {
     }
     /** Returns an array of all matches of 'regex' in 'text', grouped into sub-arrays (string[matches][groups]). */
     static matches(regex, text) {
-        return DreamSpace.matches(regex, this.toString());
+        return Utilities_1.default.matches(regex, this.toString());
     }
     /** Splits the lines of the text (delimited by '\r\n', '\r', or '\n') into an array of strings. */
     static getLines(text) {
@@ -233,87 +231,88 @@ class String extends Types_1.FactoryBase(void 0, global.String) {
      * @param {Function} lineFilter An optional function to run on every line that should return new line text, or undefined to skip a line.
      */
     static addLineNumbersToText(text, lineFilter) {
-        var lines = String.getLines(text);
+        var lines = this.getLines(text);
         var marginSize = lines.length.toString().length + 1; // (used to find the max padding length; +1 for the period [i.e. '  1.'])
         if (lineFilter && typeof lineFilter != 'function')
             lineFilter = null;
         for (var i = 0, n = lines.length, line, _line; i < n; ++i) {
             line = lines[i];
             var lineNumStr = (1 + i) + '.';
-            var paddedLineNumStr = String.pad(lineNumStr, marginSize, ' ');
+            var paddedLineNumStr = this.pad(lineNumStr, marginSize, ' ');
             lines[i] = lineFilter && (_line = lineFilter(1 + i, marginSize, paddedLineNumStr, line)) !== void 0 && _line !== null && _line || paddedLineNumStr + " " + line;
         }
         return lines.join("\r\n");
     }
 }
-exports.String = String;
-(function (String) {
-    class $__type extends Types_1.DisposableFromBase(global.String) {
-        /** Replaces one string with another in the current string.
-        * This function is optimized to select the faster method in the current browser. For instance, 'split()+join()' is
-        * faster in Chrome, and RegEx based 'replace()' in others.
-        */
-        replaceAll(replaceWhat, replaceWith, ignoreCase) {
-            return String.replace(this.toString(), replaceWhat, replaceWith, ignoreCase);
-        }
-        /** Returns an array of all matches of 'regex' in the underlying string, grouped into sub-arrays (string[matches][groups]). */
-        matches(regex) {
-            return String.matches(regex, this.toString());
-        }
-        toString() { return this.$__value; }
-        valueOf() { return this.$__value; }
-        // (NOTE: This is the magic that makes it work, as 'toString()' is called by the other functions to get the string value, and the native implementation only works on a primitive string only.)
-        static [constructor](factory) {
-            factory.init = (o, isnew, value) => {
-                o.$__value = global.String(value);
-                //??System.String.prototype.constructor.apply(this, arguments);
-                // (IE browsers older than v9 do not populate the string object with the string characters)
-                //if (Browser.type == Browser.BrowserTypes.IE && Browser.version <= 8)
-                o.length = o.$__value.length;
-                for (var i = 0; i < o.length; ++i)
-                    o[i] = o.charAt(i);
-            };
-        }
+exports.String = StringFactory;
+let String = class String extends Types_1.makeDisposable(Globals_1.DreamSpace.global.String) {
+    /** Replaces one string with another in the current string.
+    * This function is optimized to select the faster method in the current browser. For instance, 'split()+join()' is
+    * faster in Chrome, and RegEx based 'replace()' in others.
+    */
+    replaceAll(replaceWhat, replaceWith, ignoreCase) {
+        return StringFactory.replace(this.toString(), replaceWhat, replaceWith, ignoreCase);
     }
-    String.$__type = $__type;
-    String.$__register(System);
-})(String = exports.String || (exports.String = {}));
+    /** Returns an array of all matches of 'regex' in the underlying string, grouped into sub-arrays (string[matches][groups]). */
+    matches(regex) {
+        return StringFactory.matches(regex, this.toString());
+    }
+    toString() { return this.$__value; }
+    valueOf() { return this.$__value; }
+    // (NOTE: This is the magic that makes it work, as 'toString()' is called by the other functions to get the string value, and the native implementation only works on a primitive string only.)
+    static [Globals_1.DreamSpace.constructor](f) {
+        f.init = (o, isnew, value) => {
+            o.$__value = global.String(value);
+            //??System.String.prototype.constructor.apply(this, arguments);
+            // (IE browsers older than v9 do not populate the string object with the string characters)
+            //if (Browser.type == Browser.BrowserTypes.IE && Browser.version <= 8)
+            o.length = o.$__value.length;
+            for (var i = 0; i < o.length; ++i)
+                o[i] = o.charAt(i);
+        };
+    }
+};
+String = __decorate([
+    Types_1.usingFactory(StringFactory, this)
+], String);
+exports.StringInstance = String;
 // =======================================================================================================================
 /** Represents an array of items.
  * Note: This is a DreamSpace system array object, and not the native JavaScript object. Because it is not native,
  * manually setting an array item by index past the end will not modify the length property (this may changed as
  * new features are introduce in future EcmaScript versions [such as 'Object.observe()' in ES7]).
  */
-class Array extends Types_1.FactoryBase(void 0, global.Array) {
+class ArrayFactory extends Types_1.Factory(Types_1.makeFactory(Globals_1.DreamSpace.global.Array)) {
 }
-exports.Array = Array;
-(function (Array) {
-    class $__type extends Types_1.DisposableFromBase(global.Array) {
-        /** Clears the array and returns it. */
-        clear() { this.length = 0; return this; }
-        static [constructor](factory) {
-            if (!ES6) // (if 'class' syntax is not supported then the 'length' property will not behave like an normal array so try to polyfill this somewhat)
-                global.Object.defineProperty(Array.$__type.prototype, "length", {
-                    get: function () { return this._length; },
-                    set: function (v) { this._length = +v || 0; global.Array.prototype.splice(this._length); }
-                });
-            factory.init = (o, isnew, ...items) => {
-                if (!ES6)
-                    o._length = 0;
-                try {
-                    o.push.apply(o, items); // (note: argument limit using this method: http://stackoverflow.com/a/9650855/1236397)
-                }
-                catch (e) {
-                    // (too many items for arguments, need to add each one by one)
-                    for (var i = 0, n = items.length; i < n; ++i)
-                        o.push(items[i]);
-                }
-            };
-        }
+exports.Array = ArrayFactory;
+let Array = Array_1 = class Array extends Types_1.makeDisposable(Globals_1.DreamSpace.global.Array) {
+    /** Clears the array and returns it. */
+    clear() { this.length = 0; return this; }
+    /** The static factory constructor for this type. */
+    static [Globals_1.DreamSpace.constructor](f) {
+        if (!Globals_1.DreamSpace.ES6) // (if 'class' syntax is not supported then the 'length' property will not behave like an normal array so try to polyfill this somewhat)
+            global.Object.defineProperty(Array_1.prototype, "length", {
+                get: function () { return this._length; },
+                set: function (v) { this._length = +v || 0; global.Array.prototype.splice(this._length); }
+            });
+        f.init = (o, isnew, ...items) => {
+            if (!Globals_1.DreamSpace.ES6)
+                o._length = 0;
+            try {
+                o.push.apply(o, items); // (note: argument limit using this method: http://stackoverflow.com/a/9650855/1236397)
+            }
+            catch (e) {
+                // (too many items for arguments, need to add each one by one)
+                for (var i = 0, n = items.length; i < n; ++i)
+                    o.push(items[i]);
+            }
+        };
     }
-    Array.$__type = $__type;
-    Array.$__register(System);
-})(Array = exports.Array || (exports.Array = {}));
+};
+Array = Array_1 = __decorate([
+    Types_1.usingFactory(ArrayFactory, this)
+], Array);
+exports.ArrayInstance = Array;
 // =======================================================================================================================
 //if (Object.freeze) {
 //    Object.freeze($Object);
@@ -323,7 +322,7 @@ exports.Array = Array;
 //}
 // ====================================================================================================================================
 /** Represents an object that can have a parent object. */
-class DependentObject extends DSObject.$__type {
+class DependentObject extends DSObject {
     get parent() { return this.__parent; }
 }
 exports.DependentObject = DependentObject;

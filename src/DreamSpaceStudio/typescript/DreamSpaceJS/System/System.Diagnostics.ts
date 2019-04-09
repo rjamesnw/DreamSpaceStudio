@@ -2,7 +2,7 @@
 // Types for time management.
 // ############################################################################################################################
 
-import { FactoryBase, Disposable } from "../Types";
+import { Factory, Disposable } from "../Types";
 import { DreamSpace as DS, ITypeInfo } from "../Globals";
 import { TimeSpan, ITimeSpan } from "./System.Time";
 import { LogTypes, error, log as base_log } from "../Logging";
@@ -21,7 +21,7 @@ namespace Diagnostics {
 
     // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-    export class LogItem extends FactoryBase() {
+    export class LogItem extends Factory() {
         static 'new'(parent: ILogItem, title: string, message: string, type?: LogTypes, outputToConsole?: boolean): ILogItem;
         static 'new'(parent: ILogItem, title: any, message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true): ILogItem { return null; }
 

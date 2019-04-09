@@ -2,7 +2,7 @@
 // Types for time management.
 // ###########################################################################################################################
 
-import { FactoryBase, FactoryType } from "../Types";
+import { Factory, FactoryType } from "../Types";
 import { DSObject, String } from "./PrimitiveTypes";
 import { DreamSpace as DS} from "../Globals"
 import { Exception } from "./Exception";
@@ -17,7 +17,7 @@ import { Exception } from "./Exception";
  * Note: TimeSpan exposes the results as properties for fast access (rather than getters/setters), but changing individual properties does not
  * cause the other values to update.  Use the supplied functions for manipulating the values.
  */
-export class TimeSpan extends FactoryBase(DSObject) {
+export class TimeSpan extends Factory(DSObject) {
     static 'new': {
         (timeInMS: number): ITimeSpan;
         (year: number, dayOfYear?: number, hours?: number, minutes?: number, seconds?: number, milliseconds?: number): ITimeSpan;

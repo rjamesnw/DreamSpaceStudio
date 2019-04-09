@@ -1,4 +1,4 @@
-import { FactoryBase, ICallback, IResultCallback, IErrorCallback } from "./Types";
+import { Factory, ICallback, IResultCallback, IErrorCallback } from "./Types";
 import { toString } from "./Utilities";
 import { ResourceTypes, RequestStatuses } from "./Resources";
 import { basePathFromResourceType } from "./Core";
@@ -16,7 +16,7 @@ import { Query } from "./Query";
  * Inheritance note: When creating via the 'new' factory method, any already existing instance with the same URL will be returned,
  * and NOT the new object instance.  For this reason, you should call 'loadResource()' instead.
  */
-export class ResourceRequest extends FactoryBase() {
+export class ResourceRequest extends Factory() {
     /** 
      * If true (the default) then a 'ResourceRequest.cacheBustingVar+"="+Date.now()' query item is added to make sure the browser never uses
      * the cache. To change the variable used, set the 'cacheBustingVar' property also.

@@ -16,7 +16,7 @@ const Exception_1 = require("./Exception");
  * Note: TimeSpan exposes the results as properties for fast access (rather than getters/setters), but changing individual properties does not
  * cause the other values to update.  Use the supplied functions for manipulating the values.
  */
-class TimeSpan extends Types_1.FactoryBase(PrimitiveTypes_1.DSObject) {
+class TimeSpan extends Types_1.Factory(PrimitiveTypes_1.DSObject) {
     //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
     /** Returns the time zone offset in milliseconds ({Date}.getTimezoneOffset() returns it in minutes). */
     static getTimeZoneOffset() { return Globals_1.DreamSpace.Time.__localTimeZoneOffset; }

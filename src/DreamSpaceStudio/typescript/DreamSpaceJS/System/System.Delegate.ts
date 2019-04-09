@@ -2,7 +2,7 @@
 // Callback Delegates (serializable - closures should not be used)
 // ###########################################################################################################################
 
-import { FactoryBase } from "../Types";
+import { Factory } from "../Types";
 import { DSObject, IObject } from "./PrimitiveTypes";
 import { INamespaceInfo, IFunctionInfo } from "../Globals";
 
@@ -19,7 +19,7 @@ export interface DelegateFunction<TObj extends object=object> { (...args: any[])
  * serialized.
  * Note: If the target object is undefined, then 'null' is assumed and passed in as 'this'.
  */
-export class Delegate extends FactoryBase(DSObject) {
+export class Delegate extends Factory(DSObject) {
     /**
      * Constructs a new Delegate object.
      * @param {DSObject} object The instance on which the associated function will be called.  This should be undefined/null for static functions.

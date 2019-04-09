@@ -567,7 +567,6 @@ export function makeDisposable<TBaseClass extends IType=ObjectConstructor>(baseC
     cls.prototype.dispose = Disposable.prototype.dispose; // (make these functions both the same function reference by default)
     return cls;
 }
-
 type ExcludeNewInit<T extends { new(...args: any[]): any }> = { [P in Exclude<keyof T, 'new' | 'init'>]: T[P] };
 type FactoryBaseType<T extends IType> =
     {
@@ -647,9 +646,22 @@ export function Factory<TBaseFactory extends IType>(baseFactoryType: TBaseFactor
 }
 
 /** 
-* Associates a class type with a factory class type (see also 'Types.__registerType()' for non-factory supported types).
-* Any static constructors defined will also be called at this point.
+* Designates and registers a class as a factory class type (see also 'Types.__registerType()' for non-factory supported types).
+* Any static constructors defined will also be called at this point (use the 'DreamSpace.constructor' symbol to create static constructors if desired).
 * 
+* @param moduleSpace A reference to the module that contains the factory.
+* @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
+* applied (using the IFunctionInfo interface).
+*/
+export function factory(moduleSpace: object, addMemberTypeInfo = true) {
+    return function (factory: IType & IFactory): any { return <any>Types.__registerFactoryType(factory, factory, moduleSpace, addMemberTypeInfo); };
+}
+
+/** 
+* Associates a class with another class that acts as the factory (see also 'Types.__registerType()' for non-factory supported types).
+* Any static constructors defined will also be called at this point (use the 'DreamSpace.constructor' symbol to create static constructors if desired).
+* This differs from '@factory()' in that it is mainly used when dealing with generic classes (to prevent losing the generic type information).
+*
 * @param moduleSpace A reference to the module that contains the factory.
 * @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
 * applied (using the IFunctionInfo interface).

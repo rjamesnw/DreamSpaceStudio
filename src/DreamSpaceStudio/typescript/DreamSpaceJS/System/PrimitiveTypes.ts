@@ -1,4 +1,4 @@
-﻿import { Factory, makeDisposable, getTypeName, makeFactory, usingFactory } from "../Types";
+﻿import { Factory, makeDisposable, getTypeName, makeFactory, factory, usingFactory } from "../Types";
 import { SerializedData, ISerializable } from "./Serialization";
 import { dispose } from "./System";
 import { AppDomain, Application } from "./AppDomain";
@@ -15,22 +15,39 @@ import Utilities from "../Utilities";
 // =======================================================================================================================
 
 /** The base type for many DreamSpace classes. */
-class DSObjectFactory extends Factory(makeFactory(DS.global.Object)) { // (FACTORY)
+@factory(this)
+export class DSObject extends Factory(makeFactory(makeDisposable(DS.global.Object))) implements ISerializable { // (FACTORY)
     /**
     * Create a new basic object type.
     * @param value If specified, the value will be wrapped in the created object.
     * @param makeValuePrivate If true, the value will not be exposed, making the value immutable. Default is false.
     */
-    static 'new': (value?: any, makeValuePrivate?: boolean) => IObject;
+    static 'new'(value?: any, makeValuePrivate?: boolean): IObject { return null; }
 
     /** This is called internally to initialize a blank instance of the underlying type. Users should call the 'new()'
     * constructor function to get new instances, and 'dispose()' to release them when done.
     */
-    static init: (o: IObject, isnew: boolean, value?: any, makeValuePrivate?: boolean) => void;
-}
+    static init(o: IObject, isnew: boolean, value?: any, makeValuePrivate?: boolean): void {
+        if (!isnew)
+            o.$__reset();
 
-@usingFactory(DSObjectFactory, this)
-class DSObject extends makeDisposable(DS.global.Object) implements ISerializable { // (INSTANCE)
+        if (o.$__appDomain == void 0 && AppDomain)
+            o.$__appDomain = AppDomain.default;
+
+        if (o.$__app == void 0 && Application)
+            o.$__app = Application.default;
+
+        // ... if a value is given, the behavior changes to latch onto the value ...
+        if (value != void 0) {
+            if (makeValuePrivate) {
+                o.valueOf = function () { return value; };
+                o.toString = function () { return '' + value; };
+            } else {
+                o['$__value'] = value;
+            }
+        }
+    }
+
     // -------------------------------------------------------------------------------------------------------------------
 
     private $__value?: any;
@@ -122,34 +139,9 @@ class DSObject extends makeDisposable(DS.global.Object) implements ISerializable
     }
 
     // -------------------------------------------------------------------------------------------------------------------
-    // This part uses the DreamSpace factory pattern
-    private static [DS.constructor](f: typeof DSObjectFactory): void {
-        f.init = (o, isnew, value, makeValuePrivate = false) => {
-            if (!isnew)
-                o.$__reset();
-
-            if (o.$__appDomain == void 0 && AppDomain)
-                o.$__appDomain = AppDomain.default;
-
-            if (o.$__app == void 0 && Application)
-                o.$__app = Application.default;
-
-            // ... if a value is given, the behavior changes to latch onto the value ...
-            if (value != void 0) {
-                if (makeValuePrivate) {
-                    o.valueOf = function () { return value; };
-                    o.toString = function () { return '' + value; };
-                } else {
-                    o['$__value'] = value;
-                }
-            }
-        };
-    }
-    // -------------------------------------------------------------------------------------------------------------------
 }
 
 export interface IObject extends DSObject { }
-export { DSObjectFactory as DSObject, DSObject as DSObjectInstance }; // (EXPORT FACTORY)
 
 // =======================================================================================================================
 
@@ -173,7 +165,8 @@ declare class PrimitiveString extends DS.global.String { }
 
 /* Note: This is a DreamSpace system string object, and not the native JavaScript object. */
 /** Allows manipulation and formatting of text strings, including the determination and location of substrings within strings. */
-class StringFactory extends Factory(makeFactory(PrimitiveString)) { // (FACTORY)
+@factory(this)
+export class String extends Factory(makeFactory(makeDisposable(PrimitiveString))) { // (FACTORY)
     /** Returns a new string object instance. */
     static 'new': (value?: any) => IString;
     /**
@@ -183,7 +176,14 @@ class StringFactory extends Factory(makeFactory(PrimitiveString)) { // (FACTORY)
         * @param object The instance to bind to the resulting delegate object.
         * @param func The function that will be called for the resulting delegate object.
         */
-    static init: (o: IString, isnew: boolean, value?: any) => void;
+    static init(o: IString, isnew: boolean, value?: any): void {
+        o.$__value = global.String(value);
+        //??System.String.prototype.constructor.apply(this, arguments);
+        // (IE browsers older than v9 do not populate the string object with the string characters)
+        //if (Browser.type == Browser.BrowserTypes.IE && Browser.version <= 8)
+        o.length = o.$__value.length;
+        for (var i = 0; i < o.length; ++i) o[i] = o.charAt(i);
+    }
 
     /** Replaces one string with another in a given string.
         * This function is optimized to select the faster method in the current browser. For instance, 'split()+join()' is
@@ -290,10 +290,7 @@ class StringFactory extends Factory(makeFactory(PrimitiveString)) { // (FACTORY)
         }
         return lines.join("\r\n");
     }
-}
 
-@usingFactory(StringFactory, this)
-class String extends makeDisposable(DS.global.String) {
     [index: number]: string;
 
     private $__value?: any;
@@ -304,34 +301,21 @@ class String extends makeDisposable(DS.global.String) {
     * faster in Chrome, and RegEx based 'replace()' in others.
     */
     replaceAll(replaceWhat: string, replaceWith: string, ignoreCase?: boolean): string {
-        return StringFactory.replace(this.toString(), replaceWhat, replaceWith, ignoreCase);
+        return String.replace(this.toString(), replaceWhat, replaceWith, ignoreCase);
     }
 
     /** Returns an array of all matches of 'regex' in the underlying string, grouped into sub-arrays (string[matches][groups]). */
     matches(regex: RegExp): string[][] {
-        return StringFactory.matches(regex, this.toString());
+        return String.matches(regex, this.toString());
     }
 
     toString(): string { return this.$__value; }
 
     valueOf(): any { return this.$__value; }
     // (NOTE: This is the magic that makes it work, as 'toString()' is called by the other functions to get the string value, and the native implementation only works on a primitive string only.)
-
-    private static [DS.constructor](f: typeof StringFactory) {
-        f.init = (o, isnew, value) => {
-            o.$__value = global.String(value);
-            //??System.String.prototype.constructor.apply(this, arguments);
-            // (IE browsers older than v9 do not populate the string object with the string characters)
-            //if (Browser.type == Browser.BrowserTypes.IE && Browser.version <= 8)
-            o.length = o.$__value.length;
-            for (var i = 0; i < o.length; ++i) o[i] = o.charAt(i);
-        };
-    }
 }
 
 export interface IString extends String { }
-
-export { StringFactory as String, String as StringInstance }; // (EXPORT FACTORY)
 
 // =======================================================================================================================
 

@@ -541,8 +541,21 @@ function Factory(baseFactoryType) {
 }
 exports.Factory = Factory;
 /**
-* Associates a class type with a factory class type (see also 'Types.__registerType()' for non-factory supported types).
-* Any static constructors defined will also be called at this point.
+* Designates and registers a class as a factory class type (see also 'Types.__registerType()' for non-factory supported types).
+* Any static constructors defined will also be called at this point (use the 'DreamSpace.constructor' symbol to create static constructors if desired).
+*
+* @param moduleSpace A reference to the module that contains the factory.
+* @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
+* applied (using the IFunctionInfo interface).
+*/
+function factory(moduleSpace, addMemberTypeInfo = true) {
+    return function (factory) { return Types.__registerFactoryType(factory, factory, moduleSpace, addMemberTypeInfo); };
+}
+exports.factory = factory;
+/**
+* Associates a class with another class that acts as the factory (see also 'Types.__registerType()' for non-factory supported types).
+* Any static constructors defined will also be called at this point (use the 'DreamSpace.constructor' symbol to create static constructors if desired).
+* This differs from '@factory()' in that it is mainly used when dealing with generic classes (to prevent losing the generic type information).
 *
 * @param moduleSpace A reference to the module that contains the factory.
 * @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information

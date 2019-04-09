@@ -1,7 +1,7 @@
-﻿import { Factory, getFullTypeName, usingFactory } from "../Types";
+﻿import { Factory, getFullTypeName, factory } from "../Types";
 import { error } from "../Logging";
 import { DreamSpace as DS, IDisposable, ITypeInfo, IFactory } from "../Globals";
-import { DSObject, DSObjectInstance } from "./PrimitiveTypes";
+import { DSObject } from "./PrimitiveTypes";
 import { Exception } from "./Exception";
 import { IndexedObjectCollection, IIndexedObjectCollection } from "./Collections.IndexedObjectCollection";
 import { dispose } from "./System";
@@ -84,18 +84,28 @@ export interface IADBridge extends IDomainObjectInfo {
  * logins, payment details, etc.
  * Note: While script isolation is the default, trusted scripts can run in the system context, and are thus not secured.
  */
-class AppDomainFactory extends Factory(DSObject) {
+@factory(AppDomain, this)
+export class AppDomain extends Factory(DSObject) {
     /** Get a new app domain instance.
     * @param application An optional application to add to the new domain.
     */
     static 'new': (application?: IApplication) => IAppDomain;
+
     /** Constructs an application domain for the specific application instance. */
-    static init: (o: IAppDomain, isnew: boolean, application?: IApplication) => void;
+    static init(o: IAppDomain, isnew: boolean, application?: IApplication): void {
+        this.super.init(o, isnew);
+        (<IDomainObjectInfo><any>o).$__appDomain = o;
+        o.__objects = IndexedObjectCollection.new<IDomainObjectInfo>();
+        o.__objects.__IDPropertyName = <KeyOf<IDomainObjectInfo>>"$__appDomainId";
+        o.applications = typeof application == 'object' ? [application] : [];
+        //? if (global.Object.freeze)
+        //?    global.Object.freeze($this); // (properties cannot be modified once set)
+    }
 
     /** The default system wide application domain.
     * See 'System.Platform.AppDomain' for more details.
     */
-    static get default(): IAppDomain { return AppDomainFactory._default; }
+    static get default(): IAppDomain { return AppDomain._default; }
     static set default(value: IAppDomain) {
         if (!value || !(value instanceof AppDomain)) error("AppDomain.default", "A valid 'AppDomain' instance is required.");
         this._default = value;
@@ -103,11 +113,8 @@ class AppDomainFactory extends Factory(DSObject) {
     private static _default: IAppDomain;
 
     /** A list of all application domains in the system. */
-    static readonly appDomains: IAppDomain[] = [AppDomainFactory.default];
-}
+    static readonly appDomains: IAppDomain[] = [AppDomain.default];
 
-@usingFactory(AppDomainFactory, this)
-class AppDomain extends DSObjectInstance {
     private _applications: IApplication[]; // (allows nesting/embedding child applications which usually run in their own global execution environment)
     private _modules: Scripts.IModule[];
 
@@ -288,22 +295,9 @@ class AppDomain extends DSObjectInstance {
             throw ex;
         }
     }
-
-    private static [DS.constructor](f: typeof AppDomainFactory): void {
-        f.init = (o, isnew, application) => {
-            f.super.init(o, isnew);
-            (<IDomainObjectInfo><any>o).$__appDomain = o;
-            o.__objects = IndexedObjectCollection.new<IDomainObjectInfo>();
-            o.__objects.__IDPropertyName = <KeyOf<IDomainObjectInfo>>"$__appDomainId";
-            o.applications = typeof application == 'object' ? [application] : [];
-            //? if (global.Object.freeze)
-            //?    global.Object.freeze($this); // (properties cannot be modified once set)
-        };
-    }
 }
 
 export interface IAppDomain extends AppDomain { }
-export { AppDomainFactory as AppDomain, AppDomain as AppDomainInstance }; // (EXPORT FACTORY)
 
 //x $AppDomain.prototype.createApplication = function createApplication<TApp extends typeof $Application>(classFactory?: IFactory<TApp>, parent?: Platform.UI.GraphNode, title?: string, description?: string, targetElement?: HTMLElement): TApp {
 //    if (!Platform.UIApplication)
@@ -316,7 +310,8 @@ export { AppDomainFactory as AppDomain, AppDomain as AppDomainInstance }; // (EX
 /** Applications wrap window reference targets, and any specified HTML for configuration and display. There can be many
   * applications in a single AppDomain.
   */
-class ApplicationFactory extends Factory(DSObject) {
+@factory(this)
+export class Application extends Factory(DSObject) {
     static 'new': (title: string, description: string, appID: number) => IApplication;
     static init: (o: IApplication, isnew: boolean, title: string, description: string, appID: number) => void;
 
@@ -327,7 +322,7 @@ class ApplicationFactory extends Factory(DSObject) {
       */
     static get default(): IApplication { return this._default; }
     static set default(value: IApplication) {
-        if (!value || !(value instanceof Application.$__type)) error("Application.default", "A valid 'Application' instance is required.");
+        if (!value || !(value instanceof Application)) error("Application.default", "A valid 'Application' instance is required.");
         this._default = value;
     }
     private static _default: IApplication;
@@ -357,10 +352,7 @@ class ApplicationFactory extends Factory(DSObject) {
         }
     }
     private static _focused: IApplication = null;
-}
 
-@usingFactory(ApplicationFactory, this)
-class Application extends DSObjectInstance {
     // --------------------------------------------------------------------------------------------------------------------------
 
     /** Returns true if this application is focused. */
@@ -418,7 +410,7 @@ class Application extends DSObjectInstance {
 
     // -------------------------------------------------------------------------------------------------------------------------------
 
-    private static [DS.constructor](f: typeof ApplicationFactory) {
+    private static [DS.constructor](f: typeof Application) {
         f.init = (o, isnew, title, description, appID) => {
             f.super.init(o, isnew);
             (<IDomainObjectInfo><any>o).$__app = o;
@@ -430,16 +422,15 @@ class Application extends DSObjectInstance {
 }
 
 export interface IApplication extends Application { }
-export { ApplicationFactory as Application, Application as ApplicationInstance };
 
 // ===================================================================================================================================
 // Create a default application domain and default application.
 // The default app domain is used for new objects created, and the default application can be used to easily represent the current web application.
 
-AppDomainFactory.default = AppDomainFactory.new();
-ApplicationFactory.default = ApplicationFactory.new(window.document.title, "Default Application", 0);
+AppDomain.default = AppDomain.new();
+Application.default = Application.new(window.document.title, "Default Application", 0);
 
-DS.frozen(AppDomainFactory);
-DS.frozen(ApplicationFactory);
+DS.frozen(AppDomain);
+DS.frozen(Application);
 
 // ========================================================================================================================================

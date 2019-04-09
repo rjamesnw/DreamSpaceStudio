@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var Array_1;
+var String_1, Array_1;
 const Types_1 = require("../Types");
 const System_1 = require("./System");
 const AppDomain_1 = require("./AppDomain");
@@ -14,10 +14,34 @@ const Utilities_1 = require("../Utilities");
 // Thing that gets passed a function and makes a decorator:
 // =======================================================================================================================
 /** The base type for many DreamSpace classes. */
-class DSObjectFactory extends Types_1.Factory(Types_1.makeFactory(Globals_1.DreamSpace.global.Object)) {
-}
-exports.DSObject = DSObjectFactory;
-let DSObject = class DSObject extends Types_1.makeDisposable(Globals_1.DreamSpace.global.Object) {
+let DSObject = class DSObject extends Types_1.Factory(Types_1.makeFactory(Types_1.makeDisposable(Globals_1.DreamSpace.global.Object))) {
+    /**
+    * Create a new basic object type.
+    * @param value If specified, the value will be wrapped in the created object.
+    * @param makeValuePrivate If true, the value will not be exposed, making the value immutable. Default is false.
+    */
+    static 'new'(value, makeValuePrivate) { return null; }
+    /** This is called internally to initialize a blank instance of the underlying type. Users should call the 'new()'
+    * constructor function to get new instances, and 'dispose()' to release them when done.
+    */
+    static init(o, isnew, value, makeValuePrivate) {
+        if (!isnew)
+            o.$__reset();
+        if (o.$__appDomain == void 0 && AppDomain_1.AppDomain)
+            o.$__appDomain = AppDomain_1.AppDomain.default;
+        if (o.$__app == void 0 && AppDomain_1.Application)
+            o.$__app = AppDomain_1.Application.default;
+        // ... if a value is given, the behavior changes to latch onto the value ...
+        if (value != void 0) {
+            if (makeValuePrivate) {
+                o.valueOf = function () { return value; };
+                o.toString = function () { return '' + value; };
+            }
+            else {
+                o['$__value'] = value;
+            }
+        }
+    }
     // -------------------------------------------------------------------------------------------------------------------
     /** Returns the type information for this object instance. */
     getTypeInfo() {
@@ -93,33 +117,11 @@ let DSObject = class DSObject extends Types_1.makeDisposable(Globals_1.DreamSpac
         this.isEmpty = Globals_1.DreamSpace.isEmpty; // (make future calls use the root namespace function that already exists)
         return Globals_1.DreamSpace.isEmpty(obj);
     }
-    // -------------------------------------------------------------------------------------------------------------------
-    // This part uses the DreamSpace factory pattern
-    static [Globals_1.DreamSpace.constructor](f) {
-        f.init = (o, isnew, value, makeValuePrivate = false) => {
-            if (!isnew)
-                o.$__reset();
-            if (o.$__appDomain == void 0 && AppDomain_1.AppDomain)
-                o.$__appDomain = AppDomain_1.AppDomain.default;
-            if (o.$__app == void 0 && AppDomain_1.Application)
-                o.$__app = AppDomain_1.Application.default;
-            // ... if a value is given, the behavior changes to latch onto the value ...
-            if (value != void 0) {
-                if (makeValuePrivate) {
-                    o.valueOf = function () { return value; };
-                    o.toString = function () { return '' + value; };
-                }
-                else {
-                    o['$__value'] = value;
-                }
-            }
-        };
-    }
 };
 DSObject = __decorate([
-    Types_1.usingFactory(DSObjectFactory, this)
+    Types_1.factory(this)
 ], DSObject);
-exports.DSObjectInstance = DSObject;
+exports.DSObject = DSObject;
 // =======================================================================================================================
 /** Copies over prototype properties from the $Object type to other base primitive types. */
 function _addObjectPrototypeProperties(type) {
@@ -132,7 +134,23 @@ function _addObjectPrototypeProperties(type) {
 eval("var PrimitiveString = DS.global.String;");
 /* Note: This is a DreamSpace system string object, and not the native JavaScript object. */
 /** Allows manipulation and formatting of text strings, including the determination and location of substrings within strings. */
-class StringFactory extends Types_1.Factory(Types_1.makeFactory(PrimitiveString)) {
+let String = String_1 = class String extends Types_1.Factory(Types_1.makeFactory(Types_1.makeDisposable(PrimitiveString))) {
+    /**
+        * Reinitializes a disposed Delegate instance.
+        * @param this The Delegate instance to initialize, or re-initialize.
+        * @param isnew If true, this is a new instance, otherwise it is from a cache (and may have some preexisting properties).
+        * @param object The instance to bind to the resulting delegate object.
+        * @param func The function that will be called for the resulting delegate object.
+        */
+    static init(o, isnew, value) {
+        o.$__value = global.String(value);
+        //??System.String.prototype.constructor.apply(this, arguments);
+        // (IE browsers older than v9 do not populate the string object with the string characters)
+        //if (Browser.type == Browser.BrowserTypes.IE && Browser.version <= 8)
+        o.length = o.$__value.length;
+        for (var i = 0; i < o.length; ++i)
+            o[i] = o.charAt(i);
+    }
     /** Replaces one string with another in a given string.
         * This function is optimized to select the faster method in the current browser. For instance, 'split()+join()' is
         * faster in Chrome, and RegEx based 'replace()' in others.
@@ -243,39 +261,24 @@ class StringFactory extends Types_1.Factory(Types_1.makeFactory(PrimitiveString)
         }
         return lines.join("\r\n");
     }
-}
-exports.String = StringFactory;
-let String = class String extends Types_1.makeDisposable(Globals_1.DreamSpace.global.String) {
     /** Replaces one string with another in the current string.
     * This function is optimized to select the faster method in the current browser. For instance, 'split()+join()' is
     * faster in Chrome, and RegEx based 'replace()' in others.
     */
     replaceAll(replaceWhat, replaceWith, ignoreCase) {
-        return StringFactory.replace(this.toString(), replaceWhat, replaceWith, ignoreCase);
+        return String_1.replace(this.toString(), replaceWhat, replaceWith, ignoreCase);
     }
     /** Returns an array of all matches of 'regex' in the underlying string, grouped into sub-arrays (string[matches][groups]). */
     matches(regex) {
-        return StringFactory.matches(regex, this.toString());
+        return String_1.matches(regex, this.toString());
     }
     toString() { return this.$__value; }
     valueOf() { return this.$__value; }
-    // (NOTE: This is the magic that makes it work, as 'toString()' is called by the other functions to get the string value, and the native implementation only works on a primitive string only.)
-    static [Globals_1.DreamSpace.constructor](f) {
-        f.init = (o, isnew, value) => {
-            o.$__value = global.String(value);
-            //??System.String.prototype.constructor.apply(this, arguments);
-            // (IE browsers older than v9 do not populate the string object with the string characters)
-            //if (Browser.type == Browser.BrowserTypes.IE && Browser.version <= 8)
-            o.length = o.$__value.length;
-            for (var i = 0; i < o.length; ++i)
-                o[i] = o.charAt(i);
-        };
-    }
 };
-String = __decorate([
-    Types_1.usingFactory(StringFactory, this)
+String = String_1 = __decorate([
+    Types_1.factory(this)
 ], String);
-exports.StringInstance = String;
+exports.String = String;
 // =======================================================================================================================
 /** Represents an array of items.
  * Note: This is a DreamSpace system array object, and not the native JavaScript object. Because it is not native,

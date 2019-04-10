@@ -7,6 +7,7 @@
     <RootNamespace>DreamSpaceStudio</RootNamespace>
     <LastActiveSolutionConfig>Debug|Any CPU</LastActiveSolutionConfig>
     <SaveNodeJsSettingsInProjectFile>True</SaveNodeJsSettingsInProjectFile>
+    <TypeScriptBuildMode>true</TypeScriptBuildMode>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -14,7 +15,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>299b48b6-ada3-487d-b803-ad33d3471265</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>app.js</StartupFile>
+    <StartupFile>
+    </StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -24,7 +26,7 @@
     <NodejsPort>1337</NodejsPort>
     <TypeScriptSourceMap>true</TypeScriptSourceMap>
     <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
-    <TypeScriptToolsVersion>3.1</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
     <EnableTypeScript>true</EnableTypeScript>
     <StartWebBrowser>True</StartWebBrowser>
   </PropertyGroup>
@@ -43,7 +45,7 @@
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Query.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Path.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\IO.ts" />
-    <TypeScriptCompile Include="TypeScript\types\DreamSpace.ts" />
+    <TypeScriptCompile Include="TypeScript\types\DreamSpace~.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Resources.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\ErrorHandling.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Logging.ts" />
@@ -68,7 +70,7 @@
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Collections.IndexedObjectCollection.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Collections.ObservableCollection.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Data.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Delegate.ts" />
+    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Delegate.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Diagnostics.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Events.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Exception.ts" />
@@ -107,9 +109,10 @@
     <Content Include="..\..\README.md">
       <Link>README.md</Link>
     </Content>
-    <Content Include="tsconfig.json" />
+    <Content Include="TypeScript\tsconfig.json" />
     <Content Include="package.json" />
     <Content Include="public\stylesheets\main.css" />
+    <Content Include="TypeScript\client\tsconfig.json" />
     <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\.gitignore" />
     <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\custom-message\index.html" />
     <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\hash-trick\index.html" />
@@ -129,7 +132,6 @@
     <Content Include="typescript\DreamSpaceJS\HoldOn\HoldOn.min.css" />
     <Content Include="typescript\DreamSpaceJS\JQuery\jquery_2_2_0.min.map" />
     <Content Include="typescript\DreamSpaceJS\Scripting Symanics Ideas.txt" />
-    <Content Include="typescript\DreamSpaceJS\tsconfig.json" />
     <Content Include="typescript\DreamSpaceJS\Twitter\bootstrap\css\bootstrap-theme.css" />
     <Content Include="typescript\DreamSpaceJS\Twitter\bootstrap\css\bootstrap-theme.min.css" />
     <Content Include="typescript\DreamSpaceJS\Twitter\bootstrap\css\bootstrap.css" />
@@ -186,6 +188,7 @@
     <Folder Include="typescript\DreamSpaceJS\Twitter\bootstrap\fonts\" />
     <Folder Include="typescript\DreamSpaceJS\Twitter\bootstrap\js\" />
     <Folder Include="typescript\DreamSpaceJS\xregexp\" />
+    <Folder Include="TypeScript\client\" />
     <Folder Include="TypeScript\types\" />
     <Folder Include="typescript\server\" />
     <Folder Include="views\" />

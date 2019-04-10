@@ -77,14 +77,14 @@ export interface IADBridge extends IDomainObjectInfo {
 
 // ====================================================================================================================================
 
-/** 
+/**
  * Application domains encapsulate applications and confine them to a root working space.  When application scripts are
  * loaded, they are isolated and run in the context of a new global scope.  This protects the main window UI, and also
  * protects the user from malicious applications that may try to hook into and read a user's key strokes to steal
  * logins, payment details, etc.
  * Note: While script isolation is the default, trusted scripts can run in the system context, and are thus not secured.
  */
-@factory(AppDomain, this)
+@factory(this)
 export class AppDomain extends Factory(DSObject) {
     /** Get a new app domain instance.
     * @param application An optional application to add to the new domain.
@@ -428,7 +428,7 @@ export interface IApplication extends Application { }
 // The default app domain is used for new objects created, and the default application can be used to easily represent the current web application.
 
 AppDomain.default = AppDomain.new();
-Application.default = Application.new(window.document.title, "Default Application", 0);
+Application.default = Application.new(DS.global.document.title, "Default Application", 0);
 
 DS.frozen(AppDomain);
 DS.frozen(Application);

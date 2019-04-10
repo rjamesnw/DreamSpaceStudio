@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "lib": [ "es6" ],
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "experimentalDecorators": true
+  },
+  //"include": [ "DreamSpaceJS/Polyfills.ts", "DreamSpaceJS/System/Delegate.ts" ],
+  "exclude": [
+    "node_modules",
+    "public",
+    "TypeScript/DreamSpaceJS",
+    "TypeScript/types/DreamSpace*.*",
+    "htmlreader.ts",
+    "DreamSpace~.ts"
+  ]
+}

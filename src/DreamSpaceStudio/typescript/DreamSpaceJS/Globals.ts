@@ -521,10 +521,10 @@ export interface ITypeInfo {
       */
     $__name?: string;
 
-    ///** Returns the full name of this type (includes the namespace).
-    //  * Note: This value is only set on types registered using '{AppDomain}.registerType()'.
-    //  */
-    //$__fullname?: string;
+    /** Returns the full name of this type (includes the namespace).
+      * Note: This value is only set on types registered using '{AppDomain}.registerType()'.
+      */
+    $__fullname?: string;
 }
 
 export interface IType<TInstance = object> {

@@ -4,15 +4,15 @@
 
 import { DreamSpace as DS } from "./Globals";
 import { log, error } from "./Logging";
-import { Factory, nameof, FactoryType } from "./Types";
-
-import Globals = DS.Globals;
+import { Factory, nameof } from "./Types";
 import IO from "./IO";
 import { ResourceTypes, RequestStatuses } from "./Resources";
 import { String, IAddLineNumbersFilter } from "./System/PrimitiveTypes";
 import { extractPragmas } from "./Core";
 import { renderHelperVarDeclarations } from "./TSHelpers";
 import { Exception } from "./System/Exception";
+
+import Globals = DS.Globals;
 
 /** Types and functions for loading scripts into the DreamSpace system. */
 
@@ -72,43 +72,39 @@ export class ScriptResource extends Factory(IO.ResourceRequest) {
     /** Returns a new module object only - does not load it. */
     static 'new': (url: string) => IScriptResource;
     /** Returns a new module object only - does not load it. */
-    static init: (o: IScriptResource, isnew: boolean, url: string) => void;
-}
-export namespace ScriptResource {
-    export class $__type extends FactoryType(IO.ResourceRequest) {
-        /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DreamSpace.Globals' and 'Globals.register()'. */
-        registerGlobal<T>(name: string, initialValue: T, asHostGlobal?: boolean): string {
-            return Globals.register(this, name, initialValue, asHostGlobal);
-        }
-        /** For help, see 'DreamSpace.Globals'. */
-        globalExists<T>(name: string): boolean {
-            return Globals.exists(this, name);
-        }
-        /** For help, see 'DreamSpace.Globals'. */
-        eraseGlobal<T>(name: string): boolean {
-            return Globals.erase(this, name);
-        }
-        /** For help, see 'DreamSpace.Globals'. */
-        clearGlobals<T>(): boolean {
-            return Globals.clear(this);
-        }
-        /** For help, see 'DreamSpace.Globals'. */
-        setGlobalValue<T>(name: string, value: T): T {
-            return Globals.setValue<T>(this, name, value);
-        }
-        /** For help, see 'DreamSpace.Globals'. */
-        getGlobalValue<T>(name: string): T {
-            return Globals.getValue<T>(this, name);
-        }
-
-        private static [DS.constructor](factory: typeof ScriptResource) {
-            factory.init = (o, isnew, url) => {
-                factory.super.init(o, isnew, url, ResourceTypes.Application_Script);
-            };
-        }
+    static init(o: IScriptResource, isnew: boolean, url: string): void {
+        this.super.init(o, isnew, url, ResourceTypes.Application_Script);
     }
 
-    ScriptResource.$__register(Scripts);
+    /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DreamSpace.Globals' and 'Globals.register()'. */
+    registerGlobal<T>(name: string, initialValue: T, asHostGlobal?: boolean): string {
+        return Globals.register(this, name, initialValue, asHostGlobal);
+    }
+    /** For help, see 'DreamSpace.Globals'. */
+    globalExists<T>(name: string): boolean {
+        return Globals.exists(this, name);
+    }
+    /** For help, see 'DreamSpace.Globals'. */
+    eraseGlobal<T>(name: string): boolean {
+        return Globals.erase(this, name);
+    }
+    /** For help, see 'DreamSpace.Globals'. */
+    clearGlobals<T>(): boolean {
+        return Globals.clear(this);
+    }
+    /** For help, see 'DreamSpace.Globals'. */
+    setGlobalValue<T>(name: string, value: T): T {
+        return Globals.setValue<T>(this, name, value);
+    }
+    /** For help, see 'DreamSpace.Globals'. */
+    getGlobalValue<T>(name: string): T {
+        return Globals.getValue<T>(this, name);
+    }
+
+    private static [DS.constructor](factory: typeof ScriptResource) {
+        factory.init = (o, isnew, url) => {
+        };
+    }
 }
 
 export interface IScriptResource extends ScriptResource.$__type { }

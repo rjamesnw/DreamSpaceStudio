@@ -3,7 +3,7 @@
 // ############################################################################################################################
 
 import { DreamSpace as DS } from "../Globals";
-import { IDelegate } from "./System.Delegate";
+import { IDelegate } from "./Delegate";
 import { Factory, FactoryType } from "../Types";
 import { Exception } from "./Exception";
 import { DSObject, Array, DependentObject } from "./PrimitiveTypes";

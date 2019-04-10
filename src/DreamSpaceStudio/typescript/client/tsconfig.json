@@ -1,0 +1,21 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "composite": true,
+    "target": "es6",
+    "module": "amd",
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "declaration": true,
+    "outDir": "../../public/js/client",
+    "lib": [ "es6", "dom" ],
+    "noEmitHelpers": true,
+    "experimentalDecorators": true
+  },
+  "include": [ "./**/*.ts", "../DreamSpaceJS/**/*.ts" ],
+  "exclude": [
+    "node_modules",
+    "Loader.ts",
+    "manifest.ts"
+  ]
+}

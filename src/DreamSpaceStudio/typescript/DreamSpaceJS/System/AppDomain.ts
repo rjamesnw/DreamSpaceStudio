@@ -1,10 +1,11 @@
-﻿import { Factory, getFullTypeName, factory } from "../Types";
+﻿import { Factory, getFullTypeName, factory, Types } from "../Types";
 import { error } from "../Logging";
-import { DreamSpace as DS, IDisposable, ITypeInfo, IFactory } from "../Globals";
+import { DreamSpace as DS, IDisposable, ITypeInfo, IFactory, IType } from "../Globals";
 import { DSObject } from "./PrimitiveTypes";
 import { Exception } from "./Exception";
 import { IndexedObjectCollection, IIndexedObjectCollection } from "./Collections.IndexedObjectCollection";
 import { dispose } from "./System";
+import { IModule } from "../Scripts";
 
 // ############################################################################################################################################
 // Application Domains
@@ -116,7 +117,7 @@ export class AppDomain extends Factory(DSObject) {
     static readonly appDomains: IAppDomain[] = [AppDomain.default];
 
     private _applications: IApplication[]; // (allows nesting/embedding child applications which usually run in their own global execution environment)
-    private _modules: Scripts.IModule[];
+    private _modules: IModule[];
 
     /** A type bridge is a object instance who's prototype points to the actual static function object.
       * Each time "{AppDomain}.with()" is used, a bridge is created and cached here under the type name for reuse.
@@ -168,7 +169,7 @@ export class AppDomain extends Factory(DSObject) {
     dispose(object?: IDisposable, release: boolean = true): void {
         var _object: IDomainObjectInfo = <any>object;
         if (arguments.length > 0) {
-            __disposeValidate(object, "{AppDomain}.dispose()", this);
+            Types.__disposeValidate(object, "{AppDomain}.dispose()", this);
 
             // ... make sure 'dispose()' was called on the object for the correct app domain ...
 
@@ -252,7 +253,7 @@ export class AppDomain extends Factory(DSObject) {
         var type = <IDomainObjectInfo><any>object;
         if (type.$__disposing || type.$__disposed)
             error("attachObject()", "The specified object instance of type '" + getFullTypeName(type) + "' is disposed.", type);
-        if (!type.$__corext || !type.$__appDomain || !type.dispose)
+        if (!type.$__ds || !type.$__appDomain || !type.dispose)
             error("attachObject()", "The specified type '" + getFullTypeName(type) + "' is not valid for this operation. Make sure to use 'DreamSpace.ClassFactory()' to create valid factory types, or make sure the 'IDomainObjectInfo' properties are satisfied.", type);
         if (type.$__appDomain != this)
             error("attachObject()", "The specified object instance of type '" + getFullTypeName(type) + "' is already attached to a different application domain.", type);
@@ -338,7 +339,7 @@ export class Application extends Factory(DSObject) {
     // -------------------------------------------------------------------------------------------------------------------------------
 
     /** A list of all applications in the system. */
-    static applications: IApplication[] = [this._default];
+    static applications: IApplication[] = [Application._default];
 
     /** References the application who's window currently has user focus. You can also set this property to change window focus. */
     static get focused(): IApplication {
@@ -372,7 +373,7 @@ export class Application extends Factory(DSObject) {
     private _appDomains: IAppDomain[];
 
     private _applications: Application[]; // (allows nesting/embedding child applications which usually run in their own global execution environment)
-    private _modules: Scripts.IModule[];
+    private _modules: IModule[];
 
     /** Returns the default (first) application for this domain. */
     application(): Application {

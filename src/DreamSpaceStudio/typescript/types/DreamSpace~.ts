@@ -38,6 +38,6 @@ export * from "./Syste./System/Exceptionort * from "./System/System.Diagnostics"
 export * from "../DreamSpaceJS/System/System.Events";
 export * from "../DreamSpaceJS/System/System.Browser";
 export * from "../DreamSpaceJS/System/System.Text";
-export * from "../DreamSpaceJS/System/System.Data";
+export * from "../DreamSpaceJS/System/Data";
 export * from "../DreamSpaceJS/System/System.IO";
 export * from "../DreamSpaceJS/System/System.Storage";

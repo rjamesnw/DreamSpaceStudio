@@ -2,10 +2,10 @@
 // Types for time management.
 // ###########################################################################################################################
 
-import { DreamSpace as DS } from "./Globals";
+import { DreamSpace as DS, ICallback } from "./Globals";
 import { log, error } from "./Logging";
-import { Factory, nameof } from "./Types";
-import IO from "./IO";
+import { Factory, nameof, factory } from "./Types";
+import { IO } from "./IO";
 import { ResourceTypes, RequestStatuses } from "./Resources";
 import { String, IAddLineNumbersFilter } from "./System/PrimitiveTypes";
 import { extractPragmas } from "./Core";
@@ -13,6 +13,9 @@ import { renderHelperVarDeclarations } from "./TSHelpers";
 import { Exception } from "./System/Exception";
 
 import Globals = DS.Globals;
+import { getErrorMessage } from "./ErrorHandling";
+import { Utilities }  from "./Utilities";
+import { ResourceRequest } from "./ResourceRequest";
 
 /** Types and functions for loading scripts into the DreamSpace system. */
 
@@ -27,23 +30,23 @@ export var MANIFEST_DEPENDENCIES_REGEX = /^\s*using:\s*([A-Za-z0-9$_.,\s]*)/gim;
  * A code-completion friendly list of registered modules.
  * Note: Though module references may show in code completion, the related manifests in each plugin location must be
  * loaded first before a module is ready for use.
- * Usage: To load a module, call it using the '[DreamSpace.]using.ModuleName(...)' syntax.
+ * Usage: To load a module, call it using the '[DS.]using.ModuleName(...)' syntax.
  * Note: If you are developing your own module, use a proper name path under the Modules namespace -
- * typically something like 'namespace DreamSpace.Scripts.Modules { /** Description... * / export namespace CompanyOrWebsite.YourModule { ... } }'
+ * typically something like 'namespace DS.Scripts.Modules { /** Description... * / export namespace CompanyOrWebsite.YourModule { ... } }'
  * (take note that the comments are in their own scope, which is required as well).
  * Remember: You can create a sub-namespace name with specific versions of your scripts (i.e. 'export namespace Company.MyScript.v1_0_0').
  */
-export namespace Modules {
+export var Modules = {
 
     /** 
      * Supported DreamSpace system modules.
      * Note: If you are developing your own module, use a proper name path under the parent 'Modules' namespace -
-     * typically something like 'namespace DreamSpace.Scripts.Modules { export namespace CompanyOrWebsite.YourModule { ... } }',
+     * typically something like 'namespace DS.Scripts.Modules { export namespace CompanyOrWebsite.YourModule { ... } }',
      * much like how GitHub URLs look like (i.e. 'Microsoft/TypeScript' might be 'Microsoft.TypeScript')
-     * * Do not put custom modules directly in the 'DreamSpace.Scripts.Modules.System' namespace, nor any sub-namespace from there.
+     * * Do not put custom modules directly in the 'DS.Scripts.Modules.System' namespace, nor any sub-namespace from there.
      * Remember: You can create a sub-namespace name with specific versions of your scripts (i.e. 'export namespace Company.MyScript.v1_0_0').
      */
-    export namespace System {
+    System: {
     }
 }
 
@@ -55,8 +58,8 @@ export function moduleNamespaceToFolderPath(nsName: string) {
     var _nsName = ('' + nsName).trim();
     if (!nsName || !_nsName)
         log(nameof(() => moduleNamespaceToFolderPath) + "()", "A valid non-empty namespace string was expected.");
-    var sysNs1 = nameof(() => DreamSpace.Scripts.Modules) + "."; // (account for full names or relative names)
-    var sysNs2 = nameof(() => Scripts.Modules) + ".";
+    var sysNs1 = nameof(() => Modules) + "."; // (account for full names or relative names)
+    var sysNs2 = nameof(() => Modules) + ".";
     var sysNs3 = nameof(() => Modules) + ".";
     if (_nsName.substr(0, sysNs1.length) === sysNs1) _nsName = _nsName.substr(sysNs1.length);
     else if (_nsName.substr(0, sysNs2.length) === sysNs2) _nsName = _nsName.substr(sysNs2.length);
@@ -68,7 +71,8 @@ export function moduleNamespaceToFolderPath(nsName: string) {
 
 // ====================================================================================================================
 
-export class ScriptResource extends Factory(IO.ResourceRequest) {
+@factory(this)
+export class ScriptResource extends Factory(ResourceRequest) {
     /** Returns a new module object only - does not load it. */
     static 'new': (url: string) => IScriptResource;
     /** Returns a new module object only - does not load it. */
@@ -76,27 +80,27 @@ export class ScriptResource extends Factory(IO.ResourceRequest) {
         this.super.init(o, isnew, url, ResourceTypes.Application_Script);
     }
 
-    /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DreamSpace.Globals' and 'Globals.register()'. */
+    /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DS.Globals' and 'Globals.register()'. */
     registerGlobal<T>(name: string, initialValue: T, asHostGlobal?: boolean): string {
         return Globals.register(this, name, initialValue, asHostGlobal);
     }
-    /** For help, see 'DreamSpace.Globals'. */
+    /** For help, see 'DS.Globals'. */
     globalExists<T>(name: string): boolean {
         return Globals.exists(this, name);
     }
-    /** For help, see 'DreamSpace.Globals'. */
+    /** For help, see 'DS.Globals'. */
     eraseGlobal<T>(name: string): boolean {
         return Globals.erase(this, name);
     }
-    /** For help, see 'DreamSpace.Globals'. */
+    /** For help, see 'DS.Globals'. */
     clearGlobals<T>(): boolean {
         return Globals.clear(this);
     }
-    /** For help, see 'DreamSpace.Globals'. */
+    /** For help, see 'DS.Globals'. */
     setGlobalValue<T>(name: string, value: T): T {
         return Globals.setValue<T>(this, name, value);
     }
-    /** For help, see 'DreamSpace.Globals'. */
+    /** For help, see 'DS.Globals'. */
     getGlobalValue<T>(name: string): T {
         return Globals.getValue<T>(this, name);
     }
@@ -121,47 +125,42 @@ export class Manifest extends Factory(ScriptResource) {
     static 'new': (url: string) => IManifest;
     /** Holds variables required for manifest execution (for example, callback functions for 3rd party libraries, such as the Google Maps API). */
     static init: (o: IManifest, isnew: boolean, url: string) => void;
-}
-export namespace Manifest {
-    // (evaluated last, but called first)
-    export class $__type extends FactoryType(ScriptResource) {
-        /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DreamSpace.Globals' and 'Globals.register()'. */
-        registerGlobal<T>(name: string, initialValue: T, asHostGlobal?: boolean): string {
-            return Globals.register(this, name, initialValue, asHostGlobal);
-        }
-        /** For help, see 'DreamSpace.Globals'. */
-        globalExists<T>(name: string): boolean {
-            return Globals.exists(this, name);
-        }
-        /** For help, see 'DreamSpace.Globals'. */
-        eraseGlobal<T>(name: string): boolean {
-            return Globals.erase(this, name);
-        }
-        /** For help, see 'DreamSpace.Globals'. */
-        clearGlobals<T>(): boolean {
-            return Globals.clear(this);
-        }
-        /** For help, see 'DreamSpace.Globals'. */
-        setGlobalValue<T>(name: string, value: T): T {
-            return Globals.setValue<T>(this, name, value);
-        }
-        /** For help, see 'DreamSpace.Globals'. */
-        getGlobalValue<T>(name: string): T {
-            return Globals.getValue<T>(this, name);
-        }
 
-        private static [DS.constructor](factory: typeof ScriptResource) {
-            factory.init = (o, isnew, url) => {
-                factory.super.init(o, isnew, url, ResourceTypes.Application_Script);
-            };
-        }
+    /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DS.Globals' and 'Globals.register()'. */
+    registerGlobal<T>(name: string, initialValue: T, asHostGlobal?: boolean): string {
+        return Globals.register(this, name, initialValue, asHostGlobal);
+    }
+    /** For help, see 'DS.Globals'. */
+    globalExists<T>(name: string): boolean {
+        return Globals.exists(this, name);
+    }
+    /** For help, see 'DS.Globals'. */
+    eraseGlobal<T>(name: string): boolean {
+        return Globals.erase(this, name);
+    }
+    /** For help, see 'DS.Globals'. */
+    clearGlobals<T>(): boolean {
+        return Globals.clear(this);
+    }
+    /** For help, see 'DS.Globals'. */
+    setGlobalValue<T>(name: string, value: T): T {
+        return Globals.setValue<T>(this, name, value);
+    }
+    /** For help, see 'DS.Globals'. */
+    getGlobalValue<T>(name: string): T {
+        return Globals.getValue<T>(this, name);
     }
 
-    Manifest.$__register(Scripts);
-    sealed($__type);
+    private static [DS.constructor](factory: typeof ScriptResource) {
+        factory.init = (o, isnew, url) => {
+            factory.super.init(o, isnew, url, ResourceTypes.Application_Script);
+        };
+    }
 }
 
-export interface IManifest extends Manifest.$__type { }
+sealed(Manifest);
+
+export interface IManifest extends Manifest { }
 
 // ====================================================================================================================
 
@@ -260,7 +259,7 @@ export function getManifest(path?: string): IManifest {
         if (!data) return;
         var script: string = (typeof data == 'string' ? data : '' + data);
         if (script) {
-            var matches: string[][] = DreamSpace.matches(MANIFEST_DEPENDENCIES_REGEX, script); // ("a.b.x, a.b.y, a.b.z")
+            var matches: string[][] = Utilities.matches(MANIFEST_DEPENDENCIES_REGEX, script); // ("a.b.x, a.b.y, a.b.z")
             if (matches.length) {
                 var dependencies: string[] = [];
                 for (var i = 0, n = matches.length; i < n; i++) {
@@ -295,7 +294,7 @@ export function getManifest(path?: string): IManifest {
             func.call(this, manifestRequest, DreamSpace); // (make sure 'this' is supplied, just in case, to help protect the global scope somewhat [instead of forcing 'strict' mode])
         }
         catch (ex) {
-            errorResult = ScriptError.fromError(ex, func && func.toString() || script, nameof(() => DreamSpace.Scripts.getManifest, true) + "() while executing " + manifestRequest.url);
+            errorResult = ScriptError.fromError(ex, func && func.toString() || script, nameof(() => getManifest, true) + "() while executing " + manifestRequest.url);
             error("getManifest(" + path + ")", "Error executing script: " + errorResult.message + "\r\nScript: \r\n" + errorResult.getFormatedSource(), manifestRequest);
         }
         manifestRequest.status = RequestStatuses.Executed;
@@ -322,7 +321,7 @@ export enum ModuleLoadStatus {
     Waiting,
     /** The script is loading. */
     InProgress,
-    /** The script is now available, but has not executed yet. Scripts only execute when needed (see 'DreamSpace.using'). */
+    /** The script is now available, but has not executed yet. Scripts only execute when needed (see 'DS.using'). */
     Loaded,
     /** The script has been executed. */
     Ready
@@ -339,9 +338,6 @@ export class Module extends Factory(ScriptResource) {
     static 'new': (fullname: string, url: string, minifiedUrl?: string) => IModule;
     /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
     static init: (o: IModule, isnew: boolean, fullname: string, url: string, minifiedUrl?: string) => void;
-}
-export namespace Module {
-    export class $__type extends FactoryType(ScriptResource) {
 
         /** The full type name for this module. */
         fullname: string;
@@ -372,7 +368,7 @@ export namespace Module {
 
         /** This 'exports' container exists to support loading client-side modules in a NodeJS-type fashion.  The main exception is that
           * 'require()' is not supported as it is synchronous, and an asynchronous method is required on the client side.  Instead, the
-          * reference to a 'manifest' variable (of type 'DreamSpace.Scripts.IManifest') is also given to the script, and can be used to
+          * reference to a 'manifest' variable (of type 'DS.Scripts.IManifest') is also given to the script, and can be used to
           * further chain more modules to load.
           * Note: 'exports' (a module-global object) does not apply to scripts executed in the global scope (i.e. if 'execute(true)' is called).
           */
@@ -449,17 +445,14 @@ export namespace Module {
         }
     }
 
-    Module.$__register(Scripts);
-}
-
-export interface IModule extends InstanceType<typeof Module.$__type> { }
+export interface IModule extends InstanceType<typeof Module> { }
 
 var _runMode = 0; // (0=auto run, depending on debug flag; 1=user has requested run before the app module was ready; 2=running)
 
 /** Used internally to see if the application should run automatically. Developers should NOT call this directly and call 'runApp()' instead. */
 export function _tryRunApp() {
     if (_runMode < 2)
-        if (_appModule && (_runMode == 1 || !DreamSpace.host.isDebugMode() && DreamSpace.debugMode != DreamSpace.DebugModes.Debug_Wait)) {
+        if (_appModule && (_runMode == 1 || !DS.host.isDebugMode() && DS.debugMode != DS.DebugModes.Debug_Wait)) {
             // (note: if the host is in debug mode, it trumps the internal debug setting)
             if (_appModule.status == RequestStatuses.Ready)
                 _appModule.execute();
@@ -470,7 +463,7 @@ export function _tryRunApp() {
 
 /** Attempts to run the application module (typically the script generated from 'app.ts'), if ready (i.e. loaded along with all dependencies).
   * If the app is not ready yet, the request is flagged to start the app automatically.
-  * Note: Applications always start automatically by default, unless 'DreamSpace.System.Diagnostics.debug' is set to 'Debug_Wait'.
+  * Note: Applications always start automatically by default, unless 'DS.System.Diagnostics.debug' is set to 'Debug_Wait'.
   */
 export function runApp() {
     if (_runMode < 2) {
@@ -485,12 +478,12 @@ export function runApp() {
 * Note: This should either be empty, or always end with a URL path separator ('/') character (but the system will assume to add one anyhow if missing). */
 export var pluginFilesBasePath: string = System.IO && System.IO.Path ? System.IO.Path.combine(baseURL, "wwwroot/js/") : baseURL + "wwwroot/js/";
 
-/** Translates a module relative or full type name to the actual type name (i.e. '.ABC' to 'DreamSpace.ABC', or 'System'/'System.' to 'DreamSpace'/'DreamSpace.'). */
+/** Translates a module relative or full type name to the actual type name (i.e. '.ABC' to 'DS.ABC', or 'System'/'System.' to 'DreamSpace'/'DS.'). */
 export function translateModuleTypeName(moduleFullTypeName: string) {
     if (moduleFullTypeName.charAt(0) == '.')
-        moduleFullTypeName = "DreamSpace" + moduleFullTypeName; // (just a shortcut to reduce repetition of "DreamSpace." at the start of full module type names during registration)
+        moduleFullTypeName = "DreamSpace" + moduleFullTypeName; // (just a shortcut to reduce repetition of "DS." at the start of full module type names during registration)
     else if (moduleFullTypeName == "System" || moduleFullTypeName.substr(0, "System.".length) == "System.")
-        moduleFullTypeName = "DreamSpace" + moduleFullTypeName.substr("System".length); // ("System." maps to "DreamSpace." internally to prevent compatibility issues)
+        moduleFullTypeName = "DreamSpace" + moduleFullTypeName.substr("System".length); // ("System." maps to "DS." internally to prevent compatibility issues)
     return moduleFullTypeName;
 };
 
@@ -534,15 +527,15 @@ export interface IUsingModule {
     finally: (cleanupHandler: ICallback<System.IO.IResourceRequest>) => IUsingModule;
 }
 
-/** This is usually called from the 'DreamSpace.[ts|js]' file to register script files (plugins), making them available to the application based on module names (instead of file names).
-  * When 'DreamSpace.using.{...someplugin}()' is called, the required script files are then executed as needed.
+/** This is usually called from the 'DS.[ts|js]' file to register script files (plugins), making them available to the application based on module names (instead of file names).
+  * When 'DS.using.{...someplugin}()' is called, the required script files are then executed as needed.
   * This function returns a function that, when called, will execute the loaded script.  The returned object also as chainable methods for success and error callbacks.
   * @param {ModuleInfo[]} dependencies A list of modules that this module depends on.
-  * @param {string} moduleFullTypeName The full type name of the module, such as 'DreamSpace.UI', or 'jquery'.
+  * @param {string} moduleFullTypeName The full type name of the module, such as 'DS.UI', or 'jquery'.
   *                                    You can also use the token sequence '{min:[non-minified-text|]minified-text}' (where '[...]' is optional, square brackets
   *                                    not included) to define the minified and non-minified text parts.
   * @param {string} moduleFileBasePath (optional) The path to the '.js' file, including the filename + extension.  If '.js' is not found at the end, then
-  *                                    the full module type name is appended, along with '.js'. This parameter will default to 'DreamSpace.moduleFilesBasePath'
+  *                                    the full module type name is appended, along with '.js'. This parameter will default to 'DS.moduleFilesBasePath'
   *                                    (which is 'DreamSpaceJS/' by default) if null is passed, so pass an empty string if this is not desired.
   *                                    You can also use the '{min:[non-minified-text|]minified-text}' token sequence (where '[...]' is optional, square brackets
   *                                    not included) to define the minified and non-minified text parts.
@@ -564,7 +557,7 @@ export function module(dependencies: IUsingModule[], moduleFullTypeName: string,
         moduleFullTypeName = translateModuleTypeName(results[0]);
         minifiedFullTypeName = translateModuleTypeName(results[1]);
     }
-    else moduleFullTypeName = translateModuleTypeName(moduleFullTypeName); // (translate "System." to "DreamSpace." and "." to "DreamSpace." internally)
+    else moduleFullTypeName = translateModuleTypeName(moduleFullTypeName); // (translate "System." to "DS." and "." to "DS." internally)
 
     // ... if the JavaScript file is not given, then create the relative path to it given the full type name ...
 
@@ -572,7 +565,7 @@ export function module(dependencies: IUsingModule[], moduleFullTypeName: string,
     var minPath: string = null;
 
     if (path && path.charAt(0) == '~')
-        path = System.IO.Path.combine(pluginFilesBasePath, path.substring(1)); // ('~' is a request to insert the current default path; eg. "~DreamSpace.System.js" for "DreamSpaceJS/DreamSpace.System.js")
+        path = System.IO.Path.combine(pluginFilesBasePath, path.substring(1)); // ('~' is a request to insert the current default path; eg. "~DS.System.js" for "DreamSpaceJS/DS.System.js")
 
     results = processMinifyTokens(path);
     if (results[1]) {
@@ -650,7 +643,7 @@ export function module(dependencies: IUsingModule[], moduleFullTypeName: string,
         // ... request to load the module and execute the script ...
 
         switch (mod.status) {
-            case RequestStatuses.Error: throw DreamSpace.System.Exception.from("The module '" + mod.fullname + "' is in an error state and cannot be used.", mod);
+            case RequestStatuses.Error: throw DS.System.Exception.from("The module '" + mod.fullname + "' is in an error state and cannot be used.", mod);
             case RequestStatuses.Pending: mod.start(); break; // (the module is not yet ready and cannot be executed right now; attach callbacks...)
             case RequestStatuses.Loading: mod.catch(onerror); break;
             case RequestStatuses.Loaded:
@@ -689,6 +682,6 @@ export function module(dependencies: IUsingModule[], moduleFullTypeName: string,
 
 ///** Used to load, compile & execute required plugin scripts. */
 //if (!this['using'])
-//    var using = DreamSpace.using; // (users should reference "using.", but "DreamSpace.using" can be used if the global 'using' is needed for something else)
+//    var using = DS.using; // (users should reference "using.", but "DS.using" can be used if the global 'using' is needed for something else)
 
 // ###########################################################################################################################

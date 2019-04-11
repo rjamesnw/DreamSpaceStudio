@@ -189,7 +189,7 @@ export namespace Types {
         }
 
         // ... initialize DreamSpace and app domain references ...
-        instance.$__corext = DS;
+        instance.$__ds = DS;
         instance.$__id = getNextObjectId();
         if (autoTrackInstances && (!appDomain || appDomain.autoTrackInstances === void 0 || appDomain.autoTrackInstances))
             instance.$__globalId = Utilities.createGUID(false);
@@ -249,8 +249,8 @@ export namespace Types {
     export function __registerFactoryType<TClass extends IType, TFactory extends IFactory>
         (instanceType: TClass, factoryType: TFactory, moduleSpace: Object, addMemberTypeInfo = true) {
 
-        var _instanceType = <IFactory<TClass> & IClassInfo & IType><any>instanceType;
-        var factoryTypeInfo = <IFactoryTypeInfo><any>factoryType;
+        var _instanceType = <IFactory<TClass> & IClassInfo & IType & Object><any>instanceType;
+        var factoryTypeInfo = <IFactoryTypeInfo & Object><any>factoryType;
 
         if (typeof factoryType !== 'function')
             error("__registerFactoryType()", "The 'factoryType' argument is not a valid constructor function.", factoryType); // TODO: See if this can also be detected in ES2015 (ES6) using the specialized functions.
@@ -271,11 +271,8 @@ export namespace Types {
 
         var registeredFactory = __registerType(factoryType, moduleSpace, addMemberTypeInfo);
 
-        //x factoryTypeInfo.$__type = <any>classType; // (the class type AND factory type should both have a reference to the underlying type)
-
-        //x classType.$__type = <any>classType; // (the class type AND factory type should both have a reference to the underlying type)
+        factoryTypeInfo.$__type = _instanceType; // (the class type AND factory type should both have a reference to each other)
         _instanceType.$__factoryType = factoryTypeInfo; // (a properly registered class that supports the factory pattern should have a reference to its underlying factory type)
-        //x _instanceType.$__baseFactoryType = factoryTypeInfo.$__baseFactoryType;
 
         var registeredFactoryType = __registerType(_instanceType, factoryType, addMemberTypeInfo);
 
@@ -286,11 +283,11 @@ export namespace Types {
         // ... if the user supplied a static constructor then call it now before we do anything more ...
         // (note: the static constructor may be where 'new' and 'init' factory functions are provided, so we MUST call them first before we hook into anything)
 
-        if (typeof factoryType[DS.constructor] == 'function')
-            factoryType[DS.constructor].call(_instanceType);
+        if (typeof factoryTypeInfo[<any>DS.constructor] == 'function')
+            factoryTypeInfo[<any>DS.constructor].call(_instanceType);
 
-        if (typeof _instanceType[DS.constructor] == 'function')
-            _instanceType[DS.constructor](factoryType);
+        if (typeof _instanceType[<any>DS.constructor] == 'function')
+            _instanceType[<any>DS.constructor](factoryType);
 
         // ... hook into the 'init' and 'new' factory methods ...
         // (note: if no 'init()' function is specified, just call the base by default)
@@ -442,10 +439,11 @@ export namespace Types {
         dispose: <any>false
     };
 
+    /** Used internally to validate that an object can be disposed. */
     export function __disposeValidate(object: IDisposable, title: string, source?: any) {
         if (typeof object != 'object') error(title, "The argument given is not an object.", source);
-        if (!object.$__corext) error(title, "The object instance '" + getFullTypeName(object) + "' is not a DreamSpace created object.", source);
-        if (object.$__corext != DS) error(title, "The object instance '" + getFullTypeName(object) + "' was created in a different DreamSpace instance and cannot be disposed by this one.", source); // (if loaded as a module perhaps, where other instance may exist [just in case])
+        if (!object.$__ds) error(title, "The object instance '" + getFullTypeName(object) + "' is not a DreamSpace created object.", source);
+        if (object.$__ds != DS) error(title, "The object instance '" + getFullTypeName(object) + "' was created in a different DreamSpace instance and cannot be disposed by this one.", source); // (if loaded as a module perhaps, where other instance may exist [just in case])
         if (typeof object.dispose != 'function') error(title, "The object instance '" + getFullTypeName(object) + "' does not contain a 'dispose()' function.", source);
         if (!isDisposable(object)) error(title, "The object instance '" + getFullTypeName(object) + "' is not disposable.", source);
     }
@@ -517,7 +515,7 @@ export class Disposable implements IDisposable {
 
 /** Returns true if the specified object can be disposed using this DreamSpace system. */
 export function isDisposable(instance: IDisposable) {
-    if (instance.$__corext != DS) return false;
+    if (instance.$__ds != DS) return false;
     return typeof instance.dispose == 'function';
 }
 

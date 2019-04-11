@@ -2,11 +2,14 @@
 // Browser detection (for special cases).
 // ############################################################################################################################################
 
+import { DreamSpace as DS } from "../Globals";
+
 /** Contains information on the user agent (browser) being used.
   * Note: While it's always better to check objects for supported functions, sometimes an existing function may take different
   * parameters based on the browser (such as 'Worker.postMessage()' using transferable objects with IE vs All Others [as usual]).
   */
-namespace Browser {
+export abstract class Browser { }
+export namespace Browser {
     // (Browser detection is a highly modified version of "http://www.quirksmode.org/js/detect.html".)
     // (Note: This is only required for quirk detection in special circumstances [such as IE's native JSON whitespace parsing issue], and not for object feature support)
 
@@ -206,7 +209,7 @@ namespace Browser {
     export var version: number = -1;
 
     /** Set to true if ES2015 (aka ES6) is supported ('class', 'new.target', etc.). */
-    export const ES6 = DreamSpace.ES6;
+    export const ES6 = DS.ES6;
     // (Note: For extension of native types, the DreamSpace behavior changes depending on ES6 support due to the new 'new.target' feature changing how called native constructors behave)
 
     /** The type of browser detected. */
@@ -414,7 +417,5 @@ namespace Browser {
 
     // -----------------------------------------------------------------------------------------------------------------------------------
 }
-
-export default Browser;
 
 // ############################################################################################################################################

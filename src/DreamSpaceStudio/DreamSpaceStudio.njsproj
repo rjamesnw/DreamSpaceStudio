@@ -69,12 +69,12 @@
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Browser.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Collections.IndexedObjectCollection.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Collections.ObservableCollection.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Data.ts" />
+    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Data.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Delegate.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Diagnostics.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Events.ts" />
+    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Events.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Exception.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.IO.ts" />
+    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\IO.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Markup.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Platform.Graph.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Platform.HTML.Application.ts" />

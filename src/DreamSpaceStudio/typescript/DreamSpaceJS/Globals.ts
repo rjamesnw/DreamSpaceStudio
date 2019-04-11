@@ -1,4 +1,4 @@
-﻿import IO from "./IO";
+﻿import { IO } from "./IO";
 import { Exception } from "./System/Exception";
 import { IResourceRequest } from "./ResourceRequest";
 
@@ -13,8 +13,9 @@ import { IResourceRequest } from "./ResourceRequest";
 
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
  * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.
+ * Note: A symbol is not used, since callbacks placed into API URLs must be strings. Instead, a static pre-generated GUID is appended.
  */
-export const DEFAULT_GLOBAL_NS_NAME = "$__DREAMSPACE_GLBOALS_A756B156811A44E59329E44CAA6AFA98";
+export const DEFAULT_GLOBAL_NS_NAME = "$__DREAMSPACE_GLBOALS_A756B156811A44E59329E44CAA6AFA98"; // (A static GUID is appended)
  var USER_GIVEN_GLOBAL_NS_NAME: string;
 
 export abstract class DreamSpace {
@@ -497,7 +498,7 @@ export interface IDisposable {
      * Returns a reference to the DreamSpace system that created the object.  This is set automatically when creating instances from factories.
      * Note: Setting this to null/undefined will prevent an instance from being disposable.
      */
-    $__corext?: {};
+    $__ds?: {};
     /** 
     * Releases the object back into the object pool. 
     * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
@@ -577,6 +578,9 @@ export interface IFactoryTypeInfo<TClass extends IType = IType/*, TFactory exten
 
     /** This is set to true when 'init()' is called. The flag is used to determine if 'super.init()' was called. If not then it is called automatically. */
     $__initCalled?: boolean;
+
+    /** The type that the factory will create when '.new()' is called. If not a class/function, the factory class is assumed to be the instance class as well. */
+    $__type?: IType;
 }
 
 /** Represents the factory methods of a factory instance. */
@@ -663,7 +667,7 @@ export interface IErrorCallback<TSender> { (sender?: TSender, error?: any): any 
 
 // ###########################################################################################################################
 
-/** Registers this global module in the global scope.
+/** Registers this global module in the global scope. The global 'DreamSpace' namespace is returned, if needed.
  * This helps to support:
  * 1. A single object to store global DreamSpace states, such as the host application version, base paths, etc.
  * 2. A global object to store callback functions for API initialization, such as Google Maps.
@@ -672,7 +676,9 @@ export interface IErrorCallback<TSender> { (sender?: TSender, error?: any): any 
 export default function registerGlobal(uniqueGlobalVarName?: string) {
     if (uniqueGlobalVarName)
         USER_GIVEN_GLOBAL_NS_NAME = uniqueGlobalVarName;
-    return DreamSpace.global[DreamSpace.globalNamespaceName] = DreamSpace;
+    Object.defineProperty(DreamSpace.global, DreamSpace.globalNamespaceName, { enumerable: false, writable: false, configurable: false, value: DreamSpace });
+    // (this locked down, as global paths might be used by APIs after future initialization)
+    return DreamSpace;
 }
 
 // ###########################################################################################################################

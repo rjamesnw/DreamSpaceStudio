@@ -1,10 +1,12 @@
-﻿import { Exception } from "./System/Exception";
+﻿import { DreamSpace as DS } from "./Globals";
+import { Exception } from "./System/Exception";
 
 // ###########################################################################################################################
 // Application Windows
 // ###########################################################################################################################
 
 /** One or more utility functions to ease development within DreamSpace environments. */
+abstract class Utilities { }
 namespace Utilities {
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -27,10 +29,10 @@ namespace Utilities {
      * returned as is, and everything else will be converted to a string by calling 'toString()', or simply '""+value' if
      * 'value.toString' is not a function. If for some reason a call to 'toString()' does not return a string the cycle
      * starts over with the new value until a string is returned.
-     * Note: If no arguments are passed in (i.e. 'DreamSpace.toString()'), then DreamSpace.ROOT_NAMESPACE is returned, which should be the string "DreamSpace".
+     * Note: If no arguments are passed in (i.e. 'Utilities.toString()'), then undefined is returned.
      */
     export function toString(value?: any): string {
-        if (arguments.length == 0) return $__ROOT_DREAMSPACE_NAMESPACE_NAME;
+        if (arguments.length == 0) return void 0;
         if (value === void 0 || value === null) return "";
         if (typeof value == 'string') return value;
         return typeof value.toString == 'function' ? toString(value.toString()) : "" + value; // ('value.toString()' should be a string, but in case it is not, this will cycle until a string type value is found, or no 'toString()' function exists)
@@ -104,8 +106,8 @@ namespace Utilities {
     *                         'window.eval()' is not called directly in this function.
     */
     export function dereferencePropertyPath(path: string, origin?: Object, unsafe = false): {} {
-        if (unsafe) return DreamSpace.safeEval('p0.' + path, origin); // (note: this is 'DreamSpace.eval()', not a direct call to the global 'eval()')
-        if (origin === void 0 || origin === null) origin = this !== DreamSpace.global ? this : DreamSpace.global;
+        if (unsafe) return DS.safeEval('p0.' + path, origin); // (note: this is 'DreamSpace.eval()', not a direct call to the global 'eval()')
+        if (origin === void 0 || origin === null) origin = this !== DS.global ? this : DS.global;
         if (typeof path !== 'string') path = '' + path;
         var o = origin, c = '', pc: string, i = 0, n = path.length, name = '';
         if (n)
@@ -176,7 +178,7 @@ namespace Utilities {
      * @param {boolean} hyphens If true (default) then hyphens (-) are inserted to separate the GUID parts.
      */
     export function createGUID(hyphens: boolean = true): string {
-        var time = (Date.now ? Date.now() : new Date().getTime()) + DreamSpace.Time.__localTimeZoneOffset; // (use current local time [not UTC] to offset the random number [there was a bug in Chrome, not sure if it was fixed yet])
+        var time = (Date.now ? Date.now() : new Date().getTime()) + DS.Time.__localTimeZoneOffset; // (use current local time [not UTC] to offset the random number [there was a bug in Chrome, not sure if it was fixed yet])
         var randseed = time + _guidSeed;
         var hexTime = time.toString(16) + (_guidCounter <= 0xffffffff ? _guidCounter++ : _guidCounter = 0).toString(16), i = hexTime.length, pi = 0;
         var pattern = hyphens ? 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx' : 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx', len = pattern.length, result = "", c: string, r: number;
@@ -186,7 +188,7 @@ namespace Utilities {
     }
 }
 
-export default Utilities;
+export { Utilities };
 
 // ------------------------------------------------------------------------------------------------------------------------
 

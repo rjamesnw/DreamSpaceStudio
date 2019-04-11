@@ -1,7 +1,7 @@
 define(["require", "exports", "../Types", "./System", "./AppDomain", "../Globals", "./Browser", "../Utilities"], function (require, exports, Types_1, System_1, AppDomain_1, Globals_1, Browser_1, Utilities_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var String_1, Array_1;
+    var DSObject_1, String_1, Array_1;
     // ###########################################################################################################################
     // Primitive types designed for use with the DreamSpace system.
     // See 'DreamSpace.global' and 'DreamSpace.NativeTypes/NativeStaticTypes' for access to global scope native references and definitions.
@@ -9,7 +9,7 @@ define(["require", "exports", "../Types", "./System", "./AppDomain", "../Globals
     // Thing that gets passed a function and makes a decorator:
     // =======================================================================================================================
     /** The base type for many DreamSpace classes. */
-    let DSObject = class DSObject extends Types_1.Factory(Types_1.makeFactory(Types_1.makeDisposable(Globals_1.DreamSpace.global.Object))) {
+    let DSObject = DSObject_1 = class DSObject extends Types_1.Factory(Types_1.makeFactory(Types_1.Disposable)) {
         /**
         * Create a new basic object type.
         * @param value If specified, the value will be wrapped in the created object.
@@ -20,12 +20,13 @@ define(["require", "exports", "../Types", "./System", "./AppDomain", "../Globals
         * constructor function to get new instances, and 'dispose()' to release them when done.
         */
         static init(o, isnew, value, makeValuePrivate) {
+            var _o = o;
             if (!isnew)
                 o.$__reset();
-            if (o.$__appDomain == void 0 && AppDomain_1.AppDomain)
-                o.$__appDomain = AppDomain_1.AppDomain.default;
-            if (o.$__app == void 0 && AppDomain_1.Application)
-                o.$__app = AppDomain_1.Application.default;
+            if (_o.$__appDomain == void 0 && AppDomain_1.AppDomain)
+                _o.$__appDomain = AppDomain_1.AppDomain.default;
+            if (_o.$__app == void 0 && AppDomain_1.Application)
+                _o.$__app = AppDomain_1.Application.default;
             // ... if a value is given, the behavior changes to latch onto the value ...
             if (value != void 0) {
                 if (makeValuePrivate) {
@@ -41,7 +42,7 @@ define(["require", "exports", "../Types", "./System", "./AppDomain", "../Globals
         /** Returns the type information for this object instance. */
         getTypeInfo() {
             if (!this.constructor.$__name && this.constructor.getTypeName)
-                this.constructor.getTypeName();
+                this.constructor.getTypeName(this); // (make sure name details exist; if not, this will add it before continuing)
             return this.constructor;
         }
         ;
@@ -87,7 +88,7 @@ define(["require", "exports", "../Types", "./System", "./AppDomain", "../Globals
                 System_1.dispose(this, false); // 'false' also keeps the app domain (see 'dispose()' below), and only removes it from the "active" list.
             //??if (!this.constructor.new)
             //    throw Exception.error("{object}.new", "You need to register the class/type first: see 'AppDomain.registerClass()'.", this);
-            var instance = this.init.call(this, this, false, ...arguments);
+            var instance = DSObject_1.init.call(this, this, false, ...arguments);
             instance.$__appDomain.objects.addObject(instance);
             delete instance.dispose;
             return this;
@@ -113,7 +114,7 @@ define(["require", "exports", "../Types", "./System", "./AppDomain", "../Globals
             return Globals_1.DreamSpace.isEmpty(obj);
         }
     };
-    DSObject = __decorate([
+    DSObject = DSObject_1 = __decorate([
         Types_1.factory(this)
     ], DSObject);
     exports.DSObject = DSObject;
@@ -159,11 +160,11 @@ define(["require", "exports", "../Types", "./System", "./AppDomain", "../Globals
             if (typeof replaceWith !== 'string')
                 replaceWith = "" + replaceWith;
             if (ignoreCase)
-                return source.replace(new RegExp(Utilities_1.default.escapeRegex(replaceWhat), 'gi'), replaceWith);
-            else if (Browser_1.default.type == Browser_1.default.BrowserTypes.Chrome)
+                return source.replace(new RegExp(Utilities_1.Utilities.escapeRegex(replaceWhat), 'gi'), replaceWith);
+            else if (Browser_1.Browser.type == Browser_1.Browser.BrowserTypes.Chrome)
                 return source.split(replaceWhat).join(replaceWith); // (MUCH faster in Chrome [including Chrome mobile])
             else
-                return source.replace(new RegExp(Utilities_1.default.escapeRegex(replaceWhat), 'g'), replaceWith);
+                return source.replace(new RegExp(Utilities_1.Utilities.escapeRegex(replaceWhat), 'g'), replaceWith);
         }
         /** Replaces all tags in the given 'HTML' string with 'tagReplacement' (an empty string by default) and returns the result. */
         static replaceTags(html, tagReplacement) {
@@ -232,7 +233,7 @@ define(["require", "exports", "../Types", "./System", "./AppDomain", "../Globals
         }
         /** Returns an array of all matches of 'regex' in 'text', grouped into sub-arrays (string[matches][groups]). */
         static matches(regex, text) {
-            return Utilities_1.default.matches(regex, this.toString());
+            return Utilities_1.Utilities.matches(regex, this.toString());
         }
         /** Splits the lines of the text (delimited by '\r\n', '\r', or '\n') into an array of strings. */
         static getLines(text) {

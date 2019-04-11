@@ -1,57 +1,13 @@
+import { Disposable } from "../Types";
 import { SerializedData, ISerializable } from "./Serialization";
 import { DreamSpace as DS, IFunctionInfo } from "../Globals";
 declare const DSObject_base: {
-    new (): {
-        dispose(release?: boolean): void;
-    } & Object;
-    super: {
-        new (...args: any[]): {
-            dispose(release?: boolean): void;
-        };
-    } & ObjectConstructor & import("../Globals").IFactory<{
-        new (...args: any[]): {
-            dispose(release?: boolean): void;
-        };
-    } & ObjectConstructor, import("../Globals").NewDelegate<{
-        dispose(release?: boolean): void;
-    } & Object>, import("../Globals").InitDelegate<{
-        dispose(release?: boolean): void;
-    } & Object>>;
+    new (): Disposable;
+    super: typeof Disposable & import("../Globals").IFactory<typeof Disposable, import("../Globals").NewDelegate<Disposable>, import("../Globals").InitDelegate<Disposable>>;
     'new'?(...args: any[]): any;
     init?(o: object, isnew: boolean, ...args: any[]): void;
 } & {
-    prototype: {
-        dispose(release?: boolean): void;
-    } & Object;
-    getPrototypeOf: (o: any) => any;
-    getOwnPropertyDescriptor: (o: any, p: string | number | symbol) => PropertyDescriptor;
-    getOwnPropertyNames: (o: any) => string[];
-    create: {
-        (o: object): any;
-        (o: object, properties: PropertyDescriptorMap & ThisType<any>): any;
-    };
-    defineProperty: (o: any, p: string | number | symbol, attributes: PropertyDescriptor & ThisType<any>) => any;
-    defineProperties: (o: any, properties: PropertyDescriptorMap & ThisType<any>) => any;
-    seal: <T>(o: T) => T;
-    freeze: {
-        <T>(a: T[]): readonly T[];
-        <T extends Function>(f: T): T;
-        <T>(o: T): Readonly<T>;
-    };
-    preventExtensions: <T>(o: T) => T;
-    isSealed: (o: any) => boolean;
-    isFrozen: (o: any) => boolean;
-    isExtensible: (o: any) => boolean;
-    keys: (o: {}) => string[];
-    assign: {
-        <T, U>(target: T, source: U): T & U;
-        <T, U, V>(target: T, source1: U, source2: V): T & U & V;
-        <T, U, V, W>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
-        (target: object, ...sources: any[]): any;
-    };
-    getOwnPropertySymbols: (o: any) => symbol[];
-    is: (value1: any, value2: any) => boolean;
-    setPrototypeOf: (o: any, proto: object) => any;
+    prototype: Disposable;
 };
 /** The base type for many DreamSpace classes. */
 export declare class DSObject extends DSObject_base implements ISerializable {

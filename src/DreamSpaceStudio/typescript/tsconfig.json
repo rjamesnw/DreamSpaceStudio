@@ -7,12 +7,12 @@
     "noImplicitAny": true,
     "experimentalDecorators": true
   },
+  "include": [ "types/globals.d.ts" ],
   //"include": [ "DreamSpaceJS/Polyfills.ts", "DreamSpaceJS/System/Delegate.ts" ],
   "exclude": [
     "node_modules",
-    "public",
-    "TypeScript/DreamSpaceJS",
-    "TypeScript/types/DreamSpace*.*",
+    "DreamSpaceJS",
+    "types/DreamSpace*.*",
     "htmlreader.ts",
     "DreamSpace~.ts"
   ]

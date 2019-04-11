@@ -40,50 +40,9 @@ declare const EventDispatcherFactory_base: {
     init?(o: object, isnew: boolean, ...args: any[]): void;
 } & {
     prototype: DSObject;
-    getPrototypeOf: (o: any) => any;
-    getOwnPropertyDescriptor: (o: any, p: string | number | symbol) => PropertyDescriptor;
-    getOwnPropertyNames: (o: any) => string[];
-    create: {
-        (o: object): any;
-        (o: object, properties: PropertyDescriptorMap & ThisType<any>): any;
-    };
-    defineProperty: (o: any, p: string | number | symbol, attributes: PropertyDescriptor & ThisType<any>) => any;
-    defineProperties: (o: any, properties: PropertyDescriptorMap & ThisType<any>) => any;
-    seal: <T>(o: T) => T;
-    freeze: {
-        <T>(a: T[]): readonly T[];
-        <T extends Function>(f: T): T;
-        <T>(o: T): Readonly<T>;
-    };
-    preventExtensions: <T>(o: T) => T;
-    isSealed: (o: any) => boolean;
-    isFrozen: (o: any) => boolean;
-    isExtensible: (o: any) => boolean;
-    keys: (o: {}) => string[];
-    assign: {
-        <T, U>(target: T, source: U): T & U;
-        <T, U, V>(target: T, source1: U, source2: V): T & U & V;
-        <T, U, V, W>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
-        (target: object, ...sources: any[]): any;
-    };
-    getOwnPropertySymbols: (o: any) => symbol[];
-    is: (value1: any, value2: any) => boolean;
-    setPrototypeOf: (o: any, proto: object) => any;
+    super: typeof import("../Types").Disposable & import("../Globals").IFactory<typeof import("../Types").Disposable, import("../Globals").NewDelegate<import("../Types").Disposable>, import("../Globals").InitDelegate<import("../Types").Disposable>>;
     getTypeName: typeof DSObject.getTypeName;
     isEmpty: typeof DSObject.isEmpty;
-    super: {
-        new (...args: any[]): {
-            dispose(release?: boolean): void;
-        };
-    } & ObjectConstructor & import("../Globals").IFactory<{
-        new (...args: any[]): {
-            dispose(release?: boolean): void;
-        };
-    } & ObjectConstructor, import("../Globals").NewDelegate<{
-        dispose(release?: boolean): void;
-    } & Object>, import("../Globals").InitDelegate<{
-        dispose(release?: boolean): void;
-    } & Object>>;
 };
 /**
   * The EventDispatcher wraps a specific event type, and manages the triggering of "handlers" (callbacks) when that event type
@@ -135,7 +94,7 @@ declare class EventDispatcherFactory extends EventDispatcherFactory_base {
        */
     static createPrivateEventName(eventName: string): string;
 }
-declare class EventDispatcher<TOwner extends object, TCallback extends EventHandler> extends DependentObject {
+declare class EventDispatcher<TOwner extends object = object, TCallback extends EventHandler = EventHandler> extends DependentObject {
     readonly owner: TOwner;
     private __eventName;
     private __associations;
@@ -203,11 +162,19 @@ declare class EventDispatcher<TOwner extends object, TCallback extends EventHand
         */
     resetTriggerState(): void;
     /** A simple way to pass arguments to event handlers using arguments with static typing (calls 'dispatchEvent(null, false, false, arguments)').
-        * TIP: To prevent triggering the same event multiple times, use a custom state value in a call to 'setTriggerState()', and only call
-        * 'dispatch()' if true is returned (example: "someEvent.setTriggerState(someState) && someEvent.dispatch(...);", where the call to 'dispatch()'
-        * only occurs if true is returned from the previous statement).
-        */
-    dispatch: TCallback;
+    * If not cancelled, then 'true' is returned.
+    * TIP: To prevent triggering the same event multiple times, use a custom state value in a call to 'setTriggerState()', and only call
+    * 'dispatch()' if true is returned (example: "someEvent.setTriggerState(someState) && someEvent.dispatch(...);", where the call to 'dispatch()'
+    * only occurs if true is returned from the previous statement).
+    * Note: Call 'dispatchAsync()' to allow current script execution to complete before any handlers get called.
+    * @see dispatchAsync
+    */
+    dispatch(...args: Parameters<TCallback>): boolean;
+    /** Trigger this event by calling all the handlers.
+     * If a handler cancels the process, then the promise is rejected.
+     * This method allows scheduling events to fire after current script execution completes.
+     */
+    dispatchAsync(...args: Parameters<TCallback>): Promise<void>;
     /** If called within a handler, prevents the other handlers from being called. */
     cancel(): void;
     private __indexOf;
@@ -242,50 +209,9 @@ declare const EventObject_base: {
     init?(o: object, isnew: boolean, ...args: any[]): void;
 } & {
     prototype: DSObject;
-    getPrototypeOf: (o: any) => any;
-    getOwnPropertyDescriptor: (o: any, p: string | number | symbol) => PropertyDescriptor;
-    getOwnPropertyNames: (o: any) => string[];
-    create: {
-        (o: object): any;
-        (o: object, properties: PropertyDescriptorMap & ThisType<any>): any;
-    };
-    defineProperty: (o: any, p: string | number | symbol, attributes: PropertyDescriptor & ThisType<any>) => any;
-    defineProperties: (o: any, properties: PropertyDescriptorMap & ThisType<any>) => any;
-    seal: <T>(o: T) => T;
-    freeze: {
-        <T>(a: T[]): readonly T[];
-        <T extends Function>(f: T): T;
-        <T>(o: T): Readonly<T>;
-    };
-    preventExtensions: <T>(o: T) => T;
-    isSealed: (o: any) => boolean;
-    isFrozen: (o: any) => boolean;
-    isExtensible: (o: any) => boolean;
-    keys: (o: {}) => string[];
-    assign: {
-        <T, U>(target: T, source: U): T & U;
-        <T, U, V>(target: T, source1: U, source2: V): T & U & V;
-        <T, U, V, W>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
-        (target: object, ...sources: any[]): any;
-    };
-    getOwnPropertySymbols: (o: any) => symbol[];
-    is: (value1: any, value2: any) => boolean;
-    setPrototypeOf: (o: any, proto: object) => any;
+    super: typeof import("../Types").Disposable & import("../Globals").IFactory<typeof import("../Types").Disposable, import("../Globals").NewDelegate<import("../Types").Disposable>, import("../Globals").InitDelegate<import("../Types").Disposable>>;
     getTypeName: typeof DSObject.getTypeName;
     isEmpty: typeof DSObject.isEmpty;
-    super: {
-        new (...args: any[]): {
-            dispose(release?: boolean): void;
-        };
-    } & ObjectConstructor & import("../Globals").IFactory<{
-        new (...args: any[]): {
-            dispose(release?: boolean): void;
-        };
-    } & ObjectConstructor, import("../Globals").NewDelegate<{
-        dispose(release?: boolean): void;
-    } & Object>, import("../Globals").InitDelegate<{
-        dispose(release?: boolean): void;
-    } & Object>>;
 };
 export declare class EventObject extends EventObject_base implements INotifyPropertyChanged<IEventObject> {
     /**

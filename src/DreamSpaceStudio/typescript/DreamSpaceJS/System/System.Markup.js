@@ -1,46 +1,32 @@
-"use strict";
 // ############################################################################################################################
 // Functions for working with HTML/XML.
 // ############################################################################################################################
-Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * Contains types and functions to deal with HTML markup textual data.
- */
-// ========================================================================================================================
-namespace(() => DreamSpace.System.Markup);
-var HTMLReaderModes;
-(function (HTMLReaderModes) {
-    /** There's no more to read (end of HTML). */
-    HTMLReaderModes[HTMLReaderModes["End"] = -1] = "End";
-    /** Reading hasn't yet started. */
-    HTMLReaderModes[HTMLReaderModes["NotStarted"] = 0] = "NotStarted";
-    /** A tag was just read. The 'runningText' property holds the text prior to the tag, and the tag name is in 'tagName'. */
-    HTMLReaderModes[HTMLReaderModes["Tag"] = 1] = "Tag";
-    /** An attribute was just read from the last tag. The name will be placed in 'attributeName' and the value (if value) in 'attributeValue'.*/
-    HTMLReaderModes[HTMLReaderModes["Attribute"] = 2] = "Attribute";
-    /** An ending tag bracket was just read (no more attributes). */
-    HTMLReaderModes[HTMLReaderModes["EndOfTag"] = 3] = "EndOfTag";
-    /** A template token in the form '{{...}}' was just read. */
-    HTMLReaderModes[HTMLReaderModes["TemplateToken"] = 4] = "TemplateToken";
-})(HTMLReaderModes = exports.HTMLReaderModes || (exports.HTMLReaderModes = {}));
-// ========================================================================================================================
-/** Used to parse HTML text.
-  * Performance note: Since HTML can be large, it's not efficient to scan the HTML character by character. Instead, the HTML reader uses the native
-  * RegEx engine to split up the HTML into chunks of delimiter text, which makes reading it much faster.
-  */
-class HTMLReader extends FactoryBase(DSObject) {
-    /**
-         * Create a new HTMLReader instance to parse the given HTML text.
-         * @param html The HTML text to parse.
-         */
-    static 'new'(html) { return null; }
-    static init(o, isnew, html) { }
-}
-exports.HTMLReader = HTMLReader;
-(function (HTMLReader) {
-    class $__type extends FactoryType(DSObject) {
+define(["require", "exports", "./PrimitiveTypes", "../Types", "./Exception"], function (require, exports, PrimitiveTypes_1, Types_1, Exception_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    // ========================================================================================================================
+    var HTMLReaderModes;
+    (function (HTMLReaderModes) {
+        /** There's no more to read (end of HTML). */
+        HTMLReaderModes[HTMLReaderModes["End"] = -1] = "End";
+        /** Reading hasn't yet started. */
+        HTMLReaderModes[HTMLReaderModes["NotStarted"] = 0] = "NotStarted";
+        /** A tag was just read. The 'runningText' property holds the text prior to the tag, and the tag name is in 'tagName'. */
+        HTMLReaderModes[HTMLReaderModes["Tag"] = 1] = "Tag";
+        /** An attribute was just read from the last tag. The name will be placed in 'attributeName' and the value (if value) in 'attributeValue'.*/
+        HTMLReaderModes[HTMLReaderModes["Attribute"] = 2] = "Attribute";
+        /** An ending tag bracket was just read (no more attributes). */
+        HTMLReaderModes[HTMLReaderModes["EndOfTag"] = 3] = "EndOfTag";
+        /** A template token in the form '{{...}}' was just read. */
+        HTMLReaderModes[HTMLReaderModes["TemplateToken"] = 4] = "TemplateToken";
+    })(HTMLReaderModes = exports.HTMLReaderModes || (exports.HTMLReaderModes = {}));
+    // ========================================================================================================================
+    /** Used to parse HTML text.
+      * Performance note: Since HTML can be large, it's not efficient to scan the HTML character by character. Instead, the HTML reader uses the native
+      * RegEx engine to split up the HTML into chunks of delimiter text, which makes reading it much faster.
+      */
+    class HTMLReader extends Types_1.Factory(PrimitiveTypes_1.DSObject) {
         constructor() {
-            // -------------------------------------------------------------------------------------------------------------------
             super(...arguments);
             // (The RegEx above will identify areas that MAY need to delimited for parsing [not a guarantee].  The area outside of the delimiters is usually
             // defined by the delimiter types, so the delimiters are moved out into their own array for quick parsing [this also allows the host browser's native
@@ -69,40 +55,53 @@ exports.HTMLReader = HTMLReader;
             this.attributeName = "";
             /** The attribute value, if attribute was read. */
             this.attributeValue = "";
-            this.readMode = Markup.HTMLReaderModes.NotStarted;
+            this.readMode = HTMLReaderModes.NotStarted;
             /** If true, then the parser will produce errors on ill-formed HTML (eg. 'attribute=' with no value).
             * This can greatly help identify possible areas of page errors.
             */
             this.strictMode = true;
+            // -------------------------------------------------------------------------------------------------------------------
+        }
+        /**
+             * Create a new HTMLReader instance to parse the given HTML text.
+             * @param html The HTML text to parse.
+             */
+        static 'new'(html) { return null; }
+        static init(o, isnew, html) {
+            this.super.init(o, isnew);
+            // ... using RegEx allows the native browser system to split up the HTML text into parts that can be consumed more quickly ...
+            o.html = html;
+            o.delimiters = html.match(HTMLReader.__splitRegEx); // (get delimiters [inverse of 'split()'])
+            o.nonDelimiters = o.html.split(HTMLReader.__splitRegEx, void 0, o.delimiters); // (get text parts [inverse of 'match()']; last argument is ignored on newer systems [see related polyfill in DreamSpace.Browser])
         }
         /** Returns true if tag current tag block is a mark-up declaration in the form "<!...>", where '...' is any text EXCEPT the start of a comment ('--'). */
         isMarkupDeclaration() {
-            return this.readMode == Markup.HTMLReaderModes.Tag
+            return this.readMode == HTMLReaderModes.Tag
                 && this.tagName.length >= 4 && this.tagName.charAt(0) == '!' && this.tagName.charAt(1) != '-';
             //(spec reference and info on dashes: http://weblog.200ok.com.au/2008/01/dashing-into-trouble-why-html-comments.html)
         }
         /** Returns true if tag current tag block is a mark-up declaration representing a comment block in the form "<!--...-->", where '...' is any text. */
         isCommentBlock() {
-            return this.readMode == Markup.HTMLReaderModes.Tag
+            return this.readMode == HTMLReaderModes.Tag
                 && this.tagName.length >= 7 && this.tagName.charAt(0) == '!' && this.tagName.charAt(1) == '-';
             ///^!--.*-->$/.test(...) (see http://jsperf.com/test-regex-vs-charat)
             //(spec reference and info on dashes: http://weblog.200ok.com.au/2008/01/dashing-into-trouble-why-html-comments.html)
         }
         /** Return true if the current tag block represents a script. */
         isScriptBlock() {
-            return this.readMode == Markup.HTMLReaderModes.Tag
+            return this.readMode == HTMLReaderModes.Tag
                 && this.tagName.length >= 6 && this.tagName.charAt(0) == 's' && this.tagName.charAt(1) == 'c' && this.tagName.charAt(this.tagName.length - 1) == '>';
             // (tag is taken from pre - matched names, so no need to match the whole name)
         }
         /** Return true if the current tag block represents a style. */
         isStyleBlock() {
-            return this.readMode == Markup.HTMLReaderModes.Tag
+            return this.readMode == HTMLReaderModes.Tag
                 && this.tagName.length >= 5 && this.tagName.charAt(0) == 's' && this.tagName.charAt(1) == 't' && this.tagName.charAt(this.tagName.length - 1) == '>';
             // (tag is taken from pre-matched names, so no need to match the whole name)
         }
         /** Returns true if the current position is a tag closure (i.e. '</', or '/>' [self-closing allowed for non-nestable tags]). */
         isClosingTag() {
-            return this.readMode == Markup.HTMLReaderModes.Tag && this.tagBracket == '</' || this.readMode == Markup.HTMLReaderModes.EndOfTag && this.delimiter == '/>';
+            return this.readMode == HTMLReaderModes.Tag && this.tagBracket == '</' || this.readMode == HTMLReaderModes.EndOfTag && this.delimiter == '/>';
             // (match "<tag/>" [no inner html/text] and "</tag> [end of inner html/text])
         }
         /** Returns true if the current delimiter represents a template token in the form '{{....}}'. */
@@ -113,12 +112,12 @@ exports.HTMLReader = HTMLReader;
         getHTML() { return this.html; }
         __readNext() {
             if (this.partIndex >= this.nonDelimiters.length) {
-                if (this.readMode != Markup.HTMLReaderModes.End) {
+                if (this.readMode != HTMLReaderModes.End) {
                     this.__lastTextEndIndex = this.textEndIndex;
                     this.textEndIndex += this.delimiter.length;
                     this.text = "";
                     this.delimiter = "";
-                    this.readMode = Markup.HTMLReaderModes.End;
+                    this.readMode = HTMLReaderModes.End;
                 }
             }
             else {
@@ -146,7 +145,7 @@ exports.HTMLReader = HTMLReader;
             * if whitespace immediately follows another delimiter (such as space after a tag name).
             */
         __skipWhiteSpace(onlyIfTextIsEmpty = false) {
-            if (this.readMode != Markup.HTMLReaderModes.End
+            if (this.readMode != HTMLReaderModes.End
                 && (this.delimiter.length == 0 || this.delimiter.charCodeAt(0) <= 32)
                 && (!onlyIfTextIsEmpty || !this.text)) {
                 this.__readNext();
@@ -157,16 +156,16 @@ exports.HTMLReader = HTMLReader;
         }
         throwError(msg) {
             this.__readNext(); // (includes the delimiter and next text in the running text)
-            throw Exception.from(msg + " on line " + this.getCurrentLineNumber() + ": <br/>\r\n" + this.getCurrentRunningText());
+            throw Exception_1.Exception.from(msg + " on line " + this.getCurrentLineNumber() + ": <br/>\r\n" + this.getCurrentRunningText());
         }
         // -------------------------------------------------------------------------------------------------------------------
         /** Reads the next tag or attribute in the underlying html. */
         readNext() {
             this.textStartIndex = this.textEndIndex + this.delimiter.length;
             this.__readNext();
-            if (this.readMode == Markup.HTMLReaderModes.Tag
+            if (this.readMode == HTMLReaderModes.Tag
                 && this.tagBracket != '</' && this.tagName.charAt(this.tagName.length - 1) != ">" // (skip entire tag block delimiters, such as "<script></script>", "<style></style>", and "<!-- -->")
-                || this.readMode == Markup.HTMLReaderModes.Attribute) {
+                || this.readMode == HTMLReaderModes.Attribute) {
                 this.__skipWhiteSpace(true);
                 // Valid formats supported: <TAG A 'B' C=D E='F' 'G'=H 'I'='J' K.L = MNO P.Q="RS" />
                 // (note: user will be notified of invalid formatting)
@@ -194,20 +193,20 @@ exports.HTMLReader = HTMLReader;
                             this.throwError("A closing tag bracket or whitespace is missing after the attribute '" + this.attributeName + (this.attributeValue ? "=" + this.attributeValue : "") + "'");
                         this.__reQueueDelimiter(); // (clears the text part and backs up the parts index for another read to properly close off the tag on the next read)
                     }
-                    this.readMode = Markup.HTMLReaderModes.Attribute;
+                    this.readMode = HTMLReaderModes.Attribute;
                     return;
                 }
                 // ... no attribute found, so expect '/>', '>', or grouped whitespace ...
                 this.__skipWhiteSpace(); // (skip any whitespace so end brackets can be verified)
                 if (this.delimiter != '/>' && this.delimiter != '>')
                     this.throwError("A closing tag bracket is missing for tag '" + this.tagBracket + this.tagName + "'."); //??A valid attribute format (i.e. a, a=b, or a='b c', etc.) was expected
-                this.readMode = Markup.HTMLReaderModes.EndOfTag;
+                this.readMode = HTMLReaderModes.EndOfTag;
                 return;
             }
             this.__skipWhiteSpace(); // (will be ignored if no whitespace exists, otherwise the next non-whitespace delimiter will become available)
             // ... locate a valid tag or token ...
             // (note: 'this.arrayIndex == 0' after reading from the delimiter side)
-            while (this.readMode != Markup.HTMLReaderModes.End) {
+            while (this.readMode != HTMLReaderModes.End) {
                 if (this.delimiter.charAt(0) == '<') {
                     if (this.delimiter.charAt(1) == '/') {
                         this.tagBracket = this.delimiter.substring(0, 2);
@@ -227,9 +226,9 @@ exports.HTMLReader = HTMLReader;
                 this.__readNext();
             }
             ;
-            if (this.readMode != Markup.HTMLReaderModes.End) {
+            if (this.readMode != HTMLReaderModes.End) {
                 this.runningText = this.getCurrentRunningText();
-                this.readMode = Markup.HTMLReaderModes.Tag;
+                this.readMode = HTMLReaderModes.Tag;
                 // ... do a quick look ahead if on an end tag to verify closure ...
                 if (this.tagBracket == '</') {
                     this.__readNext();
@@ -251,20 +250,10 @@ exports.HTMLReader = HTMLReader;
                     ++ln;
             return ln;
         }
-        // -------------------------------------------------------------------------------------------------------------------
-        static [constructor](factory) {
-            factory.init = (o, isnew, html) => {
-                factory.super.init(o, isnew);
-                // ... using RegEx allows the native browser system to split up the HTML text into parts that can be consumed more quickly ...
-                o.html = html;
-                o.delimiters = html.match($__type.__splitRegEx); // (get delimiters [inverse of 'split()'])
-                o.nonDelimiters = o.html.split($__type.__splitRegEx, void 0, o.delimiters); // (get text parts [inverse of 'match()']; last argument is ignored on newer systems [see related polyfill in DreamSpace.Browser])
-            };
-        }
     }
-    $__type.__splitRegEx = /<!(?:--[\S\s]*?--)?[\S\s]*?>|<script\b[\S\s]*?<\/script[\S\s]*?>|<style\b[\S\s]*?<\/style[\S\s]*?>|<\![A-Z0-9]+|<\/[A-Z0-9]+|<[A-Z0-9]+|\/?>|&[A-Z]+;?|&#[0-9]+;?|&#x[A-F0-9]+;?|(?:'[^<>]*?'|"[^<>]*?")|=|\s+|\{\{[^\{\}]*?\}\}/gi;
-    HTMLReader.$__type = $__type;
-    HTMLReader.$__register(Markup);
-})(HTMLReader = exports.HTMLReader || (exports.HTMLReader = {}));
+    // -------------------------------------------------------------------------------------------------------------------
+    HTMLReader.__splitRegEx = /<!(?:--[\S\s]*?--)?[\S\s]*?>|<script\b[\S\s]*?<\/script[\S\s]*?>|<style\b[\S\s]*?<\/style[\S\s]*?>|<\![A-Z0-9]+|<\/[A-Z0-9]+|<[A-Z0-9]+|\/?>|&[A-Z]+;?|&#[0-9]+;?|&#x[A-F0-9]+;?|(?:'[^<>]*?'|"[^<>]*?")|=|\s+|\{\{[^\{\}]*?\}\}/gi;
+    exports.HTMLReader = HTMLReader;
+});
 // ========================================================================================================================
 //# sourceMappingURL=System.Markup.js.map

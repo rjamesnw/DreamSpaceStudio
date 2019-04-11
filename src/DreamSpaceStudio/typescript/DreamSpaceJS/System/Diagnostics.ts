@@ -2,14 +2,14 @@
 // Types for time management.
 // ############################################################################################################################
 
-import { Factory, Disposable } from "../Types";
+import { Factory, Disposable, factory } from "../Types";
 import { DreamSpace as DS, ITypeInfo } from "../Globals";
 import { TimeSpan, ITimeSpan } from "./System.Time";
 import { LogTypes, error, log as base_log } from "../Logging";
 import { Exception } from "./Exception";
 import { String } from "./PrimitiveTypes";
 
-    // ========================================================================================================================
+// ========================================================================================================================
 
 /** Contains diagnostic based functions, such as those needed for logging purposes. */
 namespace Diagnostics {
@@ -21,7 +21,8 @@ namespace Diagnostics {
 
     // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-    export class LogItem extends Factory() {
+    @factory(this)
+    export class LogItem extends Factory(Disposable) {
         static 'new'(parent: ILogItem, title: string, message: string, type?: LogTypes, outputToConsole?: boolean): ILogItem;
         static 'new'(parent: ILogItem, title: any, message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true): ILogItem { return null; }
 
@@ -62,91 +63,87 @@ namespace Diagnostics {
                 base_log(null, consoleText, type, void 0, false, false);
             }
         }
-    }
-    export namespace LogItem {
-        export class $__type extends Disposable {
-            // --------------------------------------------------------------------------------------------------------------------------
 
-            /** The parent log item. */
-            parent: ILogItem = null;
-            /** The sequence count of this log item. */
-            sequence: number = __logItemsSequenceCounter++; // (to maintain correct ordering, as time is not reliable if log items are added too fast)
-            /** The title of this log item. */
-            title: string;
-            /** The message of this log item. */
-            message: string;
-            /** The time of this log item. */
-            time: number;
-            /** The type of this log item. */
-            type: LogTypes;
-            /** The source of the reason for this log item, if any. */
-            source: {};
+        // --------------------------------------------------------------------------------------------------------------------------
 
-            subItems: ILogItem[];
+        /** The parent log item. */
+        parent: ILogItem = null;
+        /** The sequence count of this log item. */
+        sequence: number = __logItemsSequenceCounter++; // (to maintain correct ordering, as time is not reliable if log items are added too fast)
+        /** The title of this log item. */
+        title: string;
+        /** The message of this log item. */
+        message: string;
+        /** The time of this log item. */
+        time: number;
+        /** The type of this log item. */
+        type: LogTypes;
+        /** The source of the reason for this log item, if any. */
+        source: {};
 
-            marginIndex: number = void 0;
+        subItems: ILogItem[];
 
-            /** Write a message to the log without using a title and return the current log item instance. */
-            write(message: string, type?: LogTypes, outputToConsole?: boolean): ILogItem;
-            /** Write a message to the log. */
-            write(message: any, type?: LogTypes, outputToConsole?: boolean): ILogItem;
-            write(message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true): ILogItem {
-                var logItem = Diagnostics.LogItem.new(this, null, message, type);
-                if (!this.subItems)
-                    this.subItems = [];
-                this.subItems.push(logItem);
-                return this;
-            }
+        marginIndex: number = void 0;
 
-            /** Write a message to the log without using a title and return the new log item instance, which can be used to start a related sub-log. */
-            log(title: string, message: string, type?: LogTypes, outputToConsole?: boolean): ILogItem;
-            /** Write a message to the log without using a title and return the new log item instance, which can be used to start a related sub-log. */
-            log(title: any, message: any, type?: LogTypes, outputToConsole?: boolean): ILogItem;
-            log(title: any, message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true): ILogItem {
-                var logItem = Diagnostics.LogItem.new(this, title, message, type, outputToConsole);
-                if (!this.subItems)
-                    this.subItems = [];
-                this.subItems.push(logItem);
-                return logItem;
-            }
-
-            /** Causes all future log writes to be nested under this log entry.
-            * This is usually called at the start of a block of code, where following function calls may trigger nested log writes. Don't forget to call 'endCapture()' when done.
-            * The current instance is returned to allow chaining function calls.
-            * Note: The number of calls to 'endCapture()' must match the number of calls to 'beginCapture()', or an error will occur.
-            */
-            beginCapture(): ILogItem {
-                //? if (__logCaptureStack.indexOf(this) < 0)
-                __logCaptureStack.push(this);
-                return this;
-            }
-
-            /** Undoes the call to 'beginCapture()', activating any previous log item that called 'beginCapture()' before this instance.
-            * See 'beginCapture()' for more details.
-            * Note: The number of calls to 'endCapture()' must match the number of calls to 'beginCapture()', or an error will occur.
-            */
-            endCapture() {
-                //var i = __logCaptureStack.lastIndexOf(this);
-                //if (i >= 0) __logCaptureStack.splice(i, 1);
-                var item = __logCaptureStack.pop();
-                if (item != null) throw Exception.from("Your calls to begin/end log capture do not match up. Make sure the calls to 'endCapture()' match up to your calls to 'beginCapture()'.", this);
-            }
-
-            toString(): string {
-                var time = TimeSpan && TimeSpan.utcTimeToLocalTime(this.time) || null;
-                var timeStr = time && (time.hours + ":" + (time.minutes < 10 ? "0" + time.minutes : "" + time.minutes) + ":" + (time.seconds < 10 ? "0" + time.seconds : "" + time.seconds)) || "" + new Date(this.time).toLocaleTimeString();
-                var txt = "[" + this.sequence + "] (" + timeStr + ") " + this.title + ": " + this.message;
-                return txt;
-            }
-
-            // --------------------------------------------------------------------------------------------------------------------------
-
-            private static [DS.constructor](factory: typeof LogItem) {
-                //factory.init = (o, isnew) => { // not dealing with private properties, so this is not needed!
-                //};
-            }
+        /** Write a message to the log without using a title and return the current log item instance. */
+        write(message: string, type?: LogTypes, outputToConsole?: boolean): ILogItem;
+        /** Write a message to the log. */
+        write(message: any, type?: LogTypes, outputToConsole?: boolean): ILogItem;
+        write(message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true): ILogItem {
+            var logItem = Diagnostics.LogItem.new(this, null, message, type);
+            if (!this.subItems)
+                this.subItems = [];
+            this.subItems.push(logItem);
+            return this;
         }
-        LogItem.$__register(Diagnostics);
+
+        /** Write a message to the log without using a title and return the new log item instance, which can be used to start a related sub-log. */
+        log(title: string, message: string, type?: LogTypes, outputToConsole?: boolean): ILogItem;
+        /** Write a message to the log without using a title and return the new log item instance, which can be used to start a related sub-log. */
+        log(title: any, message: any, type?: LogTypes, outputToConsole?: boolean): ILogItem;
+        log(title: any, message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true): ILogItem {
+            var logItem = Diagnostics.LogItem.new(this, title, message, type, outputToConsole);
+            if (!this.subItems)
+                this.subItems = [];
+            this.subItems.push(logItem);
+            return logItem;
+        }
+
+        /** Causes all future log writes to be nested under this log entry.
+        * This is usually called at the start of a block of code, where following function calls may trigger nested log writes. Don't forget to call 'endCapture()' when done.
+        * The current instance is returned to allow chaining function calls.
+        * Note: The number of calls to 'endCapture()' must match the number of calls to 'beginCapture()', or an error will occur.
+        */
+        beginCapture(): ILogItem {
+            //? if (__logCaptureStack.indexOf(this) < 0)
+            __logCaptureStack.push(this);
+            return this;
+        }
+
+        /** Undoes the call to 'beginCapture()', activating any previous log item that called 'beginCapture()' before this instance.
+        * See 'beginCapture()' for more details.
+        * Note: The number of calls to 'endCapture()' must match the number of calls to 'beginCapture()', or an error will occur.
+        */
+        endCapture() {
+            //var i = __logCaptureStack.lastIndexOf(this);
+            //if (i >= 0) __logCaptureStack.splice(i, 1);
+            var item = __logCaptureStack.pop();
+            if (item != null) throw Exception.from("Your calls to begin/end log capture do not match up. Make sure the calls to 'endCapture()' match up to your calls to 'beginCapture()'.", this);
+        }
+
+        toString(): string {
+            var time = TimeSpan && TimeSpan.utcTimeToLocalTime(this.time) || null;
+            var timeStr = time && (time.hours + ":" + (time.minutes < 10 ? "0" + time.minutes : "" + time.minutes) + ":" + (time.seconds < 10 ? "0" + time.seconds : "" + time.seconds)) || "" + new Date(this.time).toLocaleTimeString();
+            var txt = "[" + this.sequence + "] (" + timeStr + ") " + this.title + ": " + this.message;
+            return txt;
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------------
+
+        private static [DS.constructor](factory: typeof LogItem) {
+            //factory.init = (o, isnew) => { // not dealing with private properties, so this is not needed!
+            //};
+        }
     }
 
     export interface ILogItem extends LogItem.$__type { }

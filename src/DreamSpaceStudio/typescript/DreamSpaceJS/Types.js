@@ -170,7 +170,7 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
             instance.$__ds = Globals_1.DreamSpace;
             instance.$__id = getNextObjectId();
             if (Types.autoTrackInstances && (!appDomain || appDomain.autoTrackInstances === void 0 || appDomain.autoTrackInstances))
-                instance.$__globalId = Utilities_1.default.createGUID(false);
+                instance.$__globalId = Utilities_1.Utilities.createGUID(false);
             if (appDomain)
                 instance.$__appDomain = appDomain;
             if ('$__disposing' in instance)
@@ -181,8 +181,8 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
             // TODO: Clean up the following when ...rest is more widely supported. Also needs testing to see which is actually more efficient when compiled for ES6.
             if (Globals_1.DreamSpace.ES6Targeted) {
                 if (typeof this.init == 'function')
-                    if (Delegate_1.default)
-                        Delegate_1.default.fastCall(this.init, this, instance, isNew, ...arguments);
+                    if (Delegate_1.Delegate)
+                        Delegate_1.Delegate.fastCall(this.init, this, instance, isNew, ...arguments);
                     else
                         this.init.call(this, instance, isNew, ...arguments);
             }
@@ -193,8 +193,8 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
                 arguments[1] = isNew;
                 arguments.length += 2;
                 if (typeof this.init == 'function')
-                    if (Delegate_1.default)
-                        Delegate_1.default.fastApply(this.init, this, arguments);
+                    if (Delegate_1.Delegate)
+                        Delegate_1.Delegate.fastApply(this.init, this, arguments);
                     else
                         this.init.apply(this, arguments);
             }
@@ -224,6 +224,9 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
          * applied (using the IFunctionInfo interface).
         */
         function __registerFactoryType(instanceType, factoryType, moduleSpace, addMemberTypeInfo = true) {
+            if (!factory.$__type)
+                throw "__registerFactoryType() error: 'factoryType' (" + getTypeName(factoryType) + ") is not a valid factory, or you forgot to use the '@factory()' decorator to register it."
+                    + " If the base is a generic-type factory, make sure to use '@usingFactory()' on the generic instance class associated with the factory.";
             var _instanceType = instanceType;
             var factoryTypeInfo = factoryType;
             if (typeof factoryType !== 'function')
@@ -237,7 +240,9 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
             if (typeof _instanceType != 'function')
                 Logging_1.error("__registerFactoryType()", "'" + getFullTypeName(factoryType) + ".$__type' is not a valid constructor function.", factoryType); // TODO: See if this can also be detected in ES2015 (ES6) using the specialized functions.
             // ... register type information first BEFORER we call any static constructor (so it is available to the user)s ...
-            var registeredFactory = __registerType(factoryType, moduleSpace, addMemberTypeInfo);
+            // TODO: (NOTE: this call takes the instance type, which may also be the factory type; if not a factory, then it should have a reference to one)
+            var registeredFactory = __registerType(instanceType, moduleSpace, addMemberTypeInfo);
+            s;
             factoryTypeInfo.$__type = _instanceType; // (the class type AND factory type should both have a reference to each other)
             _instanceType.$__factoryType = factoryTypeInfo; // (a properly registered class that supports the factory pattern should have a reference to its underlying factory type)
             var registeredFactoryType = __registerType(_instanceType, factoryType, addMemberTypeInfo);
@@ -408,7 +413,7 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
                     appDomain.dispose(_object, release);
                     return;
                 }
-                Utilities_1.default.erase(object, __nonDisposableProperties);
+                Utilities_1.Utilities.erase(object, __nonDisposableProperties);
                 _object.$__disposing = false;
                 _object.$__disposed = true;
                 if (release) {
@@ -502,7 +507,7 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
         obj.init = obj.init || function (o, isnew, ...args) {
             if (isnew)
                 return o; // (else the object is from the cache of disposed objects)
-            Utilities_1.default.erase(o);
+            Utilities_1.Utilities.erase(o);
             var newO = new obj(...args); // (this exists because we cannot assume the developer will create a better 'init()' for their derived factory type - which they should do)
             for (var p in newO)
                 if (newO.hasOwnProperty(p))
@@ -517,6 +522,9 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
      * @param {TBaseFactory} baseFactoryType The factory that this factory type derives from.
     */
     function Factory(baseFactoryType) {
+        if (!baseFactoryType.$__type)
+            throw "'extends Factory(base)' error: 'base' (" + getTypeName(baseFactoryType) + ") is not a factory, or you forgot to use the '@factory()' decorator to register it."
+                + " If the base is a generic-type factory, make sure to use '@usingFactory()' on the generic instance class associated with the factory.";
         if (typeof baseFactoryType != 'function')
             baseFactoryType = Globals_1.DreamSpace.global.Object;
         var cls = class FactoryBase extends baseFactoryType {
@@ -557,6 +565,8 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
     * applied (using the IFunctionInfo interface).
     */
     function usingFactory(factory, moduleSpace, addMemberTypeInfo = true) {
+        if (!factory.$__type)
+            throw "usingFactory(factory, ...) error: 'factory' (" + getTypeName(factory) + ") is not a valid factory, or you forgot to use the '@factory()' decorator to register it.";
         return function (cls) { return Types.__registerFactoryType(cls, factory, moduleSpace, addMemberTypeInfo); };
     }
     exports.usingFactory = usingFactory;

@@ -6,7 +6,7 @@ import { DreamSpace as DS } from "../Globals";
 declare module "../Globals" { namespace DreamSpace { export var onReady: typeof DreamSpace_Ext.onReady; } } // (augmented with a "ready" event)
 
 import { IDelegate, Delegate } from "./Delegate";
-import { Factory, usingFactory, getTypeName, extendNS } from "../Types";
+import { Factory, usingFactory, getTypeName, extendNS, factory } from "../Types";
 import { Exception } from "./Exception";
 import { DSObject, Array, DependentObject } from "./PrimitiveTypes";
 import { getErrorMessage } from "../ErrorHandling";
@@ -45,6 +45,7 @@ type THandlerInfo<TCallback extends EventHandler = EventHandler> = IDelegate<obj
   * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
   * instance level event handler registration on the class only when necessary.
   */
+@factory(this)
 class EventDispatcherFactory extends Factory(DSObject) {
     /** Creates an event object for a specific even type.
         * @param {TOwner} owner The owner which owns this event object.
@@ -97,7 +98,7 @@ class EventDispatcherFactory extends Factory(DSObject) {
 }
 
 @usingFactory(EventDispatcherFactory, this)
-class EventDispatcher<TOwner extends object, TCallback extends EventHandler> extends DependentObject {
+class EventDispatcher<TOwner extends object = object, TCallback extends EventHandler = EventHandler> extends DependentObject {
     readonly owner: TOwner;
 
     private __eventName: string;
@@ -303,14 +304,58 @@ class EventDispatcher<TOwner extends object, TCallback extends EventHandler> ext
         */
     resetTriggerState() { this.__lastTriggerState = null; }
 
+
     /** A simple way to pass arguments to event handlers using arguments with static typing (calls 'dispatchEvent(null, false, false, arguments)').
-        * TIP: To prevent triggering the same event multiple times, use a custom state value in a call to 'setTriggerState()', and only call
-        * 'dispatch()' if true is returned (example: "someEvent.setTriggerState(someState) && someEvent.dispatch(...);", where the call to 'dispatch()'
-        * only occurs if true is returned from the previous statement).
-        */
-    dispatch: TCallback = <TCallback><any>((...args: any[]) => {
-        return this.dispatchEvent.apply(this, (args.unshift(null), args));
-    });
+    * If not cancelled, then 'true' is returned.
+    * TIP: To prevent triggering the same event multiple times, use a custom state value in a call to 'setTriggerState()', and only call
+    * 'dispatch()' if true is returned (example: "someEvent.setTriggerState(someState) && someEvent.dispatch(...);", where the call to 'dispatch()'
+    * only occurs if true is returned from the previous statement).
+    * Note: Call 'dispatchAsync()' to allow current script execution to complete before any handlers get called.
+    * @see dispatchAsync
+    */
+    dispatch(...args: Parameters<TCallback>): boolean { return void 0; }
+
+    /** Trigger this event by calling all the handlers. 
+     * If a handler cancels the process, then the promise is rejected.
+     * This method allows scheduling events to fire after current script execution completes.
+     */
+    dispatchAsync(...args: Parameters<TCallback>): Promise<void> { return void 0; }
+
+    private static [DS.constructor](factory: typeof EventDispatcherFactory) {
+
+        function getTriggerFunc(this: EventDispatcher, args: any[]) {
+            //x args.push(void 0, this); // (add 2 optional items on end)
+            //x var dataIndex = args.length - 2; // (set the index where the data should be set when each handler gets called)
+            return function _trigger(this: EventDispatcher) {
+                //x for (var i = 0, n = this._handlers.length; i < n; ++i) {
+                //    var h = <IEventDispatcherHandlerInfo<any, any>>this._handlers[i];
+                //    args[dataIndex] = h.data;
+                //    var result = this.eventCaller ? this.eventCaller.call(this._owner || this, h.handler, args) : h.handler.apply(this._owner || this, args);
+                //    if (this.canCancel && result === false) return false;
+                //    if (h.removeOnTrigger) { this._handlers.splice(i, 1); --i; --n; }
+                //x }
+                // 
+                //return !this.onCompleted || this.onCompleted.apply(this._owner || this, args) !== false;
+                return this.dispatchEvent.apply(this, (args.unshift(null), args));
+            }
+        };
+        (<Writeable<EventDispatcher>>EventDispatcher.prototype).dispatch = function dispatch(this: EventDispatcher, ...args: any[]): boolean  {
+            var _trigger = getTriggerFunc.call(this, args);
+            if (!this.synchronous && typeof setTimeout == 'function')
+                setTimeout(() => { _trigger.call(this); }, 0);
+            else
+                return _trigger.call(this);
+        };
+        (<Writeable<EventDispatcher>>EventDispatcher.prototype).dispatchAsync = function dispatchAsync(this: EventDispatcher, ...args: any[]): Promise<void> {
+            var _trigger = getTriggerFunc.call(this, args);
+            return new Promise<void>((resolve, reject) => {
+                if (!this.synchronous && typeof setTimeout == 'function')
+                    setTimeout(() => { if (_trigger.call(this)) resolve(); else reject(); }, 0);
+                else
+                    if (_trigger.call(this)) resolve(); else reject();
+            });
+        };
+    }
 
     /** If called within a handler, prevents the other handlers from being called. */
     cancel(): void {

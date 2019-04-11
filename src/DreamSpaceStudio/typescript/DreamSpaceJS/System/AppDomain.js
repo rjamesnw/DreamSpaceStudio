@@ -289,8 +289,8 @@ define(["require", "exports", "../Types", "../Logging", "../Globals", "./Primiti
     // The default app domain is used for new objects created, and the default application can be used to easily represent the current web application.
     AppDomain.default = AppDomain.new();
     Application.default = Application.new(Globals_1.DreamSpace.global.document.title, "Default Application", 0);
-    Globals_1.DreamSpace.frozen(AppDomain);
-    Globals_1.DreamSpace.frozen(Application);
+    Globals_1.frozen(AppDomain);
+    Globals_1.frozen(Application);
 });
 // ========================================================================================================================================
 //# sourceMappingURL=AppDomain.js.map

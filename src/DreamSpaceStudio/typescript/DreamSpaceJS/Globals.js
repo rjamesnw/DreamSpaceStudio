@@ -1,4 +1,4 @@
-define(["require", "exports", "./System/Exception"], function (require, exports, Exception_1) {
+define(["require", "exports", "./System/Exception", "./Logging", "./Path"], function (require, exports, Exception_1, Logging_1, Path_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // ###########################################################################################################################
@@ -158,43 +158,6 @@ define(["require", "exports", "./System/Exception"], function (require, exports,
             return true;
         }
         DreamSpace.isEmpty = isEmpty;
-        /**
-         * A TypeScript decorator used to seal a function and its prototype. Properties cannot be added, but existing ones can be updated.
-         */
-        function sealed(target, propertyName, descriptor) {
-            if (typeof target == 'object')
-                Object.seal(target);
-            if (typeof target.prototype == 'object')
-                Object.seal(target.prototype);
-            return target;
-        }
-        DreamSpace.sealed = sealed;
-        /**
-        * A TypeScript decorator used to freeze a function and its prototype.  Properties cannot be added, and existing ones cannot be changed.
-        */
-        function frozen(target, propertyName, descriptor) {
-            if (typeof target == 'object')
-                Object.freeze(target);
-            if (typeof target.prototype == 'object')
-                Object.freeze(target.prototype);
-            return target;
-        }
-        DreamSpace.frozen = frozen;
-        // =======================================================================================================================
-        // Function Parameter Dependency Injection Support
-        // TODO: Consider DI support at some point.
-        /**
-         * A decorator used to add DI information for a function parameter.
-         * @param args A list of items which are either fully qualified type names, or references to the type functions.
-         * The order specified is important.  A new (transient) or existing (singleton) instance of the first matching type found is returned.
-         */
-        function $(...args) {
-            return function (target, paramName, index) {
-                var _target = target;
-                _target.$__argumentTypes[index] = args;
-            };
-        }
-        DreamSpace.$ = $;
         // ========================================================================================================================================
         /**
          * Returns true if the URL contains the specific action and controller names at the end of the URL path.
@@ -398,7 +361,64 @@ define(["require", "exports", "./System/Exception"], function (require, exports,
             Globals.getValue = getValue;
             ;
         })(Globals = DreamSpace.Globals || (DreamSpace.Globals = {}));
+        // ========================================================================================================================================
+        /**
+         * Returns the base URL used by the system.  This can be configured by setting the global 'siteBaseURL' property, or if using DreamSpace.JS for
+         * .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called before all scripts in the header section of your layout view.
+         * If no 'siteBaseURL' global property exists, the current page location is assumed.
+         */
+        DreamSpace.baseURL = Path_1.Path.fix(DreamSpace.global.siteBaseURL || DreamSpace.baseURL || location.origin); // (example: "https://calendar.google.com/")
+        /**
+         * Returns the base URL used by the system for loading scripts.  This can be configured by setting the global 'scriptBaseURL' property.
+         * If no 'siteBaseURL' global property exists, the current page location is assumed.
+         */
+        DreamSpace.baseScriptsURL = DreamSpace.global.scriptsBaseURL ? Path_1.Path.fix(DreamSpace.global.scriptsBaseURL || DreamSpace.baseScriptsURL) : DreamSpace.baseURL + "js/";
+        /**
+         * Returns the base URL used by the system for loading scripts.  This can be configured by setting the global 'scriptBaseURL' property.
+         * If no 'siteBaseURL' global property exists, the current page location is assumed.
+         */
+        DreamSpace.baseCSSURL = DreamSpace.global.cssBaseURL ? Path_1.Path.fix(DreamSpace.global.cssBaseURL || DreamSpace.baseCSSURL) : DreamSpace.baseURL + "css/";
+        Logging_1.log("DreamSpace.baseURL", DreamSpace.baseURL + " (If this is wrong, set a global 'siteBaseURL' variable to the correct path, or if using DreamSpace.JS for .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called in the header section of your layout view)"); // (requires the exception object, which is the last one to be defined above; now we start the first log entry with the base URI of the site)
+        Logging_1.log("DreamSpace.baseScriptsURL", DreamSpace.baseScriptsURL + " (If this is wrong, set a global 'scriptsBaseURL' variable to the correct path)");
+        if (DreamSpace.global.serverWebRoot)
+            Logging_1.log("DreamSpace.serverWebRoot", DreamSpace.global.serverWebRoot + " (typically set server side within the layout view only while debugging to help resolve script source maps)");
+        // ========================================================================================================================================
+        // *** At this point the core type system, error handling, and console-based logging are now available. ***
+        // ========================================================================================================================================
+        Logging_1.log("DreamSpace", "Core system loaded.", Logging_1.LogTypes.Info);
+        // ========================================================================================================================================
     })(DreamSpace = exports.DreamSpace || (exports.DreamSpace = {}));
+    function sealed(target, propertyName, descriptor) {
+        if (typeof target == 'object')
+            Object.seal(target);
+        if (typeof target.prototype == 'object')
+            Object.seal(target.prototype);
+        return target;
+    }
+    exports.sealed = sealed;
+    function frozen(target, propertyName, descriptor) {
+        if (typeof target == 'object')
+            Object.freeze(target);
+        if (typeof target.prototype == 'object')
+            Object.freeze(target.prototype);
+        return target;
+    }
+    exports.frozen = frozen;
+    // =======================================================================================================================
+    // Function Parameter Dependency Injection Support
+    // TODO: Consider DI support at some point.
+    /**
+     * A decorator used to add DI information for a function parameter.
+     * @param args A list of items which are either fully qualified type names, or references to the type functions.
+     * The order specified is important.  A new (transient) or existing (singleton) instance of the first matching type found is returned.
+     */
+    function $(...args) {
+        return function (target, paramName, index) {
+            var _target = target;
+            _target.$__argumentTypes[index] = args;
+        };
+    }
+    exports.$ = $;
     ///** Represents a static property on a class module. */
     //? export interface IStaticProperty<TDataType> { }
     ///** Stores static property registration details. */

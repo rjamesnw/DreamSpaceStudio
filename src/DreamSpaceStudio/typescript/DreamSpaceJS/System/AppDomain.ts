@@ -1,6 +1,6 @@
 ﻿import { Factory, getFullTypeName, factory, Types } from "../Types";
 import { error } from "../Logging";
-import { DreamSpace as DS, IDisposable, ITypeInfo, IFactory, IType } from "../Globals";
+import { DreamSpace as DS, IDisposable, ITypeInfo, IFactory, IType, frozen } from "../Globals";
 import { DSObject } from "./PrimitiveTypes";
 import { Exception } from "./Exception";
 import { IndexedObjectCollection, IIndexedObjectCollection } from "./Collections.IndexedObjectCollection";
@@ -97,7 +97,7 @@ export class AppDomain extends Factory(DSObject) {
         this.super.init(o, isnew);
         (<IDomainObjectInfo><any>o).$__appDomain = o;
         o.__objects = IndexedObjectCollection.new<IDomainObjectInfo>();
-        o.__objects.__IDPropertyName = <KeyOf<IDomainObjectInfo>>"$__appDomainId";
+        o.__objects.__IDPropertyName = <keyof IDomainObjectInfo>"$__appDomainId";
         o.applications = typeof application == 'object' ? [application] : [];
         //? if (global.Object.freeze)
         //?    global.Object.freeze($this); // (properties cannot be modified once set)
@@ -431,7 +431,7 @@ export interface IApplication extends Application { }
 AppDomain.default = AppDomain.new();
 Application.default = Application.new(DS.global.document.title, "Default Application", 0);
 
-DS.frozen(AppDomain);
-DS.frozen(Application);
+frozen(AppDomain);
+frozen(Application);
 
 // ========================================================================================================================================

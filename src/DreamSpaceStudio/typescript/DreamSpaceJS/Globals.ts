@@ -1,6 +1,8 @@
 ﻿import { IO } from "./IO";
 import { Exception } from "./System/Exception";
 import { IResourceRequest } from "./ResourceRequest";
+import { log, LogTypes } from "./Logging";
+import { Path } from "./Path";
 
 // ###########################################################################################################################
 // These are functions for creating global scope variables/references that eliminate/minimize collisions between conflicting scripts.
@@ -16,7 +18,7 @@ import { IResourceRequest } from "./ResourceRequest";
  * Note: A symbol is not used, since callbacks placed into API URLs must be strings. Instead, a static pre-generated GUID is appended.
  */
 export const DEFAULT_GLOBAL_NS_NAME = "$__DREAMSPACE_GLBOALS_A756B156811A44E59329E44CAA6AFA98"; // (A static GUID is appended)
- var USER_GIVEN_GLOBAL_NS_NAME: string;
+var USER_GIVEN_GLOBAL_NS_NAME: string;
 
 export abstract class DreamSpace {
     static get globalNamespaceName() { return USER_GIVEN_GLOBAL_NS_NAME || DEFAULT_GLOBAL_NS_NAME; }
@@ -168,44 +170,6 @@ export namespace DreamSpace {
         return true;
     }
 
-    /**
-     * A TypeScript decorator used to seal a function and its prototype. Properties cannot be added, but existing ones can be updated.
-     */
-    export function sealed<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T {
-        if (typeof target == 'object')
-            Object.seal(target);
-        if (typeof (<Object>target).prototype == 'object')
-            Object.seal((<Object>target).prototype);
-        return target;
-    }
-
-    /**
-    * A TypeScript decorator used to freeze a function and its prototype.  Properties cannot be added, and existing ones cannot be changed.
-    */
-    export function frozen<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T {
-        if (typeof target == 'object')
-            Object.freeze(target);
-        if (typeof (<Object>target).prototype == 'object')
-            Object.freeze((<Object>target).prototype);
-        return target;
-    }
-
-    // =======================================================================================================================
-    // Function Parameter Dependency Injection Support
-    // TODO: Consider DI support at some point.
-
-    /**
-     * A decorator used to add DI information for a function parameter.
-     * @param args A list of items which are either fully qualified type names, or references to the type functions.
-     * The order specified is important.  A new (transient) or existing (singleton) instance of the first matching type found is returned.
-     */
-    export function $(...args: (IType<any> | string)[]) { // this is the decorator factory
-        return function (target: any, paramName: string, index: number) { // this is the decorator
-            var _target = <IFunctionInfo>target;
-            _target.$__argumentTypes[index] = args;
-        }
-    }
-
     // ========================================================================================================================================
 
     /** 
@@ -321,7 +285,7 @@ export namespace DreamSpace {
         *                                Some frameworks, such as the Google Maps API, support callbacks with dot-delimited names for nested objects to help
         *                                prevent global scope pollution.
         */
-        export function register<T>(resource: IO.IResourceRequest, name: string, initialValue: T, asHostGlobal?: boolean): string;
+        export function register<T>(resource: IResourceRequest, name: string, initialValue: T, asHostGlobal?: boolean): string;
         /**
         * Registers and initializes a global property for the specified namespace, and returns the dot-delimited string reference (see DreamSpace.Globals).
         * Subsequent calls with the same namespace and identifier name ignores the 'initialValue' and 'asHostGlobal' arguments, and simply returns the
@@ -373,7 +337,7 @@ export namespace DreamSpace {
         /**
           * Returns true if the specified global variable name is registered.
           */
-        export function exists<T>(resource: IO.IResourceRequest, name: string): boolean;
+        export function exists<T>(resource: IResourceRequest, name: string): boolean;
         /**
           * Returns true if the specified global variable name is registered.
          */
@@ -390,7 +354,7 @@ export namespace DreamSpace {
           * Erases the registered global variable (by setting it to 'undefined' - which is faster than deleting it).
           * Returns true if successful.
           */
-        export function erase<T>(resource: IO.IResourceRequest, name: string): boolean;
+        export function erase<T>(resource: IResourceRequest, name: string): boolean;
         export function erase<T>(namespace: string, name: string): boolean;
         export function erase<T>(namespace: any, name: string): boolean {
             var namespace = namespace.url || ('' + namespace), nsID: string, nsglobals: { [index: string]: any };
@@ -412,7 +376,7 @@ export namespace DreamSpace {
           * and creating a new object.  Any host globals are deleted first.
           * Return true on success, and false if the namespace doesn't exist.
           */
-        export function clear<T>(resource: IO.IResourceRequest): boolean;
+        export function clear<T>(resource: IResourceRequest): boolean;
         /**
           * Clears all registered globals by releasing the associated global object for the specified resource's namespace
           * and creating a new object.  Any host globals are deleted first.
@@ -436,7 +400,7 @@ export namespace DreamSpace {
         /**
           * Sets and returns a global property value.
           */
-        export function setValue<T>(resource: IO.IResourceRequest, name: string, value: T): T;
+        export function setValue<T>(resource: IResourceRequest, name: string, value: T): T;
         /**
           * Sets and returns a global property value.
           */
@@ -462,7 +426,7 @@ export namespace DreamSpace {
         /**
         * Gets a global property value.
         */
-        export function getValue<T>(resource: IO.IResourceRequest, name: string): T;
+        export function getValue<T>(resource: IResourceRequest, name: string): T;
         /**
         * Gets a global property value.
         */
@@ -481,6 +445,87 @@ export namespace DreamSpace {
             }
             else return nsglobals[name];
         };
+    }
+
+    // ========================================================================================================================================
+
+    /**
+     * Returns the base URL used by the system.  This can be configured by setting the global 'siteBaseURL' property, or if using DreamSpace.JS for
+     * .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called before all scripts in the header section of your layout view.
+     * If no 'siteBaseURL' global property exists, the current page location is assumed.
+     */
+    export var baseURL: string = Path.fix(global.siteBaseURL || baseURL || location.origin); // (example: "https://calendar.google.com/")
+
+    /**
+     * Returns the base URL used by the system for loading scripts.  This can be configured by setting the global 'scriptBaseURL' property.
+     * If no 'siteBaseURL' global property exists, the current page location is assumed.
+     */
+    export var baseScriptsURL: string = global.scriptsBaseURL ? Path.fix(global.scriptsBaseURL || baseScriptsURL) : baseURL + "js/";
+
+    /**
+     * Returns the base URL used by the system for loading scripts.  This can be configured by setting the global 'scriptBaseURL' property.
+     * If no 'siteBaseURL' global property exists, the current page location is assumed.
+     */
+    export var baseCSSURL: string = global.cssBaseURL ? Path.fix(global.cssBaseURL || baseCSSURL) : baseURL + "css/";
+
+    log("DreamSpace.baseURL", baseURL + " (If this is wrong, set a global 'siteBaseURL' variable to the correct path, or if using DreamSpace.JS for .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called in the header section of your layout view)"); // (requires the exception object, which is the last one to be defined above; now we start the first log entry with the base URI of the site)
+    log("DreamSpace.baseScriptsURL", baseScriptsURL + " (If this is wrong, set a global 'scriptsBaseURL' variable to the correct path)");
+
+    if (global.serverWebRoot)
+        log("DreamSpace.serverWebRoot", global.serverWebRoot + " (typically set server side within the layout view only while debugging to help resolve script source maps)");
+
+    // ========================================================================================================================================
+
+    // *** At this point the core type system, error handling, and console-based logging are now available. ***
+
+    // ========================================================================================================================================
+
+    log("DreamSpace", "Core system loaded.", LogTypes.Info);
+
+    // ========================================================================================================================================
+}
+
+// ########################################################################################################################
+
+/**
+ * A TypeScript decorator used to seal a function and its prototype. Properties cannot be added, but existing ones can be updated.
+ */
+export function sealed<T extends IType>(target: T): T;
+export function sealed<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T;
+export function sealed<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T {
+    if (typeof target == 'object')
+        Object.seal(target);
+    if (typeof (<any>target).prototype == 'object')
+        Object.seal((<any>target).prototype);
+    return target;
+}
+
+/**
+* A TypeScript decorator used to freeze a function and its prototype.  Properties cannot be added, and existing ones cannot be changed.
+*/
+export function frozen<T extends IType>(target: T): T;
+export function frozen<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T;
+export function frozen<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T {
+    if (typeof target == 'object')
+        Object.freeze(target);
+    if (typeof (<any>target).prototype == 'object')
+        Object.freeze((<any>target).prototype);
+    return target;
+}
+
+// =======================================================================================================================
+// Function Parameter Dependency Injection Support
+// TODO: Consider DI support at some point.
+
+/**
+ * A decorator used to add DI information for a function parameter.
+ * @param args A list of items which are either fully qualified type names, or references to the type functions.
+ * The order specified is important.  A new (transient) or existing (singleton) instance of the first matching type found is returned.
+ */
+export function $(...args: (IType<any> | string)[]) { // this is the decorator factory
+    return function (target: any, paramName: string, index: number) { // this is the decorator
+        var _target = <IFunctionInfo>target;
+        _target.$__argumentTypes[index] = args;
     }
 }
 

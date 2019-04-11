@@ -2,9 +2,9 @@
 // Types for time management.
 // ###########################################################################################################################
 
-import { Factory, FactoryType } from "../Types";
+import { Factory } from "../Types";
 import { DSObject, String } from "./PrimitiveTypes";
-import { DreamSpace as DS} from "../Globals"
+import { DreamSpace as DS } from "../Globals"
 import { Exception } from "./Exception";
 
 // =======================================================================================================================
@@ -24,11 +24,16 @@ export class TimeSpan extends Factory(DSObject) {
         (year?: number, dayOfYear?: number, hours?: number, minutes?: number, seconds?: number, milliseconds?: number): ITimeSpan;
     };
 
-    static init: {
-        (o: ITimeSpan, isnew: boolean, timeInMS: number): void;
-        (o: ITimeSpan, isnew: boolean, year: number, dayOfYear?: number, hours?: number, minutes?: number, seconds?: number, milliseconds?: number): void;
-        (o: ITimeSpan, isnew: boolean, year?: number, dayOfYear?: number, hours?: number, minutes?: number, seconds?: number, milliseconds?: number): void;
-    };
+    static init(o: ITimeSpan, isnew: boolean, timeInMS: number): void;
+    static init(o: ITimeSpan, isnew: boolean, year: number, dayOfYear?: number, hours?: number, minutes?: number, seconds?: number, milliseconds?: number): void;
+    static init(o: ITimeSpan, isnew: boolean, year?: number, dayOfYear?: number, hours?: number, minutes?: number, seconds?: number, milliseconds?: number): void;
+    static init(o: ITimeSpan, isnew: boolean, year?: number, dayOfYear?: number, hours?: number, minutes?: number, seconds?: number, milliseconds?: number): void {
+        this.super.init(o, isnew);
+        if (arguments.length <= 3)
+            o.setTime(year);
+        else
+            o.setTime(TimeSpan.msFromTime(year, dayOfYear, hours, minutes, seconds, milliseconds));
+    }
 
     //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
 
@@ -208,165 +213,149 @@ export class TimeSpan extends Factory(DSObject) {
             + String.pad(Math.floor(seconds % 1 * 1000), 3, null, '0') // (1000th decimal precision)
             + "Z";
     }
-}
-export namespace TimeSpan {
-    export class $__type extends FactoryType(DSObject) {
 
-        //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+    //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
 
-        year: number;
-        dayOfYear: number;
-        hours: number;
-        minutes: number;
-        seconds: number;
-        milliseconds: number;
+    year: number;
+    dayOfYear: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+    milliseconds: number;
 
-        //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+    //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
 
-        private __ms: number;
-        private __date: Date; // (this is only used if needed - such as when creating the date string; it caches the result for future reuse)
-        private __localTS: ITimeSpan; // (this is only used if needed - such as when creating the local TimeSpan string; it caches the result for future reuse)
+    private __ms: number;
+    private __date: Date; // (this is only used if needed - such as when creating the date string; it caches the result for future reuse)
+    private __localTS: ITimeSpan; // (this is only used if needed - such as when creating the local TimeSpan string; it caches the result for future reuse)
 
-        //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+    //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
 
-        /** Set the time of this TimeSpan, in milliseconds.
-            * Note: This function assumes that milliseconds representing leap year days are included (same as the JavaScript 'Date' object).
-            */
-        setTime(timeInMs: number): ITimeSpan {
-            if (!isNaN(timeInMs)) {
-                var ms = this.__ms = timeInMs || 0;
-                this.__date = null;
-                var daysToYear = TimeSpan.daysSinceEpoch(this.year = TimeSpan.yearsSinceEpoch(ms));
-                var msRemaining = ms - daysToYear * DS.Time.__millisecondsPerDay;
-                this.dayOfYear = 1 + Math.floor(msRemaining / DS.Time.__millisecondsPerDay);
-                msRemaining -= (this.dayOfYear - 1) * DS.Time.__millisecondsPerDay;
-                this.hours = Math.floor(msRemaining / DS.Time.__millisecondsPerHour);
-                msRemaining -= this.hours * DS.Time.__millisecondsPerHour;
-                this.minutes = Math.floor(msRemaining / DS.Time.__millisecondsPerMinute);
-                msRemaining -= this.minutes * DS.Time.__millisecondsPerMinute;
-                this.seconds = Math.floor(msRemaining / DS.Time.__millisecondsPerSecond);
-                msRemaining -= this.seconds * DS.Time.__millisecondsPerSecond;
-                this.milliseconds = msRemaining;
-            }
-            return this;
+    /** Set the time of this TimeSpan, in milliseconds.
+        * Note: This function assumes that milliseconds representing leap year days are included (same as the JavaScript 'Date' object).
+        */
+    setTime(timeInMs: number): ITimeSpan {
+        if (!isNaN(timeInMs)) {
+            var ms = this.__ms = timeInMs || 0;
+            this.__date = null;
+            var daysToYear = TimeSpan.daysSinceEpoch(this.year = TimeSpan.yearsSinceEpoch(ms));
+            var msRemaining = ms - daysToYear * DS.Time.__millisecondsPerDay;
+            this.dayOfYear = 1 + Math.floor(msRemaining / DS.Time.__millisecondsPerDay);
+            msRemaining -= (this.dayOfYear - 1) * DS.Time.__millisecondsPerDay;
+            this.hours = Math.floor(msRemaining / DS.Time.__millisecondsPerHour);
+            msRemaining -= this.hours * DS.Time.__millisecondsPerHour;
+            this.minutes = Math.floor(msRemaining / DS.Time.__millisecondsPerMinute);
+            msRemaining -= this.minutes * DS.Time.__millisecondsPerMinute;
+            this.seconds = Math.floor(msRemaining / DS.Time.__millisecondsPerSecond);
+            msRemaining -= this.seconds * DS.Time.__millisecondsPerSecond;
+            this.milliseconds = msRemaining;
         }
-
-        /** Returns the internal millisecond total for this TimeSpan.
-            * Note: 
-            */
-        getTime(): number { return this.__ms; }
-
-        //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-
-        add(timeInMS: number): ITimeSpan;
-        add(yearOffset: number, dayOfYearOffset: number, hoursOffset?: number, minutesOffset?: number, secondsOffset?: number, msOffset?: number): ITimeSpan;
-        add(yearOrTimeInMS: number = 0, dayOfYearOffset: number = 0, hoursOffset: number = 0, minutesOffset: number = 0, secondsOffset: number = 0, msOffset: number = 0): ITimeSpan {
-            if (arguments.length == 1)
-                this.setTime(this.__ms += (yearOrTimeInMS || 0));
-            else
-                this.setTime(this.__ms += TimeSpan.msFromTime(DS.Time.__EpochYear + yearOrTimeInMS, 1 + dayOfYearOffset, hoursOffset, minutesOffset, secondsOffset, msOffset));
-            return this;
-        }
-
-        subtract(timeInMS: number): ITimeSpan;
-        subtract(yearOffset: number, dayOfYearOffset: number, hoursOffset?: number, minutesOffset?: number, secondsOffset?: number, msOffset?: number): ITimeSpan;
-        subtract(yearOrTimeInMS: number = 0, dayOfYearOffset: number = 0, hoursOffset: number = 0, minutesOffset: number = 0, secondsOffset: number = 0, msOffset: number = 0): ITimeSpan {
-            if (arguments.length == 1)
-                this.setTime(this.__ms -= (yearOrTimeInMS || 0));
-            else
-                this.setTime(this.__ms -= TimeSpan.msFromTime(DS.Time.__EpochYear + yearOrTimeInMS, 1 + dayOfYearOffset, hoursOffset, minutesOffset, secondsOffset, msOffset));
-            return this;
-        }
-
-        /** Returns the time span as a string (note: this is NOT a date string).
-            * To exclude milliseconds, set 'includeMilliseconds' false.
-            * @param {boolean} includeTime If true (default), the time part is included, otherwise only the date part is returned.
-            * @param {boolean} includeMilliseconds If true (default), the millisecond part is included, otherwise only the date and time parts are returned.
-            * Note: This is ignored if 'includeTime' is false.
-            * @param {boolean} includeTimezone If true (default), the time zone part is included.
-            * Note: This is ignored if 'includeTime' is false.
-            */
-        toString(includeTime: boolean = true, includeMilliseconds: boolean = true, includeTimezone: boolean = true): string {
-            if (!this.__localTS)
-                this.__localTS = TimeSpan.new(this.toValue() - DS.Time.__localTimeZoneOffset);
-            var localTS = this.__localTS;
-            return "Year " + String.pad(localTS.year, 4, '0') + ", Day " + String.pad(localTS.dayOfYear, 3, '0')
-                + (includeTime ? " " + String.pad(localTS.hours, 2, '0') + ":" + String.pad(localTS.minutes, 2, '0') + ":" + String.pad(localTS.seconds, 2, '0')
-                    + (includeMilliseconds && localTS.milliseconds ? ":" + localTS.milliseconds : "")
-                    + (includeTimezone ? " " + TimeSpan.getTimeZoneSuffix() : "")
-                    : "");
-        }
-
-        /** Returns the time span as a string (note: this is NOT a date string).
-            * To exclude milliseconds, set 'includeMilliseconds' false.
-            * @param {boolean} includeTime If true (default), the time part is included, otherwise only the date part is returned.
-            * @param {boolean} includeMilliseconds If true (default), the millisecond part is included, otherwise only the date and time parts are returned.
-            * Note: This is ignored if 'includeTime' is false.
-            */
-        toUTCString(includeTime: boolean = true, includeMilliseconds: boolean = true): string {
-            return "Year " + String.pad(this.year, 4, '0') + ", Day " + String.pad(this.dayOfYear, 3, '0')
-                + (includeTime ? " " + String.pad(this.hours, 2, '0') + ":" + String.pad(this.minutes, 2, '0') + ":" + String.pad(this.seconds, 2, '0')
-                    + (includeMilliseconds && this.milliseconds ? ":" + this.milliseconds : "")
-                    : "");
-        }
-
-        /** Returns the time span as a local string in the standard international ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ).
-            * To exclude milliseconds, set 'includeMilliseconds' false.
-            * @param {boolean} includeTime If true (default), the time part is included, otherwise only the date part is returned.
-            * @param {boolean} includeMilliseconds If true (default), the millisecond part is included, otherwise only the date and time parts are returned.
-            * Note: This is ignored if 'includeTime' is false.
-            * @param {boolean} includeTimezone If true (default), the time zone part is included.
-            * Note: This is ignored if 'includeTime' is false.
-            */
-        toISODateString(includeTime: boolean = true, includeMilliseconds: boolean = true, includeTimezone: boolean = true): string {
-            if (!this.__date)
-                this.__date = new Date(this.toValue());
-            return String.pad(this.__date.getFullYear(), 4, '0') + "-" + String.pad(1 + this.__date.getMonth(), 2, '0') + "-" + String.pad(this.__date.getDate(), 2, '0')
-                + (includeTime ? "T" + String.pad(this.__date.getHours(), 2, '0') + ":" + String.pad(this.__date.getMinutes(), 2, '0') + ":" + String.pad(this.__date.getSeconds(), 2, '0')
-                    + (includeMilliseconds && this.__date.getMilliseconds() ? "." + this.__date.getMilliseconds() : "")
-                    + (includeTimezone ? TimeSpan.getISOTimeZoneSuffix() : "")
-                    : "");
-        }
-
-        /** Returns the time span as a Coordinated Universal Time (UTC) string in the standard international ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ).
-            * To exclude milliseconds, set 'includeMilliseconds' false.
-            * @param {boolean} includeTime If true (default), the time part is included, otherwise only the date part is returned.
-            * @param {boolean} includeMilliseconds If true (default), the millisecond part is included, otherwise only the date and time parts are returned.
-            * Note: This is ignored if 'includeTime' is false.
-            * @param {boolean} includeTimezone If true (default), the time zone part is included.
-            * Note: This is ignored if 'includeTime' is false.
-            */
-        toUTCISODateString(includeTime: boolean = true, includeMilliseconds: boolean = true, includeTimezone: boolean = true): string {
-            if (!this.__date)
-                this.__date = new Date(this.toValue());
-            return String.pad(this.year, 4, '0') + "-" + String.pad(1 + this.__date.getUTCMonth(), 2, '0') + "-" + String.pad(this.__date.getUTCDate(), 2, '0')
-                + (includeTime ? "T" + String.pad(this.hours, 2, '0') + ":" + String.pad(this.minutes, 2, '0') + ":" + String.pad(this.seconds, 2, '0')
-                    + (includeMilliseconds && this.milliseconds ? "." + this.milliseconds : "")
-                    + (includeTimezone ? TimeSpan.getISOTimeZoneSuffix(0) : "")
-                    : "");
-        }
-
-        toValue(): number {
-            return this.__ms;
-        }
-
-        //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-
-        private static [DS.constructor](factory: typeof TimeSpan) {
-            factory.init = function (o: ITimeSpan, isnew: boolean, year?: number, dayOfYear?: number, hours?: number, minutes?: number, seconds?: number, milliseconds?: number) {
-                factory.super.init(o, isnew);
-                if (arguments.length <= 3)
-                    o.setTime(year);
-                else
-                    o.setTime(TimeSpan.msFromTime(year, dayOfYear, hours, minutes, seconds, milliseconds));
-            };
-        }
+        return this;
     }
 
-    TimeSpan.$__register(System);
+    /** Returns the internal millisecond total for this TimeSpan.
+        * Note: 
+        */
+    getTime(): number { return this.__ms; }
+
+    //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+
+    add(timeInMS: number): ITimeSpan;
+    add(yearOffset: number, dayOfYearOffset: number, hoursOffset?: number, minutesOffset?: number, secondsOffset?: number, msOffset?: number): ITimeSpan;
+    add(yearOrTimeInMS: number = 0, dayOfYearOffset: number = 0, hoursOffset: number = 0, minutesOffset: number = 0, secondsOffset: number = 0, msOffset: number = 0): ITimeSpan {
+        if (arguments.length == 1)
+            this.setTime(this.__ms += (yearOrTimeInMS || 0));
+        else
+            this.setTime(this.__ms += TimeSpan.msFromTime(DS.Time.__EpochYear + yearOrTimeInMS, 1 + dayOfYearOffset, hoursOffset, minutesOffset, secondsOffset, msOffset));
+        return this;
+    }
+
+    subtract(timeInMS: number): ITimeSpan;
+    subtract(yearOffset: number, dayOfYearOffset: number, hoursOffset?: number, minutesOffset?: number, secondsOffset?: number, msOffset?: number): ITimeSpan;
+    subtract(yearOrTimeInMS: number = 0, dayOfYearOffset: number = 0, hoursOffset: number = 0, minutesOffset: number = 0, secondsOffset: number = 0, msOffset: number = 0): ITimeSpan {
+        if (arguments.length == 1)
+            this.setTime(this.__ms -= (yearOrTimeInMS || 0));
+        else
+            this.setTime(this.__ms -= TimeSpan.msFromTime(DS.Time.__EpochYear + yearOrTimeInMS, 1 + dayOfYearOffset, hoursOffset, minutesOffset, secondsOffset, msOffset));
+        return this;
+    }
+
+    /** Returns the time span as a string (note: this is NOT a date string).
+        * To exclude milliseconds, set 'includeMilliseconds' false.
+        * @param {boolean} includeTime If true (default), the time part is included, otherwise only the date part is returned.
+        * @param {boolean} includeMilliseconds If true (default), the millisecond part is included, otherwise only the date and time parts are returned.
+        * Note: This is ignored if 'includeTime' is false.
+        * @param {boolean} includeTimezone If true (default), the time zone part is included.
+        * Note: This is ignored if 'includeTime' is false.
+        */
+    toString(includeTime: boolean = true, includeMilliseconds: boolean = true, includeTimezone: boolean = true): string {
+        if (!this.__localTS)
+            this.__localTS = TimeSpan.new(this.toValue() - DS.Time.__localTimeZoneOffset);
+        var localTS = this.__localTS;
+        return "Year " + String.pad(localTS.year, 4, '0') + ", Day " + String.pad(localTS.dayOfYear, 3, '0')
+            + (includeTime ? " " + String.pad(localTS.hours, 2, '0') + ":" + String.pad(localTS.minutes, 2, '0') + ":" + String.pad(localTS.seconds, 2, '0')
+                + (includeMilliseconds && localTS.milliseconds ? ":" + localTS.milliseconds : "")
+                + (includeTimezone ? " " + TimeSpan.getTimeZoneSuffix() : "")
+                : "");
+    }
+
+    /** Returns the time span as a string (note: this is NOT a date string).
+        * To exclude milliseconds, set 'includeMilliseconds' false.
+        * @param {boolean} includeTime If true (default), the time part is included, otherwise only the date part is returned.
+        * @param {boolean} includeMilliseconds If true (default), the millisecond part is included, otherwise only the date and time parts are returned.
+        * Note: This is ignored if 'includeTime' is false.
+        */
+    toUTCString(includeTime: boolean = true, includeMilliseconds: boolean = true): string {
+        return "Year " + String.pad(this.year, 4, '0') + ", Day " + String.pad(this.dayOfYear, 3, '0')
+            + (includeTime ? " " + String.pad(this.hours, 2, '0') + ":" + String.pad(this.minutes, 2, '0') + ":" + String.pad(this.seconds, 2, '0')
+                + (includeMilliseconds && this.milliseconds ? ":" + this.milliseconds : "")
+                : "");
+    }
+
+    /** Returns the time span as a local string in the standard international ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ).
+        * To exclude milliseconds, set 'includeMilliseconds' false.
+        * @param {boolean} includeTime If true (default), the time part is included, otherwise only the date part is returned.
+        * @param {boolean} includeMilliseconds If true (default), the millisecond part is included, otherwise only the date and time parts are returned.
+        * Note: This is ignored if 'includeTime' is false.
+        * @param {boolean} includeTimezone If true (default), the time zone part is included.
+        * Note: This is ignored if 'includeTime' is false.
+        */
+    toISODateString(includeTime: boolean = true, includeMilliseconds: boolean = true, includeTimezone: boolean = true): string {
+        if (!this.__date)
+            this.__date = new Date(this.toValue());
+        return String.pad(this.__date.getFullYear(), 4, '0') + "-" + String.pad(1 + this.__date.getMonth(), 2, '0') + "-" + String.pad(this.__date.getDate(), 2, '0')
+            + (includeTime ? "T" + String.pad(this.__date.getHours(), 2, '0') + ":" + String.pad(this.__date.getMinutes(), 2, '0') + ":" + String.pad(this.__date.getSeconds(), 2, '0')
+                + (includeMilliseconds && this.__date.getMilliseconds() ? "." + this.__date.getMilliseconds() : "")
+                + (includeTimezone ? TimeSpan.getISOTimeZoneSuffix() : "")
+                : "");
+    }
+
+    /** Returns the time span as a Coordinated Universal Time (UTC) string in the standard international ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ).
+        * To exclude milliseconds, set 'includeMilliseconds' false.
+        * @param {boolean} includeTime If true (default), the time part is included, otherwise only the date part is returned.
+        * @param {boolean} includeMilliseconds If true (default), the millisecond part is included, otherwise only the date and time parts are returned.
+        * Note: This is ignored if 'includeTime' is false.
+        * @param {boolean} includeTimezone If true (default), the time zone part is included.
+        * Note: This is ignored if 'includeTime' is false.
+        */
+    toUTCISODateString(includeTime: boolean = true, includeMilliseconds: boolean = true, includeTimezone: boolean = true): string {
+        if (!this.__date)
+            this.__date = new Date(this.toValue());
+        return String.pad(this.year, 4, '0') + "-" + String.pad(1 + this.__date.getUTCMonth(), 2, '0') + "-" + String.pad(this.__date.getUTCDate(), 2, '0')
+            + (includeTime ? "T" + String.pad(this.hours, 2, '0') + ":" + String.pad(this.minutes, 2, '0') + ":" + String.pad(this.seconds, 2, '0')
+                + (includeMilliseconds && this.milliseconds ? "." + this.milliseconds : "")
+                + (includeTimezone ? TimeSpan.getISOTimeZoneSuffix(0) : "")
+                : "");
+    }
+
+    toValue(): number {
+        return this.__ms;
+    }
+
+    //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
 }
 
-export interface ITimeSpan extends TimeSpan.$__type { }
+export interface ITimeSpan extends TimeSpan { }
 
     // =======================================================================================================================
 

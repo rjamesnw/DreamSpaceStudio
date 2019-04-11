@@ -24,7 +24,7 @@ define(["require", "exports", "../Globals", "./Delegate", "../Types", "./Excepti
       * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
       * instance level event handler registration on the class only when necessary.
       */
-    class EventDispatcherFactory extends Types_1.Factory(PrimitiveTypes_1.DSObject) {
+    let EventDispatcherFactory = class EventDispatcherFactory extends Types_1.Factory(PrimitiveTypes_1.DSObject) {
         /** Creates an event object for a specific even type.
             * @param {TOwner} owner The owner which owns this event object.
             * @param {string} eventName The name of the event which this event object represents.
@@ -64,7 +64,10 @@ define(["require", "exports", "../Globals", "./Delegate", "../Types", "./Excepti
            * The private event names are used to store event instances on the owning instances so each instance has it's own handlers list to manage.
            */
         static createPrivateEventName(eventName) { return "$__" + eventName + "Event"; }
-    }
+    };
+    EventDispatcherFactory = __decorate([
+        Types_1.factory(this)
+    ], EventDispatcherFactory);
     exports.EventDispatcher = EventDispatcherFactory;
     let EventDispatcher = EventDispatcher_1 = class EventDispatcher extends PrimitiveTypes_1.DependentObject {
         constructor() {
@@ -80,14 +83,6 @@ define(["require", "exports", "../Globals", "./Delegate", "../Types", "./Excepti
             this.eventTriggerHandler = null;
             /** True if the event can be cancelled. */
             this.canCancel = true;
-            /** A simple way to pass arguments to event handlers using arguments with static typing (calls 'dispatchEvent(null, false, false, arguments)').
-                * TIP: To prevent triggering the same event multiple times, use a custom state value in a call to 'setTriggerState()', and only call
-                * 'dispatch()' if true is returned (example: "someEvent.setTriggerState(someState) && someEvent.dispatch(...);", where the call to 'dispatch()'
-                * only occurs if true is returned from the previous statement).
-                */
-            this.dispatch = ((...args) => {
-                return this.dispatchEvent.apply(this, (args.unshift(null), args));
-            });
         }
         /** Return the underlying event name for this event object. */
         getEventName() { return this.__eventName; }
@@ -241,6 +236,60 @@ define(["require", "exports", "../Globals", "./Delegate", "../Types", "./Excepti
             * This is usually called after a sequence of events have completed, in which it is possible for the cycle to repeat.
             */
         resetTriggerState() { this.__lastTriggerState = null; }
+        /** A simple way to pass arguments to event handlers using arguments with static typing (calls 'dispatchEvent(null, false, false, arguments)').
+        * If not cancelled, then 'true' is returned.
+        * TIP: To prevent triggering the same event multiple times, use a custom state value in a call to 'setTriggerState()', and only call
+        * 'dispatch()' if true is returned (example: "someEvent.setTriggerState(someState) && someEvent.dispatch(...);", where the call to 'dispatch()'
+        * only occurs if true is returned from the previous statement).
+        * Note: Call 'dispatchAsync()' to allow current script execution to complete before any handlers get called.
+        * @see dispatchAsync
+        */
+        dispatch(...args) { return void 0; }
+        /** Trigger this event by calling all the handlers.
+         * If a handler cancels the process, then the promise is rejected.
+         * This method allows scheduling events to fire after current script execution completes.
+         */
+        dispatchAsync(...args) { return void 0; }
+        static [Globals_1.DreamSpace.constructor](factory) {
+            function getTriggerFunc(args) {
+                //x args.push(void 0, this); // (add 2 optional items on end)
+                //x var dataIndex = args.length - 2; // (set the index where the data should be set when each handler gets called)
+                return function _trigger() {
+                    //x for (var i = 0, n = this._handlers.length; i < n; ++i) {
+                    //    var h = <IEventDispatcherHandlerInfo<any, any>>this._handlers[i];
+                    //    args[dataIndex] = h.data;
+                    //    var result = this.eventCaller ? this.eventCaller.call(this._owner || this, h.handler, args) : h.handler.apply(this._owner || this, args);
+                    //    if (this.canCancel && result === false) return false;
+                    //    if (h.removeOnTrigger) { this._handlers.splice(i, 1); --i; --n; }
+                    //x }
+                    // 
+                    //return !this.onCompleted || this.onCompleted.apply(this._owner || this, args) !== false;
+                    return this.dispatchEvent.apply(this, (args.unshift(null), args));
+                };
+            }
+            ;
+            EventDispatcher_1.prototype.dispatch = function dispatch(...args) {
+                var _trigger = getTriggerFunc.call(this, args);
+                if (!this.synchronous && typeof setTimeout == 'function')
+                    setTimeout(() => { _trigger.call(this); }, 0);
+                else
+                    return _trigger.call(this);
+            };
+            EventDispatcher_1.prototype.dispatchAsync = function dispatchAsync(...args) {
+                var _trigger = getTriggerFunc.call(this, args);
+                return new Promise((resolve, reject) => {
+                    if (!this.synchronous && typeof setTimeout == 'function')
+                        setTimeout(() => { if (_trigger.call(this))
+                            resolve();
+                        else
+                            reject(); }, 0);
+                    else if (_trigger.call(this))
+                        resolve();
+                    else
+                        reject();
+                });
+            };
+        }
         /** If called within a handler, prevents the other handlers from being called. */
         cancel() {
             if (this.__dispatchInProgress)

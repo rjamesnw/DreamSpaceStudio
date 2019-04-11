@@ -13,7 +13,8 @@
   "dependencies": {
     "debug": "^2.2.0",
     "express": "^4.14.0",
-    "monaco-editor": "^0.16.2"
+    "monaco-editor": "^0.16.2",
+    "node-xhrstub": "^1.1.1"
   },
   "devDependencies": {
     "@types/debug": "0.0.30",

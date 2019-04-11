@@ -1,8 +1,8 @@
 ﻿import { log, error, LogTypes } from "./Logging";
 import { Exception } from "./System/Exception";
 import { IDomainObjectInfo, IADBridge, AppDomain } from "./System/AppDomain";
-import Utilities from "./Utilities";
-import Delegate from "./System/Delegate";
+import { Utilities } from "./Utilities";
+import { Delegate } from "./System/Delegate";
 import { DreamSpace as DS, IDisposable, ITypeInfo, IFactoryTypeInfo, IType, IFactory, IClassInfo, IFunctionInfo, INamespaceInfo, InitDelegate, NewDelegate } from "./Globals";
 
 // ###########################################################################################################################
@@ -249,6 +249,10 @@ export namespace Types {
     export function __registerFactoryType<TClass extends IType, TFactory extends IFactory>
         (instanceType: TClass, factoryType: TFactory, moduleSpace: Object, addMemberTypeInfo = true) {
 
+        if (!(<IFactoryTypeInfo><any>factory).$__type)
+            throw "__registerFactoryType() error: 'factoryType' (" + getTypeName(factoryType) + ") is not a valid factory, or you forgot to use the '@factory()' decorator to register it."
+            + " If the base is a generic-type factory, make sure to use '@usingFactory()' on the generic instance class associated with the factory.";
+
         var _instanceType = <IFactory<TClass> & IClassInfo & IType & Object><any>instanceType;
         var factoryTypeInfo = <IFactoryTypeInfo & Object><any>factoryType;
 
@@ -268,8 +272,9 @@ export namespace Types {
             error("__registerFactoryType()", "'" + getFullTypeName(factoryType) + ".$__type' is not a valid constructor function.", factoryType); // TODO: See if this can also be detected in ES2015 (ES6) using the specialized functions.
 
         // ... register type information first BEFORER we call any static constructor (so it is available to the user)s ...
-
-        var registeredFactory = __registerType(factoryType, moduleSpace, addMemberTypeInfo);
+        
+        // TODO: (NOTE: this call takes the instance type, which may also be the factory type; if not a factory, then it should have a reference to one)
+        var registeredFactory = __registerType(instanceType, moduleSpace, addMemberTypeInfo);s
 
         factoryTypeInfo.$__type = _instanceType; // (the class type AND factory type should both have a reference to each other)
         _instanceType.$__factoryType = factoryTypeInfo; // (a properly registered class that supports the factory pattern should have a reference to its underlying factory type)
@@ -283,11 +288,11 @@ export namespace Types {
         // ... if the user supplied a static constructor then call it now before we do anything more ...
         // (note: the static constructor may be where 'new' and 'init' factory functions are provided, so we MUST call them first before we hook into anything)
 
-        if (typeof factoryTypeInfo[<any>DS.constructor] == 'function')
-            factoryTypeInfo[<any>DS.constructor].call(_instanceType);
+        if (typeof (<any>factoryTypeInfo)[<any>DS.constructor] == 'function')
+            (<any>factoryTypeInfo)[<any>DS.constructor].call(_instanceType);
 
-        if (typeof _instanceType[<any>DS.constructor] == 'function')
-            _instanceType[<any>DS.constructor](factoryType);
+        if (typeof (<any>_instanceType)[<any>DS.constructor] == 'function')
+            (<any>_instanceType)[<any>DS.constructor](factoryType);
 
         // ... hook into the 'init' and 'new' factory methods ...
         // (note: if no 'init()' function is specified, just call the base by default)
@@ -536,7 +541,7 @@ export function isPrimitiveType(o: object) {
  * This is only valid if compiling your .ts source for ES5 while also enabling support for ES6 environments. 
  * If you compile your .ts source for ES6 then the 'class' syntax will be used and this value has no affect.
  */
-export function makeDisposable<TBaseClass extends IType=ObjectConstructor>(baseClass: TBaseClass, isPrimitiveOrHostBase?: boolean) {
+export function makeDisposable<TBaseClass extends IType = ObjectConstructor>(baseClass: TBaseClass, isPrimitiveOrHostBase?: boolean) {
     if (!baseClass) {
         baseClass = <any>DS.global.Object;
         isPrimitiveOrHostBase = true;
@@ -602,6 +607,10 @@ export function makeFactory<T extends IType = ObjectConstructor>(obj: T): T & IF
 export function Factory<TBaseFactory extends IType = ObjectConstructor>(baseFactoryType?: TBaseFactory & IFactory)
     : FactoryBaseType<TBaseFactory> {
 
+    if (!(<IFactoryTypeInfo><any>baseFactoryType).$__type)
+        throw "'extends Factory(base)' error: 'base' (" + getTypeName(baseFactoryType) + ") is not a factory, or you forgot to use the '@factory()' decorator to register it."
+        + " If the base is a generic-type factory, make sure to use '@usingFactory()' on the generic instance class associated with the factory.";
+
     if (typeof baseFactoryType != 'function')
         baseFactoryType = <any>DS.global.Object;
 
@@ -665,6 +674,9 @@ export function factory(moduleSpace: object, addMemberTypeInfo = true) {
 * applied (using the IFunctionInfo interface).
 */
 export function usingFactory<TFactory extends IFactory>(factory: TFactory, moduleSpace: object, addMemberTypeInfo = true) {
+    if (!(<IFactoryTypeInfo><any>factory).$__type)
+        throw "usingFactory(factory, ...) error: 'factory' (" + getTypeName(factory) + ") is not a valid factory, or you forgot to use the '@factory()' decorator to register it.";
+
     return function (cls: IType): any { return <any>Types.__registerFactoryType(cls, factory, moduleSpace, addMemberTypeInfo); };
 }
 

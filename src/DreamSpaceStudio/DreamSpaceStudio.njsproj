@@ -37,7 +37,10 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="typescript\DreamSpaceJS\FileManager.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\ResourceRequest.ts" />
+    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\Security.ts" />
+    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\User.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\TSHelpers.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
@@ -45,12 +48,12 @@
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Query.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Path.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\IO.ts" />
+    <TypeScriptCompile Include="TypeScript\types\globals.d.ts" />
     <TypeScriptCompile Include="TypeScript\types\DreamSpace~.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Resources.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\ErrorHandling.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Logging.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\Cubiq_org\manifest.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Core.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\Eyecon_ro\datepicker\manifest.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\Github\Ilinsky\manifest.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\Globals.ts" />
@@ -71,24 +74,24 @@
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Collections.ObservableCollection.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Data.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Delegate.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Diagnostics.ts" />
+    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Diagnostics.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Events.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Exception.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\IO.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Markup.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Platform.Graph.ts" />
+    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Markup.ts" />
+    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Platform.Graph.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Platform.HTML.Application.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Platform.HTML.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Platform.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Platform.Windows.ts" />
+    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Platform.ts" />
+    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Platform.Windows.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\PrimitiveTypes.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Properties.ts" />
+    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Properties.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Serialization.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Storage.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Text.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Time.ts" />
+    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Storage.ts" />
+    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Text.ts" />
+    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Time.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Users.ts" />
+    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Users~.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Loader.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\test.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\Twitter\CoreXT.System.Platform.UI.Bootstrap.ts" />
@@ -109,6 +112,7 @@
     <Content Include="..\..\README.md">
       <Link>README.md</Link>
     </Content>
+    <Content Include="typescript\DreamSpaceJS\tsconfig.json" />
     <Content Include="TypeScript\tsconfig.json" />
     <Content Include="package.json" />
     <Content Include="public\stylesheets\main.css" />

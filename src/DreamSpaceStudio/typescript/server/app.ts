@@ -5,6 +5,8 @@ import path = require('path');
 import routes from '../../routes/index';
 import users from '../../routes/user';
 
+global.XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+
 import registerGlobal from '../DreamSpaceJS/Globals';
 
 var ds = registerGlobal();

@@ -1,10 +1,10 @@
-﻿import { Factory, makeDisposable, getTypeName, makeFactory, factory, usingFactory } from "../Types";
+﻿import { Factory, makeDisposable, getTypeName, makeFactory, factory, usingFactory, Disposable } from "../Types";
 import { SerializedData, ISerializable } from "./Serialization";
 import { dispose } from "./System";
-import { AppDomain, Application } from "./AppDomain";
-import { DreamSpace as DS, IFunctionInfo, ITypeInfo } from "../Globals";
-import Browser from "./Browser";
-import Utilities from "../Utilities";
+import { AppDomain, Application, IDomainObjectInfo } from "./AppDomain";
+import { DreamSpace as DS, IFunctionInfo, ITypeInfo, IDisposable, IClassInfo } from "../Globals";
+import { Browser } from "./Browser";
+import { Utilities } from "../Utilities";
 
 // ###########################################################################################################################
 // Primitive types designed for use with the DreamSpace system.
@@ -16,7 +16,7 @@ import Utilities from "../Utilities";
 
 /** The base type for many DreamSpace classes. */
 @factory(this)
-export class DSObject extends Factory(makeFactory(makeDisposable(DS.global.Object))) implements ISerializable { // (FACTORY)
+export class DSObject extends Factory(makeFactory(Disposable)) implements ISerializable { // (FACTORY)
     /**
     * Create a new basic object type.
     * @param value If specified, the value will be wrapped in the created object.
@@ -28,14 +28,16 @@ export class DSObject extends Factory(makeFactory(makeDisposable(DS.global.Objec
     * constructor function to get new instances, and 'dispose()' to release them when done.
     */
     static init(o: IObject, isnew: boolean, value?: any, makeValuePrivate?: boolean): void {
+        var _o: IDomainObjectInfo = o;
+
         if (!isnew)
             o.$__reset();
 
-        if (o.$__appDomain == void 0 && AppDomain)
-            o.$__appDomain = AppDomain.default;
+        if (_o.$__appDomain == void 0 && AppDomain)
+            _o.$__appDomain = AppDomain.default;
 
-        if (o.$__app == void 0 && Application)
-            o.$__app = Application.default;
+        if (_o.$__app == void 0 && Application)
+            _o.$__app = Application.default;
 
         // ... if a value is given, the behavior changes to latch onto the value ...
         if (value != void 0) {
@@ -56,8 +58,8 @@ export class DSObject extends Factory(makeFactory(makeDisposable(DS.global.Objec
 
     /** Returns the type information for this object instance. */
     getTypeInfo(): IFunctionInfo {
-        if (!(<ITypeInfo><any>this.constructor).$__name && (<DSObject><any>this.constructor).getTypeName)
-            (<DSObject><any>this.constructor).getTypeName();
+        if (!(<ITypeInfo><any>this.constructor).$__name && (<typeof DSObject><any>this.constructor).getTypeName)
+            (<typeof DSObject><any>this.constructor).getTypeName(this); // (make sure name details exist; if not, this will add it before continuing)
         return <IFunctionInfo>this.constructor;
     };
 
@@ -109,7 +111,7 @@ export class DSObject extends Factory(makeFactory(makeDisposable(DS.global.Objec
             dispose(this, false); // 'false' also keeps the app domain (see 'dispose()' below), and only removes it from the "active" list.
         //??if (!this.constructor.new)
         //    throw Exception.error("{object}.new", "You need to register the class/type first: see 'AppDomain.registerClass()'.", this);
-        var instance = <DSObject & ITypeInfo>this.init.call(this, this, false, ...arguments);
+        var instance = <DSObject & ITypeInfo & IDomainObjectInfo>DSObject.init.call(this, this, false, ...arguments);
         instance.$__appDomain.objects.addObject(instance);
         delete instance.dispose;
         return this;
@@ -150,7 +152,7 @@ function _addObjectPrototypeProperties<T extends { new(...args: any[]): any }>(t
     for (var p in DSObject.prototype)
         if (DSObject.prototype.hasOwnProperty.call(DSObject.prototype, p) && p.charAt(0) != "$" && p.charAt(0) != "_")
             if (!(p in type.prototype))
-                type.prototype[p] = DSObject.prototype[p];
+                type.prototype[p] = (<any>DSObject.prototype)[p];
     return <any>type;
 }
 
@@ -327,7 +329,7 @@ export interface IString extends String { }
 class ArrayFactory extends Factory(makeFactory(DS.global.Array)) {
     /** Returns a new array object instance. 
       * Note: This is a DreamSpace system array object, and not the native JavaScript object. */
-    static 'new': <T=any>(...items: any[]) => IArray<T>;
+    static 'new': <T = any>(...items: any[]) => IArray<T>;
     /**
        * Reinitializes a disposed Delegate instance.
        * @param this The Delegate instance to initialize, or re-initialize.
@@ -335,7 +337,7 @@ class ArrayFactory extends Factory(makeFactory(DS.global.Array)) {
        * @param object The instance to bind to the resulting delegate object.
        * @param func The function that will be called for the resulting delegate object.
        */
-    static init: <T=any>(o: IArray<T>, isnew: boolean, ...items: any[]) => void;
+    static init: <T = any>(o: IArray<T>, isnew: boolean, ...items: any[]) => void;
 }
 
 @usingFactory(ArrayFactory, this)
@@ -369,7 +371,7 @@ class Array<T> extends makeDisposable(DS.global.Array)<T> {
     }
 }
 
-export interface IArray<T=any> extends Array<T> { }
+export interface IArray<T = any> extends Array<T> { }
 export { ArrayFactory as Array, Array as ArrayInstance }; // (EXPORT FACTORY)
 
 // =======================================================================================================================

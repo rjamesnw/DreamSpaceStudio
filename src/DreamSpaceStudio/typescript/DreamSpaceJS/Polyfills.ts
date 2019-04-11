@@ -26,11 +26,15 @@ interface IndexedObject {
     [name: string]: any;
 }
 
+type Writeable<T> = {
+    -readonly [P in keyof T]: T[P];
+};
+
 declare namespace NativeTypes { // ('declare' used so no code is actually exported)
     export interface IFunction extends Function { }
     export interface IObject extends Object, IndexedObject { }
     export interface IArray<T> extends Array<T> { }
-    export interface IString extends String { }
+    export interface IString extends String { } //x [i: number]: string 
     export interface INumber extends Number { }
     export interface IBoolean extends Boolean { }
     export interface IRegExp extends RegExp { }
@@ -61,6 +65,13 @@ interface IStaticGlobals extends Window {
     Text: typeof Text;
     Window: typeof Window;
     DreamSpace: typeof DreamSpace;
+
+    /**
+    * This is set by default when '@RenderDreamSpaceJSConfigurations()' is called at the top of the layout page and a debugger is attached. It is
+    * used to resolve source maps delivered through XHR while debugging.
+    * Typically the server side web root file path matches the same root as the http root path in 'baseURL'.
+    */
+    serverWebRoot: string;
 
     /** An optional site root URL if the main site root path is in a virtual path. */
     siteBaseURL: string;

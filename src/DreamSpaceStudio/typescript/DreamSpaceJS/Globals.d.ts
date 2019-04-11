@@ -1,4 +1,3 @@
-import { IO } from "./IO";
 import { IResourceRequest } from "./ResourceRequest";
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
  * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.
@@ -76,20 +75,6 @@ export declare namespace DreamSpace {
     /** Returns true if the given object is empty, or an invalid value (eg. NaN, or an empty object, array, or string). */
     function isEmpty(obj: any): boolean;
     /**
-     * A TypeScript decorator used to seal a function and its prototype. Properties cannot be added, but existing ones can be updated.
-     */
-    function sealed<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T;
-    /**
-    * A TypeScript decorator used to freeze a function and its prototype.  Properties cannot be added, and existing ones cannot be changed.
-    */
-    function frozen<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T;
-    /**
-     * A decorator used to add DI information for a function parameter.
-     * @param args A list of items which are either fully qualified type names, or references to the type functions.
-     * The order specified is important.  A new (transient) or existing (singleton) instance of the first matching type found is returned.
-     */
-    function $(...args: (IType<any> | string)[]): (target: any, paramName: string, index: number) => void;
-    /**
      * Returns true if the URL contains the specific action and controller names at the end of the URL path.
      * This of course assumes typical routing patterns in the format '/controller/action' or '/area/controller/action'.
      */
@@ -141,7 +126,7 @@ export declare namespace DreamSpace {
         *                                Some frameworks, such as the Google Maps API, support callbacks with dot-delimited names for nested objects to help
         *                                prevent global scope pollution.
         */
-        function register<T>(resource: IO.IResourceRequest, name: string, initialValue: T, asHostGlobal?: boolean): string;
+        function register<T>(resource: IResourceRequest, name: string, initialValue: T, asHostGlobal?: boolean): string;
         /**
         * Registers and initializes a global property for the specified namespace, and returns the dot-delimited string reference (see DreamSpace.Globals).
         * Subsequent calls with the same namespace and identifier name ignores the 'initialValue' and 'asHostGlobal' arguments, and simply returns the
@@ -160,7 +145,7 @@ export declare namespace DreamSpace {
         /**
           * Returns true if the specified global variable name is registered.
           */
-        function exists<T>(resource: IO.IResourceRequest, name: string): boolean;
+        function exists<T>(resource: IResourceRequest, name: string): boolean;
         /**
           * Returns true if the specified global variable name is registered.
          */
@@ -169,14 +154,14 @@ export declare namespace DreamSpace {
           * Erases the registered global variable (by setting it to 'undefined' - which is faster than deleting it).
           * Returns true if successful.
           */
-        function erase<T>(resource: IO.IResourceRequest, name: string): boolean;
+        function erase<T>(resource: IResourceRequest, name: string): boolean;
         function erase<T>(namespace: string, name: string): boolean;
         /**
           * Clears all registered globals by releasing the associated global object for the specified resource's namespace
           * and creating a new object.  Any host globals are deleted first.
           * Return true on success, and false if the namespace doesn't exist.
           */
-        function clear<T>(resource: IO.IResourceRequest): boolean;
+        function clear<T>(resource: IResourceRequest): boolean;
         /**
           * Clears all registered globals by releasing the associated global object for the specified resource's namespace
           * and creating a new object.  Any host globals are deleted first.
@@ -186,7 +171,7 @@ export declare namespace DreamSpace {
         /**
           * Sets and returns a global property value.
           */
-        function setValue<T>(resource: IO.IResourceRequest, name: string, value: T): T;
+        function setValue<T>(resource: IResourceRequest, name: string, value: T): T;
         /**
           * Sets and returns a global property value.
           */
@@ -194,13 +179,45 @@ export declare namespace DreamSpace {
         /**
         * Gets a global property value.
         */
-        function getValue<T>(resource: IO.IResourceRequest, name: string): T;
+        function getValue<T>(resource: IResourceRequest, name: string): T;
         /**
         * Gets a global property value.
         */
         function getValue<T>(namespace: string, name: string): T;
     }
+    /**
+     * Returns the base URL used by the system.  This can be configured by setting the global 'siteBaseURL' property, or if using DreamSpace.JS for
+     * .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called before all scripts in the header section of your layout view.
+     * If no 'siteBaseURL' global property exists, the current page location is assumed.
+     */
+    var baseURL: string;
+    /**
+     * Returns the base URL used by the system for loading scripts.  This can be configured by setting the global 'scriptBaseURL' property.
+     * If no 'siteBaseURL' global property exists, the current page location is assumed.
+     */
+    var baseScriptsURL: string;
+    /**
+     * Returns the base URL used by the system for loading scripts.  This can be configured by setting the global 'scriptBaseURL' property.
+     * If no 'siteBaseURL' global property exists, the current page location is assumed.
+     */
+    var baseCSSURL: string;
 }
+/**
+ * A TypeScript decorator used to seal a function and its prototype. Properties cannot be added, but existing ones can be updated.
+ */
+export declare function sealed<T extends IType>(target: T): T;
+export declare function sealed<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T;
+/**
+* A TypeScript decorator used to freeze a function and its prototype.  Properties cannot be added, and existing ones cannot be changed.
+*/
+export declare function frozen<T extends IType>(target: T): T;
+export declare function frozen<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T;
+/**
+ * A decorator used to add DI information for a function parameter.
+ * @param args A list of items which are either fully qualified type names, or references to the type functions.
+ * The order specified is important.  A new (transient) or existing (singleton) instance of the first matching type found is returned.
+ */
+export declare function $(...args: (IType<any> | string)[]): (target: any, paramName: string, index: number) => void;
 /** Provides a mechanism for object cleanup.
 * See also: 'dispose(...)' helper functions. */
 export interface IDisposable {

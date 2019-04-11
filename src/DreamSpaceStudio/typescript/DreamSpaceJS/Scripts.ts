@@ -2,20 +2,19 @@
 // Types for time management.
 // ###########################################################################################################################
 
-import { DreamSpace as DS, ICallback } from "./Globals";
+import { DreamSpace as DS, ICallback, sealed, IErrorCallback } from "./Globals";
 import { log, error } from "./Logging";
 import { Factory, nameof, factory } from "./Types";
-import { IO } from "./IO";
 import { ResourceTypes, RequestStatuses } from "./Resources";
 import { String, IAddLineNumbersFilter } from "./System/PrimitiveTypes";
-import { extractPragmas } from "./Core";
 import { renderHelperVarDeclarations } from "./TSHelpers";
 import { Exception } from "./System/Exception";
 
 import Globals = DS.Globals;
 import { getErrorMessage } from "./ErrorHandling";
-import { Utilities }  from "./Utilities";
-import { ResourceRequest } from "./ResourceRequest";
+import { Utilities } from "./Utilities";
+import { ResourceRequest, IResourceRequest } from "./ResourceRequest";
+import { Path } from "./Path";
 
 /** Types and functions for loading scripts into the DreamSpace system. */
 
@@ -111,7 +110,7 @@ export class ScriptResource extends Factory(ResourceRequest) {
     }
 }
 
-export interface IScriptResource extends ScriptResource.$__type { }
+export interface IScriptResource extends ScriptResource { }
 
 // ====================================================================================================================
 
@@ -120,6 +119,7 @@ export interface IScriptResource extends ScriptResource.$__type { }
 * 'Manifest' inherits from 'ScriptResource', providing the loaded manifests the ability to register globals for the
 * DreamSpace context, instead of the global 'window' context.
 */
+@factory(this) @sealed
 export class Manifest extends Factory(ScriptResource) {
     /** Holds variables required for manifest execution (for example, callback functions for 3rd party libraries, such as the Google Maps API). */
     static 'new': (url: string) => IManifest;
@@ -157,8 +157,6 @@ export class Manifest extends Factory(ScriptResource) {
         };
     }
 }
-
-sealed(Manifest);
 
 export interface IManifest extends Manifest { }
 
@@ -220,7 +218,7 @@ export class ScriptError implements Pick<ErrorEvent, "error" | "filename" | "mes
 /// <param name="script"> The script to validate. </param>
 /// <returns> A ScriptError instance if there are any parse errors, and null otherwise. </returns>
 export function validateScript(script: string, url?: string): ScriptError {
-    if (window) {
+    if (DS.host.isClient) {
         var oldWinError = window.onerror, err: string | Event, lineNumber: number, column: number;
         window.onerror = (errEventOrMsg, u, ln, col) => { err = errEventOrMsg; url = u || url; lineNumber = ln; column = col; };
         var s = document.createElement('script');
@@ -339,111 +337,111 @@ export class Module extends Factory(ScriptResource) {
     /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
     static init: (o: IModule, isnew: boolean, fullname: string, url: string, minifiedUrl?: string) => void;
 
-        /** The full type name for this module. */
-        fullname: string;
+    /** The full type name for this module. */
+    fullname: string;
 
-        /** The URL to the non-minified version of this module script. */
-        nonMinifiedURL: string;
-        /** The URL to the minified version of this module script. */
-        minifiedURL: string;
+    /** The URL to the non-minified version of this module script. */
+    nonMinifiedURL: string;
+    /** The URL to the minified version of this module script. */
+    minifiedURL: string;
 
-        required: boolean = false; // (true if the script is required - the application will fail to execute if this occurs, and an exception will be thrown)
+    required: boolean = false; // (true if the script is required - the application will fail to execute if this occurs, and an exception will be thrown)
 
-        isInclude() { return this.url && this.fullname == this.url; }
+    isInclude() { return this.url && this.fullname == this.url; }
 
-        /** If true, then the module is waiting to complete based on some outside custom script/event. */
-        customWait: boolean = false;
+    /** If true, then the module is waiting to complete based on some outside custom script/event. */
+    customWait: boolean = false;
 
-        /** Holds a reference to the executed function that wraps the loaded script. */
-        private $__modFunc: (corext: typeof DreamSpace, module: IModule, exports: {}, ...args: any[]) => _IModuleAccessors;
+    /** Holds a reference to the executed function that wraps the loaded script. */
+    private $__modFunc: (corext: typeof DreamSpace, module: IModule, exports: {}, ...args: any[]) => _IModuleAccessors;
 
-        /** Returns a variable value from the executed module's local scope.
-          * Module scripts that are wrapped in functions may have defined global variables that become locally scoped instead. In
-          * these cases, use this function to read the required values.  This is an expensive operation that should only be used to 
-          * retrieve object references.  If performance is required to access non-reference values, the script must be applied to
-          * the global scope as normal.
-          */
-        getVar: <T extends any>(varName: string) => T = DS.noop;
-        setVar: <T extends any>(varName: string, value: T) => T = DS.noop;
+    /** Returns a variable value from the executed module's local scope.
+      * Module scripts that are wrapped in functions may have defined global variables that become locally scoped instead. In
+      * these cases, use this function to read the required values.  This is an expensive operation that should only be used to 
+      * retrieve object references.  If performance is required to access non-reference values, the script must be applied to
+      * the global scope as normal.
+      */
+    getVar: <T extends any>(varName: string) => T = DS.noop;
+    setVar: <T extends any>(varName: string, value: T) => T = DS.noop;
 
-        /** This 'exports' container exists to support loading client-side modules in a NodeJS-type fashion.  The main exception is that
-          * 'require()' is not supported as it is synchronous, and an asynchronous method is required on the client side.  Instead, the
-          * reference to a 'manifest' variable (of type 'DS.Scripts.IManifest') is also given to the script, and can be used to
-          * further chain more modules to load.
-          * Note: 'exports' (a module-global object) does not apply to scripts executed in the global scope (i.e. if 'execute(true)' is called).
-          */
-        exports: {} = {};
+    /** This 'exports' container exists to support loading client-side modules in a NodeJS-type fashion.  The main exception is that
+      * 'require()' is not supported as it is synchronous, and an asynchronous method is required on the client side.  Instead, the
+      * reference to a 'manifest' variable (of type 'DS.Scripts.IManifest') is also given to the script, and can be used to
+      * further chain more modules to load.
+      * Note: 'exports' (a module-global object) does not apply to scripts executed in the global scope (i.e. if 'execute(true)' is called).
+      */
+    exports: {} = {};
 
-        /** A temp reference to the object returned from executing the generated '$__modFunc' wrapper function. */
-        private _moduleGlobalAccessors: _IModuleAccessors;
-        private static readonly _globalaccessors: _IModuleAccessors = (() => { return DS.safeEval("({ get: function(varName) { return p0.global[varName]; }, set: function(varName, val) { return p0.global[varName] = val; } })", DreamSpace); })();
+    /** A temp reference to the object returned from executing the generated '$__modFunc' wrapper function. */
+    private _moduleGlobalAccessors: _IModuleAccessors;
+    private static readonly _globalaccessors: _IModuleAccessors = (() => { return DS.safeEval("({ get: function(varName) { return p0.global[varName]; }, set: function(varName, val) { return p0.global[varName] = val; } })", DreamSpace); })();
 
-        private __onLoaded() {
-            // ... script is loaded (not executed), but may be waiting on dependencies; for now, check for in-script dependencies/flags and apply those now ...
-            return this;
+    private __onLoaded() {
+        // ... script is loaded (not executed), but may be waiting on dependencies; for now, check for in-script dependencies/flags and apply those now ...
+        return this;
+    }
+
+    private __onReady(request: IResourceRequest) {
+        // ... script is loaded (not executed) and ready to be applied ...
+        if (this.fullname == "app" || this.fullname == "application") {
+            _appModule = this;
+            if (_runMode) // (if run was requested)
+                _tryRunApp();
         }
+        return this;
+    }
 
-        private __onReady(request: IO.IResourceRequest) {
-            // ... script is loaded (not executed) and ready to be applied ...
-            if (this.fullname == "app" || this.fullname == "application") {
-                _appModule = this;
-                if (_runMode) // (if run was requested)
-                    _tryRunApp();
+    toString() { return this.fullname; }
+    toValue() { return this.fullname; }
+
+    /** Begin loading the module's script. After the loading is completed, any dependencies are automatically detected and loaded as well. */
+    start(): this {
+        if (this.status == RequestStatuses.Pending && !this._moduleGlobalAccessors) { // (make sure this module was not already started nor applied)
+            this.url = DS.debugMode ? this.nonMinifiedURL : (this.minifiedURL || this.nonMinifiedURL); // (just in case the debugging flag changed)
+            return super.start();
+        }
+        return this;
+    }
+
+    /** Executes the underlying script by either wrapping it in another function (the default), or running it in the global window scope. */
+    execute(useGlobalScope = false): void {
+        if (this.status == RequestStatuses.Ready && !this._moduleGlobalAccessors) {
+            // ... first, make sure all parent modules have been executed first ...
+            for (var i = 0, n = this._parentRequests.length, dep: IResourceRequest; i < n; ++i)
+                if ((dep = this._parentRequests[i]).status == RequestStatuses.Ready)
+                    (<IModule>dep).execute();
+
+            var accessors: _IModuleAccessors;
+            if (useGlobalScope) {
+                this._moduleGlobalAccessors = (DS.globalEval(this.response), Module._globalaccessors); // (use the global accessors, as the module was run in the global scope)
+            } else {
+                var tsHelpers = renderHelperVarDeclarations("arguments[3]");
+                this.$__modFunc = <any>new Function("DreamSpace", "module", "exports", tsHelpers[0] + this.response + ";\r\n return { get: function(varName) { return eval(varName); }, set: function(varName, val) { return eval(varName + ' = val;'); } };");
+                this._moduleGlobalAccessors = this.$__modFunc(DreamSpace, this, this.exports, tsHelpers); // (note that 'this.' effectively prevents polluting the global scope in case 'this' is used)
             }
-            return this;
-        }
 
-        toString() { return this.fullname; }
-        toValue() { return this.fullname; }
+            this.getVar = this._moduleGlobalAccessors.get;
+            this.setVar = this._moduleGlobalAccessors.set;
 
-        /** Begin loading the module's script. After the loading is completed, any dependencies are automatically detected and loaded as well. */
-        start(): this {
-            if (this.status == RequestStatuses.Pending && !this._moduleGlobalAccessors) { // (make sure this module was not already started nor applied)
-                this.url = DS.debugMode ? this.nonMinifiedURL : (this.minifiedURL || this.nonMinifiedURL); // (just in case the debugging flag changed)
-                return super.start();
-            }
-            return this;
-        }
-
-        /** Executes the underlying script by either wrapping it in another function (the default), or running it in the global window scope. */
-        execute(useGlobalScope = false): void {
-            if (this.status == RequestStatuses.Ready && !this._moduleGlobalAccessors) {
-                // ... first, make sure all parent modules have been executed first ...
-                for (var i = 0, n = this._parentRequests.length, dep: IO.IResourceRequest; i < n; ++i)
-                    if ((dep = this._parentRequests[i]).status == RequestStatuses.Ready)
-                        (<IModule>dep).execute();
-
-                var accessors: _IModuleAccessors;
-                if (useGlobalScope) {
-                    this._moduleGlobalAccessors = (DS.globalEval(this.response), $__type._globalaccessors); // (use the global accessors, as the module was run in the global scope)
-                } else {
-                    var tsHelpers = renderHelperVarDeclarations("arguments[3]");
-                    this.$__modFunc = <any>new Function("DreamSpace", "module", "exports", tsHelpers[0] + this.response + ";\r\n return { get: function(varName) { return eval(varName); }, set: function(varName, val) { return eval(varName + ' = val;'); } };");
-                    this._moduleGlobalAccessors = this.$__modFunc(DreamSpace, this, this.exports, tsHelpers); // (note that 'this.' effectively prevents polluting the global scope in case 'this' is used)
-                }
-
-                this.getVar = this._moduleGlobalAccessors.get;
-                this.setVar = this._moduleGlobalAccessors.set;
-
-                this.status = RequestStatuses.Executed;
-            }
-        }
-
-        private static [DS.constructor](factory: typeof Module) {
-            factory.init = (o, isnew, fullname, url, minifiedUrl?) => {
-                factory.super.init(o, isnew, [DS.debugMode ? url : (minifiedUrl || url));
-
-                if (!o.type) // (if the base resource loader fails to initialize, then another resource already exists for the same location)
-                    throw Exception.from("Duplicate module load request: A previous request for '" + url + "' was already made.", o);
-
-                o.fullname = fullname;
-                o.nonMinifiedURL = url;
-                o.minifiedURL = minifiedUrl;
-
-                o.then(o.__onLoaded).ready(o.__onReady);
-            };
+            this.status = RequestStatuses.Executed;
         }
     }
+
+    private static [DS.constructor](factory: typeof Module) {
+        factory.init = (o, isnew, fullname, url, minifiedUrl?) => {
+            factory.super.init(o, isnew, DS.isDebugging ? url : (minifiedUrl || url));
+
+            if (!o.type) // (if the base resource loader fails to initialize, then another resource already exists for the same location)
+                throw Exception.from("Duplicate module load request: A previous request for '" + url + "' was already made.", o);
+
+            o.fullname = fullname;
+            o.nonMinifiedURL = url;
+            o.minifiedURL = minifiedUrl;
+
+            o.then(o.__onLoaded).ready(o.__onReady);
+        };
+    }
+}
 
 export interface IModule extends InstanceType<typeof Module> { }
 
@@ -476,7 +474,7 @@ export function runApp() {
 
 /** This is the path to the root of the DreamSpace JavaScript files ('DreamSpace/' by default).
 * Note: This should either be empty, or always end with a URL path separator ('/') character (but the system will assume to add one anyhow if missing). */
-export var pluginFilesBasePath: string = System.IO && System.IO.Path ? System.IO.Path.combine(baseURL, "wwwroot/js/") : baseURL + "wwwroot/js/";
+export var pluginFilesBasePath: string = Path.combine(DS.baseURL, "wwwroot/js/");
 
 /** Translates a module relative or full type name to the actual type name (i.e. '.ABC' to 'DS.ABC', or 'System'/'System.' to 'DreamSpace'/'DS.'). */
 export function translateModuleTypeName(moduleFullTypeName: string) {
@@ -517,14 +515,14 @@ export interface IUsingModule {
     (onready?: (mod: IModule) => any, onerror?: (mod: IModule) => any): IUsingModule;
     /** The plugin object instance details. */
     module: IModule;
-    then: (success: ICallback<System.IO.IResourceRequest>, error?: IErrorCallback<System.IO.IResourceRequest>) => IUsingModule;
+    then: (success: ICallback<IResourceRequest>, error?: IErrorCallback<IResourceRequest>) => IUsingModule;
     /** Attach some dependent resources to load with the module (note: the module will not load if the required resources fail to load). */
-    require: (request: System.IO.IResourceRequest) => IUsingModule;
+    require: (request: IResourceRequest) => IUsingModule;
     //?include: (mod: IUsingModule) => IUsingModule; //? (dangerous and confusing to users I think in regards to module definitions)
-    ready: (handler: ICallback<System.IO.IResourceRequest>) => IUsingModule;
-    while: (progressHandler: ICallback<System.IO.IResourceRequest>) => IUsingModule;
-    catch: (errorHandler: IErrorCallback<System.IO.IResourceRequest>) => IUsingModule;
-    finally: (cleanupHandler: ICallback<System.IO.IResourceRequest>) => IUsingModule;
+    ready: (handler: ICallback<IResourceRequest>) => IUsingModule;
+    while: (progressHandler: ICallback<IResourceRequest>) => IUsingModule;
+    catch: (errorHandler: IErrorCallback<IResourceRequest>) => IUsingModule;
+    finally: (cleanupHandler: ICallback<IResourceRequest>) => IUsingModule;
 }
 
 /** This is usually called from the 'DS.[ts|js]' file to register script files (plugins), making them available to the application based on module names (instead of file names).
@@ -545,9 +543,7 @@ export interface IUsingModule {
 export function module(dependencies: IUsingModule[], moduleFullTypeName: string, moduleFileBasePath: string = null, requiresGlobalScope = false): IUsingModule {
 
     if (!moduleFullTypeName)
-        throw System.Exception.from("A full type name path is expected.");
-
-    var Path = System.IO.Path;
+        throw Exception.from("A full type name path is expected.");
 
     // ... extract the minify-name tokens and create the proper names and paths for both min and non-min versions ...
 
@@ -565,7 +561,7 @@ export function module(dependencies: IUsingModule[], moduleFullTypeName: string,
     var minPath: string = null;
 
     if (path && path.charAt(0) == '~')
-        path = System.IO.Path.combine(pluginFilesBasePath, path.substring(1)); // ('~' is a request to insert the current default path; eg. "~DS.System.js" for "DreamSpaceJS/DS.System.js")
+        path = Path.combine(pluginFilesBasePath, path.substring(1)); // ('~' is a request to insert the current default path; eg. "~DS.System.js" for "DreamSpaceJS/DS.System.js")
 
     results = processMinifyTokens(path);
     if (results[1]) {
@@ -577,14 +573,14 @@ export function module(dependencies: IUsingModule[], moduleFullTypeName: string,
     if (!Path.hasFileExt(path, '.js')) { //&& !/^https?:\/\//.test(path)
         // ... JavaScript filename extension not found, so add it under the assumed name ...
         if (!path || path.charAt(path.length - 1) == '/')
-            path = System.IO.Path.combine(path, moduleFullTypeName + ".js");
+            path = Path.combine(path, moduleFullTypeName + ".js");
         else
             path += ".js";
     }
     if (minPath && !Path.hasFileExt(minPath, '.js')) { //&& !/^https?:\/\//.test(path)
         // ... JavaScript filename extension not found, so add it under the assumed name ...
         if (!minPath || minPath.charAt(minPath.length - 1) == '/')
-            minPath = System.IO.Path.combine(minPath, minifiedFullTypeName + ".js");
+            minPath = Path.combine(minPath, minifiedFullTypeName + ".js");
         else
             minPath += ".js";
     }
@@ -622,7 +618,7 @@ export function module(dependencies: IUsingModule[], moduleFullTypeName: string,
                 msg = "It has not been requested to load.  Either supply a callback to execute when the module is ready to be used, or add it as a dependency to the requesting module.";
             else if (mod.status < RequestStatuses.Waiting)
                 msg = "It is still loading and is not yet ready.  Either supply a callback to execute when the module is ready to be used, or add it as a dependency to the requesting module.";
-            throw System.Exception.from("Cannot use module '" + mod.fullname + "': " + msg, mod);
+            throw Exception.from("Cannot use module '" + mod.fullname + "': " + msg, mod);
         }
 
         function onReadyforUse(mod: IModule): any {
@@ -643,7 +639,7 @@ export function module(dependencies: IUsingModule[], moduleFullTypeName: string,
         // ... request to load the module and execute the script ...
 
         switch (mod.status) {
-            case RequestStatuses.Error: throw DS.System.Exception.from("The module '" + mod.fullname + "' is in an error state and cannot be used.", mod);
+            case RequestStatuses.Error: throw Exception.from("The module '" + mod.fullname + "' is in an error state and cannot be used.", mod);
             case RequestStatuses.Pending: mod.start(); break; // (the module is not yet ready and cannot be executed right now; attach callbacks...)
             case RequestStatuses.Loading: mod.catch(onerror); break;
             case RequestStatuses.Loaded:
@@ -658,12 +654,12 @@ export function module(dependencies: IUsingModule[], moduleFullTypeName: string,
     usingPluginFunc.module = mod;
 
     usingPluginFunc.then = (success, error) => { mod.then(success, error); return this; };
-    usingPluginFunc.require = (request: System.IO.IResourceRequest) => { request.include(mod); return this; };
+    usingPluginFunc.require = (request: IResourceRequest) => { request.include(mod); return this; };
     //?usingPluginFunc.include = (dependantMod: IUsingModule) => { mod.include(dependantMod.module); return dependantMod; };
-    usingPluginFunc.ready = (handler: ICallback<System.IO.IResourceRequest>) => { mod.ready(handler); return this; };
-    usingPluginFunc.while = (progressHandler: ICallback<System.IO.IResourceRequest>) => { mod.while(progressHandler); return this; };
-    usingPluginFunc.catch = (errorHandler: IErrorCallback<System.IO.IResourceRequest>) => { mod.catch(errorHandler); return this; };
-    usingPluginFunc.finally = (cleanupHandler: ICallback<System.IO.IResourceRequest>) => { mod.finally(cleanupHandler); return this; };
+    usingPluginFunc.ready = (handler: ICallback<IResourceRequest>) => { mod.ready(handler); return this; };
+    usingPluginFunc.while = (progressHandler: ICallback<IResourceRequest>) => { mod.while(progressHandler); return this; };
+    usingPluginFunc.catch = (errorHandler: IErrorCallback<IResourceRequest>) => { mod.catch(errorHandler); return this; };
+    usingPluginFunc.finally = (cleanupHandler: ICallback<IResourceRequest>) => { mod.finally(cleanupHandler); return this; };
 
     return usingPluginFunc;
 };
@@ -683,5 +679,87 @@ export function module(dependencies: IUsingModule[], moduleFullTypeName: string,
 ///** Used to load, compile & execute required plugin scripts. */
 //if (!this['using'])
 //    var using = DS.using; // (users should reference "using.", but "DS.using" can be used if the global 'using' is needed for something else)
+
+// ###########################################################################################################################
+
+/** Used to strip out script source mappings. Used with 'extractSourceMapping()'. */
+export var SCRIPT_SOURCE_MAPPING_REGEX = /^\s*(\/\/[#@])\s*([A-Za-z0-9$_]+)\s*=\s*([^;/]*)(.*)/gim;
+
+/** Holds details on extract script pragmas. @See extractPragmas() */
+export class PragmaInfo {
+    /**
+     * @param {string} prefix The "//#" part.
+     * @param {string} name The pragma name, such as 'sourceMappingURL'.
+     * @param {string} value The part after "=" in the pragma expression.
+     * @param {string} extras Any extras on the line (like comments) that are not part of the extracted value.
+     */
+    constructor(public prefix: string, public name: string, public value: string, public extras: string) {
+        this.prefix = (this.prefix || "").trim().replace("//@", "//#"); // ('@' is depreciated in favor of '#' because of conflicts with IE, so help out by making this correction automatically)
+        this.name = (this.name || "").trim();
+        this.value = (this.value || "").trim();
+        this.extras = (this.extras || "").trim();
+    }
+    /**
+     * Make a string from this source map info.
+     * @param {string} valuePrefix An optional string to insert before the value, such as a sub-directory path, or missing protocol+server+port URL parts, etc.
+     * @param {string} valueSuffix An optional string to insert after the value.
+     */
+    toString(valuePrefix?: string, valueSuffix?: string) {
+        if (valuePrefix !== void 0 && valuePrefix !== null && typeof valuePrefix != 'string') valuePrefix = '' + valuePrefix;
+        if (valueSuffix !== void 0 && valuePrefix !== null && typeof valueSuffix != 'string') valueSuffix = '' + valueSuffix;
+        return this.prefix + " " + this.name + "=" + (valuePrefix || "") + this.value + (valueSuffix || "") + this.extras;
+    } // (NOTE: I space after the prefix IS REQUIRED [at least for IE])
+    valueOf() { return this.prefix + " " + this.name + "=" + this.value + this.extras; }
+}
+
+/** @See extractPragmas() */
+export interface IExtractedPragmaDetails {
+    /** The original source given to the function. */
+    originalSource: string;
+    /** The original source minus the extracted pragmas. */
+    filteredSource: string;
+    /** The extracted pragma information. */
+    pragmas: PragmaInfo[];
+}
+
+/** 
+ * Extract any pragmas, such as source mapping. This is used mainly with XHR loading of scripts in order to execute them with
+ * source mapping support while being served from a DreamSpace .Net Core MVC project.
+ */
+export function extractPragmas(src: string) {
+    var srcMapPragmas: PragmaInfo[] = [], result: RegExpExecArray, filteredSrc = src;
+    SCRIPT_SOURCE_MAPPING_REGEX.lastIndex = 0;
+    while ((result = SCRIPT_SOURCE_MAPPING_REGEX.exec(src)) !== null) {
+        var srcMap = new PragmaInfo(result[1], result[2], result[3], result[4]);
+        srcMapPragmas.push(srcMap);
+        filteredSrc = filteredSrc.substr(0, result.index) + filteredSrc.substr(result.index + result[0].length);
+    }
+    return <IExtractedPragmaDetails>{
+        /** The original source given to the function. */
+        originalSource: src,
+        /** The original source minus the extracted pragmas. */
+        filteredSource: filteredSrc,
+        /** The extracted pragma information. */
+        pragmas: srcMapPragmas
+    };
+}
+
+/** 
+ * Extracts and replaces source mapping pragmas. This is used mainly with XHR loading of scripts in order to execute them with
+ * source mapping support while being served from a DreamSpace .Net Core MVC project.
+ */
+export function fixSourceMappingsPragmas(sourcePragmaInfo: IExtractedPragmaDetails, scriptURL: string) {
+    var script = sourcePragmaInfo && sourcePragmaInfo.originalSource || "";
+    if (sourcePragmaInfo.pragmas && sourcePragmaInfo.pragmas.length)
+        for (var i = 0, n = +sourcePragmaInfo.pragmas.length; i < n; ++i) {
+            var pragma = sourcePragmaInfo.pragmas[i];
+            if (pragma.name.substr(0, 6) != "source")
+                script += "\r\n" + pragma; // (not for source mapping, so leave as is)
+            else
+                script += "\r\n" + pragma.prefix + " " + pragma.name + "="
+                    + Path.resolve(pragma.value, Path.map(scriptURL), DS.global.serverWebRoot ? DS.global.serverWebRoot : DS.baseScriptsURL) + pragma.extras;
+        }
+    return script;
+}
 
 // ###########################################################################################################################

@@ -1,10 +1,15 @@
 /** @module Path The path module contains functions for working with URI based paths. */
 
-import { baseURL, serverWebRoot } from "./Core";
 import { Uri } from "./Uri";
-
+import { Utilities } from "./Utilities";
+import { DreamSpace as DS } from "./Globals";
+import { Query, pageQuery } from "./Query";
+import { ResourceRequest } from "./ResourceRequest";
+import { IO } from "./System/IO";
 // ==========================================================================================================================
 
+/** Contains functions for working with URI based paths. */
+abstract class Path { }
 namespace Path {
     /** Parses the URL into 1: protocol (without '://'), 2: username, 3: password, 4: host, 5: port, 6: path, 7: query (without '?'), and 8: fragment (without '#'). */
     export var URL_PARSER_REGEX = /^[\t\f\v ]*(?:(?:(?:(\w+):\/\/|\/\/)(?:(.*?)(?::(.*?))?@)?([^#?/:~\r\n]*))(?::(\d*))?)?([^#?\r\n]+)?(?:\?([^#\r\n]*))?(?:\#(.*))?/m;
@@ -12,7 +17,7 @@ namespace Path {
 
     /** Parses the URL into 1: protocol (without '://'), 2: host, 3: port, 4: path, 5: query (without '?'), and 6: fragment (without '#'). */
     export function parse(url: string) {
-        if (typeof url != 'string') url = toString(url);
+        if (typeof url != 'string') url = Utilities.toString(url);
         var m = url.match(URL_PARSER_REGEX);
         return m && new Uri(
             (m[1] || "").trim(),
@@ -32,8 +37,8 @@ namespace Path {
        * Set 'normalizePathSeparators' to true to normalize any '\' path characters to '/' instead.
        */
     export function combine(path1: string, path2: string, normalizePathSeparators = false): string {
-        if (typeof path1 != 'string') path1 = toString(path1);
-        if (typeof path2 != 'string') path2 = toString(path2);
+        if (typeof path1 != 'string') path1 = Utilities.toString(path1);
+        if (typeof path2 != 'string') path2 = Utilities.toString(path2);
         if (path2.charAt(0) == '~') path2 = path2.substr(1);
         if (!path2) return path1;
         if (!path1) return path2;
@@ -57,11 +62,11 @@ namespace Path {
        * If not specified, this is 'location.href' by default.
        * @param {string} baseURL An optional path that specifies the site's root URL.  By default this is 'DreamSpace.baseURL'.
        */
-    export function resolve(path: string, currentResourceURL = location.href, baseURL = DreamSpace.baseURL) {
-        baseURL = toString(baseURL).trim();
-        currentResourceURL = toString(currentResourceURL).trim();
+    export function resolve(path: string, currentResourceURL = DS.global.location.href, baseURL = DS.baseURL) {
+        baseURL = Utilities.toString(baseURL).trim();
+        currentResourceURL = Utilities.toString(currentResourceURL).trim();
         if (currentResourceURL) currentResourceURL = parse(currentResourceURL).getResourceURL();
-        path = toString(path).trim();
+        path = Utilities.toString(path).trim();
         if (!path) return currentResourceURL || baseURL;
         if (path.charAt(0) == '/' || path.charAt(0) == '\\') {
             // ... resolve to the root of the host; determine current or base, whichever is available ...
@@ -116,9 +121,9 @@ namespace Path {
             url = resolve(url);
         url = query.appendTo(url);
         query.dispose();
-        if (wait)
-            wait();
-        setTimeout(() => { location.href = url; }, 1); // (let events finish before setting)
+        if (IO.wait)
+            IO.wait();
+        setTimeout(() => { DS.global.location.href = url; }, 1); // (let events finish before setting)
     }
 
     // ==========================================================================================================================
@@ -130,22 +135,22 @@ namespace Path {
       * @param controller A controller name (defaults to "home" if not specified)
       */
     export function isView(action: string, controller = "home"): boolean {
-        return new RegExp("^\/" + controller + "\/" + action + "(?:[\/?&#])?", "gi").test(location.pathname);
+        return new RegExp("^\/" + controller + "\/" + action + "(?:[\/?&#])?", "gi").test(DS.global.location.pathname);
     }
 
     // ==========================================================================================================================
 
     /** Subtracts the current site's base URL from the given URL and returns 'serverWebRoot' with the remained appended. */
     export function map(url: string) {
-        if (url.substr(0, baseURL.length).toLocaleLowerCase() == baseURL.toLocaleLowerCase()) {
+        if (url.substr(0, DS.baseURL.length).toLocaleLowerCase() == DS.baseURL.toLocaleLowerCase()) {
             // TODO: Make this more robust by parsing and checked individual URL parts properly (like default vs explicit ports in the URL).
-            var subpath = url.substr(baseURL.length);
-            return combine(serverWebRoot, subpath);
+            var subpath = url.substr(DS.baseURL.length);
+            return combine(DS.global.serverWebRoot, subpath);
         }
-        else return parse(url).toString(serverWebRoot); // (the origin is not the same, so just assume everything after the URL's origin is the path)
+        else return parse(url).toString(DS.global.serverWebRoot); // (the origin is not the same, so just assume everything after the URL's origin is the path)
     }
 }
 
-export default Path;
+export { Path };
 
 // ===============================================================================================================================

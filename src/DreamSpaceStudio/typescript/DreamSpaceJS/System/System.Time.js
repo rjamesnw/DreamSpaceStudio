@@ -175,7 +175,7 @@ define(["require", "exports", "../Types", "./PrimitiveTypes", "../Globals", "./E
     }
     exports.TimeSpan = TimeSpan;
     (function (TimeSpan) {
-        class $__type extends Types_1.FactoryType(PrimitiveTypes_1.DSObject) {
+        class $__type extends FactoryType(PrimitiveTypes_1.DSObject) {
             //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
             /** Set the time of this TimeSpan, in milliseconds.
                 * Note: This function assumes that milliseconds representing leap year days are included (same as the JavaScript 'Date' object).

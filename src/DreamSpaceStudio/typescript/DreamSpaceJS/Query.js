@@ -1,23 +1,46 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const Types_1 = require("./Types");
-// ==========================================================================================================================
-exports.QUERY_STRING_REGEX = /[?|&][a-zA-Z0-9-._]+(?:=[^&#$]*)?/gi;
-/**
-  * Helps wrap common functionality for query/search string manipulation.  An internal 'values' object stores the 'name:value'
-  * pairs from a URI or 'location.search' string, and converting the object to a string results in a proper query/search string
-  * with all values escaped and ready to be appended to a URI.
-  * Note: Call 'Query.new()' to create new instances.
-  */
-class Query extends Types_1.Factory() {
-}
-exports.Query = Query;
-(function (Query) {
-    class $__type extends Disposable {
+define(["require", "exports", "./Types", "./System/Text", "./Utilities", "./Globals"], function (require, exports, Types_1, Text_1, Utilities_1, Globals_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    // ==========================================================================================================================
+    exports.QUERY_STRING_REGEX = /[?|&][a-zA-Z0-9-._]+(?:=[^&#$]*)?/gi;
+    /**
+      * Helps wrap common functionality for query/search string manipulation.  An internal 'values' object stores the 'name:value'
+      * pairs from a URI or 'location.search' string, and converting the object to a string results in a proper query/search string
+      * with all values escaped and ready to be appended to a URI.
+      * Note: Call 'Query.new()' to create new instances.
+      */
+    class Query extends Types_1.Factory(Types_1.makeFactory(Types_1.Disposable)) {
         constructor() {
-            // ----------------------------------------------------------------------------------------------------------------
             super(...arguments);
+            // ----------------------------------------------------------------------------------------------------------------
             this.values = {};
+            // ---------------------------------------------------------------------------------------------------------------
+        }
+        /** Helps to build an object of 'name:value' pairs from a URI or 'location.search' string.
+        * @param {string|object} query A full URI string, a query string (such as 'location.search'), or an object to create query values from.
+        * @param {boolean} makeNamesLowercase If true, then all query names are made lower case when parsing (the default is false).
+        */
+        static init(o, isnew, query, makeNamesLowercase) {
+            if (query)
+                if (typeof query == 'object')
+                    o.addOrUpdate(query, makeNamesLowercase);
+                else {
+                    if (typeof query != 'string')
+                        query = Utilities_1.Utilities.toString(query);
+                    var nameValuePairs = query.match(exports.QUERY_STRING_REGEX);
+                    var i, n, eqIndex, nameValue;
+                    if (nameValuePairs)
+                        for (var i = 0, n = nameValuePairs.length; i < n; ++i) {
+                            nameValue = nameValuePairs[i];
+                            eqIndex = nameValue.indexOf('='); // (need to get first instance of the '=' char)
+                            if (eqIndex == -1)
+                                eqIndex = nameValue.length; // (whole string is the name)
+                            if (makeNamesLowercase)
+                                o.values[decodeURIComponent(nameValue).substring(1, eqIndex).toLowerCase()] = decodeURIComponent(nameValue.substring(eqIndex + 1)); // (note: the RegEx match always includes a delimiter)
+                            else
+                                o.values[decodeURIComponent(nameValue).substring(1, eqIndex)] = decodeURIComponent(nameValue.substring(eqIndex + 1)); // (note: the RegEx match always includes a delimiter)
+                        }
+                }
         }
         // ----------------------------------------------------------------------------------------------------------------
         /**
@@ -61,7 +84,7 @@ exports.Query = Query;
         // ---------------------------------------------------------------------------------------------------------------
         /** Creates and returns a duplicate of this object. */
         clone() {
-            var q = Path.Query.new();
+            var q = Query.new();
             for (var pname in this.values)
                 q.values[pname] = this.values[pname];
             return q;
@@ -107,7 +130,7 @@ exports.Query = Query;
         encodeValue(name) {
             var value = this.values[name], result;
             if (value !== void 0 && value !== null) {
-                this.values[name] = result = Text.Encoding.base64Encode(value, Text.Encoding.Base64Modes.URI);
+                this.values[name] = result = Text_1.Encoding.base64Encode(value, Text_1.Encoding.Base64Modes.URI);
             }
             return result;
         }
@@ -117,7 +140,7 @@ exports.Query = Query;
         decodeValue(name) {
             var value = this.values[name], result;
             if (value !== void 0 && value !== null) {
-                this.values[name] = result = Text.Encoding.base64Decode(value, Text.Encoding.Base64Modes.URI);
+                this.values[name] = result = Text_1.Encoding.base64Decode(value, Text_1.Encoding.Base64Modes.URI);
             }
             return result;
         }
@@ -147,37 +170,11 @@ exports.Query = Query;
                     qstr += (qstr ? "&" : "") + encodeURIComponent(pname) + "=" + encodeURIComponent(this.values[pname]);
             return (addQuerySeparator ? "?" : "") + qstr;
         }
-        // ---------------------------------------------------------------------------------------------------------------
-        static [constructor](factory) {
-            factory.init = (o, isnew, query = null, makeNamesLowercase = false) => {
-                if (query)
-                    if (typeof query == 'object')
-                        o.addOrUpdate(query, makeNamesLowercase);
-                    else {
-                        if (typeof query != 'string')
-                            query = toString(query);
-                        var nameValuePairs = query.match(exports.QUERY_STRING_REGEX);
-                        var i, n, eqIndex, nameValue;
-                        if (nameValuePairs)
-                            for (var i = 0, n = nameValuePairs.length; i < n; ++i) {
-                                nameValue = nameValuePairs[i];
-                                eqIndex = nameValue.indexOf('='); // (need to get first instance of the '=' char)
-                                if (eqIndex == -1)
-                                    eqIndex = nameValue.length; // (whole string is the name)
-                                if (makeNamesLowercase)
-                                    o.values[decodeURIComponent(nameValue).substring(1, eqIndex).toLowerCase()] = decodeURIComponent(nameValue.substring(eqIndex + 1)); // (note: the RegEx match always includes a delimiter)
-                                else
-                                    o.values[decodeURIComponent(nameValue).substring(1, eqIndex)] = decodeURIComponent(nameValue.substring(eqIndex + 1)); // (note: the RegEx match always includes a delimiter)
-                            }
-                    }
-            };
-        }
     }
-    Query.$__type = $__type;
-    Query.$__register(Path);
-})(Query = exports.Query || (exports.Query = {}));
-// ==========================================================================================================================
-/** This is set automatically to the query for the current page. */
-exports.pageQuery = Query.new(location.href);
+    exports.Query = Query;
+    // ==========================================================================================================================
+    /** This is set automatically to the query for the current page. */
+    exports.pageQuery = Query.new(Globals_1.DreamSpace.global.location.href);
+});
 // ==========================================================================================================================
 //# sourceMappingURL=Query.js.map

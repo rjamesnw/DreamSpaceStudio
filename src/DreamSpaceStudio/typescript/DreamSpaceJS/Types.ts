@@ -274,7 +274,7 @@ export namespace Types {
         // ... register type information first BEFORER we call any static constructor (so it is available to the user)s ...
         
         // TODO: (NOTE: this call takes the instance type, which may also be the factory type; if not a factory, then it should have a reference to one)
-        var registeredFactory = __registerType(instanceType, moduleSpace, addMemberTypeInfo);s
+        var registeredFactory = __registerType(instanceType, moduleSpace, addMemberTypeInfo);
 
         factoryTypeInfo.$__type = _instanceType; // (the class type AND factory type should both have a reference to each other)
         _instanceType.$__factoryType = factoryTypeInfo; // (a properly registered class that supports the factory pattern should have a reference to its underlying factory type)

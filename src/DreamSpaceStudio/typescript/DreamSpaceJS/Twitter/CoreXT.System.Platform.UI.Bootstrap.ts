@@ -1,5 +1,4 @@
 ﻿declare var module: DreamSpace.Scripts.IModule;
-declare var exports: { };
 
 DreamSpace.using // (this just confirms that the 'DreamSpace.UI.HTML' module is available before continuing)
     .System.UI()

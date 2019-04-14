@@ -1,14 +1,42 @@
-import { DSObject } from "./PrimitiveTypes";
+import { Object } from "../PrimitiveTypes";
 declare const TimeSpan_base: {
-    new (): DSObject;
-    super: typeof DSObject;
+    new (): Object;
+    super: typeof Object;
     'new'?(...args: any[]): any;
     init?(o: object, isnew: boolean, ...args: any[]): void;
 } & {
-    prototype: DSObject;
-    getTypeName: typeof DSObject.getTypeName;
-    isEmpty: typeof DSObject.isEmpty;
-    super: typeof import("../Types").Disposable & import("../Globals").IFactory<typeof import("../Types").Disposable, import("../Globals").NewDelegate<import("../Types").Disposable>, import("../Globals").InitDelegate<import("../Types").Disposable>>;
+    prototype: Object;
+    getTypeName: typeof Object.getTypeName;
+    isEmpty: typeof Object.isEmpty;
+    getPrototypeOf: (o: any) => any;
+    getOwnPropertyDescriptor: (o: any, p: string | number | symbol) => PropertyDescriptor;
+    getOwnPropertyNames: (o: any) => string[];
+    create: {
+        (o: object): any;
+        (o: object, properties: PropertyDescriptorMap & ThisType<any>): any;
+    };
+    defineProperty: (o: any, p: string | number | symbol, attributes: PropertyDescriptor & ThisType<any>) => any;
+    defineProperties: (o: any, properties: PropertyDescriptorMap & ThisType<any>) => any;
+    seal: <T>(o: T) => T;
+    freeze: {
+        <T>(a: T[]): readonly T[];
+        <T extends Function>(f: T): T;
+        <T>(o: T): Readonly<T>;
+    };
+    preventExtensions: <T>(o: T) => T;
+    isSealed: (o: any) => boolean;
+    isFrozen: (o: any) => boolean;
+    isExtensible: (o: any) => boolean;
+    keys: (o: {}) => string[];
+    assign: {
+        <T, U>(target: T, source: U): T & U;
+        <T, U, V>(target: T, source1: U, source2: V): T & U & V;
+        <T, U, V, W>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
+        (target: object, ...sources: any[]): any;
+    };
+    getOwnPropertySymbols: (o: any) => symbol[];
+    is: (value1: any, value2: any) => boolean;
+    setPrototypeOf: (o: any, proto: object) => any;
 };
 /**
  * Represents a span of time (not a date). Calculation of dates usually relies on calendar rules.  A time-span object

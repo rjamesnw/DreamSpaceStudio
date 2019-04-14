@@ -37,6 +37,8 @@ declare const ScriptResource_base: {
     init?(o: object, isnew: boolean, ...args: any[]): void;
 } & {
     prototype: ResourceRequest;
+    getTypeName: typeof import("./PrimitiveTypes").Object.getTypeName;
+    isEmpty: typeof import("./PrimitiveTypes").Object.isEmpty;
     getPrototypeOf: (o: any) => any;
     getOwnPropertyDescriptor: (o: any, p: string | number | symbol) => PropertyDescriptor;
     getOwnPropertyNames: (o: any) => string[];
@@ -68,7 +70,7 @@ declare const ScriptResource_base: {
     setPrototypeOf: (o: any, proto: object) => any;
     cacheBusting: boolean;
     cacheBustingVar: string;
-    super: ObjectConstructor;
+    super: typeof import("./PrimitiveTypes").Object;
 };
 export declare class ScriptResource extends ScriptResource_base {
     /** Returns a new module object only - does not load it. */
@@ -97,6 +99,8 @@ declare const Manifest_base: {
     init?(o: object, isnew: boolean, ...args: any[]): void;
 } & {
     prototype: ScriptResource;
+    getTypeName: typeof import("./PrimitiveTypes").Object.getTypeName;
+    isEmpty: typeof import("./PrimitiveTypes").Object.isEmpty;
     getPrototypeOf: (o: any) => any;
     getOwnPropertyDescriptor: (o: any, p: string | number | symbol) => PropertyDescriptor;
     getOwnPropertyNames: (o: any) => string[];
@@ -128,7 +132,7 @@ declare const Manifest_base: {
     setPrototypeOf: (o: any, proto: object) => any;
     cacheBusting: boolean;
     cacheBustingVar: string;
-    super: typeof ResourceRequest & ObjectConstructor;
+    super: typeof ResourceRequest & typeof import("./PrimitiveTypes").Object;
 };
 /**
 * Represents a loaded manifest that describes some underlying resource (typically JavaScript).
@@ -207,6 +211,8 @@ declare const Module_base: {
     init?(o: object, isnew: boolean, ...args: any[]): void;
 } & {
     prototype: ScriptResource;
+    getTypeName: typeof import("./PrimitiveTypes").Object.getTypeName;
+    isEmpty: typeof import("./PrimitiveTypes").Object.isEmpty;
     getPrototypeOf: (o: any) => any;
     getOwnPropertyDescriptor: (o: any, p: string | number | symbol) => PropertyDescriptor;
     getOwnPropertyNames: (o: any) => string[];
@@ -238,7 +244,7 @@ declare const Module_base: {
     setPrototypeOf: (o: any, proto: object) => any;
     cacheBusting: boolean;
     cacheBustingVar: string;
-    super: typeof ResourceRequest & ObjectConstructor;
+    super: typeof ResourceRequest & typeof import("./PrimitiveTypes").Object;
 };
 /** Contains static module properties and functions. */
 export declare class Module extends Module_base {

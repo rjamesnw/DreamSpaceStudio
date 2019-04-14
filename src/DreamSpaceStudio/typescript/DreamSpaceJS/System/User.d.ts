@@ -1,9 +1,9 @@
-import { DSObject } from "./PrimitiveTypes";
+import { Object } from "../PrimitiveTypes";
 import { UserAccess } from "./Security";
 /** The current user of the FlowScript system.
  * The user 'id' (a GUID) is used as the root directory for projects.
  */
-export declare class User extends DSObject {
+export declare class User extends Object {
     email: string;
     firstname?: string;
     lastname?: string;

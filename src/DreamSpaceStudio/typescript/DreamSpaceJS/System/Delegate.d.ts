@@ -1,19 +1,47 @@
-import { DSObject, IObject } from "./PrimitiveTypes";
+import { Object, IObject } from "../PrimitiveTypes";
 import { IFunctionInfo } from "../Globals";
 import { SerializedData } from "./Serialization";
 export interface DelegateFunction<TObj extends object = object> {
     (...args: any[]): any;
 }
 declare const DelegateFactory_base: {
-    new (): DSObject;
-    super: typeof DSObject;
+    new (): Object;
+    super: typeof Object;
     'new'?(...args: any[]): any;
     init?(o: object, isnew: boolean, ...args: any[]): void;
 } & {
-    prototype: DSObject;
-    super: typeof import("../Types").Disposable & import("../Globals").IFactory<typeof import("../Types").Disposable, import("../Globals").NewDelegate<import("../Types").Disposable>, import("../Globals").InitDelegate<import("../Types").Disposable>>;
-    getTypeName: typeof DSObject.getTypeName;
-    isEmpty: typeof DSObject.isEmpty;
+    prototype: Object;
+    getTypeName: typeof Object.getTypeName;
+    isEmpty: typeof Object.isEmpty;
+    getPrototypeOf: (o: any) => any;
+    getOwnPropertyDescriptor: (o: any, p: string | number | symbol) => PropertyDescriptor;
+    getOwnPropertyNames: (o: any) => string[];
+    create: {
+        (o: object): any;
+        (o: object, properties: PropertyDescriptorMap & ThisType<any>): any;
+    };
+    defineProperty: (o: any, p: string | number | symbol, attributes: PropertyDescriptor & ThisType<any>) => any;
+    defineProperties: (o: any, properties: PropertyDescriptorMap & ThisType<any>) => any;
+    seal: <T>(o: T) => T;
+    freeze: {
+        <T>(a: T[]): readonly T[];
+        <T extends Function>(f: T): T;
+        <T>(o: T): Readonly<T>;
+    };
+    preventExtensions: <T>(o: T) => T;
+    isSealed: (o: any) => boolean;
+    isFrozen: (o: any) => boolean;
+    isExtensible: (o: any) => boolean;
+    keys: (o: {}) => string[];
+    assign: {
+        <T, U>(target: T, source: U): T & U;
+        <T, U, V>(target: T, source1: U, source2: V): T & U & V;
+        <T, U, V, W>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
+        (target: object, ...sources: any[]): any;
+    };
+    getOwnPropertySymbols: (o: any) => symbol[];
+    is: (value1: any, value2: any) => boolean;
+    setPrototypeOf: (o: any, proto: object) => any;
 };
 /**
  * Represents a function of a specific object instance.
@@ -27,7 +55,7 @@ declare const DelegateFactory_base: {
 declare class DelegateFactory extends DelegateFactory_base {
     /**
      * Constructs a new Delegate object.
-     * @param {DSObject} object The instance on which the associated function will be called.  This should be undefined/null for static functions.
+     * @param {Object} object The instance on which the associated function will be called.  This should be undefined/null for static functions.
      * @param {Function} func The function to be called on the associated object.
      */
     static 'new': <TObj extends object, TFunc extends DelegateFunction>(object: TObj, func: TFunc) => IDelegate<TObj, TFunc>;
@@ -61,7 +89,7 @@ declare class DelegateFactory extends DelegateFactory_base {
     static getKey<TFunc extends DelegateFunction>(object: IObject, func: TFunc): string;
     protected static __validate(callername: string, object: NativeTypes.IObject, func: DelegateFunction): boolean;
 }
-declare class Delegate<TObj extends object, TFunc extends DelegateFunction> extends DSObject {
+declare class Delegate<TObj extends object, TFunc extends DelegateFunction> extends Object {
     /** A read-only key string that uniquely identifies the combination of object instance and function in this delegate.
     * This property is set for new instances by default.  Calling 'update()' will update it if necessary.
     */

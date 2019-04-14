@@ -1,12 +1,12 @@
-import { Disposable } from "./Types";
 export declare var QUERY_STRING_REGEX: RegExp;
 declare const Query_base: {
-    new (): Disposable;
-    super: typeof Disposable & import("./Globals").IFactory<typeof Disposable, import("./Globals").NewDelegate<Disposable>, import("./Globals").InitDelegate<Disposable>>;
+    new (): any;
+    super: any;
     'new'?(...args: any[]): any;
     init?(o: object, isnew: boolean, ...args: any[]): void;
 } & {
-    prototype: Disposable;
+    [x: string]: any;
+    [x: number]: any;
 };
 /**
   * Helps wrap common functionality for query/search string manipulation.  An internal 'values' object stores the 'name:value'

@@ -36,9 +36,38 @@ declare const PropertyEventBase_base: {
     init?(o: object, isnew: boolean, ...args: any[]): void;
 } & {
     prototype: EventObject;
-    super: typeof import("./PrimitiveTypes").DSObject & typeof import("../Types").Disposable & import("../Globals").IFactory<typeof import("../Types").Disposable, import("../Globals").NewDelegate<import("../Types").Disposable>, import("../Globals").InitDelegate<import("../Types").Disposable>>;
-    getTypeName: typeof import("./PrimitiveTypes").DSObject.getTypeName;
-    isEmpty: typeof import("./PrimitiveTypes").DSObject.isEmpty;
+    getTypeName: typeof import("../PrimitiveTypes").Object.getTypeName;
+    isEmpty: typeof import("../PrimitiveTypes").Object.isEmpty;
+    getPrototypeOf: (o: any) => any;
+    getOwnPropertyDescriptor: (o: any, p: string | number | symbol) => PropertyDescriptor;
+    getOwnPropertyNames: (o: any) => string[];
+    create: {
+        (o: object): any;
+        (o: object, properties: PropertyDescriptorMap & ThisType<any>): any;
+    };
+    defineProperty: (o: any, p: string | number | symbol, attributes: PropertyDescriptor & ThisType<any>) => any;
+    defineProperties: (o: any, properties: PropertyDescriptorMap & ThisType<any>) => any;
+    seal: <T>(o: T) => T;
+    freeze: {
+        <T>(a: T[]): readonly T[];
+        <T extends Function>(f: T): T;
+        <T>(o: T): Readonly<T>;
+    };
+    preventExtensions: <T>(o: T) => T;
+    isSealed: (o: any) => boolean;
+    isFrozen: (o: any) => boolean;
+    isExtensible: (o: any) => boolean;
+    keys: (o: {}) => string[];
+    assign: {
+        <T, U>(target: T, source: U): T & U;
+        <T, U, V>(target: T, source1: U, source2: V): T & U & V;
+        <T, U, V, W>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
+        (target: object, ...sources: any[]): any;
+    };
+    getOwnPropertySymbols: (o: any) => symbol[];
+    is: (value1: any, value2: any) => boolean;
+    setPrototypeOf: (o: any, proto: object) => any;
+    super: typeof import("../PrimitiveTypes").Object;
 };
 export declare class PropertyEventBase extends PropertyEventBase_base {
     /**
@@ -90,9 +119,38 @@ declare const StaticProperty_base: {
     init?(o: object, isnew: boolean, ...args: any[]): void;
 } & {
     prototype: PropertyEventBase;
-    super: typeof EventObject & typeof import("./PrimitiveTypes").DSObject & typeof import("../Types").Disposable & import("../Globals").IFactory<typeof import("../Types").Disposable, import("../Globals").NewDelegate<import("../Types").Disposable>, import("../Globals").InitDelegate<import("../Types").Disposable>>;
-    getTypeName: typeof import("./PrimitiveTypes").DSObject.getTypeName;
-    isEmpty: typeof import("./PrimitiveTypes").DSObject.isEmpty;
+    getTypeName: typeof import("../PrimitiveTypes").Object.getTypeName;
+    isEmpty: typeof import("../PrimitiveTypes").Object.isEmpty;
+    getPrototypeOf: (o: any) => any;
+    getOwnPropertyDescriptor: (o: any, p: string | number | symbol) => PropertyDescriptor;
+    getOwnPropertyNames: (o: any) => string[];
+    create: {
+        (o: object): any;
+        (o: object, properties: PropertyDescriptorMap & ThisType<any>): any;
+    };
+    defineProperty: (o: any, p: string | number | symbol, attributes: PropertyDescriptor & ThisType<any>) => any;
+    defineProperties: (o: any, properties: PropertyDescriptorMap & ThisType<any>) => any;
+    seal: <T>(o: T) => T;
+    freeze: {
+        <T>(a: T[]): readonly T[];
+        <T extends Function>(f: T): T;
+        <T>(o: T): Readonly<T>;
+    };
+    preventExtensions: <T>(o: T) => T;
+    isSealed: (o: any) => boolean;
+    isFrozen: (o: any) => boolean;
+    isExtensible: (o: any) => boolean;
+    keys: (o: {}) => string[];
+    assign: {
+        <T, U>(target: T, source: U): T & U;
+        <T, U, V>(target: T, source1: U, source2: V): T & U & V;
+        <T, U, V, W>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
+        (target: object, ...sources: any[]): any;
+    };
+    getOwnPropertySymbols: (o: any) => symbol[];
+    is: (value1: any, value2: any) => boolean;
+    setPrototypeOf: (o: any, proto: object) => any;
+    super: typeof EventObject & typeof import("../PrimitiveTypes").Object;
 };
 export declare class StaticProperty extends StaticProperty_base {
     /**
@@ -124,9 +182,38 @@ declare const Property_base: {
     init?(o: object, isnew: boolean, ...args: any[]): void;
 } & {
     prototype: PropertyEventBase;
-    super: typeof EventObject & typeof import("./PrimitiveTypes").DSObject & typeof import("../Types").Disposable & import("../Globals").IFactory<typeof import("../Types").Disposable, import("../Globals").NewDelegate<import("../Types").Disposable>, import("../Globals").InitDelegate<import("../Types").Disposable>>;
-    getTypeName: typeof import("./PrimitiveTypes").DSObject.getTypeName;
-    isEmpty: typeof import("./PrimitiveTypes").DSObject.isEmpty;
+    getTypeName: typeof import("../PrimitiveTypes").Object.getTypeName;
+    isEmpty: typeof import("../PrimitiveTypes").Object.isEmpty;
+    getPrototypeOf: (o: any) => any;
+    getOwnPropertyDescriptor: (o: any, p: string | number | symbol) => PropertyDescriptor;
+    getOwnPropertyNames: (o: any) => string[];
+    create: {
+        (o: object): any;
+        (o: object, properties: PropertyDescriptorMap & ThisType<any>): any;
+    };
+    defineProperty: (o: any, p: string | number | symbol, attributes: PropertyDescriptor & ThisType<any>) => any;
+    defineProperties: (o: any, properties: PropertyDescriptorMap & ThisType<any>) => any;
+    seal: <T>(o: T) => T;
+    freeze: {
+        <T>(a: T[]): readonly T[];
+        <T extends Function>(f: T): T;
+        <T>(o: T): Readonly<T>;
+    };
+    preventExtensions: <T>(o: T) => T;
+    isSealed: (o: any) => boolean;
+    isFrozen: (o: any) => boolean;
+    isExtensible: (o: any) => boolean;
+    keys: (o: {}) => string[];
+    assign: {
+        <T, U>(target: T, source: U): T & U;
+        <T, U, V>(target: T, source1: U, source2: V): T & U & V;
+        <T, U, V, W>(target: T, source1: U, source2: V, source3: W): T & U & V & W;
+        (target: object, ...sources: any[]): any;
+    };
+    getOwnPropertySymbols: (o: any) => symbol[];
+    is: (value1: any, value2: any) => boolean;
+    setPrototypeOf: (o: any, proto: object) => any;
+    super: typeof EventObject & typeof import("../PrimitiveTypes").Object;
 };
 /** Represents a GraphItem instance property which holds a reference to the related static property information, and also stores the current instance value. */
 export declare class Property extends Property_base {

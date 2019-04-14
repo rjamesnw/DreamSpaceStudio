@@ -1,9 +1,9 @@
-define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", "./System/Delegate", "./Globals"], function (require, exports, Logging_1, AppDomain_1, Utilities_1, Delegate_1, Globals_1) {
+// ###########################################################################################################################
+/** @module Types Shared types and interfaces, and provides functions for type management. */
+// ###########################################################################################################################
+define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", "./System/Delegate", "./Globals", "./PrimitiveTypes"], function (require, exports, Logging_1, AppDomain_1, Utilities_1, Delegate_1, Globals_1, PrimitiveTypes_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    // ###########################################################################################################################
-    // Types for event management.
-    // ###########################################################################################################################
     /** Returns the name of a namespace or variable reference at runtime. */
     function nameof(selector, fullname = false) {
         var s = '' + selector;
@@ -22,7 +22,7 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
         var name = func.$__name || func['name'];
         if (name == void 0) {
             // ... check the type (this quickly detects internal/native Browser types) ...
-            var typeString = Object.prototype.toString.call(func);
+            var typeString = PrimitiveTypes_1.Object.prototype.toString.call(func);
             // (typeString is formated like "[object SomeType]")
             if (typeString.charAt(0) == '[' && typeString.charAt(typeString.length - 1) == ']')
                 name = typeString.substring(1, typeString.length - 1).split(' ')[1];
@@ -101,6 +101,7 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
     // */
     //x export function extendDSNS(selector: () => any) { return extendNS(selector, "DS"); }
     // ###########################################################################################################################
+    /** Contains functions to work with types within the system. */
     var Types;
     (function (Types) {
         /** Returns the root type object from nested type objects. Use this to get the root namespace  */
@@ -111,17 +112,17 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
             return _type;
         }
         Types.getRoot = getRoot;
-        Object.defineProperty(Types, "__types", { configurable: false, writable: false, value: {} });
-        Object.defineProperty(Types, "__disposedObjects", { configurable: false, writable: false, value: {} });
+        PrimitiveTypes_1.Object.defineProperty(Types, "__types", { configurable: false, writable: false, value: {} });
+        PrimitiveTypes_1.Object.defineProperty(Types, "__disposedObjects", { configurable: false, writable: false, value: {} });
         /**
          * If true the system will automatically track new objects created under this DreamSpace context and store them in 'Types.__trackedObjects'.
          * The default is false to prevent memory leaks by those unaware of how the DreamSpace factory pattern works.
          * Setting this to true (either here or within a specific AppDomain) means you take full responsibility to dispose all objects you create.
          */
         Types.autoTrackInstances = false;
-        Object.defineProperty(Types, "__trackedObjects", { configurable: false, writable: false, value: [] });
+        PrimitiveTypes_1.Object.defineProperty(Types, "__trackedObjects", { configurable: false, writable: false, value: [] });
         var ___nextObjectID = 0;
-        Object.defineProperty(Types, "__nextObjectID", { configurable: false, get: () => ___nextObjectID });
+        PrimitiveTypes_1.Object.defineProperty(Types, "__nextObjectID", { configurable: false, get: () => ___nextObjectID });
         /** Returns 'Types.__nextObjectID' and increments the value by 1. */
         function getNextObjectId() { return ___nextObjectID++; }
         Types.getNextObjectId = getNextObjectId;
@@ -242,7 +243,6 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
             // ... register type information first BEFORER we call any static constructor (so it is available to the user)s ...
             // TODO: (NOTE: this call takes the instance type, which may also be the factory type; if not a factory, then it should have a reference to one)
             var registeredFactory = __registerType(instanceType, moduleSpace, addMemberTypeInfo);
-            s;
             factoryTypeInfo.$__type = _instanceType; // (the class type AND factory type should both have a reference to each other)
             _instanceType.$__factoryType = factoryTypeInfo; // (a properly registered class that supports the factory pattern should have a reference to its underlying factory type)
             var registeredFactoryType = __registerType(_instanceType, factoryType, addMemberTypeInfo);
@@ -430,19 +430,6 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
         }
         Types.dispose = dispose;
     })(Types = exports.Types || (exports.Types = {}));
-    /** A 'Disposable' base type that implements 'IDisposable', which is the base for all DreamSpace objects that can be disposed. */
-    class Disposable {
-        /**
-         * Releases the object back into the object pool. This is the default implementation which simply calls 'Types.dispose(this, release)'.
-         * If overriding, make sure to call 'super.dispose()' or 'Types.dispose()' to complete the disposal process.
-         * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
-         *                          false to request that child objects remain connected after disposal (not released). This
-         *                          can allow quick initialization of a group of objects, instead of having to pull each one
-         *                          from the object pool each time.
-         */
-        dispose(release) { Types.dispose(this, release); }
-    }
-    exports.Disposable = Disposable;
     /** Returns true if the specified object can be disposed using this DreamSpace system. */
     function isDisposable(instance) {
         if (instance.$__ds != Globals_1.DreamSpace)
@@ -450,53 +437,14 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
         return typeof instance.dispose == 'function';
     }
     exports.isDisposable = isDisposable;
-    /** Returns true if the given type (function) represents a primitive type constructor. */
+    /** Returns true if the given type (function) represents a primitive JavaScript type constructor. */
     function isPrimitiveType(o) {
-        var symbol = typeof Symbol != 'undefined' ? Symbol : Object; // (not supported in IE11)
-        return (o == Object || o == Array || o == Boolean || o == String
+        var symbol = typeof Symbol != 'undefined' ? Symbol : PrimitiveTypes_1.Object; // (not supported in IE11)
+        return (o == PrimitiveTypes_1.Object || o == Array || o == Boolean || o == String
             || o == Number || o == symbol || o == Function || o == Date
             || o == RegExp || o == Error);
     }
     exports.isPrimitiveType = isPrimitiveType;
-    /**
-     * Creates a 'Disposable' type from another base type. This is primarily used to extend primitive types.
-     * Note: These types are NOT instances of 'DreamSpace.Disposable', since they must have prototype chains that link to other base types.
-     * @param {TBaseClass} baseClass The base class to inherit from.
-     * @param {boolean} isPrimitiveOrHostBase Set this to true when inheriting from primitive types. This is normally auto-detected, but can be forced in cases
-     * where 'new.target' (ES6) prevents proper inheritance from host system base types that are not primitive types.
-     * This is only valid if compiling your .ts source for ES5 while also enabling support for ES6 environments.
-     * If you compile your .ts source for ES6 then the 'class' syntax will be used and this value has no affect.
-     */
-    function makeDisposable(baseClass, isPrimitiveOrHostBase) {
-        if (!baseClass) {
-            baseClass = Globals_1.DreamSpace.global.Object;
-            isPrimitiveOrHostBase = true;
-        }
-        else if (typeof isPrimitiveOrHostBase == 'undefined')
-            isPrimitiveOrHostBase = isPrimitiveType(baseClass);
-        var cls = class Disposable extends baseClass {
-            /**
-            * Don't create objects using the 'new' operator. Use '{NameSpaces...ClassType}.new()' static methods instead.
-            */
-            constructor(...args) {
-                if (!Globals_1.DreamSpace.ES6Targeted && isPrimitiveOrHostBase)
-                    eval("var _super = function() { return null; };"); // (ES6 fix for extending built-in types [calling constructor not supported prior] when compiling for ES5; more details on it here: https://github.com/Microsoft/TypeScript/wiki/FAQ#why-doesnt-extending-built-ins-like-error-array-and-map-work)
-                super(...args);
-            }
-            /**
-            * Releases the object back into the object pool. This is the default implementation which simply calls 'Types.dispose(this, release)'.
-            * If overriding, make sure to call 'super.dispose()' or 'Types.dispose()' to complete the disposal process.
-            * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
-            *                          false to request that child objects remain connected after disposal (not released). This
-            *                          can allow quick initialization of a group of objects, instead of having to pull each one
-            *                          from the object pool each time.
-            */
-            dispose(release) { }
-        };
-        cls.prototype.dispose = Disposable.prototype.dispose; // (make these functions both the same function reference by default)
-        return cls;
-    }
-    exports.makeDisposable = makeDisposable;
     //function Factory<T extends IType, K extends keyof T>(base: T): FactoryBaseType<T> { return <any>base; }
     /** Converts a non-factory object type into a factory type.
      * This is used on primitive types when making the 'derived primitive types' for the system.
@@ -526,7 +474,7 @@ define(["require", "exports", "./Logging", "./System/AppDomain", "./Utilities", 
             throw "'extends Factory(base)' error: 'base' (" + getTypeName(baseFactoryType) + ") is not a factory, or you forgot to use the '@factory()' decorator to register it."
                 + " If the base is a generic-type factory, make sure to use '@usingFactory()' on the generic instance class associated with the factory.";
         if (typeof baseFactoryType != 'function')
-            baseFactoryType = Globals_1.DreamSpace.global.Object;
+            baseFactoryType = PrimitiveTypes_1.Object;
         var cls = class FactoryBase extends baseFactoryType {
             /** References the base factory. */
             static get super() { return this.$__baseFactoryType || void 0; } // ('|| void 0' keeps things consistent in case 'null' is given)

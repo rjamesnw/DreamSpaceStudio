@@ -1,7 +1,7 @@
 ﻿import { Factory, getFullTypeName, factory, Types } from "../Types";
 import { error } from "../Logging";
 import { DreamSpace as DS, IDisposable, ITypeInfo, IFactory, IType, frozen } from "../Globals";
-import { DSObject } from "./PrimitiveTypes";
+import { Object } from "../PrimitiveTypes";
 import { Exception } from "./Exception";
 import { IndexedObjectCollection, IIndexedObjectCollection } from "./Collections.IndexedObjectCollection";
 import { dispose } from "./System";
@@ -86,7 +86,7 @@ export interface IADBridge extends IDomainObjectInfo {
  * Note: While script isolation is the default, trusted scripts can run in the system context, and are thus not secured.
  */
 @factory(this)
-export class AppDomain extends Factory(DSObject) {
+export class AppDomain extends Factory(Object) {
     /** Get a new app domain instance.
     * @param application An optional application to add to the new domain.
     */
@@ -312,7 +312,7 @@ export interface IAppDomain extends AppDomain { }
   * applications in a single AppDomain.
   */
 @factory(this)
-export class Application extends Factory(DSObject) {
+export class Application extends Factory(Object) {
     static 'new': (title: string, description: string, appID: number) => IApplication;
     static init: (o: IApplication, isnew: boolean, title: string, description: string, appID: number) => void;
 

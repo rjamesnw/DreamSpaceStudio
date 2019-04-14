@@ -7,7 +7,7 @@ import { DreamSpace as DS, ITypeInfo } from "../Globals";
 import { TimeSpan, ITimeSpan } from "./System.Time";
 import { LogTypes, error, log as base_log } from "../Logging";
 import { Exception } from "./Exception";
-import { String } from "./PrimitiveTypes";
+import { String } from "../PrimitiveTypes";
 
 // ========================================================================================================================
 
@@ -21,7 +21,7 @@ namespace Diagnostics {
 
     // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-    @factory(this)
+    @factory(Diagnostics)
     export class LogItem extends Factory(Disposable) {
         static 'new'(parent: ILogItem, title: string, message: string, type?: LogTypes, outputToConsole?: boolean): ILogItem;
         static 'new'(parent: ILogItem, title: any, message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true): ILogItem { return null; }
@@ -146,7 +146,7 @@ namespace Diagnostics {
         }
     }
 
-    export interface ILogItem extends LogItem.$__type { }
+    export interface ILogItem extends LogItem { }
 
     // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
 
@@ -268,7 +268,7 @@ namespace Diagnostics {
     // ========================================================================================================================
 }
 
-export default Diagnostics;
+export { Diagnostics };
 
 // ############################################################################################################################
 // Basic Window hooks for client-side diagnostics (CTRL+~ to dump the log).

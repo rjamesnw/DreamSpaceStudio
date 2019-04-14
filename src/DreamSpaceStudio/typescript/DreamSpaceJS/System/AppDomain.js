@@ -1,4 +1,4 @@
-define(["require", "exports", "../Types", "../Logging", "../Globals", "./PrimitiveTypes", "./Exception", "./Collections.IndexedObjectCollection", "./System"], function (require, exports, Types_1, Logging_1, Globals_1, PrimitiveTypes_1, Exception_1, Collections_IndexedObjectCollection_1, System_1) {
+define(["require", "exports", "../Types", "../Logging", "../Globals", "../PrimitiveTypes", "./Exception", "./Collections.IndexedObjectCollection", "./System"], function (require, exports, Types_1, Logging_1, Globals_1, PrimitiveTypes_1, Exception_1, Collections_IndexedObjectCollection_1, System_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var AppDomain_1, Application_1;
@@ -24,7 +24,7 @@ define(["require", "exports", "../Types", "../Logging", "../Globals", "./Primiti
      * logins, payment details, etc.
      * Note: While script isolation is the default, trusted scripts can run in the system context, and are thus not secured.
      */
-    let AppDomain = AppDomain_1 = class AppDomain extends Types_1.Factory(PrimitiveTypes_1.DSObject) {
+    let AppDomain = AppDomain_1 = class AppDomain extends Types_1.Factory(PrimitiveTypes_1.Object) {
         // ====================================================================================================================================
         //x export class $DomainObject extends Factory(Object) {
         //    //static ' '?= class FactoryRoot {
@@ -209,7 +209,7 @@ define(["require", "exports", "../Types", "../Logging", "../Globals", "./Primiti
     /** Applications wrap window reference targets, and any specified HTML for configuration and display. There can be many
       * applications in a single AppDomain.
       */
-    let Application = Application_1 = class Application extends Types_1.Factory(PrimitiveTypes_1.DSObject) {
+    let Application = Application_1 = class Application extends Types_1.Factory(PrimitiveTypes_1.Object) {
         // -------------------------------------------------------------------------------------------------------------------------------
         /** The default system wide application domain.
           * See 'System.Platform.AppDomain' for more details.

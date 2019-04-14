@@ -7,7 +7,7 @@ import { IEventDispatcher, EventDispatcher } from "./Events";
 import { PropertyEventBase, IStaticProperty, StaticProperty, IProperties, PropertyChangedHandler, IProperty, Property, ListenerCallback, InterceptorCallback } from "./Properties";
 import { DreamSpace as DS, IFactory, IEnumerable } from "../Globals";
 import { Exception } from "./Exception";
-import { IArray, Array } from "./PrimitiveTypes";
+import { IArray, Array } from "../PrimitiveTypes";
 
 export interface IEvents { [index: string]: IEventDispatcher<IGraphNode, (ev: Event) => any>; }
 

@@ -84,7 +84,7 @@
     <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Platform.HTML.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Platform.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Platform.Windows.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\PrimitiveTypes.ts" />
+    <TypeScriptCompile Include="typescript\DreamSpaceJS\PrimitiveTypes.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Properties.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Serialization.ts" />
     <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Storage.ts" />

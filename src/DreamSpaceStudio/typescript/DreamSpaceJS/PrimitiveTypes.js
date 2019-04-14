@@ -1,7 +1,7 @@
-define(["require", "exports", "../Types", "./System", "./AppDomain", "../Globals", "./Browser", "../Utilities"], function (require, exports, Types_1, System_1, AppDomain_1, Globals_1, Browser_1, Utilities_1) {
+define(["require", "exports", "./Types", "./System/System", "./System/AppDomain", "./Globals", "./System/Browser", "./Utilities"], function (require, exports, Types_1, System_1, AppDomain_1, Globals_1, Browser_1, Utilities_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var DSObject_1, String_1, Array_1;
+    var Object_1, String_1, Array_1;
     // ###########################################################################################################################
     // Primitive types designed for use with the DreamSpace system.
     // See 'DreamSpace.global' and 'DreamSpace.NativeTypes/NativeStaticTypes' for access to global scope native references and definitions.
@@ -9,7 +9,7 @@ define(["require", "exports", "../Types", "./System", "./AppDomain", "../Globals
     // Thing that gets passed a function and makes a decorator:
     // =======================================================================================================================
     /** The base type for many DreamSpace classes. */
-    let DSObject = DSObject_1 = class DSObject {
+    let Object = Object_1 = class Object extends Globals_1.DreamSpace.global.Object {
         /**
         * Create a new basic object type.
         * @param value If specified, the value will be wrapped in the created object.
@@ -88,7 +88,7 @@ define(["require", "exports", "../Types", "./System", "./AppDomain", "../Globals
                 System_1.dispose(this, false); // 'false' also keeps the app domain (see 'dispose()' below), and only removes it from the "active" list.
             //??if (!this.constructor.new)
             //    throw Exception.error("{object}.new", "You need to register the class/type first: see 'AppDomain.registerClass()'.", this);
-            var instance = DSObject_1.init.call(this, this, false, ...arguments);
+            var instance = Object_1.init.call(this, this, false, ...arguments);
             instance.$__appDomain.objects.addObject(instance);
             delete instance.dispose;
             return this;
@@ -113,24 +113,87 @@ define(["require", "exports", "../Types", "./System", "./AppDomain", "../Globals
             this.isEmpty = Globals_1.DreamSpace.isEmpty; // (make future calls use the root namespace function that already exists)
             return Globals_1.DreamSpace.isEmpty(obj);
         }
+        // -------------------------------------------------------------------------------------------------------------------
+        /**
+         * Releases the object back into the object pool. This is the default implementation which simply calls 'Types.dispose(this, release)'.
+         * If overriding, make sure to call 'super.dispose()' or 'Types.dispose()' to complete the disposal process.
+         * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
+         *                          false to request that child objects remain connected after disposal (not released). This
+         *                          can allow quick initialization of a group of objects, instead of having to pull each one
+         *                          from the object pool each time.
+         */
+        dispose(release) { Types_1.Types.dispose(this, release); }
     };
-    DSObject = DSObject_1 = __decorate([
+    Object = Object_1 = __decorate([
         Types_1.factory(this)
-    ], DSObject);
-    exports.DSObject = DSObject;
+    ], Object);
+    exports.Object = Object;
+    // =======================================================================================================================
+    /**
+     * Creates a 'Disposable' type from another base type. This is primarily used to extend primitive types for use as base types to DreamSpace
+     * primitives.  This is because Array and String types cannot inherit from the custom 'Object' type AND be instances of the respective primary types.
+     * Note: These types are NOT instances of 'DreamSpace.Disposable', since they must have prototype chains that link to other base types.
+     * @param {TBaseClass} baseClass The base class to inherit from.
+     * @param {boolean} isPrimitiveOrHostBase Set this to true when inheriting from primitive types. This is normally auto-detected, but can be forced in cases
+     * where 'new.target' (ES6) prevents proper inheritance from host system base types that are not primitive types.
+     * This is only valid if compiling your .ts source for ES5 while also enabling support for ES6 environments.
+     * If you compile your .ts source for ES6 then the 'class' syntax will be used and this value has no affect.
+     */
+    function makeDisposable(baseClass, isPrimitiveOrHostBase) {
+        if (!baseClass) {
+            baseClass = Globals_1.DreamSpace.global.Object;
+            isPrimitiveOrHostBase = true;
+        }
+        else if (typeof isPrimitiveOrHostBase == 'undefined')
+            isPrimitiveOrHostBase = Types_1.isPrimitiveType(baseClass);
+        var cls = class Object extends baseClass {
+            /**
+            * Create a new basic object type.
+            * @param value If specified, the value will be wrapped in the created object.
+            * @param makeValuePrivate If true, the value will not be exposed, making the value immutable. Default is false.
+            */
+            static 'new'(value, makeValuePrivate) { return null; }
+            /** This is called internally to initialize a blank instance of the underlying type. Users should call the 'new()'
+            * constructor function to get new instances, and 'dispose()' to release them when done.
+            */
+            static init(o, isnew, value, makeValuePrivate) { }
+            /**
+            * Don't create objects using the 'new' operator. Use '{NameSpaces...ClassType}.new()' static methods instead.
+            */
+            constructor(...args) {
+                if (!Globals_1.DreamSpace.ES6Targeted && isPrimitiveOrHostBase)
+                    eval("var _super = function() { return null; };"); // (ES6 fix for extending built-in types [calling constructor not supported prior] when compiling for ES5; more details on it here: https://github.com/Microsoft/TypeScript/wiki/FAQ#why-doesnt-extending-built-ins-like-error-array-and-map-work)
+                super(...args);
+            }
+            /**
+            * Releases the object back into the object pool. This is the default implementation which simply calls 'Types.dispose(this, release)'.
+            * If overriding, make sure to call 'super.dispose()' or 'Types.dispose()' to complete the disposal process.
+            * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
+            *                          false to request that child objects remain connected after disposal (not released). This
+            *                          can allow quick initialization of a group of objects, instead of having to pull each one
+            *                          from the object pool each time.
+            */
+            dispose(release) { }
+        };
+        for (var p in Object.prototype)
+            if (Object.prototype.hasOwnProperty(p))
+                cls.prototype[p] = Object.prototype[p]; // (make these functions both the same function reference by default)
+        return cls;
+    }
+    exports.makeDisposable = makeDisposable;
     // =======================================================================================================================
     /** Copies over prototype properties from the $Object type to other base primitive types. */
     function _addObjectPrototypeProperties(type) {
-        for (var p in DSObject.prototype)
-            if (DSObject.prototype.hasOwnProperty.call(DSObject.prototype, p) && p.charAt(0) != "$" && p.charAt(0) != "_")
+        for (var p in Object.prototype)
+            if (Object.prototype.hasOwnProperty.call(Object.prototype, p) && p.charAt(0) != "$" && p.charAt(0) != "_")
                 if (!(p in type.prototype))
-                    type.prototype[p] = DSObject.prototype[p];
+                    type.prototype[p] = Object.prototype[p];
         return type;
     }
     eval("var PrimitiveString = DS.global.String;");
     /* Note: This is a DreamSpace system string object, and not the native JavaScript object. */
     /** Allows manipulation and formatting of text strings, including the determination and location of substrings within strings. */
-    let String = String_1 = class String extends Types_1.Factory(Types_1.makeFactory(Types_1.makeDisposable(PrimitiveString))) {
+    let String = String_1 = class String extends Types_1.Factory(Types_1.makeFactory(makeDisposable(PrimitiveString))) {
         /**
             * Reinitializes a disposed Delegate instance.
             * @param this The Delegate instance to initialize, or re-initialize.
@@ -284,7 +347,7 @@ define(["require", "exports", "../Types", "./System", "./AppDomain", "../Globals
     class ArrayFactory extends Types_1.Factory(Types_1.makeFactory(Globals_1.DreamSpace.global.Array)) {
     }
     exports.Array = ArrayFactory;
-    let Array = Array_1 = class Array extends Types_1.makeDisposable(Globals_1.DreamSpace.global.Array) {
+    let Array = Array_1 = class Array extends makeDisposable(Globals_1.DreamSpace.global.Array) {
         /** Clears the array and returns it. */
         clear() { this.length = 0; return this; }
         /** The static factory constructor for this type. */
@@ -321,7 +384,7 @@ define(["require", "exports", "../Types", "./System", "./AppDomain", "../Globals
     //}
     // ====================================================================================================================================
     /** Represents an object that can have a parent object. */
-    class DependentObject extends DSObject {
+    class DependentObject extends Object {
         get parent() { return this.__parent; }
     }
     exports.DependentObject = DependentObject;

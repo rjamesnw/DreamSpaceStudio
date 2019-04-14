@@ -4,7 +4,7 @@
 
 import { DreamSpace as DS } from "../Globals";
 import { Factory, usingFactory } from "../Types";
-import { DSObject, IObject } from "./PrimitiveTypes";
+import { Object, IObject } from "../PrimitiveTypes";
 import { INamespaceInfo, IFunctionInfo } from "../Globals";
 import { Exception } from "./Exception";
 import Browser from "./Browser";
@@ -24,10 +24,10 @@ export interface DelegateFunction<TObj extends object=object> { (...args: any[])
  * serialized.
  * Note: If the target object is undefined, then 'null' is assumed and passed in as 'this'.
  */
-class DelegateFactory extends Factory(DSObject) {
+class DelegateFactory extends Factory(Object) {
     /**
      * Constructs a new Delegate object.
-     * @param {DSObject} object The instance on which the associated function will be called.  This should be undefined/null for static functions.
+     * @param {Object} object The instance on which the associated function will be called.  This should be undefined/null for static functions.
      * @param {Function} func The function to be called on the associated object.
      */
     static 'new': <TObj extends object, TFunc extends DelegateFunction>(object: TObj, func: TFunc) => IDelegate<TObj, TFunc>;
@@ -81,7 +81,7 @@ class DelegateFactory extends Factory(DSObject) {
 }
 
 @usingFactory(DelegateFactory, this)
-class Delegate<TObj extends object, TFunc extends DelegateFunction> extends DSObject {
+class Delegate<TObj extends object, TFunc extends DelegateFunction> extends Object {
     //? static readonly $Type = $Delegate;
 
     private [DS.constructor](factory: typeof DelegateFactory): void {
@@ -180,7 +180,7 @@ class Delegate<TObj extends object, TFunc extends DelegateFunction> extends DSOb
             Exception.error("Delegate", "The function value is not a function:\r\n {Delegate}.func = " + this.func, this.func);
         if (this.func.bind)
             this.__boundFunc = this.func.bind(this, this.object); // (this can be faster in some cases [i.e. IE])
-        if (this.object instanceof DSObject)
+        if (this.object instanceof Object)
             this.__key = DelegateFactory.getKey(<any>this.object, this.func); // (this also validates the properties first)
         else
             this.__key = void 0;

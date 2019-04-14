@@ -1,16 +1,7 @@
-import { Disposable } from "../Types";
 import { SerializedData, ISerializable } from "./Serialization";
 import { DreamSpace as DS, IFunctionInfo } from "../Globals";
-declare const DSObject_base: {
-    new (): Disposable;
-    super: typeof Disposable & import("../Globals").IFactory<typeof Disposable, import("../Globals").NewDelegate<Disposable>, import("../Globals").InitDelegate<Disposable>>;
-    'new'?(...args: any[]): any;
-    init?(o: object, isnew: boolean, ...args: any[]): void;
-} & {
-    prototype: Disposable;
-};
 /** The base type for many DreamSpace classes. */
-export declare class DSObject extends DSObject_base implements ISerializable {
+export declare class DSObject implements ISerializable {
     /**
     * Create a new basic object type.
     * @param value If specified, the value will be wrapped in the created object.

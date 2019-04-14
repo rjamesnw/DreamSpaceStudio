@@ -5,7 +5,7 @@
 import { DreamSpace as DS } from "../Globals";
 import { Factory } from "../Types";
 import { Utilities } from "../Utilities";
-import { DSObject } from "./PrimitiveTypes";
+import { Object } from "../PrimitiveTypes";
 
 // =======================================================================================================================
 
@@ -21,7 +21,7 @@ import { DSObject } from "./PrimitiveTypes";
 //      */
 //    Native
 //}
-export class Window extends Factory(DSObject) {
+export class Window extends Factory(Object) {
     /** Creates a new window object.  If null is passed as the root element, then a new pop-up window is created when the window is shown. */
     static 'new'(rootElement?: HTMLElement, url?: string): IWindow { return null; }
     static init(o: IWindow, isnew: boolean, rootElement?: HTMLElement, url?: string) {

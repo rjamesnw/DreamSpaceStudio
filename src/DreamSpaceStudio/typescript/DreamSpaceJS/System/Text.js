@@ -1,7 +1,7 @@
 // ###########################################################################################################################
 // Text manipulation utility functions.
 // ###########################################################################################################################
-define(["require", "exports", "./Exception", "./PrimitiveTypes"], function (require, exports, Exception_1, PrimitiveTypes_1) {
+define(["require", "exports", "./Exception", "../PrimitiveTypes"], function (require, exports, Exception_1, PrimitiveTypes_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // =======================================================================================================================

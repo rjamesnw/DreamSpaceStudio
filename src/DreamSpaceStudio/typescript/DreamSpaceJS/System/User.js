@@ -1,11 +1,11 @@
-define(["require", "exports", "./PrimitiveTypes", "./Events", "./Security"], function (require, exports, PrimitiveTypes_1, Events_1, Security_1) {
+define(["require", "exports", "../PrimitiveTypes", "./Events", "./Security"], function (require, exports, PrimitiveTypes_1, Events_1, Security_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // ############################################################################################################################
     /** The current user of the FlowScript system.
      * The user 'id' (a GUID) is used as the root directory for projects.
      */
-    class User extends PrimitiveTypes_1.DSObject {
+    class User extends PrimitiveTypes_1.Object {
         constructor(email, firstname, lastname) {
             super();
             this.email = email;

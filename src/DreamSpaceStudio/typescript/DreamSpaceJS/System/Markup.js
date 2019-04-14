@@ -1,7 +1,7 @@
 // ############################################################################################################################
 // Functions for working with HTML/XML.
 // ############################################################################################################################
-define(["require", "exports", "./PrimitiveTypes", "../Types", "./Exception"], function (require, exports, PrimitiveTypes_1, Types_1, Exception_1) {
+define(["require", "exports", "../PrimitiveTypes", "../Types", "./Exception"], function (require, exports, PrimitiveTypes_1, Types_1, Exception_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // ========================================================================================================================
@@ -25,7 +25,7 @@ define(["require", "exports", "./PrimitiveTypes", "../Types", "./Exception"], fu
       * Performance note: Since HTML can be large, it's not efficient to scan the HTML character by character. Instead, the HTML reader uses the native
       * RegEx engine to split up the HTML into chunks of delimiter text, which makes reading it much faster.
       */
-    class HTMLReader extends Types_1.Factory(PrimitiveTypes_1.DSObject) {
+    class HTMLReader extends Types_1.Factory(PrimitiveTypes_1.Object) {
         constructor() {
             super(...arguments);
             // (The RegEx above will identify areas that MAY need to delimited for parsing [not a guarantee].  The area outside of the delimiters is usually

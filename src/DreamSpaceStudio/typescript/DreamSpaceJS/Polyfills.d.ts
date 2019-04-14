@@ -3,7 +3,6 @@ interface Function {
 }
 interface Object {
     [index: string]: any;
-    prototype: any;
 }
 interface Array<T> {
     [index: string]: any;

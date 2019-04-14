@@ -9,7 +9,7 @@ define(["require", "exports", "./Types", "./System/Text", "./Utilities", "./Glob
       * with all values escaped and ready to be appended to a URI.
       * Note: Call 'Query.new()' to create new instances.
       */
-    class Query extends Types_1.Factory(Types_1.makeFactory(Types_1.Disposable)) {
+    class Query extends Types_1.Factory(Types_1.Disposable) {
         constructor() {
             super(...arguments);
             // ----------------------------------------------------------------------------------------------------------------

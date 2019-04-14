@@ -1,5 +1,7 @@
+/** @module Types Shared types and interfaces, and provides functions for type management. */
 import { IDomainObjectInfo } from "./System/AppDomain";
 import { IDisposable, ITypeInfo, IFactoryTypeInfo, IType, IFactory, InitDelegate, NewDelegate } from "./Globals";
+import { Object } from "./PrimitiveTypes";
 /** Returns the name of a namespace or variable reference at runtime. */
 export declare function nameof(selector: () => any, fullname?: boolean): string;
 export declare var FUNC_NAME_REGEX: RegExp;
@@ -29,6 +31,7 @@ export declare function getFullTypeName(object: object, cacheTypeName?: boolean)
  * @param name A selector or dotted identifier path to the target namespace name to extend from.
  */
 export declare function extendNS(selector: () => any, name: string | (() => any)): string;
+/** Contains functions to work with types within the system. */
 export declare namespace Types {
     /** Returns the root type object from nested type objects. Use this to get the root namespace  */
     function getRoot(type: ITypeInfo): ITypeInfo;
@@ -77,7 +80,7 @@ export declare namespace Types {
      * @param {boolean} addMemberTypeInfo If true (default), all member functions on the type (function object) will have type information
      * applied (using the IFunctionInfo interface).
     */
-    function __registerFactoryType<TClass extends IType, TFactory extends IFactory>(instanceType: TClass, factoryType: TFactory, moduleSpace: Object, addMemberTypeInfo?: boolean): TFactory;
+    function __registerFactoryType<TClass extends IType, TFactory extends IFactory>(instanceType: TClass, factoryType: TFactory, moduleSpace: object, addMemberTypeInfo?: boolean): TFactory;
     /**
      * Registers a given type (constructor function) in a specified namespace and builds some relational type properties.
      *
@@ -111,46 +114,10 @@ export declare namespace Types {
      */
     function dispose(object: IDisposable, release?: boolean): void;
 }
-export interface IClassFactory {
-}
-/** A 'Disposable' base type that implements 'IDisposable', which is the base for all DreamSpace objects that can be disposed. */
-export declare class Disposable implements IDisposable {
-    /**
-     * Releases the object back into the object pool. This is the default implementation which simply calls 'Types.dispose(this, release)'.
-     * If overriding, make sure to call 'super.dispose()' or 'Types.dispose()' to complete the disposal process.
-     * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
-     *                          false to request that child objects remain connected after disposal (not released). This
-     *                          can allow quick initialization of a group of objects, instead of having to pull each one
-     *                          from the object pool each time.
-     */
-    dispose(release?: boolean): void;
-}
 /** Returns true if the specified object can be disposed using this DreamSpace system. */
 export declare function isDisposable(instance: IDisposable): boolean;
-/** Returns true if the given type (function) represents a primitive type constructor. */
+/** Returns true if the given type (function) represents a primitive JavaScript type constructor. */
 export declare function isPrimitiveType(o: object): boolean;
-/**
- * Creates a 'Disposable' type from another base type. This is primarily used to extend primitive types.
- * Note: These types are NOT instances of 'DreamSpace.Disposable', since they must have prototype chains that link to other base types.
- * @param {TBaseClass} baseClass The base class to inherit from.
- * @param {boolean} isPrimitiveOrHostBase Set this to true when inheriting from primitive types. This is normally auto-detected, but can be forced in cases
- * where 'new.target' (ES6) prevents proper inheritance from host system base types that are not primitive types.
- * This is only valid if compiling your .ts source for ES5 while also enabling support for ES6 environments.
- * If you compile your .ts source for ES6 then the 'class' syntax will be used and this value has no affect.
- */
-export declare function makeDisposable<TBaseClass extends IType = ObjectConstructor>(baseClass: TBaseClass, isPrimitiveOrHostBase?: boolean): {
-    new (...args: any[]): {
-        /**
-        * Releases the object back into the object pool. This is the default implementation which simply calls 'Types.dispose(this, release)'.
-        * If overriding, make sure to call 'super.dispose()' or 'Types.dispose()' to complete the disposal process.
-        * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
-        *                          false to request that child objects remain connected after disposal (not released). This
-        *                          can allow quick initialization of a group of objects, instead of having to pull each one
-        *                          from the object pool each time.
-        */
-        dispose(release?: boolean): void;
-    };
-} & TBaseClass;
 declare type ExcludeNewInit<T extends {
     new (...args: any[]): any;
 }> = {
@@ -173,7 +140,7 @@ export declare function makeFactory<T extends IType = ObjectConstructor>(obj: T)
  * information in static properties for reference.
  * @param {TBaseFactory} baseFactoryType The factory that this factory type derives from.
 */
-export declare function Factory<TBaseFactory extends IType = ObjectConstructor>(baseFactoryType?: TBaseFactory & IFactory): FactoryBaseType<TBaseFactory>;
+export declare function Factory<TBaseFactory extends IFactory & IType = typeof Object>(baseFactoryType?: TBaseFactory): FactoryBaseType<TBaseFactory>;
 /**
 * Designates and registers a class as a factory class type (see also 'Types.__registerType()' for non-factory supported types).
 * Any static constructors defined will also be called at this point (use the 'DreamSpace.constructor' symbol to create static constructors if desired).

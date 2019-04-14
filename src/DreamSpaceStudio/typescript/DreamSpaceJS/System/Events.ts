@@ -8,7 +8,7 @@ declare module "../Globals" { namespace DreamSpace { export var onReady: typeof 
 import { IDelegate, Delegate } from "./Delegate";
 import { Factory, usingFactory, getTypeName, extendNS, factory } from "../Types";
 import { Exception } from "./Exception";
-import { DSObject, Array, DependentObject } from "./PrimitiveTypes";
+import { Object, Array, DependentObject } from "../PrimitiveTypes";
 import { getErrorMessage } from "../ErrorHandling";
 
 import { Browser } from "./Browser";
@@ -46,7 +46,7 @@ type THandlerInfo<TCallback extends EventHandler = EventHandler> = IDelegate<obj
   * instance level event handler registration on the class only when necessary.
   */
 @factory(this)
-class EventDispatcherFactory extends Factory(DSObject) {
+class EventDispatcherFactory extends Factory(Object) {
     /** Creates an event object for a specific even type.
         * @param {TOwner} owner The owner which owns this event object.
         * @param {string} eventName The name of the event which this event object represents.
@@ -499,10 +499,10 @@ export interface INotifyPropertyChanged<TSender extends IEventObject> {
     doPropertyChanged(name: string, oldValue: any): void;
 }
 
-export class EventObject extends Factory(DSObject) implements INotifyPropertyChanged<IEventObject> {
+export class EventObject extends Factory(Object) implements INotifyPropertyChanged<IEventObject> {
     /**
     * Constructs a new Delegate object.
-    * @param {DSObject} object The instance on which the associated function will be called.  This should be undefined/null for static functions.
+    * @param {Object} object The instance on which the associated function will be called.  This should be undefined/null for static functions.
     * @param {Function} func The function to be called on the associated object.
     */
     static 'new'(): IEventObject { return null; }

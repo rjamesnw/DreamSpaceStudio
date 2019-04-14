@@ -2,11 +2,13 @@
 // Application Domains
 // ###########################################################################################################################
 
-import { DreamSpace as DS } from "../Globals";
-import { DSObject } from "./PrimitiveTypes";
+import { DreamSpace as DS, IFunctionInfo } from "../Globals";
+import { Object } from "../PrimitiveTypes";
 import { Exception } from "./Exception";
 import { factory, Factory } from "../Types";
-import { Application } from "./AppDomain";
+import { Application, IAppDomain } from "./AppDomain";
+import { IGraphNode } from "./Platform.Graph";
+import { IWindow } from "./Platform.Windows";
 
 // =======================================================================================================================
 // Note: DreamSpace.Environments contains the default supported target environments (platforms).
@@ -35,7 +37,7 @@ export enum Contexts {
  * On the client side, this is accomplished by using IFrame objects.  On the server side, this is accomplished using
  * workers.  As well, on the client side, workers can be used to simulate server side communication during development.
  */
-export abstract class Context extends Factory(DSObject) {
+export abstract class Context extends Factory(Object) {
 
     /** Abstract: Cannot create instances of this abstract class. */
     static 'new'(): Context {
@@ -166,19 +168,8 @@ export class UIApplication extends Factory(Application) {
     }
 
     // ----------------------------------------------------------------------------------------------------------------
-
-    private static [DS.constructor](factory: typeof UIApplication) {
-        //factory.init = (o, isnew) => {
-        //};
-    }
 }
 
-export interface IUIApplication extends UIApplication.$__type { }
+export interface IUIApplication extends UIApplication { }
 
 // ====================================================================================================================
-
-export interface IDreamSpace extends IDS { Platform: typeof Platform; }
-(<IDreamSpace>DS).Platform = Platform;
-
-var DreamSpace = <IDreamSpace>DS;
-export default DreamSpace;

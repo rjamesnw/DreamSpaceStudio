@@ -1,12 +1,14 @@
 import { ResourceTypes, RequestStatuses } from "./Resources";
 import { IResultCallback, ICallback, IErrorCallback } from "./Globals";
 declare const ResourceRequest_base: {
-    new (): Object;
-    super: ObjectConstructor;
+    new (): import("./PrimitiveTypes").Object;
+    super: typeof import("./PrimitiveTypes").Object;
     'new'?(...args: any[]): any;
     init?(o: object, isnew: boolean, ...args: any[]): void;
 } & {
-    prototype: Object;
+    prototype: import("./PrimitiveTypes").Object;
+    getTypeName: typeof import("./PrimitiveTypes").Object.getTypeName;
+    isEmpty: typeof import("./PrimitiveTypes").Object.isEmpty;
     getPrototypeOf: (o: any) => any;
     getOwnPropertyDescriptor: (o: any, p: string | number | symbol) => PropertyDescriptor;
     getOwnPropertyNames: (o: any) => string[];

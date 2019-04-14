@@ -1,10 +1,4 @@
-﻿import { IO } from "./IO";
-import { Exception } from "./System/Exception";
-import { IResourceRequest } from "./ResourceRequest";
-import { log, LogTypes } from "./Logging";
-import { Path } from "./Path";
-
-// ###########################################################################################################################
+﻿// ###########################################################################################################################
 // These are functions for creating global scope variables/references that eliminate/minimize collisions between conflicting scripts.
 // Normally, each manifest and module gets its own local-global scope; however, in some cases, 3rd-party libraries do not 
 // expect or support dot-delimited object paths, so unfortunately a root global callback reference may be required in such cases.
@@ -12,6 +6,11 @@ import { Path } from "./Path";
 // Note: There's no need to use any of these functions directly from within manifest and module scripts.  Each has a local reference
 // using the identifiers 'this', 'manifest', or 'module' (accordingly), which provides functions for local-global scope storage.
 // ###########################################################################################################################
+
+import { Exception } from "./System/Exception";
+import { IResourceRequest } from "./ResourceRequest";
+import { log, LogTypes } from "./Logging";
+import { Path } from "./Path";
 
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
  * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.

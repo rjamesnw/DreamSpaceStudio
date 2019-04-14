@@ -6,7 +6,7 @@
  * @module Markup Contains types and functions to deal with HTML markup textual data.
  */
 
-import { DSObject } from "./PrimitiveTypes";
+import { Object } from "../PrimitiveTypes";
 import { Factory } from "../Types";
 import { Exception } from "./Exception";
 
@@ -33,7 +33,7 @@ export enum HTMLReaderModes {
   * Performance note: Since HTML can be large, it's not efficient to scan the HTML character by character. Instead, the HTML reader uses the native
   * RegEx engine to split up the HTML into chunks of delimiter text, which makes reading it much faster.
   */
-export class HTMLReader extends Factory(DSObject) {
+export class HTMLReader extends Factory(Object) {
     /**
          * Create a new HTMLReader instance to parse the given HTML text.
          * @param html The HTML text to parse.

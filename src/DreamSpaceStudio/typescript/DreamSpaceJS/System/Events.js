@@ -1,7 +1,7 @@
 // ############################################################################################################################
 // Types for event management.
 // ############################################################################################################################
-define(["require", "exports", "../Globals", "./Delegate", "../Types", "./Exception", "./PrimitiveTypes", "../ErrorHandling", "./Browser"], function (require, exports, Globals_1, Delegate_1, Types_1, Exception_1, PrimitiveTypes_1, ErrorHandling_1, Browser_1) {
+define(["require", "exports", "../Globals", "./Delegate", "../Types", "./Exception", "../PrimitiveTypes", "../ErrorHandling", "./Browser"], function (require, exports, Globals_1, Delegate_1, Types_1, Exception_1, PrimitiveTypes_1, ErrorHandling_1, Browser_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var EventDispatcher_1;
@@ -24,7 +24,7 @@ define(["require", "exports", "../Globals", "./Delegate", "../Types", "./Excepti
       * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
       * instance level event handler registration on the class only when necessary.
       */
-    let EventDispatcherFactory = class EventDispatcherFactory extends Types_1.Factory(PrimitiveTypes_1.DSObject) {
+    let EventDispatcherFactory = class EventDispatcherFactory extends Types_1.Factory(PrimitiveTypes_1.Object) {
         /** Creates an event object for a specific even type.
             * @param {TOwner} owner The owner which owns this event object.
             * @param {string} eventName The name of the event which this event object represents.
@@ -389,10 +389,10 @@ define(["require", "exports", "../Globals", "./Delegate", "../Types", "./Excepti
         Types_1.usingFactory(EventDispatcherFactory, this)
     ], EventDispatcher);
     exports.EventDispatcherInstance = EventDispatcher;
-    class EventObject extends Types_1.Factory(PrimitiveTypes_1.DSObject) {
+    class EventObject extends Types_1.Factory(PrimitiveTypes_1.Object) {
         /**
         * Constructs a new Delegate object.
-        * @param {DSObject} object The instance on which the associated function will be called.  This should be undefined/null for static functions.
+        * @param {Object} object The instance on which the associated function will be called.  This should be undefined/null for static functions.
         * @param {Function} func The function to be called on the associated object.
         */
         static 'new'() { return null; }

@@ -1,7 +1,7 @@
 // ###########################################################################################################################
 // Types for time management.
 // ###########################################################################################################################
-define(["require", "exports", "../Types", "./PrimitiveTypes", "../Globals", "./Exception"], function (require, exports, Types_1, PrimitiveTypes_1, Globals_1, Exception_1) {
+define(["require", "exports", "../Types", "../PrimitiveTypes", "../Globals", "./Exception"], function (require, exports, Types_1, PrimitiveTypes_1, Globals_1, Exception_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // =======================================================================================================================
@@ -13,7 +13,7 @@ define(["require", "exports", "../Types", "./PrimitiveTypes", "../Globals", "./E
      * Note: TimeSpan exposes the results as properties for fast access (rather than getters/setters), but changing individual properties does not
      * cause the other values to update.  Use the supplied functions for manipulating the values.
      */
-    class TimeSpan extends Types_1.Factory(PrimitiveTypes_1.DSObject) {
+    class TimeSpan extends Types_1.Factory(PrimitiveTypes_1.Object) {
         static init(o, isnew, year, dayOfYear, hours, minutes, seconds, milliseconds) {
             this.super.init(o, isnew);
             if (arguments.length <= 3)

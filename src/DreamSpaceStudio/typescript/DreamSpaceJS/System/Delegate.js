@@ -1,7 +1,7 @@
 // ###########################################################################################################################
 // Callback Delegates (serializable - closures should not be used)
 // ###########################################################################################################################
-define(["require", "exports", "../Globals", "../Types", "./PrimitiveTypes", "./Exception", "./Browser"], function (require, exports, Globals_1, Types_1, PrimitiveTypes_1, Exception_1, Browser_1) {
+define(["require", "exports", "../Globals", "../Types", "../PrimitiveTypes", "./Exception", "./Browser"], function (require, exports, Globals_1, Types_1, PrimitiveTypes_1, Exception_1, Browser_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Delegate_1;
@@ -15,7 +15,7 @@ define(["require", "exports", "../Globals", "../Types", "./PrimitiveTypes", "./E
      * serialized.
      * Note: If the target object is undefined, then 'null' is assumed and passed in as 'this'.
      */
-    class DelegateFactory extends Types_1.Factory(PrimitiveTypes_1.DSObject) {
+    class DelegateFactory extends Types_1.Factory(PrimitiveTypes_1.Object) {
         /**
         * Reinitializes a disposed Delegate instance.
         * @param o The Delegate instance to initialize, or re-initialize.
@@ -50,7 +50,7 @@ define(["require", "exports", "../Globals", "../Types", "./PrimitiveTypes", "./E
         }
     }
     exports.Delegate = DelegateFactory;
-    let Delegate = Delegate_1 = class Delegate extends PrimitiveTypes_1.DSObject {
+    let Delegate = Delegate_1 = class Delegate extends PrimitiveTypes_1.Object {
         //? static readonly $Type = $Delegate;
         [Globals_1.DreamSpace.constructor](factory) {
             /** Generates "case" statements for function templates.  The function template is converted into a string, the resulting cases get inserted,
@@ -141,7 +141,7 @@ define(["require", "exports", "../Globals", "../Types", "./PrimitiveTypes", "./E
                 Exception_1.Exception.error("Delegate", "The function value is not a function:\r\n {Delegate}.func = " + this.func, this.func);
             if (this.func.bind)
                 this.__boundFunc = this.func.bind(this, this.object); // (this can be faster in some cases [i.e. IE])
-            if (this.object instanceof PrimitiveTypes_1.DSObject)
+            if (this.object instanceof PrimitiveTypes_1.Object)
                 this.__key = DelegateFactory.getKey(this.object, this.func); // (this also validates the properties first)
             else
                 this.__key = void 0;

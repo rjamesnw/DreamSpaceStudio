@@ -1,13 +1,13 @@
-﻿import { log, error, LogTypes } from "./Logging";
-import { Exception } from "./System/Exception";
+﻿// ###########################################################################################################################
+/** @module Types Shared types and interfaces, and provides functions for type management. */
+// ###########################################################################################################################
+
+import { log, error, LogTypes } from "./Logging";
 import { IDomainObjectInfo, IADBridge, AppDomain } from "./System/AppDomain";
 import { Utilities } from "./Utilities";
 import { Delegate } from "./System/Delegate";
 import { DreamSpace as DS, IDisposable, ITypeInfo, IFactoryTypeInfo, IType, IFactory, IClassInfo, IFunctionInfo, INamespaceInfo, InitDelegate, NewDelegate } from "./Globals";
-
-// ###########################################################################################################################
-// Types for event management.
-// ###########################################################################################################################
+import { Object } from "./PrimitiveTypes";
 
 /** Returns the name of a namespace or variable reference at runtime. */
 export function nameof(selector: () => any, fullname = false): string {
@@ -108,6 +108,7 @@ export function extendNS(selector: () => any, name: string | (() => any)) {
 
 // ###########################################################################################################################
 
+/** Contains functions to work with types within the system. */
 export namespace Types {
     /** Returns the root type object from nested type objects. Use this to get the root namespace  */
     export function getRoot(type: ITypeInfo): ITypeInfo {
@@ -247,7 +248,7 @@ export namespace Types {
      * applied (using the IFunctionInfo interface).
     */
     export function __registerFactoryType<TClass extends IType, TFactory extends IFactory>
-        (instanceType: TClass, factoryType: TFactory, moduleSpace: Object, addMemberTypeInfo = true) {
+        (instanceType: TClass, factoryType: TFactory, moduleSpace: object, addMemberTypeInfo = true) {
 
         if (!(<IFactoryTypeInfo><any>factory).$__type)
             throw "__registerFactoryType() error: 'factoryType' (" + getTypeName(factoryType) + ") is not a valid factory, or you forgot to use the '@factory()' decorator to register it."
@@ -405,7 +406,7 @@ export namespace Types {
         var nsOrTypeName = rootTypeName;
         log("Registering namespace for root '" + rootTypeName + "'", namespaces.join());
 
-        var currentNamespace = <INamespaceInfo>root;
+        var currentNamespace = <INamespaceInfo & IndexedObject>root;
         var fullname = (<ITypeInfo>root).$__fullname || "";
 
         if (root != DS.global && !fullname)
@@ -503,28 +504,13 @@ export namespace Types {
     }
 }
 
-export interface IClassFactory { }
-
-/** A 'Disposable' base type that implements 'IDisposable', which is the base for all DreamSpace objects that can be disposed. */
-export class Disposable implements IDisposable {
-    /** 
-     * Releases the object back into the object pool. This is the default implementation which simply calls 'Types.dispose(this, release)'.
-     * If overriding, make sure to call 'super.dispose()' or 'Types.dispose()' to complete the disposal process.
-     * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
-     *                          false to request that child objects remain connected after disposal (not released). This
-     *                          can allow quick initialization of a group of objects, instead of having to pull each one
-     *                          from the object pool each time.
-     */
-    dispose(release?: boolean): void { Types.dispose(this, release); }
-}
-
 /** Returns true if the specified object can be disposed using this DreamSpace system. */
 export function isDisposable(instance: IDisposable) {
     if (instance.$__ds != DS) return false;
     return typeof instance.dispose == 'function';
 }
 
-/** Returns true if the given type (function) represents a primitive type constructor. */
+/** Returns true if the given type (function) represents a primitive JavaScript type constructor. */
 export function isPrimitiveType(o: object) {
     var symbol = typeof Symbol != 'undefined' ? Symbol : Object; // (not supported in IE11)
     return (<object>o == Object || <object>o == Array || <object>o == Boolean || <object>o == String
@@ -532,44 +518,6 @@ export function isPrimitiveType(o: object) {
         || <object>o == RegExp || <object>o == Error);
 }
 
-/** 
- * Creates a 'Disposable' type from another base type. This is primarily used to extend primitive types.
- * Note: These types are NOT instances of 'DreamSpace.Disposable', since they must have prototype chains that link to other base types.
- * @param {TBaseClass} baseClass The base class to inherit from.
- * @param {boolean} isPrimitiveOrHostBase Set this to true when inheriting from primitive types. This is normally auto-detected, but can be forced in cases
- * where 'new.target' (ES6) prevents proper inheritance from host system base types that are not primitive types.
- * This is only valid if compiling your .ts source for ES5 while also enabling support for ES6 environments. 
- * If you compile your .ts source for ES6 then the 'class' syntax will be used and this value has no affect.
- */
-export function makeDisposable<TBaseClass extends IType = ObjectConstructor>(baseClass: TBaseClass, isPrimitiveOrHostBase?: boolean) {
-    if (!baseClass) {
-        baseClass = <any>DS.global.Object;
-        isPrimitiveOrHostBase = true;
-    }
-    else if (typeof isPrimitiveOrHostBase == 'undefined') isPrimitiveOrHostBase = isPrimitiveType(baseClass);
-
-    var cls = class Disposable extends baseClass implements IDisposable {
-        /**
-        * Don't create objects using the 'new' operator. Use '{NameSpaces...ClassType}.new()' static methods instead.
-        */
-        constructor(...args: any[]) {
-            if (!DS.ES6Targeted && isPrimitiveOrHostBase)
-                eval("var _super = function() { return null; };"); // (ES6 fix for extending built-in types [calling constructor not supported prior] when compiling for ES5; more details on it here: https://github.com/Microsoft/TypeScript/wiki/FAQ#why-doesnt-extending-built-ins-like-error-array-and-map-work)
-            super(...args);
-        }
-        /** 
-        * Releases the object back into the object pool. This is the default implementation which simply calls 'Types.dispose(this, release)'.
-        * If overriding, make sure to call 'super.dispose()' or 'Types.dispose()' to complete the disposal process.
-        * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
-        *                          false to request that child objects remain connected after disposal (not released). This
-        *                          can allow quick initialization of a group of objects, instead of having to pull each one
-        *                          from the object pool each time.
-        */
-        dispose(release?: boolean): void { }
-    }
-    cls.prototype.dispose = Disposable.prototype.dispose; // (make these functions both the same function reference by default)
-    return cls;
-}
 type ExcludeNewInit<T extends { new(...args: any[]): any }> = { [P in Exclude<keyof T, 'new' | 'init'>]: T[P] };
 type FactoryBaseType<T extends IType> =
     {
@@ -604,7 +552,7 @@ export function makeFactory<T extends IType = ObjectConstructor>(obj: T): T & IF
  * information in static properties for reference.
  * @param {TBaseFactory} baseFactoryType The factory that this factory type derives from.
 */
-export function Factory<TBaseFactory extends IType = ObjectConstructor>(baseFactoryType?: TBaseFactory & IFactory)
+export function Factory<TBaseFactory extends IFactory & IType = typeof Object>(baseFactoryType?: TBaseFactory)
     : FactoryBaseType<TBaseFactory> {
 
     if (!(<IFactoryTypeInfo><any>baseFactoryType).$__type)
@@ -612,7 +560,7 @@ export function Factory<TBaseFactory extends IType = ObjectConstructor>(baseFact
         + " If the base is a generic-type factory, make sure to use '@usingFactory()' on the generic instance class associated with the factory.";
 
     if (typeof baseFactoryType != 'function')
-        baseFactoryType = <any>DS.global.Object;
+        baseFactoryType = <any>Object;
 
     var cls = class FactoryBase extends (<any>baseFactoryType) {
         //x /** Set to true when the object is being disposed. By default this is undefined.  This is only set to true when 'dispose()' is first call to prevent cyclical calls. */

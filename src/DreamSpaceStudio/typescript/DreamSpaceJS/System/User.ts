@@ -1,4 +1,4 @@
-﻿import { DSObject } from "./PrimitiveTypes";
+﻿import { Object } from "../PrimitiveTypes";
 import { EventDispatcher } from "./Events";
 import { UserAccess } from "./Security";
 
@@ -7,7 +7,7 @@ import { UserAccess } from "./Security";
 /** The current user of the FlowScript system. 
  * The user 'id' (a GUID) is used as the root directory for projects.
  */
-export class User extends DSObject {
+export class User extends Object {
 
     /** Returns the current user object. */
     static get current() { return _currentUser; }

@@ -1,14 +1,14 @@
+// ###########################################################################################################################
+// These are functions for creating global scope variables/references that eliminate/minimize collisions between conflicting scripts.
+// Normally, each manifest and module gets its own local-global scope; however, in some cases, 3rd-party libraries do not 
+// expect or support dot-delimited object paths, so unfortunately a root global callback reference may be required in such cases.
+// DreamSpace.Globals contains functions to help deal with this as it relates to loading modules.
+// Note: There's no need to use any of these functions directly from within manifest and module scripts.  Each has a local reference
+// using the identifiers 'this', 'manifest', or 'module' (accordingly), which provides functions for local-global scope storage.
+// ###########################################################################################################################
 define(["require", "exports", "./System/Exception", "./Logging", "./Path"], function (require, exports, Exception_1, Logging_1, Path_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    // ###########################################################################################################################
-    // These are functions for creating global scope variables/references that eliminate/minimize collisions between conflicting scripts.
-    // Normally, each manifest and module gets its own local-global scope; however, in some cases, 3rd-party libraries do not 
-    // expect or support dot-delimited object paths, so unfortunately a root global callback reference may be required in such cases.
-    // DreamSpace.Globals contains functions to help deal with this as it relates to loading modules.
-    // Note: There's no need to use any of these functions directly from within manifest and module scripts.  Each has a local reference
-    // using the identifiers 'this', 'manifest', or 'module' (accordingly), which provides functions for local-global scope storage.
-    // ###########################################################################################################################
     /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
      * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.
      * Note: A symbol is not used, since callbacks placed into API URLs must be strings. Instead, a static pre-generated GUID is appended.

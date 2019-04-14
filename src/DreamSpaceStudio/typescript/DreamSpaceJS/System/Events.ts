@@ -2,6 +2,7 @@
 // Types for event management.
 // ############################################################################################################################
 
+export * from "../Globals";
 import { DreamSpace as DS } from "../Globals";
 declare module "../Globals" { namespace DreamSpace { export var onReady: typeof DreamSpace_Ext.onReady; } } // (augmented with a "ready" event)
 

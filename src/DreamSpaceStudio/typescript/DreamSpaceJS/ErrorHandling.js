@@ -1,5 +1,4 @@
-// =======================================================================================================================
-define(["require", "exports"], function (require, exports) {
+define(["require", "exports", "./System/Diagnostics", "./Scripts", "./Types"], function (require, exports, Diagnostics_1, Scripts_1, Types_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     /** Returns the call stack for a given error object. */
@@ -44,15 +43,15 @@ define(["require", "exports"], function (require, exports) {
         if (typeof errorSource == 'string')
             return errorSource;
         else if (typeof errorSource == 'object') {
-            if (System && System.Diagnostics && System.Diagnostics.LogItem && errorSource instanceof System.Diagnostics.LogItem.$__type) {
+            if (Diagnostics_1.Diagnostics && Diagnostics_1.Diagnostics.LogItem && errorSource instanceof Diagnostics_1.Diagnostics.LogItem) {
                 return errorSource.toString();
             }
             else if ('message' in errorSource) { // (this should support both 'Exception' AND 'Error' objects)
                 var errorInfo = errorSource;
                 var error = errorSource instanceof Error ? errorSource : errorSource instanceof ErrorEvent ? errorSource.error : null;
-                var msg = '' + (Scripts && Scripts.ScriptError && (errorSource instanceof Scripts.ScriptError)
+                var msg = '' + (Scripts_1.ScriptError && (errorSource instanceof Scripts_1.ScriptError)
                     ? errorSource.error && errorSource.error.message || errorSource.error && errorInfo.error : (errorInfo.message || errorInfo.reason || errorInfo.type));
-                var fname = errorInfo instanceof Function ? getTypeName(errorInfo, false) : errorInfo.functionName;
+                var fname = errorInfo instanceof Function ? Types_1.getTypeName(errorInfo, false) : errorInfo.functionName;
                 var sourceLocation = errorInfo.fileName || errorInfo.filename || errorInfo.url;
                 if (fname)
                     msg = "(" + fname + ") " + msg;

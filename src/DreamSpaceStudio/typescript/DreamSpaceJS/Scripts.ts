@@ -114,6 +114,14 @@ export interface IScriptResource extends ScriptResource { }
 
 // ====================================================================================================================
 
+export interface IScriptInfoList {
+    [index: string]: IScriptInfo;
+}
+
+export class ScriptInfoList implements IScriptInfoList {
+    [index: string]: IScriptInfo;
+}
+
 /**
 * Represents a loaded manifest that describes some underlying resource (typically JavaScript).
 * 'Manifest' inherits from 'ScriptResource', providing the loaded manifests the ability to register globals for the
@@ -124,7 +132,12 @@ export class Manifest extends Factory(ScriptResource) {
     /** Holds variables required for manifest execution (for example, callback functions for 3rd party libraries, such as the Google Maps API). */
     static 'new': (url: string) => IManifest;
     /** Holds variables required for manifest execution (for example, callback functions for 3rd party libraries, such as the Google Maps API). */
-    static init: (o: IManifest, isnew: boolean, url: string) => void;
+    static init(o: IManifest, isnew: boolean, url: string): void {
+        this.super.init(o, isnew, url, ResourceTypes.Application_Script);
+    }
+
+    /** Holds multiple versions of script libraries in a single manifest. */
+    scripts: IScriptInfoList;
 
     /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DS.Globals' and 'Globals.register()'. */
     registerGlobal<T>(name: string, initialValue: T, asHostGlobal?: boolean): string {
@@ -149,12 +162,6 @@ export class Manifest extends Factory(ScriptResource) {
     /** For help, see 'DS.Globals'. */
     getGlobalValue<T>(name: string): T {
         return Globals.getValue<T>(this, name);
-    }
-
-    private static [DS.constructor](factory: typeof ScriptResource) {
-        factory.init = (o, isnew, url) => {
-            factory.super.init(o, isnew, url, ResourceTypes.Application_Script);
-        };
     }
 }
 
@@ -444,6 +451,28 @@ export class Module extends Factory(ScriptResource) {
 }
 
 export interface IModule extends InstanceType<typeof Module> { }
+
+export interface IScriptInfo {
+    /** The internal module reference that a module manifest represents. */
+    module?: IModule;
+
+    /** The path and name of the script to load for this module. */
+    scriptInfo: { filename: string; path: string; };
+
+    /** Fires when a module's dependencies are all loaded. 
+     * This is where you can call functions that need to run immediately after a script loads; such as 'jQuery.holdReady()'.
+     */
+    onReady?(): void;
+
+    /** Fires when the underlying script fails to load. */
+    onLoadError?(): void;
+
+    /** Fires when the underlying script fails to execute. */
+    onExecuteError?(): void;
+
+    /** Fires when one or more dependencies fail to load. The module name and error are given. */
+    onDependencyError?(moduleName: string, errorMsg: string): void;
+}
 
 var _runMode = 0; // (0=auto run, depending on debug flag; 1=user has requested run before the app module was ready; 2=running)
 

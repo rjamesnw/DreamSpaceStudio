@@ -92,6 +92,12 @@ export declare class ScriptResource extends ScriptResource_base {
 }
 export interface IScriptResource extends ScriptResource {
 }
+export interface IScriptInfoList {
+    [index: string]: IScriptInfo;
+}
+export declare class ScriptInfoList implements IScriptInfoList {
+    [index: string]: IScriptInfo;
+}
 declare const Manifest_base: {
     new (): ScriptResource;
     super: typeof ScriptResource;
@@ -143,7 +149,9 @@ export declare class Manifest extends Manifest_base {
     /** Holds variables required for manifest execution (for example, callback functions for 3rd party libraries, such as the Google Maps API). */
     static 'new': (url: string) => IManifest;
     /** Holds variables required for manifest execution (for example, callback functions for 3rd party libraries, such as the Google Maps API). */
-    static init: (o: IManifest, isnew: boolean, url: string) => void;
+    static init(o: IManifest, isnew: boolean, url: string): void;
+    /** Holds multiple versions of script libraries in a single manifest. */
+    scripts: IScriptInfoList;
     /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DS.Globals' and 'Globals.register()'. */
     registerGlobal<T>(name: string, initialValue: T, asHostGlobal?: boolean): string;
     /** For help, see 'DS.Globals'. */
@@ -292,6 +300,25 @@ export declare class Module extends Module_base {
     execute(useGlobalScope?: boolean): void;
 }
 export interface IModule extends InstanceType<typeof Module> {
+}
+export interface IScriptInfo {
+    /** The internal module reference that a module manifest represents. */
+    module?: IModule;
+    /** The path and name of the script to load for this module. */
+    scriptInfo: {
+        filename: string;
+        path: string;
+    };
+    /** Fires when a module's dependencies are all loaded.
+     * This is where you can call functions that need to run immediately after a script loads; such as 'jQuery.holdReady()'.
+     */
+    onReady?(): void;
+    /** Fires when the underlying script fails to load. */
+    onLoadError?(): void;
+    /** Fires when the underlying script fails to execute. */
+    onExecuteError?(): void;
+    /** Fires when one or more dependencies fail to load. The module name and error are given. */
+    onDependencyError?(moduleName: string, errorMsg: string): void;
 }
 /** Used internally to see if the application should run automatically. Developers should NOT call this directly and call 'runApp()' instead. */
 export declare function _tryRunApp(): void;

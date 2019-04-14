@@ -1,3 +1,7 @@
+import { Diagnostics } from "./System/Diagnostics";
+import { ScriptError } from "./Scripts";
+import { getTypeName } from "./Types";
+
 // =======================================================================================================================
 
 interface _IError {
@@ -59,12 +63,12 @@ export function getErrorMessage(errorSource: any): string { // TODO: Test how th
     if (typeof errorSource == 'string')
         return errorSource;
     else if (typeof errorSource == 'object') {
-        if (System && System.Diagnostics && System.Diagnostics.LogItem && errorSource instanceof System.Diagnostics.LogItem.$__type) {
+        if (Diagnostics && Diagnostics.LogItem && errorSource instanceof Diagnostics.LogItem) {
             return errorSource.toString();
         } else if ('message' in errorSource) { // (this should support both 'Exception' AND 'Error' objects)
             var errorInfo: _IError = errorSource;
             var error: Error = errorSource instanceof Error ? errorSource : errorSource instanceof ErrorEvent ? errorSource.error : null;
-            var msg = '' + (Scripts && Scripts.ScriptError && (errorSource instanceof Scripts.ScriptError)
+            var msg = '' + (ScriptError && (errorSource instanceof ScriptError)
                 ? errorSource.error && errorSource.error.message || errorSource.error && errorInfo.error : (errorInfo.message || errorInfo.reason || errorInfo.type));
             var fname = errorInfo instanceof Function ? getTypeName(errorInfo, false) : errorInfo.functionName;
             var sourceLocation = errorInfo.fileName || errorInfo.filename || errorInfo.url;

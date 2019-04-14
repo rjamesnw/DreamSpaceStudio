@@ -11,6 +11,7 @@
   },
   "main": "app.js",
   "dependencies": {
+    "@types/jquery": "^3.3.29",
     "debug": "^2.2.0",
     "express": "^4.14.0",
     "monaco-editor": "^0.16.2",

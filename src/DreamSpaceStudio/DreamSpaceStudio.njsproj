@@ -61,7 +61,7 @@
     <TypeScriptCompile Include="typescript\DreamSpaceJS\HoldOn\manifest.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\HostBridge.ICE.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\HostBridge.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\JQuery\manifest.ts" />
+    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\JQuery\manifest.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\Linq4JS\manifest.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\manifest.ts" />
     <TypeScriptCompile Include="typescript\DreamSpaceJS\MomentJS\manifest.ts" />

@@ -1,22 +1,22 @@
 ﻿/// <reference path="../../manifest.ts" />
 // #######################################################################################
 
-namespace DreamSpace.Scripts.Modules {
+import { IO } from "../../IO";
+import { JQuery } from "../../JQuery/manifest";
+
+/**
+ * Plugins by Stefan Petre (http://www.eyecon.ro/bootstrap-datepicker/).
+ */
+export namespace Eyecon_ro {
+    // ===================================================================================
+
     /**
-     * Plugins by Stefan Petre (http://www.eyecon.ro/bootstrap-datepicker/).
+     * A date picker.
      */
-    export namespace Eyecon_ro {
-        using: JQuery.Latest;
+    export var Datepicker = module([JQuery.V2_2_0], 'bootstrap-datepicker', '~Helpers/Eyecon/js/')
+        .require(IO.get("~eyecon.ro/css/datepicker.css"));
 
-        // ===================================================================================
-
-        /**
-         * A date picker.
-         */
-        export var Datepicker = module([JQuery.V2_2_0], 'bootstrap-datepicker', '~Helpers/Eyecon/js/')
-            .require(DreamSpace.System.IO.get("~eyecon.ro/css/datepicker.css"));
-
-        // ===================================================================================
-    }
+    // ===================================================================================
 }
+
 // #######################################################################################

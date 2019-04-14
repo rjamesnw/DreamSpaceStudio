@@ -116,10 +116,10 @@ declare const UIApplication_base: {
     is: (value1: any, value2: any) => boolean;
     setPrototypeOf: (o: any, proto: object) => any;
     default: import("./AppDomain").IApplication;
+    super: typeof Object;
     current: import("./AppDomain").IApplication;
     applications: import("./AppDomain").IApplication[];
     focused: import("./AppDomain").IApplication;
-    super: typeof Object;
 };
 /**
   * Where the Application object represents the base application properties for an AppDomain instance, the UIApplication

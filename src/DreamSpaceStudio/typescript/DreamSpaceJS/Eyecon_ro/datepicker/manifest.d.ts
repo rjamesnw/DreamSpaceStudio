@@ -1,12 +1,10 @@
 /// <reference path="../../manifest.d.ts" />
-declare namespace DreamSpace.Scripts.Modules {
+/**
+ * Plugins by Stefan Petre (http://www.eyecon.ro/bootstrap-datepicker/).
+ */
+export declare namespace Eyecon_ro {
     /**
-     * Plugins by Stefan Petre (http://www.eyecon.ro/bootstrap-datepicker/).
+     * A date picker.
      */
-    namespace Eyecon_ro {
-        /**
-         * A date picker.
-         */
-        var Datepicker: any;
-    }
+    var Datepicker: any;
 }

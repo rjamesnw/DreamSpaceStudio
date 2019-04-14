@@ -1,3 +1,4 @@
+export * from "../Globals";
 import { DreamSpace as DS } from "../Globals";
 declare module "../Globals" {
     namespace DreamSpace {

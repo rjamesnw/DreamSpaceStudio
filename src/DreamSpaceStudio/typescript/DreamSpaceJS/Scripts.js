@@ -93,13 +93,19 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
         Types_1.factory(this)
     ], ScriptResource);
     exports.ScriptResource = ScriptResource;
-    // ====================================================================================================================
+    class ScriptInfoList {
+    }
+    exports.ScriptInfoList = ScriptInfoList;
     /**
     * Represents a loaded manifest that describes some underlying resource (typically JavaScript).
     * 'Manifest' inherits from 'ScriptResource', providing the loaded manifests the ability to register globals for the
     * DreamSpace context, instead of the global 'window' context.
     */
     let Manifest = class Manifest extends Types_1.Factory(ScriptResource) {
+        /** Holds variables required for manifest execution (for example, callback functions for 3rd party libraries, such as the Google Maps API). */
+        static init(o, isnew, url) {
+            this.super.init(o, isnew, url, Resources_1.ResourceTypes.Application_Script);
+        }
         /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DS.Globals' and 'Globals.register()'. */
         registerGlobal(name, initialValue, asHostGlobal) {
             return Globals.register(this, name, initialValue, asHostGlobal);
@@ -123,11 +129,6 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
         /** For help, see 'DS.Globals'. */
         getGlobalValue(name) {
             return Globals.getValue(this, name);
-        }
-        static [Globals_1.DreamSpace.constructor](factory) {
-            factory.init = (o, isnew, url) => {
-                factory.super.init(o, isnew, url, Resources_1.ResourceTypes.Application_Script);
-            };
         }
     };
     Manifest = __decorate([

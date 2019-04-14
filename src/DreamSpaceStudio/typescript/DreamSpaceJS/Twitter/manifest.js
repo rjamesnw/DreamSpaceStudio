@@ -1,6 +1,6 @@
 /// <reference path="../manifest.ts" />
 /// <reference path="corext.system.platform.ui.bootstrap.ts" />
-/// <reference path="../jquery/manifest.ts" />
+/// <reference path="../JQuery/manifest.ts" />
 // #######################################################################################
 var DreamSpace;
 (function (DreamSpace) {
@@ -14,7 +14,7 @@ var DreamSpace;
                 // ===================================================================================
                 /** The Twitter Bootstrap JS module (the Bootstrap script file only, nothing more).
                 */
-                Twitter.Bootstrap = module([Modules.JQuery], 'bootstrap{min:.min}', '~js/').then((modInfo) => {
+                Twitter.Bootstrap = module([JQuery], 'bootstrap{min:.min}', '~js/').then((modInfo) => {
                     return true;
                 });
                 // ===================================================================================

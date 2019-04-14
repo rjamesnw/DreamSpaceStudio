@@ -1,10 +1,14 @@
 // ############################################################################################################################
 // Types for event management.
 // ############################################################################################################################
-define(["require", "exports", "../Globals", "./Delegate", "../Types", "./Exception", "../PrimitiveTypes", "../ErrorHandling", "./Browser"], function (require, exports, Globals_1, Delegate_1, Types_1, Exception_1, PrimitiveTypes_1, ErrorHandling_1, Browser_1) {
+define(["require", "exports", "../Globals", "../Globals", "./Delegate", "../Types", "./Exception", "../PrimitiveTypes", "../ErrorHandling", "./Browser"], function (require, exports, Globals_1, Globals_2, Delegate_1, Types_1, Exception_1, PrimitiveTypes_1, ErrorHandling_1, Browser_1) {
     "use strict";
+    function __export(m) {
+        for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+    }
     Object.defineProperty(exports, "__esModule", { value: true });
     var EventDispatcher_1;
+    __export(Globals_1);
     ;
     ;
     /** Controls how the event progression occurs. */
@@ -250,7 +254,7 @@ define(["require", "exports", "../Globals", "./Delegate", "../Types", "./Excepti
          * This method allows scheduling events to fire after current script execution completes.
          */
         dispatchAsync(...args) { return void 0; }
-        static [Globals_1.DreamSpace.constructor](factory) {
+        static [Globals_2.DreamSpace.constructor](factory) {
             function getTriggerFunc(args) {
                 //x args.push(void 0, this); // (add 2 optional items on end)
                 //x var dataIndex = args.length - 2; // (set the index where the data should be set when each handler gets called)
@@ -335,7 +339,7 @@ define(["require", "exports", "../Globals", "./Delegate", "../Types", "./Excepti
             for (var i = this.__listeners.length - 1; i >= 0; --i)
                 this.__removeListener(i);
         }
-        static [Globals_1.DreamSpace.constructor](factory) {
+        static [Globals_2.DreamSpace.constructor](factory) {
             factory.init = (o, isnew, owner, eventName, removeOnTrigger = false, eventTriggerHandler = null, canCancel = true) => {
                 factory.super.init(o, isnew);
                 if (typeof eventName !== 'string')
@@ -420,7 +424,7 @@ define(["require", "exports", "../Globals", "./Delegate", "../Types", "./Excepti
             if (this.onPropertyChanged)
                 this.onPropertyChanged.dispatch(this, oldValue);
         }
-        static [Globals_1.DreamSpace.constructor](factory) {
+        static [Globals_2.DreamSpace.constructor](factory) {
             factory.init = (o, isnew) => {
             };
         }
@@ -438,8 +442,8 @@ define(["require", "exports", "../Globals", "./Delegate", "../Types", "./Excepti
         /** Triggered when all manifests have loaded. No modules have been executed at this point.
           * Note: 'onReady' is not called automatically if 'DreamSpace.System.Diagnostics.debug' is set to 'Debug_Wait'.
           */
-        DreamSpace_Ext.onReady = EventDispatcherFactory.new(Globals_1.DreamSpace, "onReady", true);
-        Globals_1.DreamSpace.onReady = DreamSpace_Ext.onReady;
+        DreamSpace_Ext.onReady = EventDispatcherFactory.new(Globals_2.DreamSpace, "onReady", true);
+        Globals_2.DreamSpace.onReady = DreamSpace_Ext.onReady;
     })(DreamSpace_Ext || (DreamSpace_Ext = {}));
 });
 // ############################################################################################################################

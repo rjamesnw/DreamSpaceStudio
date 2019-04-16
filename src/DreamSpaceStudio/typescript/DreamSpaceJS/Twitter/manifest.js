@@ -1,6 +1,6 @@
 /// <reference path="../manifest.ts" />
 /// <reference path="corext.system.platform.ui.bootstrap.ts" />
-/// <reference path="../JQuery/manifest.ts" />
+/// <reference path="../JQuery/v2_2_0.ts" />
 // #######################################################################################
 var DreamSpace;
 (function (DreamSpace) {

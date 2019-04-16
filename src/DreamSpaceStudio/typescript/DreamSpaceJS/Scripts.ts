@@ -342,7 +342,18 @@ export class Module extends Factory(ScriptResource) {
     /** Returns a new module object only - does not load it. */
     static 'new': (fullname: string, url: string, minifiedUrl?: string) => IModule;
     /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
-    static init: (o: IModule, isnew: boolean, fullname: string, url: string, minifiedUrl?: string) => void;
+    static init(o: IModule, isnew: boolean, fullname: string, url: string, minifiedUrl?: string): void {
+        this.super.init(o, isnew, DS.isDebugging ? url : (minifiedUrl || url));
+
+        if (!o.type) // (if the base resource loader fails to initialize, then another resource already exists for the same location)
+            throw Exception.from("Duplicate module load request: A previous request for '" + url + "' was already made.", o);
+
+        o.fullname = fullname;
+        o.nonMinifiedURL = url;
+        o.minifiedURL = minifiedUrl;
+
+        o.then(o.__onLoaded).ready(o.__onReady);
+    }
 
     /** The full type name for this module. */
     fullname: string;
@@ -432,21 +443,6 @@ export class Module extends Factory(ScriptResource) {
 
             this.status = RequestStatuses.Executed;
         }
-    }
-
-    private static [DS.constructor](factory: typeof Module) {
-        factory.init = (o, isnew, fullname, url, minifiedUrl?) => {
-            factory.super.init(o, isnew, DS.isDebugging ? url : (minifiedUrl || url));
-
-            if (!o.type) // (if the base resource loader fails to initialize, then another resource already exists for the same location)
-                throw Exception.from("Duplicate module load request: A previous request for '" + url + "' was already made.", o);
-
-            o.fullname = fullname;
-            o.nonMinifiedURL = url;
-            o.minifiedURL = minifiedUrl;
-
-            o.then(o.__onLoaded).ready(o.__onReady);
-        };
     }
 }
 

@@ -115,8 +115,8 @@ declare const UIApplication_base: {
     getOwnPropertySymbols: (o: any) => symbol[];
     is: (value1: any, value2: any) => boolean;
     setPrototypeOf: (o: any, proto: object) => any;
-    default: import("./AppDomain").IApplication;
     super: typeof Object;
+    default: import("./AppDomain").IApplication;
     current: import("./AppDomain").IApplication;
     applications: import("./AppDomain").IApplication[];
     focused: import("./AppDomain").IApplication;

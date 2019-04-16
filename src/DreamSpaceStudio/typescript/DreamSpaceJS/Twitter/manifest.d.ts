@@ -1,6 +1,6 @@
 /// <reference path="../manifest.d.ts" />
 /// <reference path="CoreXT.System.Platform.UI.Bootstrap.d.ts" />
-/// <reference path="../JQuery/manifest.d.ts" />
+/// <reference path="../JQuery/v2_2_0.d.ts" />
 declare namespace DreamSpace.Scripts.Modules {
     /** Twitter related plugins. */
     namespace Twitter {

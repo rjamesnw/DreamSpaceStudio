@@ -2,14 +2,15 @@
 // #######################################################################################
 
 import { IO } from "../../IO";
-import { JQuery } from "../../JQuery/manifest";
+import JQ from "../../JQuery/v2_2_0";
+
 
 /**
  * Plugins by Stefan Petre (http://www.eyecon.ro/bootstrap-datepicker/).
  */
 export namespace Eyecon_ro {
     // ===================================================================================
-
+    
     /**
      * A date picker.
      */

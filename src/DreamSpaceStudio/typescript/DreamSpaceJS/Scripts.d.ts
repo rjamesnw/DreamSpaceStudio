@@ -259,7 +259,7 @@ export declare class Module extends Module_base {
     /** Returns a new module object only - does not load it. */
     static 'new': (fullname: string, url: string, minifiedUrl?: string) => IModule;
     /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
-    static init: (o: IModule, isnew: boolean, fullname: string, url: string, minifiedUrl?: string) => void;
+    static init(o: IModule, isnew: boolean, fullname: string, url: string, minifiedUrl?: string): void;
     /** The full type name for this module. */
     fullname: string;
     /** The URL to the non-minified version of this module script. */

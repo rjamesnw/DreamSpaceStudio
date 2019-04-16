@@ -328,6 +328,16 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
               */
             this.exports = {};
         }
+        /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
+        static init(o, isnew, fullname, url, minifiedUrl) {
+            this.super.init(o, isnew, Globals_1.DreamSpace.isDebugging ? url : (minifiedUrl || url));
+            if (!o.type) // (if the base resource loader fails to initialize, then another resource already exists for the same location)
+                throw Exception_1.Exception.from("Duplicate module load request: A previous request for '" + url + "' was already made.", o);
+            o.fullname = fullname;
+            o.nonMinifiedURL = url;
+            o.minifiedURL = minifiedUrl;
+            o.then(o.__onLoaded).ready(o.__onReady);
+        }
         isInclude() { return this.url && this.fullname == this.url; }
         __onLoaded() {
             // ... script is loaded (not executed), but may be waiting on dependencies; for now, check for in-script dependencies/flags and apply those now ...
@@ -372,17 +382,6 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
                 this.setVar = this._moduleGlobalAccessors.set;
                 this.status = Resources_1.RequestStatuses.Executed;
             }
-        }
-        static [Globals_1.DreamSpace.constructor](factory) {
-            factory.init = (o, isnew, fullname, url, minifiedUrl) => {
-                factory.super.init(o, isnew, Globals_1.DreamSpace.isDebugging ? url : (minifiedUrl || url));
-                if (!o.type) // (if the base resource loader fails to initialize, then another resource already exists for the same location)
-                    throw Exception_1.Exception.from("Duplicate module load request: A previous request for '" + url + "' was already made.", o);
-                o.fullname = fullname;
-                o.nonMinifiedURL = url;
-                o.minifiedURL = minifiedUrl;
-                o.then(o.__onLoaded).ready(o.__onReady);
-            };
         }
     }
     Module._globalaccessors = (() => { return Globals_1.DreamSpace.safeEval("({ get: function(varName) { return p0.global[varName]; }, set: function(varName, val) { return p0.global[varName] = val; } })", DreamSpace); })();

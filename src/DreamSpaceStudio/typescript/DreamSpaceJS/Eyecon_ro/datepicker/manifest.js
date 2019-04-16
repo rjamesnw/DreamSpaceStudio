@@ -1,6 +1,6 @@
 /// <reference path="../../manifest.ts" />
 // #######################################################################################
-define(["require", "exports", "../../IO", "../../JQuery/manifest"], function (require, exports, IO_1, manifest_1) {
+define(["require", "exports", "../../IO"], function (require, exports, IO_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     /**
@@ -12,7 +12,7 @@ define(["require", "exports", "../../IO", "../../JQuery/manifest"], function (re
         /**
          * A date picker.
          */
-        Eyecon_ro.Datepicker = module([manifest_1.JQuery.V2_2_0], 'bootstrap-datepicker', '~Helpers/Eyecon/js/')
+        Eyecon_ro.Datepicker = module([JQuery.V2_2_0], 'bootstrap-datepicker', '~Helpers/Eyecon/js/')
             .require(IO_1.IO.get("~eyecon.ro/css/datepicker.css"));
         // ===================================================================================
     })(Eyecon_ro = exports.Eyecon_ro || (exports.Eyecon_ro = {}));

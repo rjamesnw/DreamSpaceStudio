@@ -106,30 +106,6 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
         static init(o, isnew, url) {
             this.super.init(o, isnew, url, Resources_1.ResourceTypes.Application_Script);
         }
-        /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DS.Globals' and 'Globals.register()'. */
-        registerGlobal(name, initialValue, asHostGlobal) {
-            return Globals.register(this, name, initialValue, asHostGlobal);
-        }
-        /** For help, see 'DS.Globals'. */
-        globalExists(name) {
-            return Globals.exists(this, name);
-        }
-        /** For help, see 'DS.Globals'. */
-        eraseGlobal(name) {
-            return Globals.erase(this, name);
-        }
-        /** For help, see 'DS.Globals'. */
-        clearGlobals() {
-            return Globals.clear(this);
-        }
-        /** For help, see 'DS.Globals'. */
-        setGlobalValue(name, value) {
-            return Globals.setValue(this, name, value);
-        }
-        /** For help, see 'DS.Globals'. */
-        getGlobalValue(name) {
-            return Globals.getValue(this, name);
-        }
     };
     Manifest = __decorate([
         Types_1.factory(this), Globals_1.sealed
@@ -222,7 +198,7 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
       * Call 'start()' on the returned instance to begin the loading process.
       * If the manifest contains dependencies to other manifests, an attempt will be made to load them as well.
       */
-    function getManifest(path) {
+    function getModule(path) {
         if (path == void 0 || path === null)
             path = "";
         if (typeof path != 'string')
@@ -253,7 +229,7 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
                         // ... this manifest has dependencies, so convert to folder paths and load them ...
                         for (var i = 0, n = dependencies.length; i < n; ++i) {
                             var path = moduleNamespaceToFolderPath(dependencies[i]);
-                            getManifest(path).start().include(request); // (create a dependency chain; it's ok to do this in the 'then()' callback, as 'ready' events only trigger AFTER the promise sequence completes successfully)
+                            getModule(path).start().include(request); // (create a dependency chain; it's ok to do this in the 'then()' callback, as 'ready' events only trigger AFTER the promise sequence completes successfully)
                             // (Note: The current request is linked as a dependency on the required manifest. 'ready' is called when
                             //        parent manifests and their dependencies have completed loaded as well)
                         }
@@ -273,7 +249,7 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
                 func.call(this, manifestRequest, DreamSpace); // (make sure 'this' is supplied, just in case, to help protect the global scope somewhat [instead of forcing 'strict' mode])
             }
             catch (ex) {
-                errorResult = ScriptError.fromError(ex, func && func.toString() || script, Types_1.nameof(() => getManifest, true) + "() while executing " + manifestRequest.url);
+                errorResult = ScriptError.fromError(ex, func && func.toString() || script, Types_1.nameof(() => getModule, true) + "() while executing " + manifestRequest.url);
                 Logging_1.error("getManifest(" + path + ")", "Error executing script: " + errorResult.message + "\r\nScript: \r\n" + errorResult.getFormatedSource(), manifestRequest);
             }
             manifestRequest.status = Resources_1.RequestStatuses.Executed;
@@ -283,7 +259,7 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
         _manifestsByURL[path] = request;
         return request;
     }
-    exports.getManifest = getManifest;
+    exports.getModule = getModule;
     // =======================================================================================================================
     /** Contains the statuses for module (script) loading and execution. */
     var ModuleLoadStatus;
@@ -310,6 +286,7 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
         constructor() {
             super(...arguments);
             this.required = false; // (true if the script is required - the application will fail to execute if this occurs, and an exception will be thrown)
+            //x isInclude() { return this.url && this.fullname == this.url; }
             /** If true, then the module is waiting to complete based on some outside custom script/event. */
             this.customWait = false;
             /** Returns a variable value from the executed module's local scope.
@@ -338,7 +315,6 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
             o.minifiedURL = minifiedUrl;
             o.then(o.__onLoaded).ready(o.__onReady);
         }
-        isInclude() { return this.url && this.fullname == this.url; }
         __onLoaded() {
             // ... script is loaded (not executed), but may be waiting on dependencies; for now, check for in-script dependencies/flags and apply those now ...
             return this;
@@ -354,6 +330,30 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
         }
         toString() { return this.fullname; }
         toValue() { return this.fullname; }
+        /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DS.Globals' and 'Globals.register()'. */
+        registerGlobal(name, initialValue, asHostGlobal) {
+            return Globals.register(this, name, initialValue, asHostGlobal);
+        }
+        /** For help, see 'DS.Globals'. */
+        globalExists(name) {
+            return Globals.exists(this, name);
+        }
+        /** For help, see 'DS.Globals'. */
+        eraseGlobal(name) {
+            return Globals.erase(this, name);
+        }
+        /** For help, see 'DS.Globals'. */
+        clearGlobals() {
+            return Globals.clear(this);
+        }
+        /** For help, see 'DS.Globals'. */
+        setGlobalValue(name, value) {
+            return Globals.setValue(this, name, value);
+        }
+        /** For help, see 'DS.Globals'. */
+        getGlobalValue(name) {
+            return Globals.getValue(this, name);
+        }
         /** Begin loading the module's script. After the loading is completed, any dependencies are automatically detected and loaded as well. */
         start() {
             if (this.status == Resources_1.RequestStatuses.Pending && !this._moduleGlobalAccessors) { // (make sure this module was not already started nor applied)
@@ -411,9 +411,9 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
     }
     exports.runApp = runApp;
     // =======================================================================================================================
-    /** This is the path to the root of the DreamSpace JavaScript files ('DreamSpace/' by default).
+    /** This is the path to the root of the DreamSpace JavaScript files (Path.combine(DS.baseURL, "js/") by default).
     * Note: This should either be empty, or always end with a URL path separator ('/') character (but the system will assume to add one anyhow if missing). */
-    exports.pluginFilesBasePath = Path_1.Path.combine(Globals_1.DreamSpace.baseURL, "wwwroot/js/");
+    exports.pluginFilesBasePath = Path_1.Path.combine(Globals_1.DreamSpace.baseURL, "js/");
     /** Translates a module relative or full type name to the actual type name (i.e. '.ABC' to 'DS.ABC', or 'System'/'System.' to 'DreamSpace'/'DS.'). */
     function translateModuleTypeName(moduleFullTypeName) {
         if (moduleFullTypeName.charAt(0) == '.')
@@ -450,19 +450,19 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
     /** This is usually called from the 'DS.[ts|js]' file to register script files (plugins), making them available to the application based on module names (instead of file names).
       * When 'DS.using.{...someplugin}()' is called, the required script files are then executed as needed.
       * This function returns a function that, when called, will execute the loaded script.  The returned object also as chainable methods for success and error callbacks.
-      * @param {ModuleInfo[]} dependencies A list of modules that this module depends on.
+      * @param {IUsingModule[]} dependencies A list of modules that this module depends on.
       * @param {string} moduleFullTypeName The full type name of the module, such as 'DS.UI', or 'jquery'.
       *                                    You can also use the token sequence '{min:[non-minified-text|]minified-text}' (where '[...]' is optional, square brackets
       *                                    not included) to define the minified and non-minified text parts.
       * @param {string} moduleFileBasePath (optional) The path to the '.js' file, including the filename + extension.  If '.js' is not found at the end, then
-      *                                    the full module type name is appended, along with '.js'. This parameter will default to 'DS.moduleFilesBasePath'
-      *                                    (which is 'DreamSpaceJS/' by default) if null is passed, so pass an empty string if this is not desired.
+      *                                    the full module type name is appended, along with '.js'. This parameter will default to 'pluginFilesBasePath'
+      *                                    (which is Path.combine(DS.baseURL, "js/") by default) if null is passed, so pass an empty string if this is not desired.
       *                                    You can also use the '{min:[non-minified-text|]minified-text}' token sequence (where '[...]' is optional, square brackets
       *                                    not included) to define the minified and non-minified text parts.
       * @param {boolean} requiresGlobalScope If a module script MUST execute in the host global scope environment, set this to true.  If
       *                                      false, the module is wrapped in a function to create a local-global scope before execution.
       */
-    function module(dependencies, moduleFullTypeName, moduleFileBasePath = null, requiresGlobalScope = false) {
+    function createModule(dependencies, moduleFullTypeName, moduleFileBasePath = null, requiresGlobalScope = false) {
         if (!moduleFullTypeName)
             throw Exception_1.Exception.from("A full type name path is expected.");
         // ... extract the minify-name tokens and create the proper names and paths for both min and non-min versions ...
@@ -574,8 +574,20 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
         usingPluginFunc.finally = (cleanupHandler) => { mod.finally(cleanupHandler); return this; };
         return usingPluginFunc;
     }
-    exports.module = module;
+    exports.createModule = createModule;
     ;
+    function define(dependencies, onready) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (dependencies && dependencies.length > 0)
+                return new Promise((res, rej) => {
+                    for (var i = 0, n = dependencies.length; i < n; ++i) {
+                    }
+                });
+            else
+                return Promise.resolve();
+        });
+    }
+    exports.define = define;
     // =======================================================================================================================
     ///** Use to compile & execute required modules as they are needed.
     //  * By default, modules (scripts) are not executed immediately upon loading.  This makes page loading more efficient.

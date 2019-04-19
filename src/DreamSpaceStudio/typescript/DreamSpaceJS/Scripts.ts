@@ -115,11 +115,11 @@ export interface IScriptResource extends ScriptResource { }
 // ====================================================================================================================
 
 export interface IScriptInfoList {
-    [index: string]: IScriptInfo;
+    [index: string]: IModuleLoadEvents;
 }
 
 export class ScriptInfoList implements IScriptInfoList {
-    [index: string]: IScriptInfo;
+    [index: string]: IModuleLoadEvents;
 }
 
 /**
@@ -136,33 +136,7 @@ export class Manifest extends Factory(ScriptResource) {
         this.super.init(o, isnew, url, ResourceTypes.Application_Script);
     }
 
-    /** Holds multiple versions of script libraries in a single manifest. */
-    scripts: IScriptInfoList;
-
-    /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DS.Globals' and 'Globals.register()'. */
-    registerGlobal<T>(name: string, initialValue: T, asHostGlobal?: boolean): string {
-        return Globals.register(this, name, initialValue, asHostGlobal);
-    }
-    /** For help, see 'DS.Globals'. */
-    globalExists<T>(name: string): boolean {
-        return Globals.exists(this, name);
-    }
-    /** For help, see 'DS.Globals'. */
-    eraseGlobal<T>(name: string): boolean {
-        return Globals.erase(this, name);
-    }
-    /** For help, see 'DS.Globals'. */
-    clearGlobals<T>(): boolean {
-        return Globals.clear(this);
-    }
-    /** For help, see 'DS.Globals'. */
-    setGlobalValue<T>(name: string, value: T): T {
-        return Globals.setValue<T>(this, name, value);
-    }
-    /** For help, see 'DS.Globals'. */
-    getGlobalValue<T>(name: string): T {
-        return Globals.getValue<T>(this, name);
-    }
+    module: IModule;
 }
 
 export interface IManifest extends Manifest { }
@@ -247,7 +221,7 @@ export function validateScript(script: string, url?: string): ScriptError {
   * Call 'start()' on the returned instance to begin the loading process.
   * If the manifest contains dependencies to other manifests, an attempt will be made to load them as well.
   */
-export function getManifest(path?: string): IManifest {
+export function getModule(path?: string): IManifest {
     if (path == void 0 || path === null) path = "";
     if (typeof path != 'string') path = "" + path; // (convert to string)
     if (path == "") path = "manifest";
@@ -276,7 +250,7 @@ export function getManifest(path?: string): IManifest {
                     // ... this manifest has dependencies, so convert to folder paths and load them ...
                     for (var i = 0, n = dependencies.length; i < n; ++i) {
                         var path = moduleNamespaceToFolderPath(dependencies[i]);
-                        getManifest(path).start().include(request); // (create a dependency chain; it's ok to do this in the 'then()' callback, as 'ready' events only trigger AFTER the promise sequence completes successfully)
+                        getModule(path).start().include(request); // (create a dependency chain; it's ok to do this in the 'then()' callback, as 'ready' events only trigger AFTER the promise sequence completes successfully)
                         // (Note: The current request is linked as a dependency on the required manifest. 'ready' is called when
                         //        parent manifests and their dependencies have completed loaded as well)
                     }
@@ -299,7 +273,7 @@ export function getManifest(path?: string): IManifest {
             func.call(this, manifestRequest, DreamSpace); // (make sure 'this' is supplied, just in case, to help protect the global scope somewhat [instead of forcing 'strict' mode])
         }
         catch (ex) {
-            errorResult = ScriptError.fromError(ex, func && func.toString() || script, nameof(() => getManifest, true) + "() while executing " + manifestRequest.url);
+            errorResult = ScriptError.fromError(ex, func && func.toString() || script, nameof(() => getModule, true) + "() while executing " + manifestRequest.url);
             error("getManifest(" + path + ")", "Error executing script: " + errorResult.message + "\r\nScript: \r\n" + errorResult.getFormatedSource(), manifestRequest);
         }
         manifestRequest.status = RequestStatuses.Executed;
@@ -338,7 +312,7 @@ var _appModule: IModule = null; // (becomes set to the app module when the app m
 interface _IModuleAccessors { get: (varName: string) => any; set: (varName: string, value: any) => any }
 
 /** Contains static module properties and functions. */
-export class Module extends Factory(ScriptResource) {
+export abstract class Module extends Factory(ScriptResource) implements IModuleLoadEvents {
     /** Returns a new module object only - does not load it. */
     static 'new': (fullname: string, url: string, minifiedUrl?: string) => IModule;
     /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
@@ -355,6 +329,23 @@ export class Module extends Factory(ScriptResource) {
         o.then(o.__onLoaded).ready(o.__onReady);
     }
 
+    /** The path and name of the script to load for this module. */
+    scriptInfo: { filename: string; path: string; };
+
+    /** Fires when a module's dependencies are all loaded. 
+     * This is where you can call functions that need to run immediately after a script loads; such as 'jQuery.holdReady()'.
+     */
+    onReady?(): void;
+
+    /** Fires when the underlying script fails to load. */
+    onLoadError?(): void;
+
+    /** Fires when the underlying script fails to execute. */
+    onExecuteError?(): void;
+
+    /** Fires when one or more dependencies fail to load. The module name and error are given. */
+    onDependencyError?(moduleName: string, errorMsg: string): void;
+
     /** The full type name for this module. */
     fullname: string;
 
@@ -365,7 +356,7 @@ export class Module extends Factory(ScriptResource) {
 
     required: boolean = false; // (true if the script is required - the application will fail to execute if this occurs, and an exception will be thrown)
 
-    isInclude() { return this.url && this.fullname == this.url; }
+    //x isInclude() { return this.url && this.fullname == this.url; }
 
     /** If true, then the module is waiting to complete based on some outside custom script/event. */
     customWait: boolean = false;
@@ -412,6 +403,31 @@ export class Module extends Factory(ScriptResource) {
     toString() { return this.fullname; }
     toValue() { return this.fullname; }
 
+    /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DS.Globals' and 'Globals.register()'. */
+    registerGlobal<T>(name: string, initialValue: T, asHostGlobal?: boolean): string {
+        return Globals.register(this, name, initialValue, asHostGlobal);
+    }
+    /** For help, see 'DS.Globals'. */
+    globalExists<T>(name: string): boolean {
+        return Globals.exists(this, name);
+    }
+    /** For help, see 'DS.Globals'. */
+    eraseGlobal<T>(name: string): boolean {
+        return Globals.erase(this, name);
+    }
+    /** For help, see 'DS.Globals'. */
+    clearGlobals<T>(): boolean {
+        return Globals.clear(this);
+    }
+    /** For help, see 'DS.Globals'. */
+    setGlobalValue<T>(name: string, value: T): T {
+        return Globals.setValue<T>(this, name, value);
+    }
+    /** For help, see 'DS.Globals'. */
+    getGlobalValue<T>(name: string): T {
+        return Globals.getValue<T>(this, name);
+    }
+
     /** Begin loading the module's script. After the loading is completed, any dependencies are automatically detected and loaded as well. */
     start(): this {
         if (this.status == RequestStatuses.Pending && !this._moduleGlobalAccessors) { // (make sure this module was not already started nor applied)
@@ -446,15 +462,9 @@ export class Module extends Factory(ScriptResource) {
     }
 }
 
-export interface IModule extends InstanceType<typeof Module> { }
+export interface IModule extends Module { }
 
-export interface IScriptInfo {
-    /** The internal module reference that a module manifest represents. */
-    module?: IModule;
-
-    /** The path and name of the script to load for this module. */
-    scriptInfo: { filename: string; path: string; };
-
+export interface IModuleLoadEvents {
     /** Fires when a module's dependencies are all loaded. 
      * This is where you can call functions that need to run immediately after a script loads; such as 'jQuery.holdReady()'.
      */
@@ -497,9 +507,9 @@ export function runApp() {
 
 // =======================================================================================================================
 
-/** This is the path to the root of the DreamSpace JavaScript files ('DreamSpace/' by default).
+/** This is the path to the root of the DreamSpace JavaScript files (Path.combine(DS.baseURL, "js/") by default).
 * Note: This should either be empty, or always end with a URL path separator ('/') character (but the system will assume to add one anyhow if missing). */
-export var pluginFilesBasePath: string = Path.combine(DS.baseURL, "wwwroot/js/");
+export var pluginFilesBasePath: string = Path.combine(DS.baseURL, "js/");
 
 /** Translates a module relative or full type name to the actual type name (i.e. '.ABC' to 'DS.ABC', or 'System'/'System.' to 'DreamSpace'/'DS.'). */
 export function translateModuleTypeName(moduleFullTypeName: string) {
@@ -553,19 +563,19 @@ export interface IUsingModule {
 /** This is usually called from the 'DS.[ts|js]' file to register script files (plugins), making them available to the application based on module names (instead of file names).
   * When 'DS.using.{...someplugin}()' is called, the required script files are then executed as needed.
   * This function returns a function that, when called, will execute the loaded script.  The returned object also as chainable methods for success and error callbacks.
-  * @param {ModuleInfo[]} dependencies A list of modules that this module depends on.
+  * @param {IUsingModule[]} dependencies A list of modules that this module depends on.
   * @param {string} moduleFullTypeName The full type name of the module, such as 'DS.UI', or 'jquery'.
   *                                    You can also use the token sequence '{min:[non-minified-text|]minified-text}' (where '[...]' is optional, square brackets
   *                                    not included) to define the minified and non-minified text parts.
   * @param {string} moduleFileBasePath (optional) The path to the '.js' file, including the filename + extension.  If '.js' is not found at the end, then
-  *                                    the full module type name is appended, along with '.js'. This parameter will default to 'DS.moduleFilesBasePath'
-  *                                    (which is 'DreamSpaceJS/' by default) if null is passed, so pass an empty string if this is not desired.
+  *                                    the full module type name is appended, along with '.js'. This parameter will default to 'pluginFilesBasePath'
+  *                                    (which is Path.combine(DS.baseURL, "js/") by default) if null is passed, so pass an empty string if this is not desired.
   *                                    You can also use the '{min:[non-minified-text|]minified-text}' token sequence (where '[...]' is optional, square brackets
   *                                    not included) to define the minified and non-minified text parts.
   * @param {boolean} requiresGlobalScope If a module script MUST execute in the host global scope environment, set this to true.  If
   *                                      false, the module is wrapped in a function to create a local-global scope before execution.
   */
-export function module(dependencies: IUsingModule[], moduleFullTypeName: string, moduleFileBasePath: string = null, requiresGlobalScope = false): IUsingModule {
+export function createModule(dependencies: IUsingModule[], moduleFullTypeName: string, moduleFileBasePath: string = null, requiresGlobalScope = false): IUsingModule { // TODO: requiresGlobalScope
 
     if (!moduleFullTypeName)
         throw Exception.from("A full type name path is expected.");
@@ -688,6 +698,16 @@ export function module(dependencies: IUsingModule[], moduleFullTypeName: string,
 
     return usingPluginFunc;
 };
+
+export async function define(dependencies: string[], onready: (require: any, exports: IndexedObject, ...args: any[]) => {} | void): Promise<void> {
+    if (dependencies && dependencies.length > 0)
+        return new Promise((res, rej) => {
+            for (var i = 0, n = dependencies.length; i < n; ++i) {
+
+            }
+        });
+    else return Promise.resolve();
+}
 
 // =======================================================================================================================
 

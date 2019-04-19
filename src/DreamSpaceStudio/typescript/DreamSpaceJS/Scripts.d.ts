@@ -93,10 +93,10 @@ export declare class ScriptResource extends ScriptResource_base {
 export interface IScriptResource extends ScriptResource {
 }
 export interface IScriptInfoList {
-    [index: string]: IScriptInfo;
+    [index: string]: IModuleLoadEvents;
 }
 export declare class ScriptInfoList implements IScriptInfoList {
-    [index: string]: IScriptInfo;
+    [index: string]: IModuleLoadEvents;
 }
 declare const Manifest_base: {
     new (): ScriptResource;
@@ -150,20 +150,7 @@ export declare class Manifest extends Manifest_base {
     static 'new': (url: string) => IManifest;
     /** Holds variables required for manifest execution (for example, callback functions for 3rd party libraries, such as the Google Maps API). */
     static init(o: IManifest, isnew: boolean, url: string): void;
-    /** Holds multiple versions of script libraries in a single manifest. */
-    scripts: IScriptInfoList;
-    /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DS.Globals' and 'Globals.register()'. */
-    registerGlobal<T>(name: string, initialValue: T, asHostGlobal?: boolean): string;
-    /** For help, see 'DS.Globals'. */
-    globalExists<T>(name: string): boolean;
-    /** For help, see 'DS.Globals'. */
-    eraseGlobal<T>(name: string): boolean;
-    /** For help, see 'DS.Globals'. */
-    clearGlobals<T>(): boolean;
-    /** For help, see 'DS.Globals'. */
-    setGlobalValue<T>(name: string, value: T): T;
-    /** For help, see 'DS.Globals'. */
-    getGlobalValue<T>(name: string): T;
+    module: IModule;
 }
 export interface IManifest extends Manifest {
 }
@@ -194,7 +181,7 @@ export declare function validateScript(script: string, url?: string): ScriptErro
   * Call 'start()' on the returned instance to begin the loading process.
   * If the manifest contains dependencies to other manifests, an attempt will be made to load them as well.
   */
-export declare function getManifest(path?: string): IManifest;
+export declare function getModule(path?: string): IManifest;
 /** Contains the statuses for module (script) loading and execution. */
 export declare enum ModuleLoadStatus {
     /** The script was requested, but couldn't be loaded. */
@@ -255,11 +242,26 @@ declare const Module_base: {
     super: typeof ResourceRequest & typeof import("./PrimitiveTypes").Object;
 };
 /** Contains static module properties and functions. */
-export declare class Module extends Module_base {
+export declare abstract class Module extends Module_base implements IModuleLoadEvents {
     /** Returns a new module object only - does not load it. */
     static 'new': (fullname: string, url: string, minifiedUrl?: string) => IModule;
     /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
     static init(o: IModule, isnew: boolean, fullname: string, url: string, minifiedUrl?: string): void;
+    /** The path and name of the script to load for this module. */
+    scriptInfo: {
+        filename: string;
+        path: string;
+    };
+    /** Fires when a module's dependencies are all loaded.
+     * This is where you can call functions that need to run immediately after a script loads; such as 'jQuery.holdReady()'.
+     */
+    onReady?(): void;
+    /** Fires when the underlying script fails to load. */
+    onLoadError?(): void;
+    /** Fires when the underlying script fails to execute. */
+    onExecuteError?(): void;
+    /** Fires when one or more dependencies fail to load. The module name and error are given. */
+    onDependencyError?(moduleName: string, errorMsg: string): void;
     /** The full type name for this module. */
     fullname: string;
     /** The URL to the non-minified version of this module script. */
@@ -267,7 +269,6 @@ export declare class Module extends Module_base {
     /** The URL to the minified version of this module script. */
     minifiedURL: string;
     required: boolean;
-    isInclude(): boolean;
     /** If true, then the module is waiting to complete based on some outside custom script/event. */
     customWait: boolean;
     /** Holds a reference to the executed function that wraps the loaded script. */
@@ -294,21 +295,26 @@ export declare class Module extends Module_base {
     private __onReady;
     toString(): string;
     toValue(): string;
+    /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DS.Globals' and 'Globals.register()'. */
+    registerGlobal<T>(name: string, initialValue: T, asHostGlobal?: boolean): string;
+    /** For help, see 'DS.Globals'. */
+    globalExists<T>(name: string): boolean;
+    /** For help, see 'DS.Globals'. */
+    eraseGlobal<T>(name: string): boolean;
+    /** For help, see 'DS.Globals'. */
+    clearGlobals<T>(): boolean;
+    /** For help, see 'DS.Globals'. */
+    setGlobalValue<T>(name: string, value: T): T;
+    /** For help, see 'DS.Globals'. */
+    getGlobalValue<T>(name: string): T;
     /** Begin loading the module's script. After the loading is completed, any dependencies are automatically detected and loaded as well. */
     start(): this;
     /** Executes the underlying script by either wrapping it in another function (the default), or running it in the global window scope. */
     execute(useGlobalScope?: boolean): void;
 }
-export interface IModule extends InstanceType<typeof Module> {
+export interface IModule extends Module {
 }
-export interface IScriptInfo {
-    /** The internal module reference that a module manifest represents. */
-    module?: IModule;
-    /** The path and name of the script to load for this module. */
-    scriptInfo: {
-        filename: string;
-        path: string;
-    };
+export interface IModuleLoadEvents {
     /** Fires when a module's dependencies are all loaded.
      * This is where you can call functions that need to run immediately after a script loads; such as 'jQuery.holdReady()'.
      */
@@ -327,7 +333,7 @@ export declare function _tryRunApp(): void;
   * Note: Applications always start automatically by default, unless 'DS.System.Diagnostics.debug' is set to 'Debug_Wait'.
   */
 export declare function runApp(): void;
-/** This is the path to the root of the DreamSpace JavaScript files ('DreamSpace/' by default).
+/** This is the path to the root of the DreamSpace JavaScript files (Path.combine(DS.baseURL, "js/") by default).
 * Note: This should either be empty, or always end with a URL path separator ('/') character (but the system will assume to add one anyhow if missing). */
 export declare var pluginFilesBasePath: string;
 /** Translates a module relative or full type name to the actual type name (i.e. '.ABC' to 'DS.ABC', or 'System'/'System.' to 'DreamSpace'/'DS.'). */
@@ -353,19 +359,20 @@ export interface IUsingModule {
 /** This is usually called from the 'DS.[ts|js]' file to register script files (plugins), making them available to the application based on module names (instead of file names).
   * When 'DS.using.{...someplugin}()' is called, the required script files are then executed as needed.
   * This function returns a function that, when called, will execute the loaded script.  The returned object also as chainable methods for success and error callbacks.
-  * @param {ModuleInfo[]} dependencies A list of modules that this module depends on.
+  * @param {IUsingModule[]} dependencies A list of modules that this module depends on.
   * @param {string} moduleFullTypeName The full type name of the module, such as 'DS.UI', or 'jquery'.
   *                                    You can also use the token sequence '{min:[non-minified-text|]minified-text}' (where '[...]' is optional, square brackets
   *                                    not included) to define the minified and non-minified text parts.
   * @param {string} moduleFileBasePath (optional) The path to the '.js' file, including the filename + extension.  If '.js' is not found at the end, then
-  *                                    the full module type name is appended, along with '.js'. This parameter will default to 'DS.moduleFilesBasePath'
-  *                                    (which is 'DreamSpaceJS/' by default) if null is passed, so pass an empty string if this is not desired.
+  *                                    the full module type name is appended, along with '.js'. This parameter will default to 'pluginFilesBasePath'
+  *                                    (which is Path.combine(DS.baseURL, "js/") by default) if null is passed, so pass an empty string if this is not desired.
   *                                    You can also use the '{min:[non-minified-text|]minified-text}' token sequence (where '[...]' is optional, square brackets
   *                                    not included) to define the minified and non-minified text parts.
   * @param {boolean} requiresGlobalScope If a module script MUST execute in the host global scope environment, set this to true.  If
   *                                      false, the module is wrapped in a function to create a local-global scope before execution.
   */
-export declare function module(dependencies: IUsingModule[], moduleFullTypeName: string, moduleFileBasePath?: string, requiresGlobalScope?: boolean): IUsingModule;
+export declare function createModule(dependencies: IUsingModule[], moduleFullTypeName: string, moduleFileBasePath?: string, requiresGlobalScope?: boolean): IUsingModule;
+export declare function define(dependencies: string[], onready: (require: any, exports: IndexedObject, ...args: any[]) => {} | void): Promise<void>;
 /** Used to strip out script source mappings. Used with 'extractSourceMapping()'. */
 export declare var SCRIPT_SOURCE_MAPPING_REGEX: RegExp;
 /** Holds details on extract script pragmas. @See extractPragmas() */

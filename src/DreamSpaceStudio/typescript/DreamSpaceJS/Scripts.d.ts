@@ -372,7 +372,14 @@ export interface IUsingModule {
   *                                      false, the module is wrapped in a function to create a local-global scope before execution.
   */
 export declare function createModule(dependencies: IUsingModule[], moduleFullTypeName: string, moduleFileBasePath?: string, requiresGlobalScope?: boolean): IUsingModule;
-export declare function define(dependencies: string[], onready: (require: any, exports: IndexedObject, ...args: any[]) => {} | void): Promise<void>;
+/** The 'define' function is injected into a loaded module via the 'define' parameter of the wrapper function. This helps to
+ * confine var declarations and other actions to the function scope only.
+ * When a TypeScript module is loaded, it is rewritten to include a 'module' object to support angular (https://stackoverflow.com/a/45002601/1236397).
+ */
+export declare function define(dependencies: string[], onready: (require: any, exports: IndexedObject, module: {
+    id: string;
+    uri: string;
+}, ...args: any[]) => {} | void): Promise<void>;
 /** Used to strip out script source mappings. Used with 'extractSourceMapping()'. */
 export declare var SCRIPT_SOURCE_MAPPING_REGEX: RegExp;
 /** Holds details on extract script pragmas. @See extractPragmas() */

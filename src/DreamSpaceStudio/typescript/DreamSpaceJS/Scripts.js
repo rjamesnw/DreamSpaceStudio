@@ -576,6 +576,10 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
     }
     exports.createModule = createModule;
     ;
+    /** The 'define' function is injected into a loaded module via the 'define' parameter of the wrapper function. This helps to
+     * confine var declarations and other actions to the function scope only.
+     * When a TypeScript module is loaded, it is rewritten to include a 'module' object to support angular (https://stackoverflow.com/a/45002601/1236397).
+     */
     function define(dependencies, onready) {
         return __awaiter(this, void 0, void 0, function* () {
             if (dependencies && dependencies.length > 0)

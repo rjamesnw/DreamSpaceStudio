@@ -699,7 +699,11 @@ export function createModule(dependencies: IUsingModule[], moduleFullTypeName: s
     return usingPluginFunc;
 };
 
-export async function define(dependencies: string[], onready: (require: any, exports: IndexedObject, ...args: any[]) => {} | void): Promise<void> {
+/** The 'define' function is injected into a loaded module via the 'define' parameter of the wrapper function. This helps to
+ * confine var declarations and other actions to the function scope only. 
+ * When a TypeScript module is loaded, it is rewritten to include a 'module' object to support angular (https://stackoverflow.com/a/45002601/1236397).
+ */
+export async function define(dependencies: string[], onready: (require: any, exports: IndexedObject, module: { id: string, uri: string }, ...args: any[]) => {} | void): Promise<void> {
     if (dependencies && dependencies.length > 0)
         return new Promise((res, rej) => {
             for (var i = 0, n = dependencies.length; i < n; ++i) {

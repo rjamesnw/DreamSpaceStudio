@@ -354,6 +354,9 @@ export abstract class Module extends Factory(ScriptResource) implements IModuleL
     /** The URL to the minified version of this module script. */
     minifiedURL: string;
 
+    /** The URL used to load this module. */
+    url: string;
+
     required: boolean = false; // (true if the script is required - the application will fail to execute if this occurs, and an exception will be thrown)
 
     //x isInclude() { return this.url && this.fullname == this.url; }
@@ -699,11 +702,23 @@ export function createModule(dependencies: IUsingModule[], moduleFullTypeName: s
     return usingPluginFunc;
 };
 
+export class Require {
+    load() { }
+}
+
+/** A ModuleInfo object holds basic information for loading a module, and also stores. */
+export class ModuleInfo {
+    id: string;
+    url: string;
+    executor: { (define: typeof define): object };
+    module: Module;
+}
+
 /** The 'define' function is injected into a loaded module via the 'define' parameter of the wrapper function. This helps to
  * confine var declarations and other actions to the function scope only. 
  * When a TypeScript module is loaded, it is rewritten to include a 'module' object to support angular (https://stackoverflow.com/a/45002601/1236397).
  */
-export async function define(dependencies: string[], onready: (require: any, exports: IndexedObject, module: { id: string, uri: string }, ...args: any[]) => {} | void): Promise<void> {
+export async function define(dependencies: string[], onready: (require: Require, exports: IndexedObject, module: ModuleInfo, ...args: any[]) => {} | void): Promise<void> {
     if (dependencies && dependencies.length > 0)
         return new Promise((res, rej) => {
             for (var i = 0, n = dependencies.length; i < n; ++i) {

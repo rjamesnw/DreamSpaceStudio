@@ -576,6 +576,14 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
     }
     exports.createModule = createModule;
     ;
+    class Require {
+        load() { }
+    }
+    exports.Require = Require;
+    /** A ModuleInfo object holds basic information for loading a module, and also stores. */
+    class ModuleInfo {
+    }
+    exports.ModuleInfo = ModuleInfo;
     /** The 'define' function is injected into a loaded module via the 'define' parameter of the wrapper function. This helps to
      * confine var declarations and other actions to the function scope only.
      * When a TypeScript module is loaded, it is rewritten to include a 'module' object to support angular (https://stackoverflow.com/a/45002601/1236397).

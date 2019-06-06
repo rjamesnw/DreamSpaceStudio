@@ -381,7 +381,9 @@ export declare class Require {
 export declare class ModuleInfo {
     id: string;
     url: string;
-    define: typeof define;
+    executor: {
+        (define: typeof define): object;
+    };
     module: Module;
 }
 /** The 'define' function is injected into a loaded module via the 'define' parameter of the wrapper function. This helps to

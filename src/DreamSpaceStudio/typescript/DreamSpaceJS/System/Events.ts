@@ -463,8 +463,8 @@ class EventDispatcher<TOwner extends object = object, TCallback extends EventHan
 
             // ... create the event getter property and set the "on event" getter proxy ...
 
-            if (global.Object.defineProperty)
-                global.Object.defineProperty(type.prototype, customEventPropName, {
+            if (DS.global.Object.defineProperty)
+                DS.global.Object.defineProperty(type.prototype, customEventPropName, {
                     configurable: true,
                     enumerable: true,
                     writable: true,

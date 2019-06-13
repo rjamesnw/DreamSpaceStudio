@@ -3,6 +3,9 @@
 // ############################################################################################################################################
 
 import { DreamSpace as DS } from "../Globals";
+import { EventDispatcher } from "./Events";
+import { Diagnostics } from "./Diagnostics";
+import { LogTypes } from "../Logging";
 
 /** Contains information on the user agent (browser) being used.
   * Note: While it's always better to check objects for supported functions, sometimes an existing function may take different
@@ -215,7 +218,7 @@ export namespace Browser {
     /** The type of browser detected. */
     export var type: BrowserTypes = ((): BrowserTypes => {
         var browserType: BrowserTypes = BrowserTypes.Unknown, browserInfo: BrowserInfo;
-        if (Environment == Environments.Browser) {
+        if (DS.Environment == DS.Environments.Browser) {
             if (!browserVersionInfo) browserVersionInfo = __findBrowser();
             browserInfo = browserVersionInfo.parent;
             osInfo = __findOS();
@@ -277,8 +280,8 @@ export namespace Browser {
     /** Contains utility functions and events related to the browser's Document Object Model (DOM). */
     export namespace DOM {
 
-        /** True when the HTML has completed loading and was parsed. */
-        export var onDOMLoaded = DreamSpace.System.Events.EventDispatcher.new(Loader, "onDOMLoaded", true);
+        /** Fired when the HTML has completed loading and was parsed. */
+        export var onDOMLoaded = EventDispatcher.new(DOM, "onDOMLoaded", true);
         var _domLoaded = false;
 
         /** True when the DOM has completed loading. */
@@ -286,12 +289,13 @@ export namespace Browser {
         var _domReady = false;
 
         var _pageLoaded = false;
-        export var onPageLoaded = DreamSpace.System.Events.EventDispatcher.new(Loader, "onPageLoaded", true);
+        /** Fired when a page is loaded, but before it gets parsed. */
+        export var onPageLoaded = EventDispatcher.new(DOM, "onPageLoaded", true);
 
-        /** Explicit user request to queue to run when ready, regardless of debug mode.
+        /** Called when the page has loaded.
           * Returns true if running upon return, or already running, and false if not ready and queued to run later. */
         function onReady(): boolean { // (this is only available via the console or when forcibly executed and will not show in intellisense)
-            var log = DreamSpace.System.Diagnostics.log("DOM Loading", "Page loading completed; DOM is ready.").beginCapture();
+            var log = Diagnostics.log("DOM Loading", "Page loading completed; DOM is ready.").beginCapture();
 
             //??if ($ICE != null) {
             //    $ICE.loadLibraries(); // (load all ICE libraries after the DreamSpace system is ready, but before the ICE libraries are loaded so proper error details can be displayed if required)
@@ -306,11 +310,11 @@ export namespace Browser {
             //window.dispatchEvent(event);
 
             // ... the system and all modules are loaded and ready ...
-            log.write("Dispatching DOM 'onReady event ...", DreamSpace.LogTypes.Info);
-            DreamSpace.Browser.onReady.autoTrigger = true;
-            DreamSpace.Browser.onReady.dispatchEvent();
+            log.write("Dispatching DOM 'onReady event ...", LogTypes.Info);
+            Browser.onReady.autoTrigger = true;
+            Browser.onReady.dispatchEvent();
 
-            log.write("'DreamSpace.DOM.Loader' completed.", DreamSpace.LogTypes.Success);
+            log.write("'DreamSpace.DOM.Loader' completed.", LogTypes.Success);
 
             log.endCapture();
 
@@ -319,7 +323,7 @@ export namespace Browser {
 
         /** Implicit request to run only if ready, and not in debug mode. If not ready, or debug mode is set, ignore the request. (used internally) */
         function _doReady(): void {
-            var log = DreamSpace.System.Diagnostics.log("DOM Loading", "Checking if ready...").beginCapture();
+            var log = Diagnostics.log("DOM Loading", "Checking if ready...").beginCapture();
             if (_domLoaded && _pageLoaded) onReady();
             log.endCapture();
         };
@@ -328,7 +332,7 @@ export namespace Browser {
         function _doOnDOMLoaded(): void { // (note: executed immediately on the server before this script ends)
             if (!_domLoaded) {
                 _domLoaded = true;
-                var log = DreamSpace.System.Diagnostics.log("DOM Loading", "HTML document was loaded and parsed. Loading any sub-resources next (CSS, JS, etc.)...", DreamSpace.LogTypes.Success).beginCapture();
+                var log = Diagnostics.log("DOM Loading", "HTML document was loaded and parsed. Loading any sub-resources next (CSS, JS, etc.)...", LogTypes.Success).beginCapture();
                 onDOMLoaded.autoTrigger = true;
                 onDOMLoaded.dispatchEvent();
                 log.endCapture();
@@ -340,7 +344,7 @@ export namespace Browser {
             if (!_pageLoaded) {
                 _doOnDOMLoaded(); // (just in case - the DOM load must precede the page load!)
                 _pageLoaded = true;
-                var log = DreamSpace.System.Diagnostics.log("DOM Loading", "The document and all sub-resources have finished loading.", DreamSpace.LogTypes.Success).beginCapture();
+                var log = Diagnostics.log("DOM Loading", "The document and all sub-resources have finished loading.", LogTypes.Success).beginCapture();
                 onPageLoaded.autoTrigger = true;
                 onPageLoaded.dispatchEvent();
                 _doReady();
@@ -352,7 +356,7 @@ export namespace Browser {
         // If on the client side, detect when the document is ready for script downloads - this will allow the UI to show quickly, and download script while the user reads the screen.
         // (note: this is a two phased approach - DOM ready, then PAGE ready.
 
-        if (DreamSpace.Environment == DreamSpace.Environments.Browser) (function () {
+        if (DS.Environment == DS.Environments.Browser) (function () {
 
             var readyStateTimer: number;
 

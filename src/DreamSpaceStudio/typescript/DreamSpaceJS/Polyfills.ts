@@ -106,7 +106,7 @@ Array.prototype.where = function (func: (a: any) => boolean) { if (!func) return
 
     if (typeof this['Symbol'] == 'undefined') { // (mainly for IE 11)
         // ... create a simple polyfill for this ...
-        this['Symbol'] = function Symbol(desc?: string) { var d = new Date().getTime(), dStr = '$' + d; this.valueOf = () => dStr; this.toString = () => dStr; return this; };
+        this['Symbol'] = <any>function Symbol(desc?: string) { var d = new Date().getTime(), dStr = '$' + d; this.valueOf = () => dStr; this.toString = () => dStr; return this; };
     }
 
     // -------------------------------------------------------------------------------------------------------------------

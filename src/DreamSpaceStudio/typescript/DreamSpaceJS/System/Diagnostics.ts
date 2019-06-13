@@ -2,151 +2,150 @@
 // Types for time management.
 // ############################################################################################################################
 
-import { Factory, Disposable, factory } from "../Types";
+import { Factory, factory } from "../Types";
 import { DreamSpace as DS, ITypeInfo } from "../Globals";
-import { TimeSpan, ITimeSpan } from "./System.Time";
+import { TimeSpan, ITimeSpan } from "./Time";
 import { LogTypes, error, log as base_log } from "../Logging";
 import { Exception } from "./Exception";
 import { String } from "../PrimitiveTypes";
 
 // ========================================================================================================================
 
+var __logItemsSequenceCounter = 0;
+var __logCaptureStack: ILogItem[] = [];
+
+@factory(Diagnostics)
+export class LogItem extends Factory() {
+    static 'new'(parent: ILogItem, title: string, message: string, type?: LogTypes, outputToConsole?: boolean): ILogItem;
+    static 'new'(parent: ILogItem, title: any, message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true): ILogItem { return null; }
+
+    static init(o: ILogItem, isnew: boolean, parent: ILogItem, title: string, message: string, type?: LogTypes, outputToConsole?: boolean): void;
+    static init(o: ILogItem, isnew: boolean, parent: ILogItem, title: any, message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true) {
+        if (title === void 0 || title === null) {
+            if (DS.isEmpty(message))
+                error("LogItem()", "A message is required if no title is given.", o);
+            title = "";
+        }
+        else if (typeof title != 'string')
+            if ((<ITypeInfo>title).$__fullname)
+                title = (<ITypeInfo>title).$__fullname;
+            else
+                title = title.toString && title.toString() || title.toValue && title.toValue() || "" + title;
+
+        if (message === void 0 || message === null)
+            message = "";
+        else
+            message = message.toString && message.toString() || message.toValue && message.toValue() || "" + message;
+
+        o.parent = parent;
+        o.title = title;
+        o.message = message;
+        o.time = Date.now(); /*ms*/
+        o.type = type;
+
+        if (console && outputToConsole) { // (if the console object is supported, and the user allows it for this item, then send this log message to it now)
+            var _title = title, margin = ""; // (modify a copy so we can continue to pass along the unaltered title text)
+            if (_title.charAt(title.length - 1) != ":") _title += ": "; else _title += " ";
+            while (parent) { parent = parent.parent; margin += "  "; }
+            if (TimeSpan) {
+                var time = TimeSpan.utcTimeToLocalTime(o.time);
+                var consoleText = time.hours + ":" + (time.minutes < 10 ? "0" + time.minutes : "" + time.minutes) + ":" + (time.seconds < 10 ? "0" + time.seconds : "" + time.seconds)
+                    + " " + margin + _title + o.message;
+            }
+            else consoleText = (new Date()).toLocaleTimeString() + " " + margin + _title + o.message; // TODO: Make a utility function to format Date() similar to hh:mm:ss
+            base_log(null, consoleText, type, void 0, false, false);
+        }
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+
+    /** The parent log item. */
+    parent: ILogItem = null;
+    /** The sequence count of this log item. */
+    sequence: number = __logItemsSequenceCounter++; // (to maintain correct ordering, as time is not reliable if log items are added too fast)
+    /** The title of this log item. */
+    title: string;
+    /** The message of this log item. */
+    message: string;
+    /** The time of this log item. */
+    time: number;
+    /** The type of this log item. */
+    type: LogTypes;
+    /** The source of the reason for this log item, if any. */
+    source: {};
+
+    subItems: ILogItem[];
+
+    marginIndex: number = void 0;
+
+    /** Write a message to the log without using a title and return the current log item instance. */
+    write(message: string, type?: LogTypes, outputToConsole?: boolean): ILogItem;
+    /** Write a message to the log. */
+    write(message: any, type?: LogTypes, outputToConsole?: boolean): ILogItem;
+    write(message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true): ILogItem {
+        var logItem = LogItem.new(this, null, message, type);
+        if (!this.subItems)
+            this.subItems = [];
+        this.subItems.push(logItem);
+        return this;
+    }
+
+    /** Write a message to the log without using a title and return the new log item instance, which can be used to start a related sub-log. */
+    log(title: string, message: string, type?: LogTypes, outputToConsole?: boolean): ILogItem;
+    /** Write a message to the log without using a title and return the new log item instance, which can be used to start a related sub-log. */
+    log(title: any, message: any, type?: LogTypes, outputToConsole?: boolean): ILogItem;
+    log(title: any, message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true): ILogItem {
+        var logItem = LogItem.new(this, title, message, type, outputToConsole);
+        if (!this.subItems)
+            this.subItems = [];
+        this.subItems.push(logItem);
+        return logItem;
+    }
+
+    /** Causes all future log writes to be nested under this log entry.
+    * This is usually called at the start of a block of code, where following function calls may trigger nested log writes. Don't forget to call 'endCapture()' when done.
+    * The current instance is returned to allow chaining function calls.
+    * Note: The number of calls to 'endCapture()' must match the number of calls to 'beginCapture()', or an error will occur.
+    */
+    beginCapture(): ILogItem {
+        //? if (__logCaptureStack.indexOf(this) < 0)
+        __logCaptureStack.push(this);
+        return this;
+    }
+
+    /** Undoes the call to 'beginCapture()', activating any previous log item that called 'beginCapture()' before this instance.
+    * See 'beginCapture()' for more details.
+    * Note: The number of calls to 'endCapture()' must match the number of calls to 'beginCapture()', or an error will occur.
+    */
+    endCapture() {
+        //var i = __logCaptureStack.lastIndexOf(this);
+        //if (i >= 0) __logCaptureStack.splice(i, 1);
+        var item = __logCaptureStack.pop();
+        if (item != null) throw Exception.from("Your calls to begin/end log capture do not match up. Make sure the calls to 'endCapture()' match up to your calls to 'beginCapture()'.", this);
+    }
+
+    toString(): string {
+        var time = TimeSpan && TimeSpan.utcTimeToLocalTime(this.time) || null;
+        var timeStr = time && (time.hours + ":" + (time.minutes < 10 ? "0" + time.minutes : "" + time.minutes) + ":" + (time.seconds < 10 ? "0" + time.seconds : "" + time.seconds)) || "" + new Date(this.time).toLocaleTimeString();
+        var txt = "[" + this.sequence + "] (" + timeStr + ") " + this.title + ": " + this.message;
+        return txt;
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+
+    private static [DS.constructor](factory: typeof LogItem) {
+        //factory.init = (o, isnew) => { // not dealing with private properties, so this is not needed!
+        //};
+    }
+}
+
+export interface ILogItem extends LogItem { }
+
 /** Contains diagnostic based functions, such as those needed for logging purposes. */
 namespace Diagnostics {
     // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
     export var __logItems: ILogItem[] = [];
-    var __logItemsSequenceCounter = 0;
-    var __logCaptureStack: ILogItem[] = [];
-
-    // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-
-    @factory(Diagnostics)
-    export class LogItem extends Factory(Disposable) {
-        static 'new'(parent: ILogItem, title: string, message: string, type?: LogTypes, outputToConsole?: boolean): ILogItem;
-        static 'new'(parent: ILogItem, title: any, message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true): ILogItem { return null; }
-
-        static init(o: ILogItem, isnew: boolean, parent: ILogItem, title: string, message: string, type?: LogTypes, outputToConsole?: boolean): void;
-        static init(o: ILogItem, isnew: boolean, parent: ILogItem, title: any, message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true) {
-            if (title === void 0 || title === null) {
-                if (DS.isEmpty(message))
-                    error("LogItem()", "A message is required if no title is given.", o);
-                title = "";
-            }
-            else if (typeof title != 'string')
-                if ((<ITypeInfo>title).$__fullname)
-                    title = (<ITypeInfo>title).$__fullname;
-                else
-                    title = title.toString && title.toString() || title.toValue && title.toValue() || "" + title;
-
-            if (message === void 0 || message === null)
-                message = "";
-            else
-                message = message.toString && message.toString() || message.toValue && message.toValue() || "" + message;
-
-            o.parent = parent;
-            o.title = title;
-            o.message = message;
-            o.time = Date.now(); /*ms*/
-            o.type = type;
-
-            if (console && outputToConsole) { // (if the console object is supported, and the user allows it for this item, then send this log message to it now)
-                var _title = title, margin = ""; // (modify a copy so we can continue to pass along the unaltered title text)
-                if (_title.charAt(title.length - 1) != ":") _title += ": "; else _title += " ";
-                while (parent) { parent = parent.parent; margin += "  "; }
-                if (TimeSpan) {
-                    var time = TimeSpan.utcTimeToLocalTime(o.time);
-                    var consoleText = time.hours + ":" + (time.minutes < 10 ? "0" + time.minutes : "" + time.minutes) + ":" + (time.seconds < 10 ? "0" + time.seconds : "" + time.seconds)
-                        + " " + margin + _title + o.message;
-                }
-                else consoleText = (new Date()).toLocaleTimeString() + " " + margin + _title + o.message; // TODO: Make a utility function to format Date() similar to hh:mm:ss
-                base_log(null, consoleText, type, void 0, false, false);
-            }
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------------
-
-        /** The parent log item. */
-        parent: ILogItem = null;
-        /** The sequence count of this log item. */
-        sequence: number = __logItemsSequenceCounter++; // (to maintain correct ordering, as time is not reliable if log items are added too fast)
-        /** The title of this log item. */
-        title: string;
-        /** The message of this log item. */
-        message: string;
-        /** The time of this log item. */
-        time: number;
-        /** The type of this log item. */
-        type: LogTypes;
-        /** The source of the reason for this log item, if any. */
-        source: {};
-
-        subItems: ILogItem[];
-
-        marginIndex: number = void 0;
-
-        /** Write a message to the log without using a title and return the current log item instance. */
-        write(message: string, type?: LogTypes, outputToConsole?: boolean): ILogItem;
-        /** Write a message to the log. */
-        write(message: any, type?: LogTypes, outputToConsole?: boolean): ILogItem;
-        write(message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true): ILogItem {
-            var logItem = Diagnostics.LogItem.new(this, null, message, type);
-            if (!this.subItems)
-                this.subItems = [];
-            this.subItems.push(logItem);
-            return this;
-        }
-
-        /** Write a message to the log without using a title and return the new log item instance, which can be used to start a related sub-log. */
-        log(title: string, message: string, type?: LogTypes, outputToConsole?: boolean): ILogItem;
-        /** Write a message to the log without using a title and return the new log item instance, which can be used to start a related sub-log. */
-        log(title: any, message: any, type?: LogTypes, outputToConsole?: boolean): ILogItem;
-        log(title: any, message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true): ILogItem {
-            var logItem = Diagnostics.LogItem.new(this, title, message, type, outputToConsole);
-            if (!this.subItems)
-                this.subItems = [];
-            this.subItems.push(logItem);
-            return logItem;
-        }
-
-        /** Causes all future log writes to be nested under this log entry.
-        * This is usually called at the start of a block of code, where following function calls may trigger nested log writes. Don't forget to call 'endCapture()' when done.
-        * The current instance is returned to allow chaining function calls.
-        * Note: The number of calls to 'endCapture()' must match the number of calls to 'beginCapture()', or an error will occur.
-        */
-        beginCapture(): ILogItem {
-            //? if (__logCaptureStack.indexOf(this) < 0)
-            __logCaptureStack.push(this);
-            return this;
-        }
-
-        /** Undoes the call to 'beginCapture()', activating any previous log item that called 'beginCapture()' before this instance.
-        * See 'beginCapture()' for more details.
-        * Note: The number of calls to 'endCapture()' must match the number of calls to 'beginCapture()', or an error will occur.
-        */
-        endCapture() {
-            //var i = __logCaptureStack.lastIndexOf(this);
-            //if (i >= 0) __logCaptureStack.splice(i, 1);
-            var item = __logCaptureStack.pop();
-            if (item != null) throw Exception.from("Your calls to begin/end log capture do not match up. Make sure the calls to 'endCapture()' match up to your calls to 'beginCapture()'.", this);
-        }
-
-        toString(): string {
-            var time = TimeSpan && TimeSpan.utcTimeToLocalTime(this.time) || null;
-            var timeStr = time && (time.hours + ":" + (time.minutes < 10 ? "0" + time.minutes : "" + time.minutes) + ":" + (time.seconds < 10 ? "0" + time.seconds : "" + time.seconds)) || "" + new Date(this.time).toLocaleTimeString();
-            var txt = "[" + this.sequence + "] (" + timeStr + ") " + this.title + ": " + this.message;
-            return txt;
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------------
-
-        private static [DS.constructor](factory: typeof LogItem) {
-            //factory.init = (o, isnew) => { // not dealing with private properties, so this is not needed!
-            //};
-        }
-    }
-
-    export interface ILogItem extends LogItem { }
 
     // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
 

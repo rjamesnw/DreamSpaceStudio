@@ -95,10 +95,10 @@ export class GraphNode extends Factory(PropertyEventBase) {
 
         currentSP.push(sProp);
 
-        if (!global.Object.defineProperty)
+        if (!DS.global.Object.defineProperty)
             exception("'Object.defineProperty()' not found. This JavaScript environment is not supported.");
 
-        global.Object.defineProperty(factory, name, {
+        DS.global.Object.defineProperty(factory, name, {
             configurable: false,
             writable: false,
             get: function (this: IGraphNode): any { return this.getValue(sProp.name); },
@@ -465,7 +465,7 @@ export class GraphNode extends Factory(PropertyEventBase) {
     }
 }
 
-global.Object.defineProperty(GraphNode, <keyof typeof GraphNode>'uiElementMap', { writable: false, configurable: false });
+DS.global.Object.defineProperty(GraphNode, <keyof typeof GraphNode>'uiElementMap', { writable: false, configurable: false });
 
 export interface IGraphNode extends GraphNode { }
 

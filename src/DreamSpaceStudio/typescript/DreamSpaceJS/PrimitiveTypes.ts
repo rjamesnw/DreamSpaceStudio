@@ -169,6 +169,7 @@ export interface IObject extends Object { }
  * This is only valid if compiling your .ts source for ES5 while also enabling support for ES6 environments. 
  * If you compile your .ts source for ES6 then the 'class' syntax will be used and this value has no affect.
  */
+ //? * Note 2: 'new' and 'init' functions are NOT implemented. To implement proper defaults, call 'Types.makeFactory()'.
 export function makeDisposable<TBaseClass extends IType = ObjectConstructor>(baseClass: TBaseClass, isPrimitiveOrHostBase?: boolean) {
     if (!baseClass) {
         baseClass = <any>DS.global.Object;
@@ -177,17 +178,17 @@ export function makeDisposable<TBaseClass extends IType = ObjectConstructor>(bas
     else if (typeof isPrimitiveOrHostBase == 'undefined') isPrimitiveOrHostBase = isPrimitiveType(baseClass);
 
     var cls = class Object extends baseClass implements IDisposable {
-        /**
-        * Create a new basic object type.
-        * @param value If specified, the value will be wrapped in the created object.
-        * @param makeValuePrivate If true, the value will not be exposed, making the value immutable. Default is false.
-        */
-        static 'new'(value?: any, makeValuePrivate?: boolean): IObject { return null; }
+        ///**
+        //* Create a new basic object type.
+        //* @param value If specified, the value will be wrapped in the created object.
+        //* @param makeValuePrivate If true, the value will not be exposed, making the value immutable. Default is false.
+        //*/
+        //static 'new': (value?: any, makeValuePrivate?: boolean) => IObject;
 
-        /** This is called internally to initialize a blank instance of the underlying type. Users should call the 'new()'
-        * constructor function to get new instances, and 'dispose()' to release them when done.
-        */
-        static init(o: IObject, isnew: boolean, value?: any, makeValuePrivate?: boolean): void { }
+        ///** This is called internally to initialize a blank instance of the underlying type. Users should call the 'new()'
+        //* constructor function to get new instances, and 'dispose()' to release them when done.
+        //*/
+        //static init: (o: IObject, isnew: boolean, value?: any, makeValuePrivate?: boolean) => void;
 
         /**
         * Don't create objects using the 'new' operator. Use '{NameSpaces...ClassType}.new()' static methods instead.
@@ -249,7 +250,7 @@ export class String extends Factory(makeFactory(makeDisposable(PrimitiveString))
         * @param func The function that will be called for the resulting delegate object.
         */
     static init(o: IString, isnew: boolean, value?: any): void {
-        o.$__value = global.String(value);
+        o.$__value = DS.global.String(value);
         //??System.String.prototype.constructor.apply(this, arguments);
         // (IE browsers older than v9 do not populate the string object with the string characters)
         //if (Browser.type == Browser.BrowserTypes.IE && Browser.version <= 8)
@@ -305,8 +306,8 @@ export class String extends Factory(makeFactory(makeDisposable(PrimitiveString))
         else if (lchar) llen = remainder;
         else if (rchar) rlen = remainder;
 
-        lpad = global.Array(llen).join(lchar); // (https://stackoverflow.com/a/24398129/1236397)
-        rpad = global.Array(rlen).join(rchar);
+        lpad = DS.global.Array(llen).join(lchar); // (https://stackoverflow.com/a/24398129/1236397)
+        rpad = DS.global.Array(rlen).join(rchar);
 
         return lpad + s + rpad;
     }
@@ -399,7 +400,7 @@ export interface IString extends String { }
 class ArrayFactory extends Factory(makeFactory(DS.global.Array)) {
     /** Returns a new array object instance. 
       * Note: This is a DreamSpace system array object, and not the native JavaScript object. */
-    static 'new': <T = any>(...items: any[]) => IArray<T>;
+    static 'new': <T = any>(...items: any[]) => Array<T>;
     /**
        * Reinitializes a disposed Delegate instance.
        * @param this The Delegate instance to initialize, or re-initialize.
@@ -407,7 +408,7 @@ class ArrayFactory extends Factory(makeFactory(DS.global.Array)) {
        * @param object The instance to bind to the resulting delegate object.
        * @param func The function that will be called for the resulting delegate object.
        */
-    static init: <T = any>(o: IArray<T>, isnew: boolean, ...items: any[]) => void;
+    static init: <T = any>(o: Array<T>, isnew: boolean, ...items: any[]) => void;
 }
 
 @usingFactory(ArrayFactory, this)
@@ -423,9 +424,9 @@ class Array<T> extends makeDisposable(DS.global.Array)<T> {
     /** The static factory constructor for this type. */
     private static [DS.constructor](f: typeof ArrayFactory) {
         if (!DS.ES6) // (if 'class' syntax is not supported then the 'length' property will not behave like an normal array so try to polyfill this somewhat)
-            global.Object.defineProperty(Array.prototype, "length", {
+            DS.global.Object.defineProperty(Array.prototype, "length", {
                 get: function (this: IArray) { return this._length; },
-                set: function (this: IArray, v: number) { this._length = +v || 0; global.Array.prototype.splice(this._length); }
+                set: function (this: IArray, v: number) { this._length = +v || 0; DS.global.Array.prototype.splice(this._length); }
             });
 
         f.init = (o, isnew, ...items) => {

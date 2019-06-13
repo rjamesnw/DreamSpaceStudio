@@ -1,4 +1,4 @@
-import { Diagnostics } from "./System/Diagnostics";
+import { Diagnostics, LogItem } from "./System/Diagnostics";
 import { ScriptError } from "./Scripts";
 import { getTypeName } from "./Types";
 
@@ -63,7 +63,7 @@ export function getErrorMessage(errorSource: any): string { // TODO: Test how th
     if (typeof errorSource == 'string')
         return errorSource;
     else if (typeof errorSource == 'object') {
-        if (Diagnostics && Diagnostics.LogItem && errorSource instanceof Diagnostics.LogItem) {
+        if (Diagnostics && LogItem && errorSource instanceof LogItem) {
             return errorSource.toString();
         } else if ('message' in errorSource) { // (this should support both 'Exception' AND 'Error' objects)
             var errorInfo: _IError = errorSource;

@@ -7,7 +7,7 @@ import { Factory, usingFactory } from "../Types";
 import { Object, IObject } from "../PrimitiveTypes";
 import { INamespaceInfo, IFunctionInfo } from "../Globals";
 import { Exception } from "./Exception";
-import Browser from "./Browser";
+import { Browser } from "./Browser";
 import { SerializedData } from "./Serialization";
 import { IDomainObjectInfo } from "./AppDomain";
 

@@ -2,7 +2,9 @@
 // Collections: ObservableCollection
 // ############################################################################################################################################
 
-import { Factory } from "../Types";
+import { Factory, usingFactory } from "../Types";
+import { Array, ArrayInstance } from "../PrimitiveTypes";
+import { IEventDispatcher } from "./Events";
 
 // ========================================================================================================================================
 
@@ -10,41 +12,36 @@ export interface NotifyCollectionChangingEventHandler<TItem> { (sender: {}, oldI
 export interface NotifyCollectionChangedEventHandler<TItem> { (sender: {}, oldItems: TItem[], oldIndex: number, newItems: TItem[], newIndex: number): any }
 
 export interface INotifyCollectionChanging<TOwner extends object, TItems> {
-    collectionChanging: Events.IEventDispatcher<TOwner, NotifyCollectionChangingEventHandler<TItems>>;
+    collectionChanging: IEventDispatcher<TOwner, NotifyCollectionChangingEventHandler<TItems>>;
 }
 
 export interface INotifyCollectionChanged<TOwner extends object, TItems> {
-    collectionChanged: Events.IEventDispatcher<TOwner, NotifyCollectionChangedEventHandler<TItems>>;
+    collectionChanged: IEventDispatcher<TOwner, NotifyCollectionChangedEventHandler<TItems>>;
 }
 
 /** Holds an array of items, and implements notification functionality for when the collection changes. */
-export class ObservableCollection extends Factory(Array) {
-    static 'new'<TOwner extends object, T>(...items: T[]): IObservableCollection<TOwner, T> { return null; }
+class ObservableCollectionFactory extends Factory(Array) {
+    static 'new'<TOwner extends IndexedObject, T>(...items: T[]): ObservableCollection<TOwner, T> { return null; }
 
-    static init<TOwner extends object, T>(o: IObservableCollection<TOwner, T>, isnew: boolean, ...items: T[]): void {
+    static init<TOwner extends IndexedObject, T>(o: ObservableCollection<TOwner, T>, isnew: boolean, ...items: T[]): void {
         this.super.init<T>(o, isnew, ...items);
     }
 }
-export namespace ObservableCollection {
-    export class $__type<TOwner extends object, T> extends FactoryType(Array)<T> implements INotifyCollectionChanging<TOwner, T>, INotifyCollectionChanged<TOwner, T> {
-        // --------------------------------------------------------------------------------------------------------------------------
 
-        [name: string]: any;
+@usingFactory(ObservableCollectionFactory, this)
+class ObservableCollection<TOwner extends IndexedObject, T> extends ArrayInstance<T> implements INotifyCollectionChanging<TOwner, T>, INotifyCollectionChanged<TOwner, T> {
+    // --------------------------------------------------------------------------------------------------------------------------
 
-        collectionChanging: Events.IEventDispatcher<TOwner, NotifyCollectionChangingEventHandler<T>>; // TODO: Implement
-        collectionChanged: Events.IEventDispatcher<TOwner, NotifyCollectionChangedEventHandler<T>>; // TODO: Implement
+    [name: string]: any;
 
-        // --------------------------------------------------------------------------------------------------------------------------
-        private static [constructor](factory: typeof ObservableCollection) {
-            //factory.init = (o, isnew) => {
-            //};
-        }
-        // --------------------------------------------------------------------------------------------------------------------------
-    }
+    collectionChanging: IEventDispatcher<TOwner, NotifyCollectionChangingEventHandler<T>>; // TODO: Implement
+    collectionChanged: IEventDispatcher<TOwner, NotifyCollectionChangedEventHandler<T>>; // TODO: Implement
 
-    ObservableCollection.$__register(Collections);
+    // --------------------------------------------------------------------------------------------------------------------------
 }
 
-export interface IObservableCollection<TOwner extends object, T> extends ObservableCollection.$__type<TOwner, T> { }
+export { ObservableCollectionFactory as ObservableCollection, ObservableCollection as ObservableCollectionInstance }
+
+export interface IObservableCollection<TOwner extends object, T> extends ObservableCollection<TOwner, T> { }
 
 // ############################################################################################################################################

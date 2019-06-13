@@ -1,5 +1,6 @@
-import { IResourceRequest } from "./ResourceRequest";
-import { ResourceTypes } from "./Resources";
+import { IResourceRequest, ResourceRequest } from "./ResourceRequest";
+import { ResourceTypes, getResourceTypeFromExtension } from "./Resources";
+import { error } from "./Logging";
 
 // ===============================================================================================================================
 
@@ -19,7 +20,7 @@ namespace IO {
             if (!type)
                 error("Loader.get('" + url + "', type:" + type + ")", "A resource (MIME) type is required, and no resource type could be determined (See DreamSpace.Loader.ResourceTypes). If the resource type cannot be detected by a file extension then you must specify the MIME string manually.");
         }
-        var request = _resourceRequestByURL[url]; // (try to load any already existing requests)
+        var request = ResourceRequest._resourceRequestByURL[url]; // (try to load any already existing requests)
         if (!request)
             request = ResourceRequest.new(url, type, asyc);
         return request;

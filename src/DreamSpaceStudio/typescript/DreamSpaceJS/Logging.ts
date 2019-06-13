@@ -1,3 +1,6 @@
+import { Diagnostics } from "././System/Diagnostics"; // ("./" twice causes an "optional" flag - it will only be included if already imported elsewhere)
+import { Exception } from "././System/Exception"; // ("./" twice causes an "optional" flag - it will only be included if already imported elsewhere)
+
 // =======================================================================================================================
 
 /** Used with 'DreamSpace.log(...)' to write to the host console, if available.

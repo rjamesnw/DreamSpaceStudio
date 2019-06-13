@@ -1,6 +1,5 @@
 ﻿import HtmlReader from "./htmlreader";
 
-
 export function Parse(html: string): Node {
     var reader = new HtmlReader(html);
 }

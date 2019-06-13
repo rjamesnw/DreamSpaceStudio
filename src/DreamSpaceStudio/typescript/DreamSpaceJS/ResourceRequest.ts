@@ -6,7 +6,7 @@ import { getErrorMessage } from "./ErrorHandling";
 import { Query } from "./Query";
 import { Utilities } from "./Utilities";
 import { DreamSpace as DS, IResultCallback, ICallback, IErrorCallback } from "./Globals";
-import { DSObject } from "./System/PrimitiveTypes";
+import { Object as DSObject } from "./PrimitiveTypes";
 
 // ===============================================================================================================================
 
@@ -206,6 +206,11 @@ export class ResourceRequest extends Factory() {
         this._dependants.push(request);
         return request;
     }
+
+    /** Returns a promise that hooks into this request. This is provided to support the async/await semantics.
+     * When the 'ready()' or 'catch' events fire, the promise is given the resource request instance in both cases.
+     * On success the value should be in either the 'transformedResponse' or 'response' properties of the request instance. */
+    asPromise(): Promise<IResourceRequest> { return new Promise((res, rej) => { this.ready((h) => { res(h); }); this.catch((h) => { res(h); }); }); }
 
     /**
      * Add a call-back handler for when the request completes successfully.
@@ -651,7 +656,7 @@ export class ResourceRequest extends Factory() {
         if (this.status == RequestStatuses.Error) {
             var msgs = this.messageLog.join("\r\n· ");
             if (msgs) msgs = ":\r\n· " + msgs; else msgs = ".";
-            throw new Error("Unhandled error loading resource " + (typeof this.type == 'string' ? ResourceTypes[this.type] : this.type) + " from '" + this.url + "'" + msgs + "\r\n");
+            throw new Error("Unhandled error loading resource " + (typeof this.type == 'string' ? ResourceTypes[<any>this.type] : this.type) + " from '" + this.url + "'" + msgs + "\r\n");
         }
     }
 
@@ -691,26 +696,24 @@ export class ResourceRequest extends Factory() {
             if (url === void 0 || url === null) throw "A resource URL is required.";
             if (type === void 0) throw "The resource type is required.";
 
-            if ((<any>_resourceRequestByURL)[url])
-                return (<any>_resourceRequestByURL)[url]; // (abandon this new object instance in favor of the one already existing and returned it)
+            if ((<any>ResourceRequest._resourceRequestByURL)[url])
+                return (<any>ResourceRequest._resourceRequestByURL)[url]; // (abandon this new object instance in favor of the one already existing and returned it)
 
             o.url = url;
             o.type = type;
             o.async = async;
 
-            o.$__index = _resourceRequests.length;
+            o.$__index = ResourceRequest._resourceRequests.length;
 
-            _resourceRequests.push(o);
-            _resourceRequestByURL[o.url] = o;
+            ResourceRequest._resourceRequests.push(o);
+            ResourceRequest._resourceRequestByURL[o.url] = o;
         };
     }
+
+    static _resourceRequests: IResourceRequest[] = []; // (requests are loaded in parallel, but executed in order of request)
+    static _resourceRequestByURL: { [url: string]: IResourceRequest } = {}; // (a quick named index lookup into '__loadRequests')
 }
 
 export interface IResourceRequest extends ResourceRequest { }
-
-// ===============================================================================================================================
-
-var _resourceRequests: IResourceRequest[] = []; // (requests are loaded in parallel, but executed in order of request)
-var _resourceRequestByURL: { [url: string]: IResourceRequest } = {}; // (a quick named index lookup into '__loadRequests')
 
 // ===============================================================================================================================

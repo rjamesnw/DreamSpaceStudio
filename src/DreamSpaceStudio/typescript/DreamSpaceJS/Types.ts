@@ -273,7 +273,7 @@ export namespace Types {
             error("__registerFactoryType()", "'" + getFullTypeName(factoryType) + ".$__type' is not a valid constructor function.", factoryType); // TODO: See if this can also be detected in ES2015 (ES6) using the specialized functions.
 
         // ... register type information first BEFORER we call any static constructor (so it is available to the user)s ...
-        
+
         // TODO: (NOTE: this call takes the instance type, which may also be the factory type; if not a factory, then it should have a reference to one)
         var registeredFactory = __registerType(instanceType, moduleSpace, addMemberTypeInfo);
 
@@ -530,13 +530,15 @@ type FactoryBaseType<T extends IType> =
     & ExcludeNewInit<T>;
 //function Factory<T extends IType, K extends keyof T>(base: T): FactoryBaseType<T> { return <any>base; }
 
-/** Converts a non-factory object type into a factory type.
+/** Converts a non-factory object type into a factory type. Any missing 'new' and 'init' functions are populated with defaults.
  * This is used on primitive types when making the 'derived primitive types' for the system.
  * WARNING: This adds a 'new()' and 'init()' function to the given type IF THEY DO NOT ALREADY EXIST. If one exists, that one is not added.
+ * @param replaceInit If true any existing 'init' function will be replaced with a default. Default is false.
+ * @param replaceNew If true any existing 'new' function will be replaced with a default. Default is false.
  */
-export function makeFactory<T extends IType = ObjectConstructor>(obj: T): T & IFactory<T, NewDelegate<InstanceType<T>>, InitDelegate<InstanceType<T>>> {
-    (<IFactory><any>obj).new = (<IFactory><any>obj).new || function (...args: any[]) { return new obj(...args); };
-    (<IFactory><any>obj).init = (<IFactory><any>obj).init || function (o: InstanceType<T> & { [i: string]: any }, isnew: boolean, ...args: any[]) {
+export function makeFactory<T extends IType = ObjectConstructor>(obj: T, replaceInit = false, replaceNew = false): T & IFactory<T, NewDelegate<InstanceType<T>>, InitDelegate<InstanceType<T>>> {
+    (<IFactory><any>obj).new = !replaceNew && (<IFactory><any>obj).new || function (...args: any[]) { return new obj(...args); };
+    (<IFactory><any>obj).init = !replaceInit && (<IFactory><any>obj).init || function (o: InstanceType<T> & { [i: string]: any }, isnew: boolean, ...args: any[]) {
         if (isnew) return o; // (else the object is from the cache of disposed objects)
         Utilities.erase(o);
         var newO: { [i: string]: any } = new obj(...args); // (this exists because we cannot assume the developer will create a better 'init()' for their derived factory type - which they should do)

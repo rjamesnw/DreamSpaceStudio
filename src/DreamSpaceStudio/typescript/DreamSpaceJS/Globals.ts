@@ -39,7 +39,7 @@ export namespace DreamSpace {
 
     /** The current version of the DreamSpace system. */
     export var version = "0.0.1";
-    Object.defineProperty(exports, "version", { writable: false });
+    Object.defineProperty(DreamSpace, "version", { writable: false });
 
     /** Returns the current user defined application version, or a default version. */
     export var getAppVersion = () => appVersion || "0.0.0";

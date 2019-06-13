@@ -6,7 +6,7 @@ import { DreamSpace as DS, ICallback, sealed, IErrorCallback } from "./Globals";
 import { log, error } from "./Logging";
 import { Factory, nameof, factory } from "./Types";
 import { ResourceTypes, RequestStatuses } from "./Resources";
-import { String, IAddLineNumbersFilter } from "./System/PrimitiveTypes";
+import { String, IAddLineNumbersFilter } from "./PrimitiveTypes";
 import { renderHelperVarDeclarations } from "./TSHelpers";
 import { Exception } from "./System/Exception";
 
@@ -311,6 +311,16 @@ var _appModule: IModule = null; // (becomes set to the app module when the app m
 
 interface _IModuleAccessors { get: (varName: string) => any; set: (varName: string, value: any) => any }
 
+export interface IScriptInfo {
+    /** An optional base path that is the root of the script and css files. */
+    basePath?: string;
+    /** One or more JavaScript (.js) files to load into the SAME module.
+     * Note that these are all combined and executed in the SAME scope, as they would be consider a single module as a whole. */
+    files: string | string[];
+    /** One or more optional CSS files to load, which are usually required my the loaded module.  Once the module is loaded, the CSS is added to the page. */
+    cssFiles?: string | string[];
+};
+
 /** Contains static module properties and functions. */
 export abstract class Module extends Factory(ScriptResource) implements IModuleLoadEvents {
     /** Returns a new module object only - does not load it. */
@@ -329,8 +339,11 @@ export abstract class Module extends Factory(ScriptResource) implements IModuleL
         o.then(o.__onLoaded).ready(o.__onReady);
     }
 
-    /** The path and name of the script to load for this module. */
-    scriptInfo: { filename: string; path: string; };
+    /** The base path and names of files to load for this module. */
+    scriptInfo: IScriptInfo;
+
+    /** Fires just before any files are loaded for the module. */
+    onBeforeLoad?(): void;
 
     /** Fires when a module's dependencies are all loaded. 
      * This is where you can call functions that need to run immediately after a script loads; such as 'jQuery.holdReady()'.
@@ -370,8 +383,8 @@ export abstract class Module extends Factory(ScriptResource) implements IModuleL
     /** Returns a variable value from the executed module's local scope.
       * Module scripts that are wrapped in functions may have defined global variables that become locally scoped instead. In
       * these cases, use this function to read the required values.  This is an expensive operation that should only be used to 
-      * retrieve object references.  If performance is required to access non-reference values, the script must be applied to
-      * the global scope as normal.
+      * retrieve object references.  If performance is required to access non-reference values, you should use this to read an
+      * object that contains all the values and references you need (i.e. a 'root' namespace object within the module scope).
       */
     getVar: <T extends any>(varName: string) => T = DS.noop;
     setVar: <T extends any>(varName: string, value: T) => T = DS.noop;
@@ -706,11 +719,13 @@ export class Require {
     load() { }
 }
 
+type TDefine = typeof define;
+
 /** A ModuleInfo object holds basic information for loading a module, and also stores. */
 export class ModuleInfo {
     id: string;
     url: string;
-    executor: { (define: typeof define): object };
+    executor: { (define: TDefine): object };
     module: Module;
 }
 

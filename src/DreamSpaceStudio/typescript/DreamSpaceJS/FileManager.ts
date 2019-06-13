@@ -1,7 +1,7 @@
 ﻿import { Store } from "./System/Storage";
 import { Encoding } from "./System/Text";
 import { User } from "./System/User";
-import { String } from "./System/PrimitiveTypes";
+import { String } from "./PrimitiveTypes";
 
 // ############################################################################################################################
 // FileManager

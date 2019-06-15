@@ -8,6 +8,7 @@
     <LastActiveSolutionConfig>Debug|Any CPU</LastActiveSolutionConfig>
     <SaveNodeJsSettingsInProjectFile>True</SaveNodeJsSettingsInProjectFile>
     <TypeScriptBuildMode>true</TypeScriptBuildMode>
+    <LaunchUrl>http://localhost:45000/</LaunchUrl>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -15,8 +16,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>299b48b6-ada3-487d-b803-ad33d3471265</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>
-    </StartupFile>
+    <StartupFile>typescript\server\app.ts</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -37,113 +37,113 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\FileManager.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\ResourceRequest.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\Security.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\User.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\TSHelpers.ts">
+    <TypeScriptCompile Include="typescript\client\Modules\Cubiq_org\add2home_2.0.11.m.ts" />
+    <TypeScriptCompile Include="typescript\client\Modules\Eyecon_ro\datepicker\datepicker.m.ts" />
+    <TypeScriptCompile Include="typescript\client\Modules\Github\Ilinsky\XMLHttpRequest-20130624.m.ts" />
+    <TypeScriptCompile Include="typescript\client\Modules\Google\Maps\maps.m.ts" />
+    <TypeScriptCompile Include="typescript\client\Modules\HoldOn\holdon.m.ts" />
+    <TypeScriptCompile Include="typescript\client\Modules\JQuery\v2_2_0.m.ts" />
+    <TypeScriptCompile Include="typescript\client\Modules\Linq4JS\Linq4JS.m.ts" />
+    <TypeScriptCompile Include="typescript\client\Modules\MomentJS\v2.4.0.m.ts" />
+    <TypeScriptCompile Include="typescript\client\Modules\Scirra\manifest.ts" />
+    <TypeScriptCompile Include="typescript\client\Modules\Twitter\bootstrap.m.ts" />
+    <TypeScriptCompile Include="typescript\client\Modules\Twitter\Platform.UI.Bootstrap.ts" />
+    <TypeScriptCompile Include="typescript\client\Modules\xregexp\v2_0_0.m.ts" />
+    <TypeScriptCompile Include="typescript\client\Modules\xregexp\__xregexp_info.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\FileManager.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\ResourceRequest.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Security.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\User.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\TSHelpers.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Uri.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Query.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Path.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\IO.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\xregexp\v2_0_0.m.ts" />
-    <TypeScriptCompile Include="TypeScript\types\globals.d.ts" />
-    <TypeScriptCompile Include="TypeScript\types\DreamSpace~.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Resources.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\ErrorHandling.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Logging.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Cubiq_org\add2home_2.0.11.m.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Eyecon_ro\datepicker\datepicker.m.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Github\Ilinsky\XMLHttpRequest-20130624.m.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\Globals.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Google\Maps\maps.m.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\HoldOn\holdon.m.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\HostBridge.ICE.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\HostBridge.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\JQuery\v2_2_0.m.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Linq4JS\Linq4JS.m.ts" />
-    <None Include="TypeScript\DreamSpaceJS\manifest.ts~" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\MomentJS\v2.4.0.m.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\Polyfills.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\Scirra\manifest.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\Scripts.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\AppDomain.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Browser.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Collections.IndexedObjectCollection.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Collections.ObservableCollection.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Data.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Delegate.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Diagnostics.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Events.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Exception.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\IO.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Markup.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Platform.Graph.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Platform.HTML.Application.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.Platform.HTML.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Platform.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Platform.Windows.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\PrimitiveTypes.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Properties.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Serialization.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Storage.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Text.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Time.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\System\System.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\System\Users~.ts" />
-    <None Include="TypeScript\DreamSpaceJS\Loader.ts~" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\test.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\Twitter\CoreXT.System.Platform.UI.Bootstrap.ts" />
-    <TypeScriptCompile Include="TypeScript\DreamSpaceJS\Twitter\bootstrap.m.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\Types.ts" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\Utilities.ts" />
-    <None Include="TypeScript\DreamSpaceJS\VDom.Canvas.ts~" />
-    <None Include="TypeScript\DreamSpaceJS\VDom.ts~" />
-    <TypeScriptCompile Include="typescript\DreamSpaceJS\xregexp\__xregexp_info.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\Uri.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\Query.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\Path.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\IO.ts" />
+    <TypeScriptCompile Include="typescript\server\globals.d.ts" />
+    <None Include="TypeScript\types\DreamSpace~.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\Resources.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\ErrorHandling.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\Logging.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\Globals.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\HostBridge.ICE.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\HostBridge.ts" />
+    <None Include="TypeScript\Core\manifest.ts~" />
+    <TypeScriptCompile Include="TypeScript\Core\Polyfills.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\Scripts.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\AppDomain.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Browser.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Collections.IndexedObjectCollection.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Collections.ObservableCollection.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Data.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Delegate.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Diagnostics.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Events.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Exception.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\IO.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Markup.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Platform.Graph.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Platform.HTML.Application.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Platform.HTML.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Platform.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Platform.Windows.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\PrimitiveTypes.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Properties.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Serialization.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Storage.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Text.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Time.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\System.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\System\Users~.ts" />
+    <None Include="TypeScript\Core\Loader.ts~" />
+    <None Include="TypeScript\Core\test.ts~" />
+    <TypeScriptCompile Include="TypeScript\Core\Types.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\Utilities.ts" />
+    <None Include="TypeScript\Core\VDom.Canvas.ts~" />
+    <None Include="TypeScript\Core\VDom.ts~" />
     <TypeScriptCompile Include="typescript\server\vdom.ts" />
     <TypeScriptCompile Include="typescript\server\app.ts" />
-    <TypeScriptCompile Include="routes\index.ts" />
-    <TypeScriptCompile Include="routes\user.ts" />
+    <TypeScriptCompile Include="TypeScript\routes\index.ts" />
+    <TypeScriptCompile Include="TypeScript\routes\user.ts" />
     <Content Include="..\..\LICENSE">
       <Link>LICENSE</Link>
     </Content>
     <Content Include="..\..\README.md">
       <Link>README.md</Link>
     </Content>
-    <Content Include="TypeScript\DreamSpaceJS\tsconfig~.json" />
-    <Content Include="TypeScript\server\tsconfig~.json" />
+    <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\.gitignore" />
+    <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\custom-message\index.html" />
+    <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\hash-trick\index.html" />
+    <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\images\touch-icon-ipad.png" />
+    <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\images\touch-icon-ipad2.png" />
+    <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\images\touch-icon-iphone.png" />
+    <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\images\touch-icon-iphone4.png" />
+    <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\manual-startup\index.html" />
+    <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\simple\index.html" />
+    <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\suggested-config\index.html" />
+    <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\touch-icon\index.html" />
+    <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\README.md" />
+    <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\style\add2home.css" />
+    <Content Include="typescript\client\Modules\Eyecon_ro\datepicker\css\datepicker.css" />
+    <Content Include="typescript\client\Modules\Eyecon_ro\datepicker\less\datepicker.less" />
+    <Content Include="typescript\client\Modules\HoldOn\HoldOn.css" />
+    <Content Include="typescript\client\Modules\HoldOn\HoldOn.min.css" />
+    <Content Include="typescript\client\Modules\JQuery\jquery_2_2_0.min.map" />
+    <Content Include="typescript\client\Modules\Twitter\bootstrap\css\bootstrap-theme.css" />
+    <Content Include="typescript\client\Modules\Twitter\bootstrap\css\bootstrap-theme.min.css" />
+    <Content Include="typescript\client\Modules\Twitter\bootstrap\css\bootstrap.css" />
+    <Content Include="typescript\client\Modules\Twitter\bootstrap\css\bootstrap.min.css" />
+    <Content Include="typescript\client\Modules\Twitter\bootstrap\fonts\glyphicons-halflings-regular.eot" />
+    <Content Include="typescript\client\Modules\Twitter\bootstrap\fonts\glyphicons-halflings-regular.svg" />
+    <Content Include="typescript\client\Modules\Twitter\bootstrap\fonts\glyphicons-halflings-regular.ttf" />
+    <Content Include="typescript\client\Modules\Twitter\bootstrap\fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="TypeScript\Core\tsconfig~.json" />
+    <Content Include="TypeScript\tsconfig.json" />
     <Content Include="package.json" />
     <Content Include="public\stylesheets\main.css" />
     <Content Include="TypeScript\client\tsconfig.json" />
-    <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\.gitignore" />
-    <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\custom-message\index.html" />
-    <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\hash-trick\index.html" />
-    <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\images\touch-icon-ipad.png" />
-    <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\images\touch-icon-ipad2.png" />
-    <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\images\touch-icon-iphone.png" />
-    <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\images\touch-icon-iphone4.png" />
-    <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\manual-startup\index.html" />
-    <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\simple\index.html" />
-    <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\suggested-config\index.html" />
-    <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\touch-icon\index.html" />
-    <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\README.md" />
-    <Content Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\style\add2home.css" />
-    <Content Include="typescript\DreamSpaceJS\Eyecon_ro\datepicker\css\datepicker.css" />
-    <Content Include="typescript\DreamSpaceJS\Eyecon_ro\datepicker\less\datepicker.less" />
-    <Content Include="typescript\DreamSpaceJS\HoldOn\HoldOn.css" />
-    <Content Include="typescript\DreamSpaceJS\HoldOn\HoldOn.min.css" />
-    <Content Include="typescript\DreamSpaceJS\JQuery\jquery_2_2_0.min.map" />
-    <Content Include="typescript\DreamSpaceJS\Scripting Symanics Ideas.txt" />
-    <Content Include="typescript\DreamSpaceJS\Twitter\bootstrap\css\bootstrap-theme.css" />
-    <Content Include="typescript\DreamSpaceJS\Twitter\bootstrap\css\bootstrap-theme.min.css" />
-    <Content Include="typescript\DreamSpaceJS\Twitter\bootstrap\css\bootstrap.css" />
-    <Content Include="typescript\DreamSpaceJS\Twitter\bootstrap\css\bootstrap.min.css" />
-    <Content Include="typescript\DreamSpaceJS\Twitter\bootstrap\fonts\glyphicons-halflings-regular.eot" />
-    <Content Include="typescript\DreamSpaceJS\Twitter\bootstrap\fonts\glyphicons-halflings-regular.svg" />
-    <Content Include="typescript\DreamSpaceJS\Twitter\bootstrap\fonts\glyphicons-halflings-regular.ttf" />
-    <Content Include="typescript\DreamSpaceJS\Twitter\bootstrap\fonts\glyphicons-halflings-regular.woff" />
+    <Content Include="TypeScript\Core\Scripting Symanics Ideas.txt" />
     <Content Include="views\studio\error.html" />
     <Content Include="views\studio\layout.html" />
     <Content Include="views\studio\index.html">
@@ -156,67 +156,66 @@
     <Folder Include="public\images\" />
     <Folder Include="public\js\" />
     <Folder Include="public\stylesheets\" />
-    <Folder Include="routes\" />
-    <Folder Include="TypeScript\client\decl\" />
-    <Folder Include="typescript\DreamSpaceJS\" />
-    <Folder Include="typescript\DreamSpaceJS\Cubiq_org\" />
-    <Folder Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\" />
-    <Folder Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\" />
-    <Folder Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\custom-message\" />
-    <Folder Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\hash-trick\" />
-    <Folder Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\images\" />
-    <Folder Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\manual-startup\" />
-    <Folder Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\simple\" />
-    <Folder Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\suggested-config\" />
-    <Folder Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\examples\touch-icon\" />
-    <Folder Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\src\" />
-    <Folder Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\style\" />
-    <Folder Include="typescript\DreamSpaceJS\Eyecon_ro\" />
-    <Folder Include="typescript\DreamSpaceJS\Eyecon_ro\datepicker\" />
-    <Folder Include="typescript\DreamSpaceJS\Eyecon_ro\datepicker\css\" />
-    <Folder Include="typescript\DreamSpaceJS\Eyecon_ro\datepicker\js\" />
-    <Folder Include="typescript\DreamSpaceJS\Eyecon_ro\datepicker\less\" />
-    <Folder Include="typescript\DreamSpaceJS\Github\" />
-    <Folder Include="typescript\DreamSpaceJS\Github\Ilinsky\" />
-    <Folder Include="typescript\DreamSpaceJS\Google\" />
-    <Folder Include="typescript\DreamSpaceJS\Google\Maps\" />
-    <Folder Include="typescript\DreamSpaceJS\HoldOn\" />
-    <Folder Include="typescript\DreamSpaceJS\JQuery\" />
-    <Folder Include="typescript\DreamSpaceJS\Linq4JS\" />
-    <Folder Include="typescript\DreamSpaceJS\Misc\" />
-    <Folder Include="typescript\DreamSpaceJS\MomentJS\" />
-    <Folder Include="typescript\DreamSpaceJS\Scirra\" />
-    <Folder Include="typescript\DreamSpaceJS\System\" />
-    <Folder Include="typescript\DreamSpaceJS\Twitter\" />
-    <Folder Include="typescript\DreamSpaceJS\Twitter\bootstrap\" />
-    <Folder Include="typescript\DreamSpaceJS\Twitter\bootstrap\css\" />
-    <Folder Include="typescript\DreamSpaceJS\Twitter\bootstrap\fonts\" />
-    <Folder Include="typescript\DreamSpaceJS\Twitter\bootstrap\js\" />
-    <Folder Include="typescript\DreamSpaceJS\xregexp\" />
+    <Folder Include="typescript\client\Modules\" />
+    <Folder Include="typescript\client\Modules\Cubiq_org\" />
+    <Folder Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\" />
+    <Folder Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\" />
+    <Folder Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\custom-message\" />
+    <Folder Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\hash-trick\" />
+    <Folder Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\images\" />
+    <Folder Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\manual-startup\" />
+    <Folder Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\simple\" />
+    <Folder Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\suggested-config\" />
+    <Folder Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\touch-icon\" />
+    <Folder Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\src\" />
+    <Folder Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\style\" />
+    <Folder Include="typescript\client\Modules\Eyecon_ro\" />
+    <Folder Include="typescript\client\Modules\Eyecon_ro\datepicker\" />
+    <Folder Include="typescript\client\Modules\Eyecon_ro\datepicker\css\" />
+    <Folder Include="typescript\client\Modules\Eyecon_ro\datepicker\js\" />
+    <Folder Include="typescript\client\Modules\Eyecon_ro\datepicker\less\" />
+    <Folder Include="typescript\client\Modules\Github\" />
+    <Folder Include="typescript\client\Modules\Github\Ilinsky\" />
+    <Folder Include="typescript\client\Modules\Google\" />
+    <Folder Include="typescript\client\Modules\Google\Maps\" />
+    <Folder Include="typescript\client\Modules\HoldOn\" />
+    <Folder Include="typescript\client\Modules\JQuery\" />
+    <Folder Include="typescript\client\Modules\Linq4JS\" />
+    <Folder Include="typescript\client\Modules\Misc\" />
+    <Folder Include="typescript\client\Modules\MomentJS\" />
+    <Folder Include="typescript\client\Modules\Scirra\" />
+    <Folder Include="typescript\client\Modules\Twitter\" />
+    <Folder Include="typescript\client\Modules\Twitter\bootstrap\" />
+    <Folder Include="typescript\client\Modules\Twitter\bootstrap\css\" />
+    <Folder Include="typescript\client\Modules\Twitter\bootstrap\fonts\" />
+    <Folder Include="typescript\client\Modules\Twitter\bootstrap\js\" />
+    <Folder Include="typescript\client\Modules\xregexp\" />
+    <Folder Include="TypeScript\routes\" />
+    <Folder Include="TypeScript\Core\" />
+    <Folder Include="TypeScript\Core\System\" />
     <Folder Include="TypeScript\client\" />
-    <Folder Include="typescript\server\decl\" />
     <Folder Include="TypeScript\types\" />
     <Folder Include="typescript\server\" />
     <Folder Include="views\" />
     <Folder Include="views\studio\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="typescript\DreamSpaceJS\Cubiq_org\AddToHomeScreen-2.0.11\src\add2home.js" />
-    <Compile Include="typescript\DreamSpaceJS\Eyecon_ro\datepicker\js\bootstrap-datepicker.js" />
-    <Compile Include="typescript\DreamSpaceJS\Github\Ilinsky\XMLHttpRequest-20130624.js" />
-    <Compile Include="typescript\DreamSpaceJS\HoldOn\HoldOn.min.js" />
-    <Compile Include="typescript\DreamSpaceJS\JQuery\jquery_2_2_0.js" />
-    <Compile Include="typescript\DreamSpaceJS\JQuery\jquery_2_2_0.min.js" />
-    <Compile Include="typescript\DreamSpaceJS\Linq4JS\linq4js.js" />
-    <Compile Include="typescript\DreamSpaceJS\Linq4JS\linq4js.min.js" />
-    <Compile Include="typescript\DreamSpaceJS\Misc\soapclient.js" />
-    <Compile Include="typescript\DreamSpaceJS\MomentJS\moment-with-langs.js" />
-    <Compile Include="typescript\DreamSpaceJS\MomentJS\moment-with-langs.min.js" />
-    <Compile Include="typescript\DreamSpaceJS\MomentJS\moment.min.js" />
-    <Compile Include="typescript\DreamSpaceJS\Twitter\bootstrap\js\bootstrap.js" />
-    <Compile Include="typescript\DreamSpaceJS\Twitter\bootstrap\js\bootstrap.min.js" />
-    <Compile Include="typescript\DreamSpaceJS\xregexp\xregexp-min.js" />
-    <Compile Include="typescript\DreamSpaceJS\xregexp\xregexp.js" />
+    <Compile Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\src\add2home.js" />
+    <Compile Include="typescript\client\Modules\Eyecon_ro\datepicker\js\bootstrap-datepicker.js" />
+    <Compile Include="typescript\client\Modules\Github\Ilinsky\XMLHttpRequest-20130624.js" />
+    <Compile Include="typescript\client\Modules\HoldOn\HoldOn.min.js" />
+    <Compile Include="typescript\client\Modules\JQuery\jquery_2_2_0.js" />
+    <Compile Include="typescript\client\Modules\JQuery\jquery_2_2_0.min.js" />
+    <Compile Include="typescript\client\Modules\Linq4JS\linq4js.js" />
+    <Compile Include="typescript\client\Modules\Linq4JS\linq4js.min.js" />
+    <Compile Include="typescript\client\Modules\Misc\soapclient.js" />
+    <Compile Include="typescript\client\Modules\MomentJS\moment-with-langs.js" />
+    <Compile Include="typescript\client\Modules\MomentJS\moment-with-langs.min.js" />
+    <Compile Include="typescript\client\Modules\MomentJS\moment.min.js" />
+    <Compile Include="typescript\client\Modules\Twitter\bootstrap\js\bootstrap.js" />
+    <Compile Include="typescript\client\Modules\Twitter\bootstrap\js\bootstrap.min.js" />
+    <Compile Include="typescript\client\Modules\xregexp\xregexp-min.js" />
+    <Compile Include="typescript\client\Modules\xregexp\xregexp.js" />
   </ItemGroup>
   <!-- Do not delete the following Import Project.  While this appears to do nothing it is a marker for setting TypeScript properties before our import that depends on them. -->
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="False" />

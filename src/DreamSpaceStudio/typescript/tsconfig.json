@@ -1,0 +1,33 @@
+// This has to be in the TypeScript folder to set default TS compiling to be the server, which is the main part of the app.
+{
+  "compilerOptions": {
+    "incremental": true,
+    "module": "commonjs",
+    "target": "es6",
+    "lib": [ "es6", "dom" ],
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "declaration": true,
+    "rootDir": "./",
+    "declarationDir": "../../public/js/server/decl",
+    "experimentalDecorators": true,
+    "types": [ "debug", "express" ]
+  },
+  "include": [
+    "server/globals.d.ts",
+    "./server/**/*.ts",
+    "Core/**/*.ts"
+  ],
+  //"include": [ "Core/Polyfills.ts", "Core/System/Delegate.ts" ],
+  "exclude": [
+    "node_modules",
+    "client/**/*.*",
+    "server/vdom.ts",
+    //"Core",
+    "types/DreamSpace*.*",
+    "Core/**/htmlreader.ts",
+    "Core/**/Loader.ts",
+    "Core/**/manifest.ts",
+    "Core/**/Platform.UI.Bootstrap.ts"
+  ]
+}

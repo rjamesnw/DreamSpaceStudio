@@ -3,7 +3,7 @@
 // ###########################################################################################################################
 
 import { log, error, LogTypes } from "./Logging";
-import { IDomainObjectInfo, IADBridge, AppDomain } from "./System/AppDomain";
+//import { IDomainObjectInfo, IADBridge, AppDomain } from "./System/AppDomain";
 import { Utilities } from "./Utilities";
 import { Delegate } from "./System/Delegate";
 import { DreamSpace as DS, IDisposable, ITypeInfo, IFactoryTypeInfo, IType, IFactory, IClassInfo, IFunctionInfo, INamespaceInfo, InitDelegate, NewDelegate } from "./Globals";

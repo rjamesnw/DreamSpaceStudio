@@ -9,10 +9,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Types_1 = require("../Types");
+const Factories_1 = require("../Factories");
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
 /** Holds an array of items, and implements notification functionality for when the collection changes. */
-class ObservableCollectionFactory extends Types_1.Factory(PrimitiveTypes_1.Array) {
+class ObservableCollectionFactory extends Factories_1.Factory(PrimitiveTypes_1.Array) {
     static 'new'(...items) { return null; }
     static init(o, isnew, ...items) {
         this.super.init(o, isnew, ...items);
@@ -22,7 +22,7 @@ exports.ObservableCollection = ObservableCollectionFactory;
 let ObservableCollection = class ObservableCollection extends PrimitiveTypes_1.ArrayInstance {
 };
 ObservableCollection = __decorate([
-    Types_1.usingFactory(ObservableCollectionFactory, this)
+    Factories_1.usingFactory(ObservableCollectionFactory, this)
 ], ObservableCollection);
 exports.ObservableCollectionInstance = ObservableCollection;
 // ############################################################################################################################################

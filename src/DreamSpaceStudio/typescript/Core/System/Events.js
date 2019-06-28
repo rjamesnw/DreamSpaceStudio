@@ -17,6 +17,7 @@ __export(require("../Globals"));
 const Globals_1 = require("../Globals");
 const Delegate_1 = require("./Delegate");
 const Types_1 = require("../Types");
+const Factories_1 = require("../Factories");
 const Exception_1 = require("./Exception");
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
 const ErrorHandling_1 = require("../ErrorHandling");
@@ -40,7 +41,7 @@ var EventModes;
   * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
   * instance level event handler registration on the class only when necessary.
   */
-let EventDispatcherFactory = class EventDispatcherFactory extends Types_1.Factory(PrimitiveTypes_1.Object) {
+let EventDispatcherFactory = class EventDispatcherFactory extends Factories_1.Factory(PrimitiveTypes_1.Object) {
     /** Creates an event object for a specific even type.
         * @param {TOwner} owner The owner which owns this event object.
         * @param {string} eventName The name of the event which this event object represents.
@@ -82,7 +83,7 @@ let EventDispatcherFactory = class EventDispatcherFactory extends Types_1.Factor
     static createPrivateEventName(eventName) { return "$__" + eventName + "Event"; }
 };
 EventDispatcherFactory = __decorate([
-    Types_1.factory(this)
+    Factories_1.factory(this)
 ], EventDispatcherFactory);
 exports.EventDispatcher = EventDispatcherFactory;
 let EventDispatcher = EventDispatcher_1 = class EventDispatcher extends PrimitiveTypes_1.DependentObject {
@@ -401,10 +402,10 @@ let EventDispatcher = EventDispatcher_1 = class EventDispatcher extends Primitiv
     }
 };
 EventDispatcher = EventDispatcher_1 = __decorate([
-    Types_1.usingFactory(EventDispatcherFactory, this)
+    Factories_1.usingFactory(EventDispatcherFactory, this)
 ], EventDispatcher);
 exports.EventDispatcherInstance = EventDispatcher;
-class EventObject extends Types_1.Factory(PrimitiveTypes_1.Object) {
+class EventObject extends Factories_1.Factory(PrimitiveTypes_1.Object) {
     /**
     * Constructs a new Delegate object.
     * @param {Object} object The instance on which the associated function will be called.  This should be undefined/null for static functions.

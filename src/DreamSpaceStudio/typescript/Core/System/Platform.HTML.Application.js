@@ -4,7 +4,7 @@
 // ############################################################################################################################
 Object.defineProperty(exports, "__esModule", { value: true });
 const Globals_1 = require("../Globals");
-const Types_1 = require("../Types");
+const Factories_1 = require("../Factories");
 const Platform_Graph_1 = require("./Platform.Graph");
 const Exception_1 = require("./Exception");
 const Platform_HTML_1 = require("./Platform.HTML");
@@ -23,7 +23,7 @@ const Logging_1 = require("../Logging");
 //export interface IHTMLApplication extends InstanceType<typeof HTMLApplication.$__type> { }
 // ========================================================================================================================
 /** An ApplicationElement object is the root object of the graph tree that relates one UIApplication instance. */
-class ApplicationElement extends Types_1.Factory(Platform_HTML_1.HTMLElement) {
+class ApplicationElement extends Factories_1.Factory(Platform_HTML_1.HTMLElement) {
     constructor() {
         super(...arguments);
         // --------------------------------------------------------------------------------------------------------------------

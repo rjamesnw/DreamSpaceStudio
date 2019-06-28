@@ -1,7 +1,7 @@
 // ###########################################################################################################################
 // Application Windows
 // ###########################################################################################################################
-define(["require", "exports", "../Types", "../Utilities", "../PrimitiveTypes"], function (require, exports, Types_1, Utilities_1, PrimitiveTypes_1) {
+define(["require", "exports", "../Factories", "../Utilities", "../PrimitiveTypes"], function (require, exports, Factories_1, Utilities_1, PrimitiveTypes_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // =======================================================================================================================
@@ -17,7 +17,7 @@ define(["require", "exports", "../Types", "../Utilities", "../PrimitiveTypes"], 
     //      */
     //    Native
     //}
-    class Window extends Types_1.Factory(PrimitiveTypes_1.Object) {
+    class Window extends Factories_1.Factory(PrimitiveTypes_1.Object) {
         constructor() {
             super(...arguments);
             this._guid = Utilities_1.Utilities.createGUID(false);

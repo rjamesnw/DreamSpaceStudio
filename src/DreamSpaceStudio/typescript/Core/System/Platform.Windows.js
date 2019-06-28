@@ -3,7 +3,7 @@
 // Application Windows
 // ###########################################################################################################################
 Object.defineProperty(exports, "__esModule", { value: true });
-const Types_1 = require("../Types");
+const Factories_1 = require("../Factories");
 const Utilities_1 = require("../Utilities");
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
 // =======================================================================================================================
@@ -19,7 +19,7 @@ const PrimitiveTypes_1 = require("../PrimitiveTypes");
 //      */
 //    Native
 //}
-class Window extends Types_1.Factory(PrimitiveTypes_1.Object) {
+class Window extends Factories_1.Factory(PrimitiveTypes_1.Object) {
     constructor() {
         super(...arguments);
         this._guid = Utilities_1.Utilities.createGUID(false);

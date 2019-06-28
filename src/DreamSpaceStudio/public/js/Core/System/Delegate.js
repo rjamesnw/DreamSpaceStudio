@@ -1,7 +1,7 @@
 // ###########################################################################################################################
 // Callback Delegates (serializable - closures should not be used)
 // ###########################################################################################################################
-define(["require", "exports", "../Globals", "../Types", "../PrimitiveTypes", "./Exception", "./Browser"], function (require, exports, Globals_1, Types_1, PrimitiveTypes_1, Exception_1, Browser_1) {
+define(["require", "exports", "../Globals", "../Factories", "../PrimitiveTypes", "./Exception", "./Browser"], function (require, exports, Globals_1, Factories_1, PrimitiveTypes_1, Exception_1, Browser_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Delegate_1;
@@ -15,7 +15,7 @@ define(["require", "exports", "../Globals", "../Types", "../PrimitiveTypes", "./
      * serialized.
      * Note: If the target object is undefined, then 'null' is assumed and passed in as 'this'.
      */
-    class DelegateFactory extends Types_1.Factory(PrimitiveTypes_1.Object) {
+    class DelegateFactory extends Factories_1.Factory(PrimitiveTypes_1.Object) {
         /**
         * Reinitializes a disposed Delegate instance.
         * @param o The Delegate instance to initialize, or re-initialize.
@@ -175,7 +175,7 @@ define(["require", "exports", "../Globals", "../Types", "../PrimitiveTypes", "./
         }
     };
     Delegate = Delegate_1 = __decorate([
-        Types_1.usingFactory(DelegateFactory, this)
+        Factories_1.usingFactory(DelegateFactory, this)
     ], Delegate);
     exports.DelegateInstance = Delegate;
 });

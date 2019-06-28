@@ -10,7 +10,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var LogItem_1;
-const Types_1 = require("../Types");
+const Factories_1 = require("../Factories");
 const Globals_1 = require("../Globals");
 const Time_1 = require("./Time");
 const Logging_1 = require("../Logging");
@@ -19,7 +19,7 @@ const PrimitiveTypes_1 = require("../PrimitiveTypes");
 // ========================================================================================================================
 var __logItemsSequenceCounter = 0;
 var __logCaptureStack = [];
-let LogItem = LogItem_1 = class LogItem extends Types_1.Factory() {
+let LogItem = LogItem_1 = class LogItem extends Factories_1.Factory() {
     constructor() {
         super(...arguments);
         // --------------------------------------------------------------------------------------------------------------------------
@@ -118,7 +118,7 @@ let LogItem = LogItem_1 = class LogItem extends Types_1.Factory() {
     }
 };
 LogItem = LogItem_1 = __decorate([
-    Types_1.factory(Diagnostics)
+    Factories_1.factory(Diagnostics)
 ], LogItem);
 exports.LogItem = LogItem;
 /** Contains diagnostic based functions, such as those needed for logging purposes. */

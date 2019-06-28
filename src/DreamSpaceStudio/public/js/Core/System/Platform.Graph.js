@@ -1,11 +1,11 @@
 // ############################################################################################################################################
 // Types for specialized object property management.
 // ############################################################################################################################################
-define(["require", "exports", "../Types", "./Events", "./Properties", "../Globals", "./Exception", "../PrimitiveTypes"], function (require, exports, Types_1, Events_1, Properties_1, Globals_1, Exception_1, PrimitiveTypes_1) {
+define(["require", "exports", "../Types", "../Factories", "./Events", "./Properties", "../Globals", "./Exception", "../PrimitiveTypes"], function (require, exports, Types_1, Factories_1, Events_1, Properties_1, Globals_1, Exception_1, PrimitiveTypes_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     /** A graph item represents a single node on the application graph. */
-    class GraphNode extends Types_1.Factory(Properties_1.PropertyEventBase) {
+    class GraphNode extends Factories_1.Factory(Properties_1.PropertyEventBase) {
         constructor() {
             super(...arguments);
             // -----------------------------------------------------------------------------------------------------------------------------------

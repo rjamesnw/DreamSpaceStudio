@@ -2,7 +2,7 @@
 // Types for time management.
 // ############################################################################################################################
 
-import { Factory, factory } from "../Types";
+import { Factory, factory } from "../Factories";
 import { DreamSpace as DS, ITypeInfo } from "../Globals";
 import { TimeSpan, ITimeSpan } from "./Time";
 import { LogTypes, error, log as base_log } from "../Logging";

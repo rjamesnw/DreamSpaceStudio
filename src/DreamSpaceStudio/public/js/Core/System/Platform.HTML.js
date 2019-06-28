@@ -1,4 +1,4 @@
-define(["require", "exports", "../Types", "./Platform.Graph", "./Diagnostics", "./Markup", "../Globals", "./Exception", "../Utilities", "../Scripts", "./Platform", "./Platform.Windows"], function (require, exports, Types_1, Platform_Graph_1, Diagnostics_1, Markup_1, Globals_1, Exception_1, Utilities_1, Scripts_1, Platform_1, Platform_Windows_1) {
+define(["require", "exports", "../Factories", "./Platform.Graph", "./Diagnostics", "./Markup", "../Globals", "./Exception", "../Utilities", "../Scripts", "./Platform", "./Platform.Windows"], function (require, exports, Factories_1, Platform_Graph_1, Diagnostics_1, Markup_1, Globals_1, Exception_1, Utilities_1, Scripts_1, Platform_1, Platform_Windows_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var HTMLElement_1, PlainText_1, Phrase_1, Header_1;
@@ -75,12 +75,12 @@ define(["require", "exports", "../Types", "./Platform.Graph", "./Diagnostics", "
         }
     };
     BrowserContext = __decorate([
-        Types_1.factory(this)
+        Factories_1.factory(this)
     ], BrowserContext);
     exports.BrowserContext = BrowserContext;
     // ====================================================================================================================
     /** Represents the base of a DreamSpace UI object of various UI types. The default implementation extends this to implement HTML elements. */
-    let HTMLNode = class HTMLNode extends Types_1.Factory(Platform_Graph_1.GraphNode) {
+    let HTMLNode = class HTMLNode extends Factories_1.Factory(Platform_Graph_1.GraphNode) {
         // ====================================================================================================================
         /** Represents the base of a DreamSpace UI object of various UI types. The default implementation extends this to implement HTML elements. */
         constructor() {
@@ -152,14 +152,14 @@ define(["require", "exports", "../Types", "./Platform.Graph", "./Diagnostics", "
         }
     };
     HTMLNode = __decorate([
-        Types_1.factory(this)
+        Factories_1.factory(this)
     ], HTMLNode);
     exports.HTMLNode = HTMLNode;
     // ===================================================================================================================
     /** Represents an HTML node graph item that renders the content in the 'innerHTML of the default '__htmlTag' element (which is set to 'GraphItem.defaultHTMLTag' [DIV] initially).
       * This object has no element restrictions, so you can create any element you need by setting the '__htmlTag' tag before the UI element gets created.
       */
-    let HTMLElement = HTMLElement_1 = class HTMLElement extends Types_1.Factory(HTMLNode) {
+    let HTMLElement = HTMLElement_1 = class HTMLElement extends Factories_1.Factory(HTMLNode) {
         static 'new'(parent, id, name, tagName = "div", html) { return null; }
         static init(o, isnew, parent, id, name, tagName = HTMLElement_1.defaultHTMLTagName, html) {
             this.super.init(o, isnew, parent, id, name);
@@ -245,7 +245,7 @@ define(["require", "exports", "../Types", "./Platform.Graph", "./Diagnostics", "
     HTMLElement.Style = Platform_Graph_1.GraphNode.registerProperty(HTMLElement_1, "style", true);
     HTMLElement.InnerHTML = Platform_Graph_1.GraphNode.registerProperty(HTMLElement_1, "innerHTML", true);
     HTMLElement = HTMLElement_1 = __decorate([
-        Types_1.factory(this)
+        Factories_1.factory(this)
     ], HTMLElement);
     exports.HTMLElement = HTMLElement;
     // ===================================================================================================================
@@ -295,7 +295,7 @@ define(["require", "exports", "../Types", "./Platform.Graph", "./Diagnostics", "
       * Represents a basic text node graph item that renders plain text (no HTML). For HTML use 'HTMLText'.
       * This is inline with the standard which declares that all DOM elements with text should have text-ONLY nodes.
       */
-    let PlainText = PlainText_1 = class PlainText extends Types_1.Factory(HTMLNode) {
+    let PlainText = PlainText_1 = class PlainText extends Factories_1.Factory(HTMLNode) {
         // ===================================================================================================================
         ///** Represents a basic anchor node graph item that renders a link. */
         //class $Anchor extends HTMLElement.$__type<HTMLAnchorElement> {
@@ -371,13 +371,13 @@ define(["require", "exports", "../Types", "./Platform.Graph", "./Diagnostics", "
     // -------------------------------------------------------------------------------------------------------------------------------
     PlainText.Text = Platform_Graph_1.GraphNode.registerProperty(PlainText_1, "text", true);
     PlainText = PlainText_1 = __decorate([
-        Types_1.factory(this)
+        Factories_1.factory(this)
     ], PlainText);
     exports.PlainText = PlainText;
     // ====================================================================================================================================
     /** Represents an HTML text node graph item that renders the content in the 'innerHTML of a SPAN element. For plain text nodes use 'PlainText'.
       */
-    let HTMLText = class HTMLText extends Types_1.Factory(HTMLElement) {
+    let HTMLText = class HTMLText extends Factories_1.Factory(HTMLElement) {
         static 'new'(parent, html = "") { return null; }
         static init(o, isnew, parent, html = "") {
             this.super.init(o, isnew, parent, html, void 0, 'span');
@@ -392,7 +392,7 @@ define(["require", "exports", "../Types", "./Platform.Graph", "./Diagnostics", "
         }
     };
     HTMLText = __decorate([
-        Types_1.factory(this)
+        Factories_1.factory(this)
     ], HTMLText);
     exports.HTMLText = HTMLText;
     // ===================================================================================================================
@@ -426,7 +426,7 @@ define(["require", "exports", "../Types", "./Platform.Graph", "./Diagnostics", "
       * it does not dictate exactly HOW the text will actually look like. For instance, "<STRONG>" tags usually render as
       * bold text, but someone can decide to color and increase font size instead using CSS for all such elements. This is
       * actually a good thing, as it allows flexible web design in a way that can allow applying themes at a later time. */
-    let Phrase = Phrase_1 = class Phrase extends Types_1.Factory(HTMLElement) {
+    let Phrase = Phrase_1 = class Phrase extends Factories_1.Factory(HTMLElement) {
         /** Represents a basic phrase node graph item that renders phrase elements (a term used by w3.org to describe adding
           * "structural information to text fragments").  This is basically just text formatting in most cases.
           * It's important to note the word "structural" here, as it is a suggestion on how to process text, but, unlike CSS,
@@ -502,13 +502,13 @@ define(["require", "exports", "../Types", "./Platform.Graph", "./Diagnostics", "
     };
     Phrase.PhraseType = Platform_Graph_1.GraphNode.registerProperty(Phrase_1, "phraseType", true);
     Phrase = Phrase_1 = __decorate([
-        Types_1.factory(this)
+        Factories_1.factory(this)
     ], Phrase);
     exports.Phrase = Phrase;
     // ===================================================================================================================
     /** Represents an HTML header element.
       */
-    let Header = Header_1 = class Header extends Types_1.Factory(HTMLElement) {
+    let Header = Header_1 = class Header extends Factories_1.Factory(HTMLElement) {
         // ===================================================================================================================
         /** Represents an HTML header element.
           */
@@ -541,13 +541,13 @@ define(["require", "exports", "../Types", "./Platform.Graph", "./Diagnostics", "
     };
     Header.HeaderLevel = Platform_Graph_1.GraphNode.registerProperty(Header_1, "headerLevel", true);
     Header = Header_1 = __decorate([
-        Types_1.factory(this)
+        Factories_1.factory(this)
     ], Header);
     exports.Header = Header;
     // ===================================================================================================================
     /** Represents an HTML body element.
       */
-    let Body = class Body extends Types_1.Factory(HTMLElement) {
+    let Body = class Body extends Factories_1.Factory(HTMLElement) {
         static 'new'(parent, bodyLevel = 1, html = "") { return null; }
         static init(o, isnew, parent, html = "") {
             this.super.init(o, isnew, parent, html);
@@ -562,7 +562,7 @@ define(["require", "exports", "../Types", "./Platform.Graph", "./Diagnostics", "
         }
     };
     Body = __decorate([
-        Types_1.factory(this)
+        Factories_1.factory(this)
     ], Body);
     exports.Body = Body;
     // ############################################################################################################################

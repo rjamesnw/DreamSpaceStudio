@@ -7,9 +7,7 @@
 // using the identifiers 'this', 'manifest', or 'module' (accordingly), which provides functions for local-global scope storage.
 // ###########################################################################################################################
 
-import { Exception } from "./System/Exception";
 import { IResourceRequest } from "./ResourceRequest";
-import { log, LogTypes } from "./Logging";
 import { Path } from "./Path";
 
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
@@ -470,11 +468,11 @@ export namespace DreamSpace {
      */
     export var baseCSSURL: string = global.cssBaseURL ? Path.fix(global.cssBaseURL || baseCSSURL) : baseURL + "css/";
 
-    log("DreamSpace.baseURL", baseURL + " (If this is wrong, set a global 'siteBaseURL' variable to the correct path, or if using DreamSpace.JS for .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called in the header section of your layout view)"); // (requires the exception object, which is the last one to be defined above; now we start the first log entry with the base URI of the site)
-    log("DreamSpace.baseScriptsURL", baseScriptsURL + " (If this is wrong, set a global 'scriptsBaseURL' variable to the correct path)");
+    console.log("DreamSpace.baseURL", baseURL + " (If this is wrong, set a global 'siteBaseURL' variable to the correct path, or if using DreamSpace.JS for .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called in the header section of your layout view)"); // (requires the exception object, which is the last one to be defined above; now we start the first log entry with the base URI of the site)
+    console.log("DreamSpace.baseScriptsURL", baseScriptsURL + " (If this is wrong, set a global 'scriptsBaseURL' variable to the correct path)");
 
     if (global.serverWebRoot)
-        log("DreamSpace.serverWebRoot", global.serverWebRoot + " (typically set server side within the layout view only while debugging to help resolve script source maps)");
+        console.log("DreamSpace.serverWebRoot", global.serverWebRoot + " (typically set server side within the layout view only while debugging to help resolve script source maps)");
 
     // ========================================================================================================================================
 
@@ -482,7 +480,7 @@ export namespace DreamSpace {
 
     // ========================================================================================================================================
 
-    log("DreamSpace", "Core system loaded.", LogTypes.Info);
+    console.log("DreamSpace", "Core system loaded.");
 
     // ========================================================================================================================================
 }
@@ -675,31 +673,19 @@ export interface IFactoryInternal<TClass extends IType<object> = IType<object>, 
 //    namedIndex: { [index: string]: IStaticProperty<any> }; // A named hash table used to quickly lookup a static property by name (shared by all type levels).
 //}
 
+export type ExcludeNewInit<T extends { new(...args: any[]): any }> = { [P in Exclude<keyof T, 'new' | 'init'>]: T[P] };
+export type FactoryBaseType<T extends IType> =
+    {
+        new(): InstanceType<T>;
+        /** A reference to the parent type derived from for convenience. */
+        super: T;
+        'new'?(...args: any[]): any;
+        init?(o: object, isnew: boolean, ...args: any[]): void;
+    }
+    & ExcludeNewInit<T>;
+//function Factory<T extends IType, K extends keyof T>(base: T): FactoryBaseType<T> { return <any>base; }
 
 // ===================================================================================================================
-
-/**
- * Supports Iteration for ES5/ES3. To use, create a new type derived from this one, or implement the IEnumerable<T> interface.
- */
-export abstract class Enumerable<T> implements Iterator<T>
-{
-    next(value?: any): IteratorResult<T> {
-        throw Exception.notImplemented('next', this);
-    }
-
-    return(value?: any): IteratorResult<T> {
-        throw Exception.notImplemented('return', this);
-    }
-
-    throw(e?: any): IteratorResult<T> {
-        throw Exception.notImplemented('throw', this);
-    }
-}
-
-/**
-* Supports Iteration for ES5/ES3. To use, implement this interface, or create a new type derived from Enumerable<T>.
-*/
-export interface IEnumerable<T> extends Enumerable<T> { }
 
 export interface ICallback<TSender> { (sender?: TSender): void }
 /** 
@@ -729,4 +715,3 @@ export default function registerGlobal(uniqueGlobalVarName?: string) {
 }
 
 // ###########################################################################################################################
-

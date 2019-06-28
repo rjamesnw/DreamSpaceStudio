@@ -2,7 +2,7 @@
 // Collections: IndexedObjectCollection
 // ############################################################################################################################################
 
-import { Factory, usingFactory } from "../Types";
+import { Factory, usingFactory } from "../Factories";
 import { Array, ArrayInstance } from "../PrimitiveTypes";
 
 /** Returns an ID based on the index position of the added object, or from a list of previously released object IDs (indexes).

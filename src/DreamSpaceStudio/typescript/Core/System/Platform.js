@@ -12,8 +12,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Globals_1 = require("../Globals");
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
 const Exception_1 = require("./Exception");
-const Types_1 = require("../Types");
-const AppDomain_1 = require("./AppDomain");
+const Factories_1 = require("../Factories");
+const AppDomain_1 = require("../AppDomain");
 // =======================================================================================================================
 // Note: DreamSpace.Environments contains the default supported target environments (platforms).
 var Contexts;
@@ -40,7 +40,7 @@ var Contexts;
  * On the client side, this is accomplished by using IFrame objects.  On the server side, this is accomplished using
  * workers.  As well, on the client side, workers can be used to simulate server side communication during development.
  */
-class Context extends Types_1.Factory(PrimitiveTypes_1.Object) {
+class Context extends Factories_1.Factory(PrimitiveTypes_1.Object) {
     constructor() {
         super(...arguments);
         this.x = 1;
@@ -70,7 +70,7 @@ exports.Context = Context;
   * logins, private information, etc.
   * Note: While script isolation is the default, trusted scripts can run in the system context, and are thus not secured.
   */
-let UIApplication = class UIApplication extends Types_1.Factory(AppDomain_1.Application) {
+let UIApplication = class UIApplication extends Factories_1.Factory(AppDomain_1.Application) {
     // ========================================================================================================================
     /**
       * Where the Application object represents the base application properties for an AppDomain instance, the UIApplication
@@ -159,7 +159,7 @@ let UIApplication = class UIApplication extends Types_1.Factory(AppDomain_1.Appl
     }
 };
 UIApplication = __decorate([
-    Types_1.factory(this)
+    Factories_1.factory(this)
 ], UIApplication);
 exports.UIApplication = UIApplication;
 // ====================================================================================================================

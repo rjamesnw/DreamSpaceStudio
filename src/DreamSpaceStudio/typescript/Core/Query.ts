@@ -1,4 +1,4 @@
-import { Factory, makeFactory, factory } from "./Types";
+import { Factory, makeFactory, factory } from "./Factories";
 import { Encoding } from "./System/Text";
 import { Utilities } from "./Utilities";
 import { DreamSpace as DS } from "./Globals";

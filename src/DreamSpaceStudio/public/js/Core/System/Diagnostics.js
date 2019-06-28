@@ -1,14 +1,14 @@
 // ############################################################################################################################
 // Types for time management.
 // ############################################################################################################################
-define(["require", "exports", "../Types", "../Globals", "./Time", "../Logging", "./Exception", "../PrimitiveTypes"], function (require, exports, Types_1, Globals_1, Time_1, Logging_1, Exception_1, PrimitiveTypes_1) {
+define(["require", "exports", "../Factories", "../Globals", "./Time", "../Logging", "./Exception", "../PrimitiveTypes"], function (require, exports, Factories_1, Globals_1, Time_1, Logging_1, Exception_1, PrimitiveTypes_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var LogItem_1;
     // ========================================================================================================================
     var __logItemsSequenceCounter = 0;
     var __logCaptureStack = [];
-    let LogItem = LogItem_1 = class LogItem extends Types_1.Factory() {
+    let LogItem = LogItem_1 = class LogItem extends Factories_1.Factory() {
         constructor() {
             super(...arguments);
             // --------------------------------------------------------------------------------------------------------------------------
@@ -107,7 +107,7 @@ define(["require", "exports", "../Types", "../Globals", "./Time", "../Logging", 
         }
     };
     LogItem = LogItem_1 = __decorate([
-        Types_1.factory(Diagnostics)
+        Factories_1.factory(Diagnostics)
     ], LogItem);
     exports.LogItem = LogItem;
     /** Contains diagnostic based functions, such as those needed for logging purposes. */

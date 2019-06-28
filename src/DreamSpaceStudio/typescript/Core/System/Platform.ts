@@ -5,8 +5,8 @@
 import { DreamSpace as DS, IFunctionInfo } from "../Globals";
 import { Object } from "../PrimitiveTypes";
 import { Exception } from "./Exception";
-import { factory, Factory } from "../Types";
-import { Application, IAppDomain } from "./AppDomain";
+import { factory, Factory } from "../Factories";
+import { Application, IAppDomain } from "../AppDomain";
 import { IGraphNode } from "./Platform.Graph";
 import { IWindow } from "./Platform.Windows";
 

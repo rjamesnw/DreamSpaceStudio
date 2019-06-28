@@ -8,8 +8,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 var ObjectFactory_1, String_1, Array_1;
 const Types_1 = require("./Types");
+const Factories_1 = require("./Factories");
 const System_1 = require("./System/System");
-const AppDomain_1 = require("./System/AppDomain");
+const AppDomain_1 = require("./AppDomain");
 const Globals_1 = require("./Globals");
 const Browser_1 = require("./System/Browser");
 const Utilities_1 = require("./Utilities");
@@ -133,10 +134,10 @@ let ObjectFactory = ObjectFactory_1 = class ObjectFactory extends Globals_1.Drea
      *                          can allow quick initialization of a group of objects, instead of having to pull each one
      *                          from the object pool each time.
      */
-    dispose(release) { Types_1.Types.dispose(this, release); }
+    dispose(release) { Factories_1.Types.dispose(this, release); }
 };
 ObjectFactory = ObjectFactory_1 = __decorate([
-    Types_1.factory(this)
+    Factories_1.factory(this)
 ], ObjectFactory);
 exports.Object = ObjectFactory;
 // =======================================================================================================================
@@ -205,7 +206,7 @@ function _addObjectPrototypeProperties(type) {
 eval("var PrimitiveString = DS.global.String;");
 /* Note: This is a DreamSpace system string object, and not the native JavaScript object. */
 /** Allows manipulation and formatting of text strings, including the determination and location of substrings within strings. */
-let String = String_1 = class String extends Types_1.Factory(Types_1.makeFactory(makeDisposable(PrimitiveString))) {
+let String = String_1 = class String extends Factories_1.Factory(Factories_1.makeFactory(makeDisposable(PrimitiveString))) {
     /**
         * Reinitializes a disposed Delegate instance.
         * @param this The Delegate instance to initialize, or re-initialize.
@@ -347,7 +348,7 @@ let String = String_1 = class String extends Types_1.Factory(Types_1.makeFactory
     valueOf() { return this.$__value; }
 };
 String = String_1 = __decorate([
-    Types_1.factory(this)
+    Factories_1.factory(this)
 ], String);
 exports.String = String;
 // =======================================================================================================================
@@ -356,7 +357,7 @@ exports.String = String;
  * manually setting an array item by index past the end will not modify the length property (this may changed as
  * new features are introduce in future EcmaScript versions [such as 'Object.observe()' in ES7]).
  */
-class ArrayFactory extends Types_1.Factory(Types_1.makeFactory(Globals_1.DreamSpace.global.Array)) {
+class ArrayFactory extends Factories_1.Factory(Factories_1.makeFactory(Globals_1.DreamSpace.global.Array)) {
 }
 exports.Array = ArrayFactory;
 let Array = Array_1 = class Array extends makeDisposable(Globals_1.DreamSpace.global.Array) {
@@ -384,7 +385,7 @@ let Array = Array_1 = class Array extends makeDisposable(Globals_1.DreamSpace.gl
     }
 };
 Array = Array_1 = __decorate([
-    Types_1.usingFactory(ArrayFactory, this)
+    Factories_1.usingFactory(ArrayFactory, this)
 ], Array);
 exports.ArrayInstance = Array;
 // =======================================================================================================================

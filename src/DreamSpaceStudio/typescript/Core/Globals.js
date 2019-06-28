@@ -8,9 +8,6 @@
 // using the identifiers 'this', 'manifest', or 'module' (accordingly), which provides functions for local-global scope storage.
 // ###########################################################################################################################
 Object.defineProperty(exports, "__esModule", { value: true });
-const Exception_1 = require("./System/Exception");
-const Logging_1 = require("./Logging");
-const Path_1 = require("./Path");
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
  * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.
  * Note: A symbol is not used, since callbacks placed into API URLs must be strings. Instead, a static pre-generated GUID is appended.
@@ -383,14 +380,14 @@ exports.DreamSpace = DreamSpace;
      * If no 'siteBaseURL' global property exists, the current page location is assumed.
      */
     DreamSpace.baseCSSURL = DreamSpace.global.cssBaseURL ? Path_1.Path.fix(DreamSpace.global.cssBaseURL || DreamSpace.baseCSSURL) : DreamSpace.baseURL + "css/";
-    Logging_1.log("DreamSpace.baseURL", DreamSpace.baseURL + " (If this is wrong, set a global 'siteBaseURL' variable to the correct path, or if using DreamSpace.JS for .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called in the header section of your layout view)"); // (requires the exception object, which is the last one to be defined above; now we start the first log entry with the base URI of the site)
-    Logging_1.log("DreamSpace.baseScriptsURL", DreamSpace.baseScriptsURL + " (If this is wrong, set a global 'scriptsBaseURL' variable to the correct path)");
+    console.log("DreamSpace.baseURL", DreamSpace.baseURL + " (If this is wrong, set a global 'siteBaseURL' variable to the correct path, or if using DreamSpace.JS for .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called in the header section of your layout view)"); // (requires the exception object, which is the last one to be defined above; now we start the first log entry with the base URI of the site)
+    console.log("DreamSpace.baseScriptsURL", DreamSpace.baseScriptsURL + " (If this is wrong, set a global 'scriptsBaseURL' variable to the correct path)");
     if (DreamSpace.global.serverWebRoot)
-        Logging_1.log("DreamSpace.serverWebRoot", DreamSpace.global.serverWebRoot + " (typically set server side within the layout view only while debugging to help resolve script source maps)");
+        console.log("DreamSpace.serverWebRoot", DreamSpace.global.serverWebRoot + " (typically set server side within the layout view only while debugging to help resolve script source maps)");
     // ========================================================================================================================================
     // *** At this point the core type system, error handling, and console-based logging are now available. ***
     // ========================================================================================================================================
-    Logging_1.log("DreamSpace", "Core system loaded.", Logging_1.LogTypes.Info);
+    console.log("DreamSpace", "Core system loaded.");
     // ========================================================================================================================================
 })(DreamSpace = exports.DreamSpace || (exports.DreamSpace = {}));
 function sealed(target, propertyName, descriptor) {
@@ -424,30 +421,6 @@ function $(...args) {
     };
 }
 exports.$ = $;
-///** Represents a static property on a class module. */
-//? export interface IStaticProperty<TDataType> { }
-///** Stores static property registration details. */
-//?export interface IStaticPropertyInfo<TDataType> {
-//    parent: IStaticPropertyInfo<any>; // References the parent static property list (if any).  This is null on most base type.
-//    owner: IClassInfo<{}>; // The class type that owns this static property list.
-//    namedIndex: { [index: string]: IStaticProperty<any> }; // A named hash table used to quickly lookup a static property by name (shared by all type levels).
-//}
-// ===================================================================================================================
-/**
- * Supports Iteration for ES5/ES3. To use, create a new type derived from this one, or implement the IEnumerable<T> interface.
- */
-class Enumerable {
-    next(value) {
-        throw Exception_1.Exception.notImplemented('next', this);
-    }
-    return(value) {
-        throw Exception_1.Exception.notImplemented('return', this);
-    }
-    throw(e) {
-        throw Exception_1.Exception.notImplemented('throw', this);
-    }
-}
-exports.Enumerable = Enumerable;
 // ###########################################################################################################################
 /** Registers this global module in the global scope. The global 'DreamSpace' namespace is returned, if needed.
  * This helps to support:
@@ -463,5 +436,5 @@ function registerGlobal(uniqueGlobalVarName) {
     return DreamSpace;
 }
 exports.default = registerGlobal;
-// ###########################################################################################################################
+const Path_1 = require("./Path");
 //# sourceMappingURL=Globals.js.map

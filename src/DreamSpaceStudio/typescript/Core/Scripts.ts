@@ -4,7 +4,8 @@
 
 import { DreamSpace as DS, ICallback, sealed, IErrorCallback } from "./Globals";
 import { log, error } from "./Logging";
-import { Factory, nameof, factory } from "./Types";
+import { nameof } from "./Types";
+import { Factory, factory } from "./Factories";
 import { ResourceTypes, RequestStatuses } from "./Resources";
 import { String, IAddLineNumbersFilter } from "./PrimitiveTypes";
 import { renderHelperVarDeclarations } from "./TSHelpers";

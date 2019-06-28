@@ -1,7 +1,7 @@
 // ############################################################################################################################
 // Types for event management.
 // ############################################################################################################################
-define(["require", "exports", "../Globals", "../Globals", "./Delegate", "../Types", "./Exception", "../PrimitiveTypes", "../ErrorHandling", "./Browser"], function (require, exports, Globals_1, Globals_2, Delegate_1, Types_1, Exception_1, PrimitiveTypes_1, ErrorHandling_1, Browser_1) {
+define(["require", "exports", "../Globals", "../Globals", "./Delegate", "../Types", "../Factories", "./Exception", "../PrimitiveTypes", "../ErrorHandling", "./Browser"], function (require, exports, Globals_1, Globals_2, Delegate_1, Types_1, Factories_1, Exception_1, PrimitiveTypes_1, ErrorHandling_1, Browser_1) {
     "use strict";
     function __export(m) {
         for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
@@ -28,7 +28,7 @@ define(["require", "exports", "../Globals", "../Globals", "./Delegate", "../Type
       * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
       * instance level event handler registration on the class only when necessary.
       */
-    let EventDispatcherFactory = class EventDispatcherFactory extends Types_1.Factory(PrimitiveTypes_1.Object) {
+    let EventDispatcherFactory = class EventDispatcherFactory extends Factories_1.Factory(PrimitiveTypes_1.Object) {
         /** Creates an event object for a specific even type.
             * @param {TOwner} owner The owner which owns this event object.
             * @param {string} eventName The name of the event which this event object represents.
@@ -70,7 +70,7 @@ define(["require", "exports", "../Globals", "../Globals", "./Delegate", "../Type
         static createPrivateEventName(eventName) { return "$__" + eventName + "Event"; }
     };
     EventDispatcherFactory = __decorate([
-        Types_1.factory(this)
+        Factories_1.factory(this)
     ], EventDispatcherFactory);
     exports.EventDispatcher = EventDispatcherFactory;
     let EventDispatcher = EventDispatcher_1 = class EventDispatcher extends PrimitiveTypes_1.DependentObject {
@@ -389,10 +389,10 @@ define(["require", "exports", "../Globals", "../Globals", "./Delegate", "../Type
         }
     };
     EventDispatcher = EventDispatcher_1 = __decorate([
-        Types_1.usingFactory(EventDispatcherFactory, this)
+        Factories_1.usingFactory(EventDispatcherFactory, this)
     ], EventDispatcher);
     exports.EventDispatcherInstance = EventDispatcher;
-    class EventObject extends Types_1.Factory(PrimitiveTypes_1.Object) {
+    class EventObject extends Factories_1.Factory(PrimitiveTypes_1.Object) {
         /**
         * Constructs a new Delegate object.
         * @param {Object} object The instance on which the associated function will be called.  This should be undefined/null for static functions.

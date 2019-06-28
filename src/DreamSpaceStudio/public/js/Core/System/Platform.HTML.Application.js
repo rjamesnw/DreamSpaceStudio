@@ -1,7 +1,7 @@
 // ############################################################################################################################
 // Types for event management.
 // ############################################################################################################################
-define(["require", "exports", "../Globals", "../Types", "./Platform.Graph", "./Exception", "./Platform.HTML", "./Diagnostics", "../ErrorHandling", "../Logging"], function (require, exports, Globals_1, Types_1, Platform_Graph_1, Exception_1, Platform_HTML_1, Diagnostics_1, ErrorHandling_1, Logging_1) {
+define(["require", "exports", "../Globals", "../Factories", "./Platform.Graph", "./Exception", "./Platform.HTML", "./Diagnostics", "../ErrorHandling", "../Logging"], function (require, exports, Globals_1, Factories_1, Platform_Graph_1, Exception_1, Platform_HTML_1, Diagnostics_1, ErrorHandling_1, Logging_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // ========================================================================================================================
@@ -16,7 +16,7 @@ define(["require", "exports", "../Globals", "../Types", "./Platform.Graph", "./E
     //export interface IHTMLApplication extends InstanceType<typeof HTMLApplication.$__type> { }
     // ========================================================================================================================
     /** An ApplicationElement object is the root object of the graph tree that relates one UIApplication instance. */
-    class ApplicationElement extends Types_1.Factory(Platform_HTML_1.HTMLElement) {
+    class ApplicationElement extends Factories_1.Factory(Platform_HTML_1.HTMLElement) {
         constructor() {
             super(...arguments);
             // --------------------------------------------------------------------------------------------------------------------

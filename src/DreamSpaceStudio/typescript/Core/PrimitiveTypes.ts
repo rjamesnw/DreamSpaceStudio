@@ -1,7 +1,8 @@
-﻿import { Factory, getTypeName, makeFactory, factory, usingFactory, isPrimitiveType, Types } from "./Types";
+﻿import { getTypeName, isPrimitiveType } from "./Types";
+import { Factory, makeFactory, factory, usingFactory, Types } from "./Factories";
 import { SerializedData, ISerializable } from "./System/Serialization";
 import { dispose } from "./System/System";
-import { AppDomain, Application, IDomainObjectInfo } from "./System/AppDomain";
+import { AppDomain, Application, IDomainObjectInfo } from "./AppDomain";
 import { DreamSpace as DS, IFunctionInfo, ITypeInfo, IDisposable, IClassInfo, IType } from "./Globals";
 import { Browser } from "./System/Browser";
 import { Utilities } from "./Utilities";

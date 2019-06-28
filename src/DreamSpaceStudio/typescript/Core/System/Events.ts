@@ -7,7 +7,8 @@ import { DreamSpace as DS } from "../Globals";
 declare module "../Globals" { namespace DreamSpace { export var onReady: typeof DreamSpace_Ext.onReady; } } // (augmented with a "ready" event)
 
 import { IDelegate, Delegate } from "./Delegate";
-import { Factory, usingFactory, getTypeName, extendNS, factory } from "../Types";
+import { getTypeName } from "../Types";
+import { Factory, usingFactory, factory } from "../Factories";
 import { Exception } from "./Exception";
 import { Object, Array, DependentObject } from "../PrimitiveTypes";
 import { getErrorMessage } from "../ErrorHandling";

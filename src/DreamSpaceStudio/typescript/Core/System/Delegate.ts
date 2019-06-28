@@ -3,13 +3,13 @@
 // ###########################################################################################################################
 
 import { DreamSpace as DS } from "../Globals";
-import { Factory, usingFactory } from "../Types";
+import { Factory, usingFactory } from "../Factories";
 import { Object, IObject } from "../PrimitiveTypes";
 import { INamespaceInfo, IFunctionInfo } from "../Globals";
 import { Exception } from "./Exception";
 import { Browser } from "./Browser";
 import { SerializedData } from "./Serialization";
-import { IDomainObjectInfo } from "./AppDomain";
+import { IDomainObjectInfo } from "../AppDomain";
 
 // ============================================================================================================================
 

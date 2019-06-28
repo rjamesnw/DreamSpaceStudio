@@ -2,7 +2,7 @@
 // Types for specialized object property management.
 // ###########################################################################################################################
 
-import { Factory, factory } from "../Types";
+import { Factory, factory } from "../Factories";
 import { IGraphNode, GraphNode } from "./Platform.Graph";
 import { EventObject } from "./Events";
 import { Utilities } from "../Utilities";

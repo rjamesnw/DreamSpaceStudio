@@ -1,4 +1,4 @@
-define(["require", "exports", "./Types", "./Resources", "./Path", "./Logging", "./ErrorHandling", "./Query", "./Utilities", "./Globals", "./PrimitiveTypes"], function (require, exports, Types_1, Resources_1, Path_1, Logging_1, ErrorHandling_1, Query_1, Utilities_1, Globals_1, PrimitiveTypes_1) {
+define(["require", "exports", "./Factories", "./Resources", "./Path", "./Logging", "./ErrorHandling", "./Query", "./Utilities", "./Globals", "./PrimitiveTypes"], function (require, exports, Factories_1, Resources_1, Path_1, Logging_1, ErrorHandling_1, Query_1, Utilities_1, Globals_1, PrimitiveTypes_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var ResourceRequest_1;
@@ -10,7 +10,7 @@ define(["require", "exports", "./Types", "./Resources", "./Path", "./Logging", "
      * Inheritance note: When creating via the 'new' factory method, any already existing instance with the same URL will be returned,
      * and NOT the new object instance.  For this reason, you should call 'loadResource()' instead.
      */
-    let ResourceRequest = ResourceRequest_1 = class ResourceRequest extends Types_1.Factory() {
+    let ResourceRequest = ResourceRequest_1 = class ResourceRequest extends Factories_1.Factory() {
         // ===============================================================================================================================
         /**
          * Creates a new resource request object, which allows loaded resources using a "promise" style pattern (this is a custom
@@ -616,7 +616,7 @@ define(["require", "exports", "./Types", "./Resources", "./Path", "./Logging", "
     ResourceRequest._resourceRequests = []; // (requests are loaded in parallel, but executed in order of request)
     ResourceRequest._resourceRequestByURL = {}; // (a quick named index lookup into '__loadRequests')
     ResourceRequest = ResourceRequest_1 = __decorate([
-        Types_1.factory(this)
+        Factories_1.factory(this)
     ], ResourceRequest);
     exports.ResourceRequest = ResourceRequest;
 });

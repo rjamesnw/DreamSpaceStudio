@@ -1,7 +1,7 @@
 // ############################################################################################################################################
 // Collections: IndexedObjectCollection
 // ############################################################################################################################################
-define(["require", "exports", "../Types", "../PrimitiveTypes"], function (require, exports, Types_1, PrimitiveTypes_1) {
+define(["require", "exports", "../Factories", "../PrimitiveTypes"], function (require, exports, Factories_1, PrimitiveTypes_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     /** Returns an ID based on the index position of the added object, or from a list of previously released object IDs (indexes).
@@ -11,7 +11,7 @@ define(["require", "exports", "../Types", "../PrimitiveTypes"], function (requir
     * Note: A property '$__id' is added/updated on the objects automatically.  You can change this property name by setting
     * a new value for 'IndexedObjectCollcetion.__IDPropertyName'.
     */
-    class IndexedObjectCollectionFactory extends Types_1.Factory(PrimitiveTypes_1.Array) {
+    class IndexedObjectCollectionFactory extends Factories_1.Factory(PrimitiveTypes_1.Array) {
         /** @param {TObject[]} objects Initial objects to add to the collection. */
         static 'new'(...objects) { return null; }
         static init(o, isnew, ...objects) {
@@ -127,7 +127,7 @@ define(["require", "exports", "../Types", "../PrimitiveTypes"], function (requir
         }
     };
     IndexedObjectCollection = __decorate([
-        Types_1.usingFactory(IndexedObjectCollectionFactory, this)
+        Factories_1.usingFactory(IndexedObjectCollectionFactory, this)
     ], IndexedObjectCollection);
     exports.IndexedObjectCollectionInstance = IndexedObjectCollection;
 });

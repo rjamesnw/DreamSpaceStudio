@@ -1,7 +1,7 @@
 // ###########################################################################################################################
 // Types for time management.
 // ###########################################################################################################################
-define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources", "./PrimitiveTypes", "./TSHelpers", "./System/Exception", "./ErrorHandling", "./Utilities", "./ResourceRequest", "./Path"], function (require, exports, Globals_1, Logging_1, Types_1, Resources_1, PrimitiveTypes_1, TSHelpers_1, Exception_1, ErrorHandling_1, Utilities_1, ResourceRequest_1, Path_1) {
+define(["require", "exports", "./Globals", "./Logging", "./Types", "./Factories", "./Resources", "./PrimitiveTypes", "./TSHelpers", "./System/Exception", "./ErrorHandling", "./Utilities", "./ResourceRequest", "./Path"], function (require, exports, Globals_1, Logging_1, Types_1, Factories_1, Resources_1, PrimitiveTypes_1, TSHelpers_1, Exception_1, ErrorHandling_1, Utilities_1, ResourceRequest_1, Path_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var ScriptResource_1;
@@ -55,7 +55,7 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
     }
     exports.moduleNamespaceToFolderPath = moduleNamespaceToFolderPath;
     // ====================================================================================================================
-    let ScriptResource = ScriptResource_1 = class ScriptResource extends Types_1.Factory(ResourceRequest_1.ResourceRequest) {
+    let ScriptResource = ScriptResource_1 = class ScriptResource extends Factories_1.Factory(ResourceRequest_1.ResourceRequest) {
         /** Returns a new module object only - does not load it. */
         static init(o, isnew, url) {
             this.super.init(o, isnew, url, Resources_1.ResourceTypes.Application_Script);
@@ -90,7 +90,7 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
         }
     };
     ScriptResource = ScriptResource_1 = __decorate([
-        Types_1.factory(this)
+        Factories_1.factory(this)
     ], ScriptResource);
     exports.ScriptResource = ScriptResource;
     class ScriptInfoList {
@@ -101,14 +101,14 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
     * 'Manifest' inherits from 'ScriptResource', providing the loaded manifests the ability to register globals for the
     * DreamSpace context, instead of the global 'window' context.
     */
-    let Manifest = class Manifest extends Types_1.Factory(ScriptResource) {
+    let Manifest = class Manifest extends Factories_1.Factory(ScriptResource) {
         /** Holds variables required for manifest execution (for example, callback functions for 3rd party libraries, such as the Google Maps API). */
         static init(o, isnew, url) {
             this.super.init(o, isnew, url, Resources_1.ResourceTypes.Application_Script);
         }
     };
     Manifest = __decorate([
-        Types_1.factory(this), Globals_1.sealed
+        Factories_1.factory(this), Globals_1.sealed
     ], Manifest);
     exports.Manifest = Manifest;
     // ====================================================================================================================
@@ -283,7 +283,7 @@ define(["require", "exports", "./Globals", "./Logging", "./Types", "./Resources"
     var _appModule = null; // (becomes set to the app module when the app module is finally loaded and ready to be executed)
     ;
     /** Contains static module properties and functions. */
-    class Module extends Types_1.Factory(ScriptResource) {
+    class Module extends Factories_1.Factory(ScriptResource) {
         constructor() {
             super(...arguments);
             this.required = false; // (true if the script is required - the application will fail to execute if this occurs, and an exception will be thrown)

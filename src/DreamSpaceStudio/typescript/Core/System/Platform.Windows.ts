@@ -3,7 +3,7 @@
 // ###########################################################################################################################
 
 import { DreamSpace as DS } from "../Globals";
-import { Factory } from "../Types";
+import { Factory } from "../Factories";
 import { Utilities } from "../Utilities";
 import { Object } from "../PrimitiveTypes";
 

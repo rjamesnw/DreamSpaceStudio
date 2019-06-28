@@ -3,7 +3,7 @@
 // Types for time management.
 // ###########################################################################################################################
 Object.defineProperty(exports, "__esModule", { value: true });
-const Types_1 = require("../Types");
+const Factories_1 = require("../Factories");
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
 const Globals_1 = require("../Globals");
 const Exception_1 = require("./Exception");
@@ -16,7 +16,7 @@ const Exception_1 = require("./Exception");
  * Note: TimeSpan exposes the results as properties for fast access (rather than getters/setters), but changing individual properties does not
  * cause the other values to update.  Use the supplied functions for manipulating the values.
  */
-class TimeSpan extends Types_1.Factory(PrimitiveTypes_1.Object) {
+class TimeSpan extends Factories_1.Factory(PrimitiveTypes_1.Object) {
     static init(o, isnew, year, dayOfYear, hours, minutes, seconds, milliseconds) {
         this.super.init(o, isnew);
         if (arguments.length <= 3)

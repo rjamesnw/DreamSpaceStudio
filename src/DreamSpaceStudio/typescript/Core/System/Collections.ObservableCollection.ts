@@ -2,7 +2,7 @@
 // Collections: ObservableCollection
 // ############################################################################################################################################
 
-import { Factory, usingFactory } from "../Types";
+import { Factory, usingFactory } from "../Factories";
 import { Array, ArrayInstance } from "../PrimitiveTypes";
 import { IEventDispatcher } from "./Events";
 

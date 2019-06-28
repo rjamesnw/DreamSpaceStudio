@@ -4,7 +4,7 @@
 
 import { DreamSpace as DS } from "../Globals";
 import { IStaticProperty } from "./Properties";
-import { Factory } from "../Types";
+import { Factory } from "../Factories";
 import { GraphNode } from "./Platform.Graph";
 import { Exception } from "./Exception";
 import { HTMLElement, IDataTemplate, HTML } from "./Platform.HTML";

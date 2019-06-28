@@ -11,7 +11,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 var Delegate_1;
 const Globals_1 = require("../Globals");
-const Types_1 = require("../Types");
+const Factories_1 = require("../Factories");
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
 const Exception_1 = require("./Exception");
 const Browser_1 = require("./Browser");
@@ -25,7 +25,7 @@ const Browser_1 = require("./Browser");
  * serialized.
  * Note: If the target object is undefined, then 'null' is assumed and passed in as 'this'.
  */
-class DelegateFactory extends Types_1.Factory(PrimitiveTypes_1.Object) {
+class DelegateFactory extends Factories_1.Factory(PrimitiveTypes_1.Object) {
     /**
     * Reinitializes a disposed Delegate instance.
     * @param o The Delegate instance to initialize, or re-initialize.
@@ -185,7 +185,7 @@ let Delegate = Delegate_1 = class Delegate extends PrimitiveTypes_1.Object {
     }
 };
 Delegate = Delegate_1 = __decorate([
-    Types_1.usingFactory(DelegateFactory, this)
+    Factories_1.usingFactory(DelegateFactory, this)
 ], Delegate);
 exports.DelegateInstance = Delegate;
 // ============================================================================================================================

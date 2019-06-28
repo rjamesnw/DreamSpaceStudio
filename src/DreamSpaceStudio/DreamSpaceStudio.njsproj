@@ -50,8 +50,11 @@
     <TypeScriptCompile Include="typescript\client\Modules\Twitter\Platform.UI.Bootstrap.ts" />
     <TypeScriptCompile Include="typescript\client\Modules\xregexp\v2_0_0.m.ts" />
     <TypeScriptCompile Include="typescript\client\Modules\xregexp\__xregexp_info.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\DreamSpace.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\Factories.ts" />
     <TypeScriptCompile Include="TypeScript\Core\FileManager.ts" />
     <TypeScriptCompile Include="TypeScript\Core\ResourceRequest.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\Enumerable.ts" />
     <TypeScriptCompile Include="TypeScript\Core\System\Security.ts" />
     <TypeScriptCompile Include="TypeScript\Core\System\User.ts" />
     <TypeScriptCompile Include="TypeScript\Core\TSHelpers.ts">
@@ -69,10 +72,9 @@
     <TypeScriptCompile Include="TypeScript\Core\Globals.ts" />
     <TypeScriptCompile Include="TypeScript\Core\HostBridge.ICE.ts" />
     <TypeScriptCompile Include="TypeScript\Core\HostBridge.ts" />
-    <None Include="TypeScript\Core\manifest.ts~" />
     <TypeScriptCompile Include="TypeScript\Core\Polyfills.ts" />
     <TypeScriptCompile Include="TypeScript\Core\Scripts.ts" />
-    <TypeScriptCompile Include="TypeScript\Core\System\AppDomain.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\AppDomain.ts" />
     <TypeScriptCompile Include="TypeScript\Core\System\Browser.ts" />
     <TypeScriptCompile Include="TypeScript\Core\System\Collections.IndexedObjectCollection.ts" />
     <TypeScriptCompile Include="TypeScript\Core\System\Collections.ObservableCollection.ts" />
@@ -96,12 +98,8 @@
     <TypeScriptCompile Include="TypeScript\Core\System\Time.ts" />
     <TypeScriptCompile Include="TypeScript\Core\System\System.ts" />
     <TypeScriptCompile Include="TypeScript\Core\System\Users~.ts" />
-    <None Include="TypeScript\Core\Loader.ts~" />
-    <None Include="TypeScript\Core\test.ts~" />
     <TypeScriptCompile Include="TypeScript\Core\Types.ts" />
     <TypeScriptCompile Include="TypeScript\Core\Utilities.ts" />
-    <None Include="TypeScript\Core\VDom.Canvas.ts~" />
-    <None Include="TypeScript\Core\VDom.ts~" />
     <TypeScriptCompile Include="typescript\server\vdom.ts" />
     <TypeScriptCompile Include="typescript\server\app.ts" />
     <TypeScriptCompile Include="TypeScript\routes\index.ts" />

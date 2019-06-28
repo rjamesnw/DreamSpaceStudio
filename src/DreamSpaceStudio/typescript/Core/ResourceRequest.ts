@@ -1,4 +1,4 @@
-import { Factory, factory } from "./Types";
+import { Factory, factory } from "./Factories";
 import { ResourceTypes, RequestStatuses, basePathFromResourceType } from "./Resources";
 import { Path } from "./Path";
 import { log, error, LogTypes } from "./Logging";

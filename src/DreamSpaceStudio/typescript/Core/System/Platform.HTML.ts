@@ -1,4 +1,4 @@
-﻿import { Factory, factory } from "../Types";
+﻿import { Factory, factory } from "../Factories";
 import { IGraphNode, GraphNode } from "./Platform.Graph";
 import { Diagnostics } from "./Diagnostics";
 import { HTMLReaderModes, HTMLReader } from "./Markup";

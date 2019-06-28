@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var Query_1;
-const Types_1 = require("./Types");
+const Factories_1 = require("./Factories");
 const Text_1 = require("./System/Text");
 const Utilities_1 = require("./Utilities");
 const Globals_1 = require("./Globals");
@@ -19,7 +19,7 @@ exports.QUERY_STRING_REGEX = /[?|&][a-zA-Z0-9-._]+(?:=[^&#$]*)?/gi;
   * with all values escaped and ready to be appended to a URI.
   * Note: Call 'Query.new()' to create new instances.
   */
-let Query = Query_1 = class Query extends Types_1.Factory() {
+let Query = Query_1 = class Query extends Factories_1.Factory() {
     /**
       * Helps wrap common functionality for query/search string manipulation.  An internal 'values' object stores the 'name:value'
       * pairs from a URI or 'location.search' string, and converting the object to a string results in a proper query/search string
@@ -188,7 +188,7 @@ let Query = Query_1 = class Query extends Types_1.Factory() {
     }
 };
 Query = Query_1 = __decorate([
-    Types_1.factory(this)
+    Factories_1.factory(this)
 ], Query);
 exports.Query = Query;
 // ==========================================================================================================================

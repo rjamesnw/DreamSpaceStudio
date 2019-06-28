@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var ResourceRequest_1;
-const Types_1 = require("./Types");
+const Factories_1 = require("./Factories");
 const Resources_1 = require("./Resources");
 const Path_1 = require("./Path");
 const Logging_1 = require("./Logging");
@@ -24,7 +24,7 @@ const PrimitiveTypes_1 = require("./PrimitiveTypes");
  * Inheritance note: When creating via the 'new' factory method, any already existing instance with the same URL will be returned,
  * and NOT the new object instance.  For this reason, you should call 'loadResource()' instead.
  */
-let ResourceRequest = ResourceRequest_1 = class ResourceRequest extends Types_1.Factory() {
+let ResourceRequest = ResourceRequest_1 = class ResourceRequest extends Factories_1.Factory() {
     // ===============================================================================================================================
     /**
      * Creates a new resource request object, which allows loaded resources using a "promise" style pattern (this is a custom
@@ -630,7 +630,7 @@ ResourceRequest._cacheBustingVar = '_v_';
 ResourceRequest._resourceRequests = []; // (requests are loaded in parallel, but executed in order of request)
 ResourceRequest._resourceRequestByURL = {}; // (a quick named index lookup into '__loadRequests')
 ResourceRequest = ResourceRequest_1 = __decorate([
-    Types_1.factory(this)
+    Factories_1.factory(this)
 ], ResourceRequest);
 exports.ResourceRequest = ResourceRequest;
 // ===============================================================================================================================

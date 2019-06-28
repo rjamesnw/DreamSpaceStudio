@@ -9,7 +9,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Types_1 = require("../Types");
+const Factories_1 = require("../Factories");
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
 /** Returns an ID based on the index position of the added object, or from a list of previously released object IDs (indexes).
 * There are 2 main goals of this object: 1. to help prevent ID numbers from wrapping for server apps that may be running
@@ -18,7 +18,7 @@ const PrimitiveTypes_1 = require("../PrimitiveTypes");
 * Note: A property '$__id' is added/updated on the objects automatically.  You can change this property name by setting
 * a new value for 'IndexedObjectCollcetion.__IDPropertyName'.
 */
-class IndexedObjectCollectionFactory extends Types_1.Factory(PrimitiveTypes_1.Array) {
+class IndexedObjectCollectionFactory extends Factories_1.Factory(PrimitiveTypes_1.Array) {
     /** @param {TObject[]} objects Initial objects to add to the collection. */
     static 'new'(...objects) { return null; }
     static init(o, isnew, ...objects) {
@@ -134,7 +134,7 @@ let IndexedObjectCollection = class IndexedObjectCollection extends PrimitiveTyp
     }
 };
 IndexedObjectCollection = __decorate([
-    Types_1.usingFactory(IndexedObjectCollectionFactory, this)
+    Factories_1.usingFactory(IndexedObjectCollectionFactory, this)
 ], IndexedObjectCollection);
 exports.IndexedObjectCollectionInstance = IndexedObjectCollection;
 // ############################################################################################################################################

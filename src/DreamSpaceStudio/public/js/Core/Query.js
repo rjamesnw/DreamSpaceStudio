@@ -1,4 +1,4 @@
-define(["require", "exports", "./Types", "./System/Text", "./Utilities", "./Globals"], function (require, exports, Types_1, Text_1, Utilities_1, Globals_1) {
+define(["require", "exports", "./Factories", "./System/Text", "./Utilities", "./Globals"], function (require, exports, Factories_1, Text_1, Utilities_1, Globals_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Query_1;
@@ -10,7 +10,7 @@ define(["require", "exports", "./Types", "./System/Text", "./Utilities", "./Glob
       * with all values escaped and ready to be appended to a URI.
       * Note: Call 'Query.new()' to create new instances.
       */
-    let Query = Query_1 = class Query extends Types_1.Factory() {
+    let Query = Query_1 = class Query extends Factories_1.Factory() {
         /**
           * Helps wrap common functionality for query/search string manipulation.  An internal 'values' object stores the 'name:value'
           * pairs from a URI or 'location.search' string, and converting the object to a string results in a proper query/search string
@@ -179,7 +179,7 @@ define(["require", "exports", "./Types", "./System/Text", "./Utilities", "./Glob
         }
     };
     Query = Query_1 = __decorate([
-        Types_1.factory(this)
+        Factories_1.factory(this)
     ], Query);
     exports.Query = Query;
     // ==========================================================================================================================

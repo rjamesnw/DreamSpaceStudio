@@ -2,12 +2,14 @@
 // Types for specialized object property management.
 // ############################################################################################################################################
 
-import { Factory, getTypeName } from "../Types";
+import { getTypeName } from "../Types";
+import { Factory } from "../Factories";
 import { IEventDispatcher, EventDispatcher } from "./Events";
 import { PropertyEventBase, IStaticProperty, StaticProperty, IProperties, PropertyChangedHandler, IProperty, Property, ListenerCallback, InterceptorCallback } from "./Properties";
-import { DreamSpace as DS, IFactory, IEnumerable } from "../Globals";
+import { DreamSpace as DS, IFactory } from "../Globals";
 import { Exception } from "./Exception";
 import { IArray, Array } from "../PrimitiveTypes";
+import { IEnumerable } from "../Enumerable";
 
 export interface IEvents { [index: string]: IEventDispatcher<IGraphNode, (ev: Event) => any>; }
 

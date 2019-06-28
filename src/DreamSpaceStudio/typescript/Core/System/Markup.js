@@ -7,7 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * @module Markup Contains types and functions to deal with HTML markup textual data.
  */
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
-const Types_1 = require("../Types");
+const Factories_1 = require("../Factories");
 const Exception_1 = require("./Exception");
 // ========================================================================================================================
 var HTMLReaderModes;
@@ -30,7 +30,7 @@ var HTMLReaderModes;
   * Performance note: Since HTML can be large, it's not efficient to scan the HTML character by character. Instead, the HTML reader uses the native
   * RegEx engine to split up the HTML into chunks of delimiter text, which makes reading it much faster.
   */
-class HTMLReader extends Types_1.Factory(PrimitiveTypes_1.Object) {
+class HTMLReader extends Factories_1.Factory(PrimitiveTypes_1.Object) {
     constructor() {
         super(...arguments);
         // (The RegEx above will identify areas that MAY need to delimited for parsing [not a guarantee].  The area outside of the delimiters is usually

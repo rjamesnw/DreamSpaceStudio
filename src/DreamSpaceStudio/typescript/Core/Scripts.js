@@ -21,6 +21,7 @@ var ScriptResource_1;
 const Globals_1 = require("./Globals");
 const Logging_1 = require("./Logging");
 const Types_1 = require("./Types");
+const Factories_1 = require("./Factories");
 const Resources_1 = require("./Resources");
 const PrimitiveTypes_1 = require("./PrimitiveTypes");
 const TSHelpers_1 = require("./TSHelpers");
@@ -79,7 +80,7 @@ function moduleNamespaceToFolderPath(nsName) {
 }
 exports.moduleNamespaceToFolderPath = moduleNamespaceToFolderPath;
 // ====================================================================================================================
-let ScriptResource = ScriptResource_1 = class ScriptResource extends Types_1.Factory(ResourceRequest_1.ResourceRequest) {
+let ScriptResource = ScriptResource_1 = class ScriptResource extends Factories_1.Factory(ResourceRequest_1.ResourceRequest) {
     /** Returns a new module object only - does not load it. */
     static init(o, isnew, url) {
         this.super.init(o, isnew, url, Resources_1.ResourceTypes.Application_Script);
@@ -114,7 +115,7 @@ let ScriptResource = ScriptResource_1 = class ScriptResource extends Types_1.Fac
     }
 };
 ScriptResource = ScriptResource_1 = __decorate([
-    Types_1.factory(this)
+    Factories_1.factory(this)
 ], ScriptResource);
 exports.ScriptResource = ScriptResource;
 class ScriptInfoList {
@@ -125,14 +126,14 @@ exports.ScriptInfoList = ScriptInfoList;
 * 'Manifest' inherits from 'ScriptResource', providing the loaded manifests the ability to register globals for the
 * DreamSpace context, instead of the global 'window' context.
 */
-let Manifest = class Manifest extends Types_1.Factory(ScriptResource) {
+let Manifest = class Manifest extends Factories_1.Factory(ScriptResource) {
     /** Holds variables required for manifest execution (for example, callback functions for 3rd party libraries, such as the Google Maps API). */
     static init(o, isnew, url) {
         this.super.init(o, isnew, url, Resources_1.ResourceTypes.Application_Script);
     }
 };
 Manifest = __decorate([
-    Types_1.factory(this), Globals_1.sealed
+    Factories_1.factory(this), Globals_1.sealed
 ], Manifest);
 exports.Manifest = Manifest;
 // ====================================================================================================================
@@ -307,7 +308,7 @@ var _modules = {};
 var _appModule = null; // (becomes set to the app module when the app module is finally loaded and ready to be executed)
 ;
 /** Contains static module properties and functions. */
-class Module extends Types_1.Factory(ScriptResource) {
+class Module extends Factories_1.Factory(ScriptResource) {
     constructor() {
         super(...arguments);
         this.required = false; // (true if the script is required - the application will fail to execute if this occurs, and an exception will be thrown)

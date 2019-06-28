@@ -2,7 +2,7 @@
 // Types for time management.
 // ###########################################################################################################################
 
-import { Factory } from "../Types";
+import { Factory } from "../Factories";
 import { Object, String } from "../PrimitiveTypes";
 import { DreamSpace as DS } from "../Globals"
 import { Exception } from "./Exception";

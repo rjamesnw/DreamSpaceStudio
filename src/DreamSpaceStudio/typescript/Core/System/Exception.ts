@@ -1,5 +1,6 @@
 ﻿import { DreamSpace as DS, ITypeInfo } from "../Globals";
-import { Factory, factory, makeFactory, getFullTypeName } from "../Types";
+import { Factory, factory, makeFactory } from "../Factories";
+import { getFullTypeName } from "../Types";
 import { Diagnostics, ILogItem } from "./Diagnostics";
 import { LogTypes, log, error as log_error } from "../Logging"; // ("log_error" is just to prevent confusion with the "error" function in Exception)
 import { makeDisposable } from "../PrimitiveTypes";

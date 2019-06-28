@@ -1,7 +1,7 @@
 // ###########################################################################################################################
 // Application Domains
 // ###########################################################################################################################
-define(["require", "exports", "../Globals", "../PrimitiveTypes", "./Exception", "../Types", "./AppDomain"], function (require, exports, Globals_1, PrimitiveTypes_1, Exception_1, Types_1, AppDomain_1) {
+define(["require", "exports", "../Globals", "../PrimitiveTypes", "./Exception", "../Factories", "../AppDomain"], function (require, exports, Globals_1, PrimitiveTypes_1, Exception_1, Factories_1, AppDomain_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // =======================================================================================================================
@@ -30,7 +30,7 @@ define(["require", "exports", "../Globals", "../PrimitiveTypes", "./Exception", 
      * On the client side, this is accomplished by using IFrame objects.  On the server side, this is accomplished using
      * workers.  As well, on the client side, workers can be used to simulate server side communication during development.
      */
-    class Context extends Types_1.Factory(PrimitiveTypes_1.Object) {
+    class Context extends Factories_1.Factory(PrimitiveTypes_1.Object) {
         constructor() {
             super(...arguments);
             this.x = 1;
@@ -60,7 +60,7 @@ define(["require", "exports", "../Globals", "../PrimitiveTypes", "./Exception", 
       * logins, private information, etc.
       * Note: While script isolation is the default, trusted scripts can run in the system context, and are thus not secured.
       */
-    let UIApplication = class UIApplication extends Types_1.Factory(AppDomain_1.Application) {
+    let UIApplication = class UIApplication extends Factories_1.Factory(AppDomain_1.Application) {
         // ========================================================================================================================
         /**
           * Where the Application object represents the base application properties for an AppDomain instance, the UIApplication
@@ -149,7 +149,7 @@ define(["require", "exports", "../Globals", "../PrimitiveTypes", "./Exception", 
         }
     };
     UIApplication = __decorate([
-        Types_1.factory(this)
+        Factories_1.factory(this)
     ], UIApplication);
     exports.UIApplication = UIApplication;
 });

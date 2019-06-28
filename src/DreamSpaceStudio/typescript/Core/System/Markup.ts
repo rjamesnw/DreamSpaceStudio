@@ -7,7 +7,7 @@
  */
 
 import { Object } from "../PrimitiveTypes";
-import { Factory } from "../Types";
+import { Factory } from "../Factories";
 import { Exception } from "./Exception";
 
 // ========================================================================================================================

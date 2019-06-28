@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 var Exception_1;
 const Globals_1 = require("../Globals");
+const Factories_1 = require("../Factories");
 const Types_1 = require("../Types");
 const Diagnostics_1 = require("./Diagnostics");
 const Logging_1 = require("../Logging"); // ("log_error" is just to prevent confusion with the "error" function in Exception)
@@ -19,7 +20,7 @@ const PrimitiveTypes_1 = require("../PrimitiveTypes");
  * The Exception object is used to record information about errors that occur in an application.
  * Note: Creating an exception object automatically creates a corresponding log entry, unless the 'log' parameter is set to false.
  */
-let Exception = Exception_1 = class Exception extends Types_1.Factory(Types_1.makeFactory(PrimitiveTypes_1.makeDisposable(Error))) {
+let Exception = Exception_1 = class Exception extends Factories_1.Factory(Factories_1.makeFactory(PrimitiveTypes_1.makeDisposable(Error))) {
     /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
     static init(o, isnew, message, source, log) {
         o.message = message;
@@ -152,7 +153,7 @@ let Exception = Exception_1 = class Exception extends Types_1.Factory(Types_1.ma
     valueOf() { return this.message; }
 };
 Exception = Exception_1 = __decorate([
-    Types_1.factory(this)
+    Factories_1.factory(this)
 ], Exception);
 exports.Exception = Exception;
 //# sourceMappingURL=Exception.js.map

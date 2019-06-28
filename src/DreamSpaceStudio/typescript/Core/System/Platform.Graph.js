@@ -4,13 +4,14 @@
 // ############################################################################################################################################
 Object.defineProperty(exports, "__esModule", { value: true });
 const Types_1 = require("../Types");
+const Factories_1 = require("../Factories");
 const Events_1 = require("./Events");
 const Properties_1 = require("./Properties");
 const Globals_1 = require("../Globals");
 const Exception_1 = require("./Exception");
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
 /** A graph item represents a single node on the application graph. */
-class GraphNode extends Types_1.Factory(Properties_1.PropertyEventBase) {
+class GraphNode extends Factories_1.Factory(Properties_1.PropertyEventBase) {
     constructor() {
         super(...arguments);
         // -----------------------------------------------------------------------------------------------------------------------------------

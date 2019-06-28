@@ -1,11 +1,11 @@
 // ###########################################################################################################################
 // Types for specialized object property management.
 // ###########################################################################################################################
-define(["require", "exports", "../Types", "./Events", "../Utilities"], function (require, exports, Types_1, Events_1, Utilities_1) {
+define(["require", "exports", "../Factories", "./Events", "../Utilities"], function (require, exports, Factories_1, Events_1, Utilities_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // ========================================================================================================================
-    let PropertyEventBase = class PropertyEventBase extends Types_1.Factory(Events_1.EventObject) {
+    let PropertyEventBase = class PropertyEventBase extends Factories_1.Factory(Events_1.EventObject) {
         // ========================================================================================================================
         constructor() {
             super(...arguments);
@@ -118,11 +118,11 @@ define(["require", "exports", "../Types", "./Events", "../Utilities"], function 
         }
     };
     PropertyEventBase = __decorate([
-        Types_1.factory(this)
+        Factories_1.factory(this)
     ], PropertyEventBase);
     exports.PropertyEventBase = PropertyEventBase;
     // =======================================================================================================================
-    class StaticProperty extends Types_1.Factory(PropertyEventBase) {
+    class StaticProperty extends Factories_1.Factory(PropertyEventBase) {
         constructor() {
             super(...arguments);
             /** If true (false by default), then 'onRedraw()' will be called when this property is updated. */
@@ -149,7 +149,7 @@ define(["require", "exports", "../Types", "./Events", "../Utilities"], function 
     exports.StaticProperty = StaticProperty;
     // =======================================================================================================================
     /** Represents a GraphItem instance property which holds a reference to the related static property information, and also stores the current instance value. */
-    class Property extends Types_1.Factory(PropertyEventBase) {
+    class Property extends Factories_1.Factory(PropertyEventBase) {
         static 'new'(owner, staticProperty, value) { return null; }
         static init(o, isnew, owner, staticProperty, value) {
             this.super.init(o, isnew);

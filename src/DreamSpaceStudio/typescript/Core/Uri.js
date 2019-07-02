@@ -1,7 +1,6 @@
 "use strict";
+// ############################################################################################################################
 Object.defineProperty(exports, "__esModule", { value: true });
-const Utilities_1 = require("./Utilities");
-const Path_1 = require("./Path");
 /** The result of 'Path.parse()', and also helps building URLs manually. */
 class Uri {
     constructor(
@@ -100,4 +99,8 @@ class Uri {
     }
 }
 exports.Uri = Uri;
+// ############################################################################################################################
+const Utilities_1 = require("./Utilities");
+const Path_1 = require("./Path");
+// ############################################################################################################################
 //# sourceMappingURL=Uri.js.map

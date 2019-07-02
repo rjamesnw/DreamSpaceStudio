@@ -13,7 +13,6 @@ const Logging_1 = require("./Logging");
 const Globals_1 = require("./Globals");
 const PrimitiveTypes_1 = require("./PrimitiveTypes");
 const Exception_1 = require("./System/Exception");
-const Collections_IndexedObjectCollection_1 = require("./System/Collections.IndexedObjectCollection");
 const System_1 = require("./System/System");
 const Factories_2 = require("./Factories");
 // ====================================================================================================================================
@@ -306,4 +305,5 @@ Application.default = Application.new(Globals_1.DreamSpace.global.document.title
 Globals_1.frozen(AppDomain);
 Globals_1.frozen(Application);
 // ========================================================================================================================================
+const Collections_IndexedObjectCollection_1 = require("./System/Collections.IndexedObjectCollection");
 //# sourceMappingURL=AppDomain.js.map

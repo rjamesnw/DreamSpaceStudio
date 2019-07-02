@@ -4,7 +4,6 @@ import { error } from "./Logging";
 import { DreamSpace as DS, IDisposable, ITypeInfo, IFactory, IType, frozen } from "./Globals";
 import { Object } from "./PrimitiveTypes";
 import { Exception } from "./System/Exception";
-import { IndexedObjectCollection, IIndexedObjectCollection } from "./System/Collections.IndexedObjectCollection";
 import { dispose } from "./System/System";
 import { IModule } from "./Scripts";
 import { factory, Types } from "./Factories";
@@ -437,3 +436,5 @@ frozen(AppDomain);
 frozen(Application);
 
 // ========================================================================================================================================
+
+import { IndexedObjectCollection, IIndexedObjectCollection } from "./System/Collections.IndexedObjectCollection";

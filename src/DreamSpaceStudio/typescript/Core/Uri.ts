@@ -1,5 +1,4 @@
-import { Utilities } from "./Utilities";
-import { Path } from "./Path";
+// ############################################################################################################################
 
 /** The result of 'Path.parse()', and also helps building URLs manually. */
 export class Uri { // TODO: Make URL builder?
@@ -96,3 +95,10 @@ export class Uri { // TODO: Make URL builder?
         );
     }
 }
+
+// ############################################################################################################################
+
+import { Utilities } from "./Utilities";
+import { Path } from "./Path";
+
+// ############################################################################################################################

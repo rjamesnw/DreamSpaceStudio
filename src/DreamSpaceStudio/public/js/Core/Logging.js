@@ -1,7 +1,7 @@
+// =======================================================================================================================
 define(["require", "exports", "././System/Diagnostics", "././System/Exception"], function (require, exports, Diagnostics_1, Exception_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    // =======================================================================================================================
     /** Used with 'DreamSpace.log(...)' to write to the host console, if available.
       */
     var LogTypes;

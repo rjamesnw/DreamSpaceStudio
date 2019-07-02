@@ -1,11 +1,6 @@
 ﻿import { getTypeName, isPrimitiveType } from "./Types";
 import { Factory, makeFactory, factory, usingFactory, Types } from "./Factories";
-import { SerializedData, ISerializable } from "./System/Serialization";
-import { dispose } from "./System/System";
-import { AppDomain, Application, IDomainObjectInfo } from "./AppDomain";
-import { DreamSpace as DS, IFunctionInfo, ITypeInfo, IDisposable, IClassInfo, IType } from "./Globals";
-import { Browser } from "./System/Browser";
-import { Utilities } from "./Utilities";
+import { DreamSpace as DS, IFunctionInfo, ITypeInfo, IDisposable, IType } from "./Globals";
 
 // ###########################################################################################################################
 // Primitive types designed for use with the DreamSpace system.
@@ -467,3 +462,9 @@ export abstract class DependentObject extends ObjectFactory {
 export interface IDependencyObject extends DependentObject { }
 
 // =======================================================================================================================
+
+import { AppDomain, Application, IDomainObjectInfo } from "./AppDomain";
+import { Browser } from "./System/Browser";
+import { Utilities } from "./Utilities";
+import { SerializedData, ISerializable } from "./System/Serialization";
+import { dispose } from "./System/System";

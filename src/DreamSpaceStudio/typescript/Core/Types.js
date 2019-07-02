@@ -3,9 +3,7 @@
 /** @module Types Shared types and interfaces, and provides functions for type management. */
 // ###########################################################################################################################
 Object.defineProperty(exports, "__esModule", { value: true });
-const Logging_1 = require("./Logging");
 const Globals_1 = require("./Globals");
-const PrimitiveTypes_1 = require("./PrimitiveTypes");
 /** Returns the name of a namespace or variable reference at runtime. */
 function nameof(selector, fullname = false) {
     var s = '' + selector;
@@ -116,16 +114,16 @@ exports.Types = Types;
         return _type;
     }
     Types.getRoot = getRoot;
-    PrimitiveTypes_1.Object.defineProperty(Types, "__types", { configurable: false, writable: false, value: {} });
+    Globals_1.DreamSpace.global.Object.defineProperty(Types, "__types", { configurable: false, writable: false, value: {} });
     /**
      * If true the system will automatically track new objects created under this DreamSpace context and store them in 'Types.__trackedObjects'.
      * The default is false to prevent memory leaks by those unaware of how the DreamSpace factory pattern works.
      * Setting this to true (either here or within a specific AppDomain) means you take full responsibility to dispose all objects you create.
      */
     Types.autoTrackInstances = false;
-    PrimitiveTypes_1.Object.defineProperty(Types, "__trackedObjects", { configurable: false, writable: false, value: [] });
+    Globals_1.DreamSpace.global.Object.defineProperty(Types, "__trackedObjects", { configurable: false, writable: false, value: [] });
     var ___nextObjectID = 0;
-    PrimitiveTypes_1.Object.defineProperty(Types, "__nextObjectID", { configurable: false, get: () => ___nextObjectID });
+    Globals_1.DreamSpace.global.Object.defineProperty(Types, "__nextObjectID", { configurable: false, get: () => ___nextObjectID });
     /** Returns 'Types.__nextObjectID' and increments the value by 1. */
     function getNextObjectId() { return ___nextObjectID++; }
     Types.getNextObjectId = getNextObjectId;
@@ -236,6 +234,10 @@ function isPrimitiveType(o) {
         || o == RegExp || o == Error);
 }
 exports.isPrimitiveType = isPrimitiveType;
+// =======================================================================================================================
+const PrimitiveTypes_1 = require("./PrimitiveTypes");
+// =======================================================================================================================
+const Logging_1 = require("./Logging");
 // =======================================================================================================================
 // ###########################################################################################################################
 // TODO: Consider adding a dependency injection system layer.

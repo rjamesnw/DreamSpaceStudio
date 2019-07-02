@@ -1,7 +1,7 @@
 // ############################################################################################################################
 // Types for time management.
 // ############################################################################################################################
-define(["require", "exports", "../Factories", "../Globals", "./Time", "../Logging", "./Exception", "../PrimitiveTypes"], function (require, exports, Factories_1, Globals_1, Time_1, Logging_1, Exception_1, PrimitiveTypes_1) {
+define(["require", "exports", "../Factories", "../Globals", "../Logging", "./Time", "./Exception", "../PrimitiveTypes"], function (require, exports, Factories_1, Globals_1, Logging_1, Time_1, Exception_1, PrimitiveTypes_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var LogItem_1;
@@ -107,7 +107,7 @@ define(["require", "exports", "../Factories", "../Globals", "./Time", "../Loggin
         }
     };
     LogItem = LogItem_1 = __decorate([
-        Factories_1.factory(Diagnostics)
+        Factories_1.factory(LogItem_1)
     ], LogItem);
     exports.LogItem = LogItem;
     /** Contains diagnostic based functions, such as those needed for logging purposes. */

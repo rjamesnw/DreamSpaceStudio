@@ -1,8 +1,6 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const Diagnostics_1 = require("././System/Diagnostics"); // ("./" twice causes an "optional" flag - it will only be included if already imported elsewhere)
-const Exception_1 = require("././System/Exception"); // ("./" twice causes an "optional" flag - it will only be included if already imported elsewhere)
 // =======================================================================================================================
+Object.defineProperty(exports, "__esModule", { value: true });
 /** Used with 'DreamSpace.log(...)' to write to the host console, if available.
   */
 var LogTypes;
@@ -101,5 +99,8 @@ function error(title, message, source, throwException = true, useLogger = true) 
     return log(title, message, LogTypes.Error, source, throwException, useLogger);
 }
 exports.error = error;
+// =======================================================================================================================
+const Diagnostics_1 = require("././System/Diagnostics"); // ("./" twice causes an "optional" flag - it will only be included if already imported elsewhere)
+const Exception_1 = require("././System/Exception"); // ("./" twice causes an "optional" flag - it will only be included if already imported elsewhere)
 // =======================================================================================================================
 //# sourceMappingURL=Logging.js.map

@@ -1,12 +1,6 @@
 "use strict";
 /** @module Path The path module contains functions for working with URI based paths. */
 Object.defineProperty(exports, "__esModule", { value: true });
-const Uri_1 = require("./Uri");
-const Utilities_1 = require("./Utilities");
-const Globals_1 = require("./Globals");
-const Query_1 = require("./Query");
-const ResourceRequest_1 = require("./ResourceRequest");
-const IO_1 = require("./System/IO");
 // ==========================================================================================================================
 /** Contains functions for working with URI based paths. */
 class Path {
@@ -153,5 +147,12 @@ exports.Path = Path;
     Path.map = map;
 })(Path || (Path = {}));
 exports.Path = Path;
+// ===============================================================================================================================
+const Globals_1 = require("./Globals");
+const Utilities_1 = require("./Utilities");
+const Uri_1 = require("./Uri");
+const Query_1 = require("./Query");
+const ResourceRequest_1 = require("./ResourceRequest");
+const IO_1 = require("./System/IO");
 // ===============================================================================================================================
 //# sourceMappingURL=Path.js.map

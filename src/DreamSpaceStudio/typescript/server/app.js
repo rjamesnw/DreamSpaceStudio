@@ -24,8 +24,9 @@ const path = require("path");
 const index_1 = require("../routes/index");
 const user_1 = require("../routes/user");
 //? global.XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+//import { registerGlobal } from '../Core/DreamSpace';
 const Globals_1 = require("../Core/Globals");
-var ds = Globals_1.default();
+var ds = Globals_1.registerGlobal();
 var app = express();
 try {
     // Parse URL-encoded bodies (as sent by HTML forms)

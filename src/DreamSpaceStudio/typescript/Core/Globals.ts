@@ -706,7 +706,7 @@ export interface IErrorCallback<TSender> { (sender?: TSender, error?: any): any 
  * 2. A global object to store callback functions for API initialization, such as Google Maps.
  * @param uniqueGlobalVarName The global name to use.  By default this is the constant 'DEFAULT_ROOT_NS_NAME', which uses a NAME + GUID to guarantee no collisions.
  */
-export default function registerGlobal(uniqueGlobalVarName?: string) {
+export function registerGlobal(uniqueGlobalVarName?: string) {
     if (uniqueGlobalVarName)
         USER_GIVEN_GLOBAL_NS_NAME = uniqueGlobalVarName;
     Object.defineProperty(DreamSpace.global, DreamSpace.globalNamespaceName, { enumerable: false, writable: false, configurable: false, value: DreamSpace });

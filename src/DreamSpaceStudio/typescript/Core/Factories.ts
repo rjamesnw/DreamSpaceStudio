@@ -1,10 +1,6 @@
 ﻿import { getFullTypeName, Types as TypesBase, getTypeName, isDisposable } from "./Types";
 import { error } from "./Logging";
 import { DreamSpace as DS, IDisposable, ITypeInfo, IFactory, IType, IFactoryTypeInfo, IClassInfo, NewDelegate, InitDelegate, FactoryBaseType } from "./Globals";
-import { Object } from "./PrimitiveTypes";
-import { IDomainObjectInfo, IADBridge, AppDomain } from "./AppDomain";
-import { Utilities } from "./Utilities";
-import { Delegate } from "./System/Delegate";
 
 // ############################################################################################################################################
 // Factory Pattern Types and Functions
@@ -18,7 +14,7 @@ export class Types extends TypesBase { }
 export namespace Types {
     /** Holds all disposed objects that can be reused. */
     export declare var __disposedObjects: { [fulltypename: string]: IDomainObjectInfo[]; }; // (can be reused by any AppDomain instance! [global pool for better efficiency])
-    Object.defineProperty(Types, "__disposedObjects", { configurable: false, writable: false, value: {} });
+    DS.global.Object.defineProperty(Types, "__disposedObjects", { configurable: false, writable: false, value: {} });
 
     /** 
       * Used in place of the constructor to create a new instance of the underlying object type for a specific domain.
@@ -373,5 +369,12 @@ export function Factory<TBaseFactory extends IFactory & IType = typeof Object>(b
 
     return <any>cls;
 }
+
+// ========================================================================================================================================
+
+import { Object } from "./PrimitiveTypes";
+import { IDomainObjectInfo, IADBridge, AppDomain } from "./AppDomain";
+import { Utilities } from "./Utilities";
+import { Delegate } from "./System/Delegate";
 
 // ========================================================================================================================================

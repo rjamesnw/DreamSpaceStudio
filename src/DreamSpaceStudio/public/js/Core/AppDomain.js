@@ -1,4 +1,4 @@
-define(["require", "exports", "./Factories", "./Types", "./Logging", "./Globals", "./PrimitiveTypes", "./System/Exception", "./System/Collections.IndexedObjectCollection", "./System/System", "./Factories"], function (require, exports, Factories_1, Types_1, Logging_1, Globals_1, PrimitiveTypes_1, Exception_1, Collections_IndexedObjectCollection_1, System_1, Factories_2) {
+define(["require", "exports", "./Factories", "./Types", "./Logging", "./Globals", "./PrimitiveTypes", "./System/Exception", "./System/System", "./Factories", "./System/Collections.IndexedObjectCollection"], function (require, exports, Factories_1, Types_1, Logging_1, Globals_1, PrimitiveTypes_1, Exception_1, System_1, Factories_2, Collections_IndexedObjectCollection_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var AppDomain_1, Application_1;
@@ -292,5 +292,4 @@ define(["require", "exports", "./Factories", "./Types", "./Logging", "./Globals"
     Globals_1.frozen(AppDomain);
     Globals_1.frozen(Application);
 });
-// ========================================================================================================================================
 //# sourceMappingURL=AppDomain.js.map

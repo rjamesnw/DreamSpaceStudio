@@ -1,10 +1,10 @@
-define(["require", "exports", "../Globals", "../Factories", "../Types", "./Diagnostics", "../Logging", "../PrimitiveTypes"], function (require, exports, Globals_1, Factories_1, Types_1, Diagnostics_1, Logging_1, PrimitiveTypes_1) {
+define(["require", "exports", "../Globals", "../Factories", "../Types", "../Logging", "../PrimitiveTypes", "./Diagnostics"], function (require, exports, Globals_1, Factories_1, Types_1, Logging_1, PrimitiveTypes_1, Diagnostics_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Exception_1;
-    // #######################################################################################
+    // ############################################################################################################################
     // Types for error management.
-    // #######################################################################################
+    // ############################################################################################################################
     /**
      * The Exception object is used to record information about errors that occur in an application.
      * Note: Creating an exception object automatically creates a corresponding log entry, unless the 'log' parameter is set to false.
@@ -146,4 +146,5 @@ define(["require", "exports", "../Globals", "../Factories", "../Types", "./Diagn
     ], Exception);
     exports.Exception = Exception;
 });
+// ############################################################################################################################
 //# sourceMappingURL=Exception.js.map

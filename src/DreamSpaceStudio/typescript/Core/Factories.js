@@ -3,10 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Types_1 = require("./Types");
 const Logging_1 = require("./Logging");
 const Globals_1 = require("./Globals");
-const PrimitiveTypes_1 = require("./PrimitiveTypes");
-const AppDomain_1 = require("./AppDomain");
-const Utilities_1 = require("./Utilities");
-const Delegate_1 = require("./System/Delegate");
 // ############################################################################################################################################
 // Factory Pattern Types and Functions
 // ############################################################################################################################################
@@ -17,7 +13,7 @@ class Types extends Types_1.Types {
 exports.Types = Types;
 /** Contains functions to work with types within the system. */
 (function (Types) {
-    PrimitiveTypes_1.Object.defineProperty(Types, "__disposedObjects", { configurable: false, writable: false, value: {} });
+    Globals_1.DreamSpace.global.Object.defineProperty(Types, "__disposedObjects", { configurable: false, writable: false, value: {} });
     /**
       * Used in place of the constructor to create a new instance of the underlying object type for a specific domain.
       * This allows the reuse of disposed objects to prevent garbage collection hits that may cause the application to lag, and
@@ -305,5 +301,10 @@ function Factory(baseFactoryType) {
     return cls;
 }
 exports.Factory = Factory;
+// ========================================================================================================================================
+const PrimitiveTypes_1 = require("./PrimitiveTypes");
+const AppDomain_1 = require("./AppDomain");
+const Utilities_1 = require("./Utilities");
+const Delegate_1 = require("./System/Delegate");
 // ========================================================================================================================================
 //# sourceMappingURL=Factories.js.map

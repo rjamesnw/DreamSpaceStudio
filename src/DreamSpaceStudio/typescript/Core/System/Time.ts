@@ -5,7 +5,6 @@
 import { Factory } from "../Factories";
 import { Object, String } from "../PrimitiveTypes";
 import { DreamSpace as DS } from "../Globals"
-import { Exception } from "./Exception";
 
 // =======================================================================================================================
 
@@ -357,9 +356,10 @@ export class TimeSpan extends Factory(Object) {
 
 export interface ITimeSpan extends TimeSpan { }
 
-    // =======================================================================================================================
+// =======================================================================================================================
+
+import { Exception } from "./Exception";
 
 // ###########################################################################################################################
 // Notes:
 //   * https://stackoverflow.com/questions/20028945/calculation-of-leap-years-doesnt-seem-to-match-javascript-date
-

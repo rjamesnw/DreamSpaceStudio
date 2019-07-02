@@ -12,10 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var LogItem_1;
 const Factories_1 = require("../Factories");
 const Globals_1 = require("../Globals");
-const Time_1 = require("./Time");
 const Logging_1 = require("../Logging");
-const Exception_1 = require("./Exception");
-const PrimitiveTypes_1 = require("../PrimitiveTypes");
 // ========================================================================================================================
 var __logItemsSequenceCounter = 0;
 var __logCaptureStack = [];
@@ -118,7 +115,7 @@ let LogItem = LogItem_1 = class LogItem extends Factories_1.Factory() {
     }
 };
 LogItem = LogItem_1 = __decorate([
-    Factories_1.factory(Diagnostics)
+    Factories_1.factory(LogItem_1)
 ], LogItem);
 exports.LogItem = LogItem;
 /** Contains diagnostic based functions, such as those needed for logging purposes. */
@@ -283,5 +280,9 @@ if (Globals_1.DreamSpace.host.isClient && typeof window !== 'undefined') {
         }
     };
 }
+// ############################################################################################################################
+const Time_1 = require("./Time");
+const Exception_1 = require("./Exception");
+const PrimitiveTypes_1 = require("../PrimitiveTypes");
 // ############################################################################################################################
 //# sourceMappingURL=Diagnostics.js.map

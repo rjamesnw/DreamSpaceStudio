@@ -289,7 +289,6 @@ define(["require", "exports", "../Factories", "../PrimitiveTypes", "../Globals",
     }
     exports.TimeSpan = TimeSpan;
 });
-// =======================================================================================================================
 // ###########################################################################################################################
 // Notes:
 //   * https://stackoverflow.com/questions/20028945/calculation-of-leap-years-doesnt-seem-to-match-javascript-date

@@ -8,6 +8,7 @@
 // using the identifiers 'this', 'manifest', or 'module' (accordingly), which provides functions for local-global scope storage.
 // ###########################################################################################################################
 Object.defineProperty(exports, "__esModule", { value: true });
+const Path_1 = require("./Path");
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
  * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.
  * Note: A symbol is not used, since callbacks placed into API URLs must be strings. Instead, a static pre-generated GUID is appended.
@@ -435,6 +436,6 @@ function registerGlobal(uniqueGlobalVarName) {
     // (this locked down, as global paths might be used by APIs after future initialization)
     return DreamSpace;
 }
-exports.default = registerGlobal;
-const Path_1 = require("./Path");
+exports.registerGlobal = registerGlobal;
+// ###########################################################################################################################
 //# sourceMappingURL=Globals.js.map

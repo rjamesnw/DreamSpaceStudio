@@ -1,4 +1,4 @@
-define(["require", "exports", "./Types", "./Factories", "./System/System", "./AppDomain", "./Globals", "./System/Browser", "./Utilities"], function (require, exports, Types_1, Factories_1, System_1, AppDomain_1, Globals_1, Browser_1, Utilities_1) {
+define(["require", "exports", "./Types", "./Factories", "./Globals", "./AppDomain", "./System/Browser", "./Utilities", "./System/System"], function (require, exports, Types_1, Factories_1, Globals_1, AppDomain_1, Browser_1, Utilities_1, System_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var ObjectFactory_1, String_1, Array_1;
@@ -390,5 +390,4 @@ define(["require", "exports", "./Types", "./Factories", "./System/System", "./Ap
     }
     exports.DependentObject = DependentObject;
 });
-// =======================================================================================================================
 //# sourceMappingURL=PrimitiveTypes.js.map

@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Globals_1 = require("./Globals");
-const Exception_1 = require("./System/Exception");
 // ###########################################################################################################################
 // Application Windows
 // ###########################################################################################################################
@@ -196,6 +195,8 @@ exports.Utilities = Utilities;
     Utilities.createGUID = createGUID;
 })(Utilities || (Utilities = {}));
 exports.Utilities = Utilities;
+// ------------------------------------------------------------------------------------------------------------------------
+const Exception_1 = require("./System/Exception");
 // ------------------------------------------------------------------------------------------------------------------------
 /**
  * This is a special override to the default TypeScript '__extends' code for extending types in the DreamSpace system.

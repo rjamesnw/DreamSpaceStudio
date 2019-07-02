@@ -1,13 +1,12 @@
 ﻿import { DreamSpace as DS, ITypeInfo } from "../Globals";
 import { Factory, factory, makeFactory } from "../Factories";
 import { getFullTypeName } from "../Types";
-import { Diagnostics, ILogItem } from "./Diagnostics";
 import { LogTypes, log, error as log_error } from "../Logging"; // ("log_error" is just to prevent confusion with the "error" function in Exception)
 import { makeDisposable } from "../PrimitiveTypes";
 
-// #######################################################################################
+// ############################################################################################################################
 // Types for error management.
-// #######################################################################################
+// ############################################################################################################################
 
 /** 
  * The Exception object is used to record information about errors that occur in an application.
@@ -169,3 +168,9 @@ export class Exception extends Factory(makeFactory(makeDisposable(Error))) {
 }
 
 export interface IException extends Exception { }
+
+// ############################################################################################################################
+
+import { Diagnostics, ILogItem } from "./Diagnostics";
+
+// ############################################################################################################################

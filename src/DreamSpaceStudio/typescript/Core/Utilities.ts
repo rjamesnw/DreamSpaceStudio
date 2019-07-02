@@ -1,5 +1,4 @@
 ﻿import { DreamSpace as DS } from "./Globals";
-import { Exception } from "./System/Exception";
 
 // ###########################################################################################################################
 // Application Windows
@@ -161,7 +160,7 @@ namespace Utilities {
     // ------------------------------------------------------------------------------------------------------------------------
 
     var _guidSeed = (function () { // (used in 'createGUID()')
-        var text = navigator.userAgent + location.href; // TODO: This may need fixing on the server side.
+        var text = DS.global.navigator.userAgent + DS.global.location.href; // TODO: This may need fixing on the server side.
         for (var i = 0, n = text.length, randseed = 0; i < n; ++i)
             randseed += text.charCodeAt(i);
         return randseed;
@@ -189,6 +188,10 @@ namespace Utilities {
 }
 
 export { Utilities };
+
+// ------------------------------------------------------------------------------------------------------------------------
+
+import { Exception } from "./System/Exception";
 
 // ------------------------------------------------------------------------------------------------------------------------
 

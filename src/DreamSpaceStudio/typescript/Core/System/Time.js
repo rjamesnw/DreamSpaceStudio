@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Factories_1 = require("../Factories");
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
 const Globals_1 = require("../Globals");
-const Exception_1 = require("./Exception");
 // =======================================================================================================================
 /**
  * Represents a span of time (not a date). Calculation of dates usually relies on calendar rules.  A time-span object
@@ -292,6 +291,7 @@ class TimeSpan extends Factories_1.Factory(PrimitiveTypes_1.Object) {
 }
 exports.TimeSpan = TimeSpan;
 // =======================================================================================================================
+const Exception_1 = require("./Exception");
 // ###########################################################################################################################
 // Notes:
 //   * https://stackoverflow.com/questions/20028945/calculation-of-leap-years-doesnt-seem-to-match-javascript-date

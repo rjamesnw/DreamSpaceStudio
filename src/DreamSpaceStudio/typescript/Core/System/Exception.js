@@ -10,12 +10,11 @@ var Exception_1;
 const Globals_1 = require("../Globals");
 const Factories_1 = require("../Factories");
 const Types_1 = require("../Types");
-const Diagnostics_1 = require("./Diagnostics");
 const Logging_1 = require("../Logging"); // ("log_error" is just to prevent confusion with the "error" function in Exception)
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
-// #######################################################################################
+// ############################################################################################################################
 // Types for error management.
-// #######################################################################################
+// ############################################################################################################################
 /**
  * The Exception object is used to record information about errors that occur in an application.
  * Note: Creating an exception object automatically creates a corresponding log entry, unless the 'log' parameter is set to false.
@@ -156,4 +155,7 @@ Exception = Exception_1 = __decorate([
     Factories_1.factory(this)
 ], Exception);
 exports.Exception = Exception;
+// ############################################################################################################################
+const Diagnostics_1 = require("./Diagnostics");
+// ############################################################################################################################
 //# sourceMappingURL=Exception.js.map

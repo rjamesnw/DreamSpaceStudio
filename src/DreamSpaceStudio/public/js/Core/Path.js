@@ -1,5 +1,5 @@
 /** @module Path The path module contains functions for working with URI based paths. */
-define(["require", "exports", "./Uri", "./Utilities", "./Globals", "./Query", "./ResourceRequest", "./System/IO"], function (require, exports, Uri_1, Utilities_1, Globals_1, Query_1, ResourceRequest_1, IO_1) {
+define(["require", "exports", "./Globals", "./Utilities", "./Uri", "./Query", "./ResourceRequest", "./System/IO"], function (require, exports, Globals_1, Utilities_1, Uri_1, Query_1, ResourceRequest_1, IO_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // ==========================================================================================================================

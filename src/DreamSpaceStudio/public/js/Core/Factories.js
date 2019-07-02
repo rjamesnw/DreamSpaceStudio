@@ -11,7 +11,7 @@ define(["require", "exports", "./Types", "./Logging", "./Globals", "./PrimitiveT
     exports.Types = Types;
     /** Contains functions to work with types within the system. */
     (function (Types) {
-        PrimitiveTypes_1.Object.defineProperty(Types, "__disposedObjects", { configurable: false, writable: false, value: {} });
+        Globals_1.DreamSpace.global.Object.defineProperty(Types, "__disposedObjects", { configurable: false, writable: false, value: {} });
         /**
           * Used in place of the constructor to create a new instance of the underlying object type for a specific domain.
           * This allows the reuse of disposed objects to prevent garbage collection hits that may cause the application to lag, and

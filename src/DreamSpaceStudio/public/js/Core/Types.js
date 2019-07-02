@@ -1,7 +1,7 @@
 // ###########################################################################################################################
 /** @module Types Shared types and interfaces, and provides functions for type management. */
 // ###########################################################################################################################
-define(["require", "exports", "./Logging", "./Globals", "./PrimitiveTypes"], function (require, exports, Logging_1, Globals_1, PrimitiveTypes_1) {
+define(["require", "exports", "./Globals", "./PrimitiveTypes", "./Logging"], function (require, exports, Globals_1, PrimitiveTypes_1, Logging_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     /** Returns the name of a namespace or variable reference at runtime. */
@@ -114,16 +114,16 @@ define(["require", "exports", "./Logging", "./Globals", "./PrimitiveTypes"], fun
             return _type;
         }
         Types.getRoot = getRoot;
-        PrimitiveTypes_1.Object.defineProperty(Types, "__types", { configurable: false, writable: false, value: {} });
+        Globals_1.DreamSpace.global.Object.defineProperty(Types, "__types", { configurable: false, writable: false, value: {} });
         /**
          * If true the system will automatically track new objects created under this DreamSpace context and store them in 'Types.__trackedObjects'.
          * The default is false to prevent memory leaks by those unaware of how the DreamSpace factory pattern works.
          * Setting this to true (either here or within a specific AppDomain) means you take full responsibility to dispose all objects you create.
          */
         Types.autoTrackInstances = false;
-        PrimitiveTypes_1.Object.defineProperty(Types, "__trackedObjects", { configurable: false, writable: false, value: [] });
+        Globals_1.DreamSpace.global.Object.defineProperty(Types, "__trackedObjects", { configurable: false, writable: false, value: [] });
         var ___nextObjectID = 0;
-        PrimitiveTypes_1.Object.defineProperty(Types, "__nextObjectID", { configurable: false, get: () => ___nextObjectID });
+        Globals_1.DreamSpace.global.Object.defineProperty(Types, "__nextObjectID", { configurable: false, get: () => ___nextObjectID });
         /** Returns 'Types.__nextObjectID' and increments the value by 1. */
         function getNextObjectId() { return ___nextObjectID++; }
         Types.getNextObjectId = getNextObjectId;

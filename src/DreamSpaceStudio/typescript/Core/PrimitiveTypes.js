@@ -9,11 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var ObjectFactory_1, String_1, Array_1;
 const Types_1 = require("./Types");
 const Factories_1 = require("./Factories");
-const System_1 = require("./System/System");
-const AppDomain_1 = require("./AppDomain");
 const Globals_1 = require("./Globals");
-const Browser_1 = require("./System/Browser");
-const Utilities_1 = require("./Utilities");
 // ###########################################################################################################################
 // Primitive types designed for use with the DreamSpace system.
 // See 'DreamSpace.global' and 'DreamSpace.NativeTypes/NativeStaticTypes' for access to global scope native references and definitions.
@@ -402,4 +398,8 @@ class DependentObject extends ObjectFactory {
 }
 exports.DependentObject = DependentObject;
 // =======================================================================================================================
+const AppDomain_1 = require("./AppDomain");
+const Browser_1 = require("./System/Browser");
+const Utilities_1 = require("./Utilities");
+const System_1 = require("./System/System");
 //# sourceMappingURL=PrimitiveTypes.js.map

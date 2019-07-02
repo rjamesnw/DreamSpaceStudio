@@ -436,6 +436,7 @@ define(["require", "exports", "./Path"], function (require, exports, Path_1) {
         // (this locked down, as global paths might be used by APIs after future initialization)
         return DreamSpace;
     }
-    exports.default = registerGlobal;
+    exports.registerGlobal = registerGlobal;
 });
+// ###########################################################################################################################
 //# sourceMappingURL=Globals.js.map

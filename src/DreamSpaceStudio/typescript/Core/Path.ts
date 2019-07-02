@@ -1,11 +1,5 @@
 /** @module Path The path module contains functions for working with URI based paths. */
 
-import { Uri } from "./Uri";
-import { Utilities } from "./Utilities";
-import { DreamSpace as DS } from "./Globals";
-import { Query, pageQuery } from "./Query";
-import { ResourceRequest } from "./ResourceRequest";
-import { IO } from "./System/IO";
 // ==========================================================================================================================
 
 /** Contains functions for working with URI based paths. */
@@ -152,5 +146,14 @@ namespace Path {
 }
 
 export { Path };
+
+// ===============================================================================================================================
+
+import { DreamSpace as DS } from "./Globals";
+import { Utilities } from "./Utilities";
+import { Uri } from "./Uri";
+import { Query, pageQuery } from "./Query";
+import { ResourceRequest } from "./ResourceRequest";
+import { IO } from "./System/IO";
 
 // ===============================================================================================================================

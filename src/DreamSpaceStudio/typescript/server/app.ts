@@ -23,7 +23,8 @@ import users from '../routes/user';
 
 //? global.XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
-import registerGlobal from '../Core/DreamSpace';
+//import { registerGlobal } from '../Core/DreamSpace';
+import { registerGlobal } from '../Core/Globals';
 
 var ds = registerGlobal();
 

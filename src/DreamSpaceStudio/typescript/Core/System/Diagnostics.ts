@@ -4,17 +4,14 @@
 
 import { Factory, factory } from "../Factories";
 import { DreamSpace as DS, ITypeInfo } from "../Globals";
-import { TimeSpan, ITimeSpan } from "./Time";
 import { LogTypes, error, log as base_log } from "../Logging";
-import { Exception } from "./Exception";
-import { String } from "../PrimitiveTypes";
 
 // ========================================================================================================================
 
 var __logItemsSequenceCounter = 0;
 var __logCaptureStack: ILogItem[] = [];
 
-@factory(Diagnostics)
+@factory(LogItem)
 export class LogItem extends Factory() {
     static 'new'(parent: ILogItem, title: string, message: string, type?: LogTypes, outputToConsole?: boolean): ILogItem;
     static 'new'(parent: ILogItem, title: any, message: any, type: LogTypes = LogTypes.Normal, outputToConsole = true): ILogItem { return null; }
@@ -316,5 +313,11 @@ if (DS.host.isClient && typeof window !== 'undefined') {
         }
     }
 }
+
+// ############################################################################################################################
+
+import { TimeSpan, ITimeSpan } from "./Time";
+import { Exception } from "./Exception";
+import { String } from "../PrimitiveTypes";
 
 // ############################################################################################################################

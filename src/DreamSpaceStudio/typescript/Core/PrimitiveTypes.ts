@@ -1,5 +1,4 @@
-﻿import { getTypeName, isPrimitiveType } from "./Types";
-import { Factory, makeFactory, factory, usingFactory, Types } from "./Factories";
+﻿import { Factory, makeFactory, factory, usingFactory, Types } from "./Factories";
 import { DreamSpace as DS, IFunctionInfo, ITypeInfo, IDisposable, IType } from "./Globals";
 
 // ###########################################################################################################################
@@ -155,6 +154,8 @@ export { ObjectFactory as Object }
 export interface IObject extends ObjectFactory { }
 
 // =======================================================================================================================
+
+import { getTypeName, isPrimitiveType } from "./Types";
 
 /**
  * Creates a 'Disposable' type from another base type. This is primarily used to extend primitive types for use as base types to DreamSpace

@@ -7,7 +7,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var ObjectFactory_1, String_1, Array_1;
-const Types_1 = require("./Types");
 const Factories_1 = require("./Factories");
 const Globals_1 = require("./Globals");
 // ###########################################################################################################################
@@ -137,6 +136,7 @@ ObjectFactory = ObjectFactory_1 = __decorate([
 ], ObjectFactory);
 exports.Object = ObjectFactory;
 // =======================================================================================================================
+const Types_1 = require("./Types");
 /**
  * Creates a 'Disposable' type from another base type. This is primarily used to extend primitive types for use as base types to DreamSpace
  * primitives.  This is because Array and String types cannot inherit from the custom 'Object' type AND be instances of the respective primary types.

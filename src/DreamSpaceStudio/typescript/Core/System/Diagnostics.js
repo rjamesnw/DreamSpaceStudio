@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var LogItem_1;
 const Factories_1 = require("../Factories");
 const Globals_1 = require("../Globals");
-const Logging_1 = require("../Logging");
 // ========================================================================================================================
 var __logItemsSequenceCounter = 0;
 var __logCaptureStack = [];
@@ -284,5 +283,6 @@ if (Globals_1.DreamSpace.host.isClient && typeof window !== 'undefined') {
 const Time_1 = require("./Time");
 const Exception_1 = require("./Exception");
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
+const Logging_1 = require("../Logging");
 // ############################################################################################################################
 //# sourceMappingURL=Diagnostics.js.map

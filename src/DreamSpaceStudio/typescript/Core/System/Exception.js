@@ -7,10 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var Exception_1;
-const Globals_1 = require("../Globals");
 const Factories_1 = require("../Factories");
-const Types_1 = require("../Types");
-const Logging_1 = require("../Logging"); // ("log_error" is just to prevent confusion with the "error" function in Exception)
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
 // ############################################################################################################################
 // Types for error management.
@@ -156,6 +153,9 @@ Exception = Exception_1 = __decorate([
 ], Exception);
 exports.Exception = Exception;
 // ############################################################################################################################
+const Globals_1 = require("../Globals");
+const Types_1 = require("../Types");
+const Logging_1 = require("../Logging"); // ("log_error" is just to prevent confusion with the "error" function in Exception)
 const Diagnostics_1 = require("./Diagnostics");
 // ############################################################################################################################
 //# sourceMappingURL=Exception.js.map

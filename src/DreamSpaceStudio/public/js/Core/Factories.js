@@ -1,9 +1,80 @@
-define(["require", "exports", "./Types", "./Logging", "./Globals", "./PrimitiveTypes", "./AppDomain", "./Utilities", "./System/Delegate"], function (require, exports, Types_1, Logging_1, Globals_1, PrimitiveTypes_1, AppDomain_1, Utilities_1, Delegate_1) {
+define(["require", "exports", "./Types", "./Logging", "./Utilities", "./PrimitiveTypes", "./AppDomain", "./System/Delegate", "./Globals"], function (require, exports, Types_1, Logging_1, Utilities_1, PrimitiveTypes_1, AppDomain_1, Delegate_1, Globals_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    // ############################################################################################################################################
-    // Factory Pattern Types and Functions
-    // ############################################################################################################################################
+    /**
+    * Designates and registers a class as a factory class type (see also 'Types.__registerType()' for non-factory supported types).
+    * Any static constructors defined will also be called at this point (use the 'DreamSpace.constructor' symbol to create static constructors if desired).
+    *
+    * @param moduleSpace A reference to the module that contains the factory.
+    * @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
+    * applied (using the IFunctionInfo interface).
+    */
+    function factory(moduleSpace, addMemberTypeInfo = true) {
+        return function (factory) { Types.__registerFactoryType(factory, factory, moduleSpace, addMemberTypeInfo); return factory; };
+    }
+    exports.factory = factory;
+    /**
+    * Associates a class with another class that acts as the factory (see also 'Types.__registerType()' for non-factory supported types).
+    * Any static constructors defined will also be called at this point (use the 'DreamSpace.constructor' symbol to create static constructors if desired).
+    * This differs from '@factory()' in that it is mainly used when dealing with generic classes (to prevent losing the generic type information).
+    *
+    * @param moduleSpace A reference to the module that contains the factory.
+    * @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
+    * applied (using the IFunctionInfo interface).
+    */
+    function usingFactory(factory, moduleSpace, addMemberTypeInfo = true) {
+        if (!factory.$__type)
+            throw "usingFactory(factory, ...) error: 'factory' (" + Types_1.getTypeName(factory) + ") is not a valid factory, or you forgot to use the '@factory()' decorator to register it.";
+        return function (cls) { return Types.__registerFactoryType(cls, factory, moduleSpace, addMemberTypeInfo); };
+    }
+    exports.usingFactory = usingFactory;
+    /** Converts a non-factory object type into a factory type. Any missing 'new' and 'init' functions are populated with defaults.
+     * This is used on primitive types when making the 'derived primitive types' for the system.
+     * WARNING: This adds a 'new()' and 'init()' function to the given type IF THEY DO NOT ALREADY EXIST. If one exists, that one is not added.
+     * @param replaceInit If true any existing 'init' function will be replaced with a default. Default is false.
+     * @param replaceNew If true any existing 'new' function will be replaced with a default. Default is false.
+     */
+    function makeFactory(obj, replaceInit = false, replaceNew = false) {
+        obj.new = !replaceNew && obj.new || function (...args) { return new obj(...args); };
+        obj.init = !replaceInit && obj.init || function (o, isnew, ...args) {
+            if (isnew)
+                return o; // (else the object is from the cache of disposed objects)
+            Utilities_1.Utilities.erase(o);
+            var newO = new obj(...args); // (this exists because we cannot assume the developer will create a better 'init()' for their derived factory type - which they should do)
+            for (var p in newO)
+                if (newO.hasOwnProperty(p))
+                    o[p] = newO[p];
+        };
+        return obj;
+    }
+    exports.makeFactory = makeFactory;
+    /**
+     * Builds and returns a base type to be used with creating type factories. This function stores some type
+     * information in static properties for reference.
+     * @param {TBaseFactory} baseFactoryType The factory that this factory type derives from.
+    */
+    function Factory(baseFactoryType) {
+        if (!baseFactoryType.$__type)
+            throw "'extends Factory(base)' error: 'base' (" + Types_1.getTypeName(baseFactoryType) + ") is not a factory, or you forgot to use the '@factory()' decorator to register it."
+                + " If the base is a generic-type factory, make sure to use '@usingFactory()' on the generic instance class associated with the factory.";
+        if (typeof baseFactoryType != 'function')
+            baseFactoryType = PrimitiveTypes_1.Object;
+        var cls = class FactoryBase extends baseFactoryType {
+            /** References the base factory. */
+            static get super() { return this.$__baseFactoryType || void 0; } // ('|| void 0' keeps things consistent in case 'null' is given)
+            static 'new'(...args) { return null; }
+            /**
+              * Don't create objects using the 'new' operator. Use '{NameSpaces...ClassType}.new()' static methods instead.
+              */
+            constructor(...args) {
+                Logging_1.error("FactoryBase", "You cannot create instances of factory types.");
+                super();
+            }
+        };
+        cls.$__baseFactoryType = baseFactoryType; // (avoiding closures in case that becomes more efficient)
+        return cls;
+    }
+    exports.Factory = Factory;
     // ========================================================================================================================================
     // Here we extend the Types import to include extra 
     class Types extends Types_1.Types {
@@ -11,7 +82,6 @@ define(["require", "exports", "./Types", "./Logging", "./Globals", "./PrimitiveT
     exports.Types = Types;
     /** Contains functions to work with types within the system. */
     (function (Types) {
-        Globals_1.DreamSpace.global.Object.defineProperty(Types, "__disposedObjects", { configurable: false, writable: false, value: {} });
         /**
           * Used in place of the constructor to create a new instance of the underlying object type for a specific domain.
           * This allows the reuse of disposed objects to prevent garbage collection hits that may cause the application to lag, and
@@ -225,80 +295,9 @@ define(["require", "exports", "./Types", "./Logging", "./Globals", "./PrimitiveT
         }
         Types.dispose = dispose;
     })(Types = exports.Types || (exports.Types = {}));
-    /**
-    * Designates and registers a class as a factory class type (see also 'Types.__registerType()' for non-factory supported types).
-    * Any static constructors defined will also be called at this point (use the 'DreamSpace.constructor' symbol to create static constructors if desired).
-    *
-    * @param moduleSpace A reference to the module that contains the factory.
-    * @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
-    * applied (using the IFunctionInfo interface).
-    */
-    function factory(moduleSpace, addMemberTypeInfo = true) {
-        return function (factory) { return Types.__registerFactoryType(factory, factory, moduleSpace, addMemberTypeInfo); };
-    }
-    exports.factory = factory;
-    /**
-    * Associates a class with another class that acts as the factory (see also 'Types.__registerType()' for non-factory supported types).
-    * Any static constructors defined will also be called at this point (use the 'DreamSpace.constructor' symbol to create static constructors if desired).
-    * This differs from '@factory()' in that it is mainly used when dealing with generic classes (to prevent losing the generic type information).
-    *
-    * @param moduleSpace A reference to the module that contains the factory.
-    * @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
-    * applied (using the IFunctionInfo interface).
-    */
-    function usingFactory(factory, moduleSpace, addMemberTypeInfo = true) {
-        if (!factory.$__type)
-            throw "usingFactory(factory, ...) error: 'factory' (" + Types_1.getTypeName(factory) + ") is not a valid factory, or you forgot to use the '@factory()' decorator to register it.";
-        return function (cls) { return Types.__registerFactoryType(cls, factory, moduleSpace, addMemberTypeInfo); };
-    }
-    exports.usingFactory = usingFactory;
-    /** Converts a non-factory object type into a factory type. Any missing 'new' and 'init' functions are populated with defaults.
-     * This is used on primitive types when making the 'derived primitive types' for the system.
-     * WARNING: This adds a 'new()' and 'init()' function to the given type IF THEY DO NOT ALREADY EXIST. If one exists, that one is not added.
-     * @param replaceInit If true any existing 'init' function will be replaced with a default. Default is false.
-     * @param replaceNew If true any existing 'new' function will be replaced with a default. Default is false.
-     */
-    function makeFactory(obj, replaceInit = false, replaceNew = false) {
-        obj.new = !replaceNew && obj.new || function (...args) { return new obj(...args); };
-        obj.init = !replaceInit && obj.init || function (o, isnew, ...args) {
-            if (isnew)
-                return o; // (else the object is from the cache of disposed objects)
-            Utilities_1.Utilities.erase(o);
-            var newO = new obj(...args); // (this exists because we cannot assume the developer will create a better 'init()' for their derived factory type - which they should do)
-            for (var p in newO)
-                if (newO.hasOwnProperty(p))
-                    o[p] = newO[p];
-        };
-        return obj;
-    }
-    exports.makeFactory = makeFactory;
-    /**
-     * Builds and returns a base type to be used with creating type factories. This function stores some type
-     * information in static properties for reference.
-     * @param {TBaseFactory} baseFactoryType The factory that this factory type derives from.
-    */
-    function Factory(baseFactoryType) {
-        if (!baseFactoryType.$__type)
-            throw "'extends Factory(base)' error: 'base' (" + Types_1.getTypeName(baseFactoryType) + ") is not a factory, or you forgot to use the '@factory()' decorator to register it."
-                + " If the base is a generic-type factory, make sure to use '@usingFactory()' on the generic instance class associated with the factory.";
-        if (typeof baseFactoryType != 'function')
-            baseFactoryType = PrimitiveTypes_1.Object;
-        var cls = class FactoryBase extends baseFactoryType {
-            /** References the base factory. */
-            static get super() { return this.$__baseFactoryType || void 0; } // ('|| void 0' keeps things consistent in case 'null' is given)
-            static 'new'(...args) { return null; }
-            /**
-              * Don't create objects using the 'new' operator. Use '{NameSpaces...ClassType}.new()' static methods instead.
-              */
-            constructor(...args) {
-                Logging_1.error("FactoryBase", "You cannot create instances of factory types.");
-                super();
-            }
-        };
-        cls.$__baseFactoryType = baseFactoryType; // (avoiding closures in case that becomes more efficient)
-        return cls;
-    }
-    exports.Factory = Factory;
+    (function (Types) {
+        Globals_1.DreamSpace.global.Object.defineProperty(Types, "__disposedObjects", { configurable: false, writable: false, value: {} });
+    })(Types = exports.Types || (exports.Types = {}));
 });
 // ========================================================================================================================================
 //# sourceMappingURL=Factories.js.map

@@ -1,10 +1,108 @@
-﻿import { getFullTypeName, Types as TypesBase, getTypeName, isDisposable } from "./Types";
-import { error } from "./Logging";
-import { DreamSpace as DS, IDisposable, ITypeInfo, IFactory, IType, IFactoryTypeInfo, IClassInfo, NewDelegate, InitDelegate, FactoryBaseType } from "./Globals";
+﻿/** 
+* Designates and registers a class as a factory class type (see also 'Types.__registerType()' for non-factory supported types).
+* Any static constructors defined will also be called at this point (use the 'DreamSpace.constructor' symbol to create static constructors if desired).
+* 
+* @param moduleSpace A reference to the module that contains the factory.
+* @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
+* applied (using the IFunctionInfo interface).
+*/
+export function factory(moduleSpace: object, addMemberTypeInfo = true) {
+    return function (factory: IType & IFactory): any {  Types.__registerFactoryType(factory, factory, moduleSpace, addMemberTypeInfo); return factory; };
+}
+
+/** 
+* Associates a class with another class that acts as the factory (see also 'Types.__registerType()' for non-factory supported types).
+* Any static constructors defined will also be called at this point (use the 'DreamSpace.constructor' symbol to create static constructors if desired).
+* This differs from '@factory()' in that it is mainly used when dealing with generic classes (to prevent losing the generic type information).
+*
+* @param moduleSpace A reference to the module that contains the factory.
+* @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
+* applied (using the IFunctionInfo interface).
+*/
+export function usingFactory<TFactory extends IFactory>(factory: TFactory, moduleSpace: object, addMemberTypeInfo = true) {
+    if (!(<IFactoryTypeInfo><any>factory).$__type)
+        throw "usingFactory(factory, ...) error: 'factory' (" + getTypeName(factory) + ") is not a valid factory, or you forgot to use the '@factory()' decorator to register it.";
+
+    return function (cls: IType): any { return <any>Types.__registerFactoryType(cls, factory, moduleSpace, addMemberTypeInfo); };
+}
+
+/** Converts a non-factory object type into a factory type. Any missing 'new' and 'init' functions are populated with defaults.
+ * This is used on primitive types when making the 'derived primitive types' for the system.
+ * WARNING: This adds a 'new()' and 'init()' function to the given type IF THEY DO NOT ALREADY EXIST. If one exists, that one is not added.
+ * @param replaceInit If true any existing 'init' function will be replaced with a default. Default is false.
+ * @param replaceNew If true any existing 'new' function will be replaced with a default. Default is false.
+ */
+export function makeFactory<T extends IType = ObjectConstructor>(obj: T, replaceInit = false, replaceNew = false): T & IFactory<T, NewDelegate<InstanceType<T>>, InitDelegate<InstanceType<T>>> {
+    (<IFactory><any>obj).new = !replaceNew && (<IFactory><any>obj).new || function (...args: any[]) { return new obj(...args); };
+    (<IFactory><any>obj).init = !replaceInit && (<IFactory><any>obj).init || function (o: InstanceType<T> & { [i: string]: any }, isnew: boolean, ...args: any[]) {
+        if (isnew) return o; // (else the object is from the cache of disposed objects)
+        Utilities.erase(o);
+        var newO: { [i: string]: any } = new obj(...args); // (this exists because we cannot assume the developer will create a better 'init()' for their derived factory type - which they should do)
+        for (var p in newO)
+            if (newO.hasOwnProperty(p))
+                o[p] = newO[p];
+    };
+    return <any>obj;
+}
+
+/**
+ * Builds and returns a base type to be used with creating type factories. This function stores some type
+ * information in static properties for reference.
+ * @param {TBaseFactory} baseFactoryType The factory that this factory type derives from.
+*/
+export function Factory<TBaseFactory extends IFactory & IType = typeof Object>(baseFactoryType?: TBaseFactory)
+    : FactoryBaseType<TBaseFactory> {
+
+    if (!(<IFactoryTypeInfo><any>baseFactoryType).$__type)
+        throw "'extends Factory(base)' error: 'base' (" + getTypeName(baseFactoryType) + ") is not a factory, or you forgot to use the '@factory()' decorator to register it."
+        + " If the base is a generic-type factory, make sure to use '@usingFactory()' on the generic instance class associated with the factory.";
+
+    if (typeof baseFactoryType != 'function')
+        baseFactoryType = <any>Object;
+
+    var cls = class FactoryBase extends (<any>baseFactoryType) {
+        //x /** Set to true when the object is being disposed. By default this is undefined.  This is only set to true when 'dispose()' is first call to prevent cyclical calls. */
+        //x $__disposing?: boolean;
+        //x /** Set to true once the object is disposed. By default this is undefined, which means "not disposed".  This is only set to true when disposed, and false when reinitialized. */
+        //x $__disposed?: boolean;
+
+        static $__baseFactoryType: TBaseFactory;
+
+        /** References the base factory. */
+        static get super(): TBaseFactory { return this.$__baseFactoryType || void 0; } // ('|| void 0' keeps things consistent in case 'null' is given)
+
+        static 'new'(...args: any[]): any { return null; }
+        static init?(o: object, isnew: boolean, ...args: any[]): void;
+
+        /**
+          * Don't create objects using the 'new' operator. Use '{NameSpaces...ClassType}.new()' static methods instead.
+          */
+        constructor(...args: any[]) {
+            error("FactoryBase", "You cannot create instances of factory types.");
+            super();
+        }
+
+        ///** 
+        // * Releases the object back into the object pool. This is the default implementation which simply calls 'Types.dispose(this, release)'.
+        // * If overriding, make sure to call 'super.dispose()' or 'Types.dispose()' to complete the disposal process.
+        // * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
+        // *                          false to request that child objects remain connected after disposal (not released). This
+        // *                          can allow quick initialization of a group of objects, instead of having to pull each one
+        // *                          from the object pool each time.
+        // */
+        //dispose(release?: boolean): void { Types.dispose(this, release); }
+    };
+
+    cls.$__baseFactoryType = <any>baseFactoryType; // (avoiding closures in case that becomes more efficient)
+
+    return <any>cls;
+}
 
 // ############################################################################################################################################
 // Factory Pattern Types and Functions
 // ############################################################################################################################################
+
+import { getFullTypeName, Types as TypesBase, getTypeName, isDisposable } from "./Types";
 
 // ========================================================================================================================================
 // Here we extend the Types import to include extra 
@@ -12,10 +110,6 @@ import { DreamSpace as DS, IDisposable, ITypeInfo, IFactory, IType, IFactoryType
 export class Types extends TypesBase { }
 /** Contains functions to work with types within the system. */
 export namespace Types {
-    /** Holds all disposed objects that can be reused. */
-    export declare var __disposedObjects: { [fulltypename: string]: IDomainObjectInfo[]; }; // (can be reused by any AppDomain instance! [global pool for better efficiency])
-    DS.global.Object.defineProperty(Types, "__disposedObjects", { configurable: false, writable: false, value: {} });
-
     /** 
       * Used in place of the constructor to create a new instance of the underlying object type for a specific domain.
       * This allows the reuse of disposed objects to prevent garbage collection hits that may cause the application to lag, and
@@ -270,111 +364,18 @@ export namespace Types {
     }
 }
 
-/** 
-* Designates and registers a class as a factory class type (see also 'Types.__registerType()' for non-factory supported types).
-* Any static constructors defined will also be called at this point (use the 'DreamSpace.constructor' symbol to create static constructors if desired).
-* 
-* @param moduleSpace A reference to the module that contains the factory.
-* @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
-* applied (using the IFunctionInfo interface).
-*/
-export function factory(moduleSpace: object, addMemberTypeInfo = true) {
-    return function (factory: IType & IFactory): any { return <any>Types.__registerFactoryType(factory, factory, moduleSpace, addMemberTypeInfo); };
-}
-
-/** 
-* Associates a class with another class that acts as the factory (see also 'Types.__registerType()' for non-factory supported types).
-* Any static constructors defined will also be called at this point (use the 'DreamSpace.constructor' symbol to create static constructors if desired).
-* This differs from '@factory()' in that it is mainly used when dealing with generic classes (to prevent losing the generic type information).
-*
-* @param moduleSpace A reference to the module that contains the factory.
-* @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
-* applied (using the IFunctionInfo interface).
-*/
-export function usingFactory<TFactory extends IFactory>(factory: TFactory, moduleSpace: object, addMemberTypeInfo = true) {
-    if (!(<IFactoryTypeInfo><any>factory).$__type)
-        throw "usingFactory(factory, ...) error: 'factory' (" + getTypeName(factory) + ") is not a valid factory, or you forgot to use the '@factory()' decorator to register it.";
-
-    return function (cls: IType): any { return <any>Types.__registerFactoryType(cls, factory, moduleSpace, addMemberTypeInfo); };
-}
-
-/** Converts a non-factory object type into a factory type. Any missing 'new' and 'init' functions are populated with defaults.
- * This is used on primitive types when making the 'derived primitive types' for the system.
- * WARNING: This adds a 'new()' and 'init()' function to the given type IF THEY DO NOT ALREADY EXIST. If one exists, that one is not added.
- * @param replaceInit If true any existing 'init' function will be replaced with a default. Default is false.
- * @param replaceNew If true any existing 'new' function will be replaced with a default. Default is false.
- */
-export function makeFactory<T extends IType = ObjectConstructor>(obj: T, replaceInit = false, replaceNew = false): T & IFactory<T, NewDelegate<InstanceType<T>>, InitDelegate<InstanceType<T>>> {
-    (<IFactory><any>obj).new = !replaceNew && (<IFactory><any>obj).new || function (...args: any[]) { return new obj(...args); };
-    (<IFactory><any>obj).init = !replaceInit && (<IFactory><any>obj).init || function (o: InstanceType<T> & { [i: string]: any }, isnew: boolean, ...args: any[]) {
-        if (isnew) return o; // (else the object is from the cache of disposed objects)
-        Utilities.erase(o);
-        var newO: { [i: string]: any } = new obj(...args); // (this exists because we cannot assume the developer will create a better 'init()' for their derived factory type - which they should do)
-        for (var p in newO)
-            if (newO.hasOwnProperty(p))
-                o[p] = newO[p];
-    };
-    return <any>obj;
-}
-
-/**
- * Builds and returns a base type to be used with creating type factories. This function stores some type
- * information in static properties for reference.
- * @param {TBaseFactory} baseFactoryType The factory that this factory type derives from.
-*/
-export function Factory<TBaseFactory extends IFactory & IType = typeof Object>(baseFactoryType?: TBaseFactory)
-    : FactoryBaseType<TBaseFactory> {
-
-    if (!(<IFactoryTypeInfo><any>baseFactoryType).$__type)
-        throw "'extends Factory(base)' error: 'base' (" + getTypeName(baseFactoryType) + ") is not a factory, or you forgot to use the '@factory()' decorator to register it."
-        + " If the base is a generic-type factory, make sure to use '@usingFactory()' on the generic instance class associated with the factory.";
-
-    if (typeof baseFactoryType != 'function')
-        baseFactoryType = <any>Object;
-
-    var cls = class FactoryBase extends (<any>baseFactoryType) {
-        //x /** Set to true when the object is being disposed. By default this is undefined.  This is only set to true when 'dispose()' is first call to prevent cyclical calls. */
-        //x $__disposing?: boolean;
-        //x /** Set to true once the object is disposed. By default this is undefined, which means "not disposed".  This is only set to true when disposed, and false when reinitialized. */
-        //x $__disposed?: boolean;
-
-        static $__baseFactoryType: TBaseFactory;
-
-        /** References the base factory. */
-        static get super(): TBaseFactory { return this.$__baseFactoryType || void 0; } // ('|| void 0' keeps things consistent in case 'null' is given)
-
-        static 'new'(...args: any[]): any { return null; }
-        static init?(o: object, isnew: boolean, ...args: any[]): void;
-
-        /**
-          * Don't create objects using the 'new' operator. Use '{NameSpaces...ClassType}.new()' static methods instead.
-          */
-        constructor(...args: any[]) {
-            error("FactoryBase", "You cannot create instances of factory types.");
-            super();
-        }
-
-        ///** 
-        // * Releases the object back into the object pool. This is the default implementation which simply calls 'Types.dispose(this, release)'.
-        // * If overriding, make sure to call 'super.dispose()' or 'Types.dispose()' to complete the disposal process.
-        // * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
-        // *                          false to request that child objects remain connected after disposal (not released). This
-        // *                          can allow quick initialization of a group of objects, instead of having to pull each one
-        // *                          from the object pool each time.
-        // */
-        //dispose(release?: boolean): void { Types.dispose(this, release); }
-    };
-
-    cls.$__baseFactoryType = <any>baseFactoryType; // (avoiding closures in case that becomes more efficient)
-
-    return <any>cls;
-}
-
 // ========================================================================================================================================
 
+import { error } from "./Logging";
+import { Utilities } from "./Utilities";
 import { Object } from "./PrimitiveTypes";
 import { IDomainObjectInfo, IADBridge, AppDomain } from "./AppDomain";
-import { Utilities } from "./Utilities";
 import { Delegate } from "./System/Delegate";
+import { DreamSpace as DS, IDisposable, ITypeInfo, IFactory, IType, IFactoryTypeInfo, IClassInfo, NewDelegate, InitDelegate, FactoryBaseType } from "./Globals";
 
+export namespace Types {
+    /** Holds all disposed objects that can be reused. */
+    export declare var __disposedObjects: { [fulltypename: string]: IDomainObjectInfo[]; }; // (can be reused by any AppDomain instance! [global pool for better efficiency])
+    DS.global.Object.defineProperty(Types, "__disposedObjects", { configurable: false, writable: false, value: {} });
+}
 // ========================================================================================================================================

@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Types_1 = require("./Types");
-const Logging_1 = require("./Logging");
 const Globals_1 = require("./Globals");
 // ############################################################################################################################################
 // Factory Pattern Types and Functions
@@ -302,9 +301,10 @@ function Factory(baseFactoryType) {
 }
 exports.Factory = Factory;
 // ========================================================================================================================================
+const Logging_1 = require("./Logging");
+const Utilities_1 = require("./Utilities");
 const PrimitiveTypes_1 = require("./PrimitiveTypes");
 const AppDomain_1 = require("./AppDomain");
-const Utilities_1 = require("./Utilities");
 const Delegate_1 = require("./System/Delegate");
 // ========================================================================================================================================
 //# sourceMappingURL=Factories.js.map

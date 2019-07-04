@@ -2,8 +2,6 @@
 /** @module Types Shared types and interfaces, and provides functions for type management. */
 // ###########################################################################################################################
 
-import { DreamSpace as DS, IDisposable, ITypeInfo, IType, IFunctionInfo, INamespaceInfo } from "./Globals";
-
 /** Returns the name of a namespace or variable reference at runtime. */
 export function nameof(selector: () => any, fullname = false): string {
     var s = '' + selector;
@@ -115,7 +113,6 @@ export namespace Types {
 
     /** Holds all the types registered globally by calling one of the 'Types.__register???()' functions. Types are not app-domain specific. */
     export declare var __types: { [fullTypeName: string]: ITypeInfo };
-    DS.global.Object.defineProperty(Types, "__types", { configurable: false, writable: false, value: {} });
 
     /** 
      * If true the system will automatically track new objects created under this DreamSpace context and store them in 'Types.__trackedObjects'. 
@@ -124,14 +121,6 @@ export namespace Types {
      */
     export var autoTrackInstances = false;
     export declare var __trackedObjects: IDisposable[];
-    DS.global.Object.defineProperty(Types, "__trackedObjects", { configurable: false, writable: false, value: [] });
-
-    export declare var __nextObjectID: number; // (incremented automatically for each new object instance)
-    var ___nextObjectID = 0;
-    DS.global.Object.defineProperty(Types, "__nextObjectID", { configurable: false, get: () => ___nextObjectID });
-
-    /** Returns 'Types.__nextObjectID' and increments the value by 1. */
-    export function getNextObjectId() { return ___nextObjectID++; }
 
     ///** 
     //x * Called internally once registration is finalized (see also end of 'AppDomain.registerClass()').
@@ -259,11 +248,21 @@ export function isPrimitiveType(o: object) {
 
 // =======================================================================================================================
 
+import { DreamSpace as DS, IDisposable, ITypeInfo, IType, IFunctionInfo, INamespaceInfo } from "./Globals";
 import { Object } from "./PrimitiveTypes";
-
-// =======================================================================================================================
-
 import { log, error, LogTypes } from "./Logging";
+
+export namespace Types {
+    //export declare var __nextObjectID: number; // (incremented automatically for each new object instance)
+    var __nextObjectID = 0;
+
+    /** Returns the current 'Types.__nextObjectID' value and then increments the property by 1. */
+    export function getNextObjectId() { return __nextObjectID++; }
+
+    DS.global.Object.defineProperty(Types, "__types", { configurable: false, writable: false, value: {} });
+    DS.global.Object.defineProperty(Types, "__trackedObjects", { configurable: false, writable: false, value: [] });
+    DS.global.Object.defineProperty(Types, "__nextObjectID", { configurable: false, get: getNextObjectId });
+}
 
 // =======================================================================================================================
 

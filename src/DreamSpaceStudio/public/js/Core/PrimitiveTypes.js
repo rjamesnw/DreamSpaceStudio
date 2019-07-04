@@ -1,4 +1,4 @@
-define(["require", "exports", "./Types", "./Factories", "./Globals", "./AppDomain", "./System/Browser", "./Utilities", "./System/System"], function (require, exports, Types_1, Factories_1, Globals_1, AppDomain_1, Browser_1, Utilities_1, System_1) {
+define(["require", "exports", "./Factories", "./Globals", "./Types", "./AppDomain", "./System/Browser", "./Utilities", "./System/System"], function (require, exports, Factories_1, Globals_1, Types_1, AppDomain_1, Browser_1, Utilities_1, System_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var ObjectFactory_1, String_1, Array_1;
@@ -128,7 +128,6 @@ define(["require", "exports", "./Types", "./Factories", "./Globals", "./AppDomai
         Factories_1.factory(this)
     ], ObjectFactory);
     exports.Object = ObjectFactory;
-    // =======================================================================================================================
     /**
      * Creates a 'Disposable' type from another base type. This is primarily used to extend primitive types for use as base types to DreamSpace
      * primitives.  This is because Array and String types cannot inherit from the custom 'Object' type AND be instances of the respective primary types.

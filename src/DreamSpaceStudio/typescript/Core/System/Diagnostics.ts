@@ -4,7 +4,6 @@
 
 import { Factory, factory } from "../Factories";
 import { DreamSpace as DS, ITypeInfo } from "../Globals";
-import { LogTypes, error, log as base_log } from "../Logging";
 
 // ========================================================================================================================
 
@@ -319,5 +318,6 @@ if (DS.host.isClient && typeof window !== 'undefined') {
 import { TimeSpan, ITimeSpan } from "./Time";
 import { Exception } from "./Exception";
 import { String } from "../PrimitiveTypes";
+import { LogTypes, error, log as base_log } from "../Logging";
 
 // ############################################################################################################################

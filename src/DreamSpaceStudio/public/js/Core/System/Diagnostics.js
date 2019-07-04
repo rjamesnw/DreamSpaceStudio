@@ -1,7 +1,7 @@
 // ############################################################################################################################
 // Types for time management.
 // ############################################################################################################################
-define(["require", "exports", "../Factories", "../Globals", "../Logging", "./Time", "./Exception", "../PrimitiveTypes"], function (require, exports, Factories_1, Globals_1, Logging_1, Time_1, Exception_1, PrimitiveTypes_1) {
+define(["require", "exports", "../Factories", "../Globals", "./Time", "./Exception", "../PrimitiveTypes", "../Logging"], function (require, exports, Factories_1, Globals_1, Time_1, Exception_1, PrimitiveTypes_1, Logging_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var LogItem_1;

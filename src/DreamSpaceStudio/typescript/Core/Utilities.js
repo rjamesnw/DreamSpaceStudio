@@ -169,7 +169,7 @@ exports.Utilities = Utilities;
     Utilities.apply = apply;
     // ------------------------------------------------------------------------------------------------------------------------
     var _guidSeed = (function () {
-        var text = navigator.userAgent + location.href; // TODO: This may need fixing on the server side.
+        var text = Globals_1.DreamSpace.global.navigator.userAgent + Globals_1.DreamSpace.global.location.href; // TODO: This may need fixing on the server side.
         for (var i = 0, n = text.length, randseed = 0; i < n; ++i)
             randseed += text.charCodeAt(i);
         return randseed;

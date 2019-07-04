@@ -1,4 +1,4 @@
-define(["require", "exports", "../Globals", "../Factories", "../Types", "../Logging", "../PrimitiveTypes", "./Diagnostics"], function (require, exports, Globals_1, Factories_1, Types_1, Logging_1, PrimitiveTypes_1, Diagnostics_1) {
+define(["require", "exports", "../Factories", "../PrimitiveTypes", "../Globals", "../Types", "../Logging", "./Diagnostics"], function (require, exports, Factories_1, PrimitiveTypes_1, Globals_1, Types_1, Logging_1, Diagnostics_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Exception_1;

@@ -8,7 +8,6 @@
 // using the identifiers 'this', 'manifest', or 'module' (accordingly), which provides functions for local-global scope storage.
 // ###########################################################################################################################
 Object.defineProperty(exports, "__esModule", { value: true });
-const Path_1 = require("./Path");
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
  * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.
  * Note: A symbol is not used, since callbacks placed into API URLs must be strings. Instead, a static pre-generated GUID is appended.
@@ -115,36 +114,6 @@ exports.DreamSpace = DreamSpace;
         return (class {
         }).toString() == "class { }"; // (if targeting ES6 in the configuration, 'class' will be output as a function instead)
     })();
-    /** This is set to the detected running environment that scripts are executing in. Applications and certain modules all run in
-      * protected web worker environments (dedicated threads), where there is no DOM. In these cases, this property will be set to
-      * 'Environments.Worker'.
-      * The core of DreamSpace runs in the browser, and for those scripts, this will be set to 'Environments.Browser'.  Since
-      * malicious scripts might hook into a user's key strokes to steal passwords, etc., only trusted scripts run in this zone.
-      * For scripts running on the serve side, this will be set to 'Environments.Server'.
-      */
-    DreamSpace.Environment = (function () {
-        if (typeof navigator !== 'object') {
-            // On the server side, create a basic "shell" to maintain some compatibility with some system functions.
-            window = {};
-            window.document = { title: "SERVER" };
-            navigator = { userAgent: "Mozilla/5.0 (DreamSpace) like Gecko" };
-            location = {
-                hash: "",
-                host: "DreamSpace.org",
-                hostname: "DreamSpace.org",
-                href: "https://DreamSpace.org/",
-                origin: "https://DreamSpace.org",
-                pathname: "/",
-                port: "",
-                protocol: "https:"
-            };
-            return Environments.Server;
-        }
-        else if (typeof window == 'object' && window.document)
-            return Environments.Browser;
-        else
-            return Environments.Worker;
-    })();
     // =======================================================================================================================
     /** Returns true if the given object is empty, or an invalid value (eg. NaN, or an empty object, array, or string). */
     function isEmpty(obj) {
@@ -199,7 +168,7 @@ exports.DreamSpace = DreamSpace;
         /** The time zone offset in milliseconds ({Date}.getTimezoneOffset() returns it in minutes). */
         Time.__localTimeZoneOffset = (new Date()).getTimezoneOffset() * Time.__millisecondsPerMinute; // ('getTimezoneOffset()' returns minutes, which is converted to ms for '__localTimeZoneOffset')
     })(Time = DreamSpace.Time || (DreamSpace.Time = {}));
-    // =======================================================================================================================
+    // ========================================================================================================================
     /** The "fake" host object is only used when there is no .NET host wrapper integration available.
     * In this case, the environment is running as a simple web application.
     */
@@ -217,11 +186,11 @@ exports.DreamSpace = DreamSpace;
     // TODO: $ICE loads as a module, and should do this differently.
     //??else
     //??    $ICE = <IHostBridge_ICE>host;
-    // ========================================================================================================================================
+    // ========================================================================================================================
     /** A reference to the host's global environment (convenient for nested TypeScript code, or when using strict mode [where this=undefined]).
     * This provides a faster, cleaner, consistent, and reliable method of referencing the global environment scope without having to resort to workarounds.
     */
-    DreamSpace.global = DreamSpace.global || (function () { }.constructor("return this"))(); // (note: this is named as 'global' to support the NodeJS "global" object as well [for compatibility, or to ease portability])
+    DreamSpace.global = (function () { }.constructor("return this || global"))(); // (note: this is named as 'global' to support the NodeJS "global" object as well [for compatibility, or to ease portability])
     DreamSpace.host = (() => {
         // ... make sure the host object is valid for at least checking client/server/studio states
         if (typeof DreamSpace.host !== 'object' || typeof DreamSpace.host.isClient == 'undefined' || typeof DreamSpace.host.isServer == 'undefined' || typeof DreamSpace.host.isStudio == 'undefined')
@@ -229,10 +198,44 @@ exports.DreamSpace = DreamSpace;
         else
             return DreamSpace.host; // (running in a valid host (or emulator? ;) )
     })();
+    // ========================================================================================================================
+    /** This is set to the detected running environment that scripts are executing in. Applications and certain modules all run in
+    * protected web worker environments (dedicated threads), where there is no DOM. In these cases, this property will be set to
+    * 'Environments.Worker'.
+    * The core of DreamSpace runs in the browser, and for those scripts, this will be set to 'Environments.Browser'.  Since
+    * malicious scripts might hook into a user's key strokes to steal passwords, etc., only trusted scripts run in this zone.
+    * For scripts running on the serve side, this will be set to 'Environments.Server'.
+    */
+    DreamSpace.Environment = (function () {
+        if (typeof navigator !== 'object') {
+            // On the server side, create a basic "shell" to maintain some compatibility with some system functions.
+            DreamSpace.global.window = {
+                document: { title: "SERVER" }
+            };
+            DreamSpace.global.navigator = { userAgent: "Mozilla/5.0 (DreamSpace) like Gecko" };
+            DreamSpace.global.location = {
+                hash: "",
+                host: "DreamSpace.org",
+                hostname: "DreamSpace.org",
+                href: "https://DreamSpace.org/",
+                origin: "https://DreamSpace.org",
+                pathname: "/",
+                port: "",
+                protocol: "https:"
+            };
+            return Environments.Server;
+        }
+        else if (typeof window == 'object' && window.document)
+            return Environments.Browser;
+        else
+            return Environments.Worker;
+    })();
+    // ========================================================================================================================
     // If the host is in debug mode, then this script should try to wait on it.
     // Note: This many only work if the debugger is actually open when this script executes.
     if (typeof DreamSpace.host === 'object' && DreamSpace.host.isDebugMode && DreamSpace.host.isDebugMode())
         debugger;
+    // ========================================================================================================================
     /**
      * An empty object whose sole purpose is to store global properties by resource namespace (usual a URL). It exists as an
      * alternative to using the global JavaScript host environment, but also supports it as well.  The get/set methods always use
@@ -364,32 +367,6 @@ exports.DreamSpace = DreamSpace;
         Globals.getValue = getValue;
         ;
     })(Globals = DreamSpace.Globals || (DreamSpace.Globals = {}));
-    // ========================================================================================================================================
-    /**
-     * Returns the base URL used by the system.  This can be configured by setting the global 'siteBaseURL' property, or if using DreamSpace.JS for
-     * .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called before all scripts in the header section of your layout view.
-     * If no 'siteBaseURL' global property exists, the current page location is assumed.
-     */
-    DreamSpace.baseURL = Path_1.Path.fix(DreamSpace.global.siteBaseURL || DreamSpace.baseURL || location.origin); // (example: "https://calendar.google.com/")
-    /**
-     * Returns the base URL used by the system for loading scripts.  This can be configured by setting the global 'scriptBaseURL' property.
-     * If no 'siteBaseURL' global property exists, the current page location is assumed.
-     */
-    DreamSpace.baseScriptsURL = DreamSpace.global.scriptsBaseURL ? Path_1.Path.fix(DreamSpace.global.scriptsBaseURL || DreamSpace.baseScriptsURL) : DreamSpace.baseURL + "js/";
-    /**
-     * Returns the base URL used by the system for loading scripts.  This can be configured by setting the global 'scriptBaseURL' property.
-     * If no 'siteBaseURL' global property exists, the current page location is assumed.
-     */
-    DreamSpace.baseCSSURL = DreamSpace.global.cssBaseURL ? Path_1.Path.fix(DreamSpace.global.cssBaseURL || DreamSpace.baseCSSURL) : DreamSpace.baseURL + "css/";
-    console.log("DreamSpace.baseURL", DreamSpace.baseURL + " (If this is wrong, set a global 'siteBaseURL' variable to the correct path, or if using DreamSpace.JS for .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called in the header section of your layout view)"); // (requires the exception object, which is the last one to be defined above; now we start the first log entry with the base URI of the site)
-    console.log("DreamSpace.baseScriptsURL", DreamSpace.baseScriptsURL + " (If this is wrong, set a global 'scriptsBaseURL' variable to the correct path)");
-    if (DreamSpace.global.serverWebRoot)
-        console.log("DreamSpace.serverWebRoot", DreamSpace.global.serverWebRoot + " (typically set server side within the layout view only while debugging to help resolve script source maps)");
-    // ========================================================================================================================================
-    // *** At this point the core type system, error handling, and console-based logging are now available. ***
-    // ========================================================================================================================================
-    console.log("DreamSpace", "Core system loaded.");
-    // ========================================================================================================================================
 })(DreamSpace = exports.DreamSpace || (exports.DreamSpace = {}));
 function sealed(target, propertyName, descriptor) {
     if (typeof target == 'object')
@@ -422,6 +399,38 @@ function $(...args) {
     };
 }
 exports.$ = $;
+// ############################################################################################################################
+// ... the previous global items need to be in place before we can successfully load 'Path' to setup the final global items ...
+const Path_1 = require("./Path");
+const Logging_1 = require("./Logging");
+(function (DreamSpace) {
+    // ========================================================================================================================
+    /**
+     * Returns the base URL used by the system.  This can be configured by setting the global 'siteBaseURL' property, or if using DreamSpace.JS for
+     * .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called before all scripts in the header section of your layout view.
+     * If no 'siteBaseURL' global property exists, the current page location is assumed.
+     */
+    DreamSpace.baseURL = Path_1.Path.fix(DreamSpace.global.siteBaseURL || DreamSpace.baseURL || location.origin); // (example: "https://calendar.google.com/")
+    /**
+     * Returns the base URL used by the system for loading scripts.  This can be configured by setting the global 'scriptBaseURL' property.
+     * If no 'siteBaseURL' global property exists, the current page location is assumed.
+     */
+    DreamSpace.baseScriptsURL = DreamSpace.global.scriptsBaseURL ? Path_1.Path.fix(DreamSpace.global.scriptsBaseURL || DreamSpace.baseScriptsURL) : DreamSpace.baseURL + "js/";
+    /**
+     * Returns the base URL used by the system for loading scripts.  This can be configured by setting the global 'scriptBaseURL' property.
+     * If no 'siteBaseURL' global property exists, the current page location is assumed.
+     */
+    DreamSpace.baseCSSURL = DreamSpace.global.cssBaseURL ? Path_1.Path.fix(DreamSpace.global.cssBaseURL || DreamSpace.baseCSSURL) : DreamSpace.baseURL + "css/";
+    Logging_1.log("DreamSpace.baseURL", DreamSpace.baseURL + " (If this is wrong, set a global 'siteBaseURL' variable to the correct path, or if using DreamSpace.JS for .Net Core MVC, make sure '@RenderDreamSpaceJSConfigurations()' is called in the header section of your layout view)"); // (requires the exception object, which is the last one to be defined above; now we start the first log entry with the base URI of the site)
+    Logging_1.log("DreamSpace.baseScriptsURL", DreamSpace.baseScriptsURL + " (If this is wrong, set a global 'scriptsBaseURL' variable to the correct path)");
+    if (DreamSpace.global.serverWebRoot)
+        Logging_1.log("DreamSpace.serverWebRoot", DreamSpace.global.serverWebRoot + " (typically set server side within the layout view only while debugging to help resolve script source maps)");
+    // ========================================================================================================================================
+    // *** At this point the core type system, error handling, and console-based logging are now available. ***
+    // ========================================================================================================================================
+    Logging_1.log("DreamSpace", "Core system loaded.");
+    // ========================================================================================================================================
+})(DreamSpace = exports.DreamSpace || (exports.DreamSpace = {}));
 // ###########################################################################################################################
 /** Registers this global module in the global scope. The global 'DreamSpace' namespace is returned, if needed.
  * This helps to support:

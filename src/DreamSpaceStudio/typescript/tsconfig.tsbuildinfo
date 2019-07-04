@@ -49,247 +49,247 @@
         "version": "81e24ff087a1aa21fc93d465b746fe9c58185a67537502fd90bf388dc85a3a6c",
         "signature": "81e24ff087a1aa21fc93d465b746fe9c58185a67537502fd90bf388dc85a3a6c"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/server/globals.d.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/server/globals.d.ts": {
         "version": "befe994e8c40487414d03c78267f45ab31f5d8143c9a8aadd3413251c392df9a",
         "signature": "befe994e8c40487414d03c78267f45ab31f5d8143c9a8aadd3413251c392df9a"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/debug/index.d.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/debug/index.d.ts": {
         "version": "37a4038e69fb61043e363140b58d7d517d6f99f274adad0774f226ea2ee8c903",
         "signature": "37a4038e69fb61043e363140b58d7d517d6f99f274adad0774f226ea2ee8c903"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/inspector.d.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/inspector.d.ts": {
         "version": "312541b24bc94fa90916b9197028248f633554269363610207868e37103b7fee",
         "signature": "312541b24bc94fa90916b9197028248f633554269363610207868e37103b7fee"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts": {
         "version": "f030183028c84cd0b562fbdb1fee2416b8ea140304d441783674be8e262ce819",
         "signature": "f030183028c84cd0b562fbdb1fee2416b8ea140304d441783674be8e262ce819"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/range-parser/index.d.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/range-parser/index.d.ts": {
         "version": "4e88b833be14c7f384e0dcd57bb30acd799e8e34d212635d693e41a75a71164b",
         "signature": "4e88b833be14c7f384e0dcd57bb30acd799e8e34d212635d693e41a75a71164b"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts": {
         "version": "1f63571ab5cb1f41dd3f9c44ebece4945e94cc0c56dc2e0b3d2966a5cce2f109",
         "signature": "1f63571ab5cb1f41dd3f9c44ebece4945e94cc0c56dc2e0b3d2966a5cce2f109"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/mime/index.d.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/mime/index.d.ts": {
         "version": "52720bfa703ba0b3fe5fed46046ccdc6e2f27fcbe1ed182825de017b84b349a9",
         "signature": "52720bfa703ba0b3fe5fed46046ccdc6e2f27fcbe1ed182825de017b84b349a9"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/serve-static/index.d.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/serve-static/index.d.ts": {
         "version": "b27dd918d8c3f10270cadea529c69e3a9b37ce59db0852945a39068cc5c10fff",
         "signature": "b27dd918d8c3f10270cadea529c69e3a9b37ce59db0852945a39068cc5c10fff"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/connect/index.d.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/connect/index.d.ts": {
         "version": "c3be42b83b5f57ae2f65280fa395f6d31f61304ac1a29b7b406b6a0e71da8c82",
         "signature": "c3be42b83b5f57ae2f65280fa395f6d31f61304ac1a29b7b406b6a0e71da8c82"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/body-parser/index.d.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/body-parser/index.d.ts": {
         "version": "1b7919dbb6b43ff272f38f6f6522fb9f4e9e854356b2932a36aa4674f4a2fcf2",
         "signature": "1b7919dbb6b43ff272f38f6f6522fb9f4e9e854356b2932a36aa4674f4a2fcf2"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express/index.d.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express/index.d.ts": {
         "version": "434d7d3188d85bd46c64dcc8268422ffdfdd19fdbc98ec01446d650414fcaa0b",
         "signature": "434d7d3188d85bd46c64dcc8268422ffdfdd19fdbc98ec01446d650414fcaa0b"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/index.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/index.ts": {
         "version": "1e67c0f2414666f7fa13bdec81ab112a0db4910bb6031bbce9ddfbca729fbf88",
         "signature": "0747134fc57c8e4a12d6144952ae1f47f54848f1ca110e997bd81ec1cc7b76e6"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/user.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/user.ts": {
         "version": "5b1630e19c27823d37572b6318516ebc3ced5f38cf01760af89abd8f31a8c92c",
         "signature": "0747134fc57c8e4a12d6144952ae1f47f54848f1ca110e997bd81ec1cc7b76e6"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts": {
-        "version": "33d3c49a13bcc747e061909dc55fd96b93f45f200fd22a9b88f4f7e7640ec47c",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts": {
+        "version": "d26cffb428bace39e59ee261298b6b7839cfdd321d26b0e55b0abaad15e21538",
         "signature": "5844da9725f0af8e55dec805d801b92c7d3d27033843268fa999d9f69e47d9d5"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/time.ts": {
-        "version": "24cfacbf776aa1aea1aec3964f63a8e66376febb69fddc3ad8e8279f3a6bd480",
-        "signature": "ba389e0ca6ca23e556ff9bc2bb1fcc85cfab57b8e6deffe46536ab577f6f6479"
-      },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts": {
-        "version": "c4572798df8d761bacfaf001014d1d00f18938c9e3e0460196aeefefbef0bbfc",
-        "signature": "6b85a71aabd017cb216383c5a845783bebec25d8b1b1eeb1c4410828080dedce"
-      },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts": {
-        "version": "9c8f003e95db14894c9134618f05784e52a3d31cbea08e91d99aed3b92af66fd",
-        "signature": "dedd9cef42217e98417a98d5ebe64bfa8de50cbfa3a115f10a513e272ab0ec90"
-      },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/system.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/system.ts": {
         "version": "f56c6a2458b359caf5386296dd2c18aa606abfdbfe33aac3cda6110ae76a65c0",
         "signature": "738cb59f2012b941b3ebbd1196b04ef0d3df8b9245c59f629060ccdc6373ce47"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts": {
         "version": "6890b32d6a312d5d13a314a4a4e0590d2265a573db8edc0291813a02d85eb550",
         "signature": "a33de6b94ebe5ffdbd5c0d42275d21eaaac5535370b648a40112b587d6b79d83"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts": {
-        "version": "0cf0338de3c1326deb74dd89951d15a22e5bde2645e02d868ead6283b038bd96",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts": {
+        "version": "3b0843820cd17666d7147f8c3e085ec603420dd08c10f1e5d44419bfcb8bfe4c",
         "signature": "ce75500ffeb641ccc6005e7f52094043e36717b7a1f28f85b126e8f1bfbbaf21"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/tshelpers.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/tshelpers.ts": {
         "version": "d9bc75c9f5c125727ebec910d3e435861e6381f9278f2e05f313464f5abcd3e5",
         "signature": "08c4d5868aedf21490f337ebd56931e668074ac35346c6c15316aac6b3bf3870"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/errorhandling.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/errorhandling.ts": {
         "version": "f03c4b9027716cbf8f44e9ca13dab8fc29d1dcbc080d77ccbd2c29e648ee18ec",
         "signature": "b4c55f70813e5c842e1aceecc9dde124544922affaac3be1d472a7e898e5f0a4"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/uri.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/uri.ts": {
         "version": "ded8290017085fdd92257ae3b938e78844c61392399f8a0162967543c7dde360",
         "signature": "cbb1d5f451818380a55cc85bc11f41acaf1bfd0d4e2c3a11ae06216d1ae65bf5"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/text.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/text.ts": {
         "version": "25015f450db22375215dd60cd0a8c71152b0049c7cf18468930ca242f2d7c0ad",
         "signature": "5ee0f4abf1358c5b6b762b713750d63d9af37f269b3a56dc439b5c450a6304af"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/query.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/query.ts": {
         "version": "289136448ec7fea16217e42e4cd3a292a1b2a364bc08f59cddec5c44e30bbf5b",
         "signature": "c520c5b71327dba47cc33acc37cb8a476deeddfc6078c6c1aec2ad94237b7349"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/io.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/io.ts": {
         "version": "3de6f3bc1fb89b1d29cfbe8bde394d126e3510fc884a1497005a4f9c5a246c6e",
         "signature": "ed06dd19712187c660489d631f046772f3bd2ebf5ee4dc1b76ef16d354fd5f6e"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts": {
         "version": "a4daf46cff73a47f2a4e9a2a9e8ac31213eb452ca6562674165e50716b5916f9",
         "signature": "c19dcc5edc8c313ccbeba3431c6227b94115c3900ac89f5fe64d0d820017990b"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/serialization.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/serialization.ts": {
         "version": "eb708e6d365776c088bf7783902a907479ac2e4e5c0837de25c86f199d7c5a0f",
         "signature": "b8d7354bdefaf49f3fb161e41fd23e39618d92490cb43ca4b563d3004a4fa665"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/delegate.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/delegate.ts": {
         "version": "bcc9f18c0273014ea1309f99fedc62493fdef709e5d49cdf2b49e037a1fc8a37",
         "signature": "6623cb24577e722a497b5c7b4c60ae5476f135de8275a0f1156acd65b8023ad1"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts": {
         "version": "f290e6979f5ef18417fa8b3a73e224d73480075d9daf505e6646300df4eec650",
         "signature": "76b6c836023a6063f14688346d3238502a2e962caa393e198a9a8d84ab149660"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/io.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/io.ts": {
         "version": "0f17ec5e51f73b84a5c2edba568fb8727de2d710da8023cde112de9958f7a5d5",
         "signature": "a69ec2b1c571e7b875fa0df94b0c51df483ac24b5dac6cb1f87eddc155038349"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts": {
         "version": "016224d92c7ad158b7c3fc4b6a216d11469348be5f18eeb1686a5dbb3795839c",
         "signature": "e5b7463a93c0fb049381e6f3dd328dbb6b638a2f6377602208bcf31bb1d17bfd"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/scripts.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/scripts.ts": {
         "version": "ca65ed9d68b682c6cdb579b95769664c14b4b0c56667a90f8bfaae4e9bb85a04",
         "signature": "317b92e720b83f7978bc6c0260cfa5015fc3461bdce73664e7d57142b2507dca"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.indexedobjectcollection.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.indexedobjectcollection.ts": {
         "version": "77d1e02c8c143f040dbe0d83184bcc32dd603104c508edafd439b6950e88f001",
         "signature": "9defc02d94df280c9bee6f07587240f39b1183e836510bf999f40f75f18490cc"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts": {
         "version": "f1d93f4d068b191972531ac755419125a66aa29080ee75a4d3234fa67b563e14",
         "signature": "67f8918b4927221e4c073344173bcf5cd681bc3427019246be2a48a0860f28fc"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts": {
-        "version": "602dc5a3432d8d21a36e0b5a72fc8ef40f500da1ae2af1c8ff45428d0555a902",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts": {
+        "version": "56b7eeca3c9dc1bfb19277b7599ea2981f89bc9df81d5d9e5dfbfe28345ec199",
         "signature": "0b6f0e8a89e5208bb9ecc1197861316242ffa758404c0809c3df8f3481837d69"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts": {
-        "version": "217c50b196d1cbc2754f059cdff1c8964d4edc3f70de55f1b83e46277dff58c7",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/time.ts": {
+        "version": "24cfacbf776aa1aea1aec3964f63a8e66376febb69fddc3ad8e8279f3a6bd480",
+        "signature": "ba389e0ca6ca23e556ff9bc2bb1fcc85cfab57b8e6deffe46536ab577f6f6479"
+      },
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts": {
+        "version": "471ce761a948dc951fd3daf3b75544b5248af84ffa57a0f02f36e070e2574432",
+        "signature": "d9a17ea5d862ab30c2d7e560c409a543fca25b505ac0d6e6cb0d344e7b9b6d42"
+      },
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts": {
+        "version": "9c8f003e95db14894c9134618f05784e52a3d31cbea08e91d99aed3b92af66fd",
+        "signature": "dedd9cef42217e98417a98d5ebe64bfa8de50cbfa3a115f10a513e272ab0ec90"
+      },
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts": {
+        "version": "d62c9218da5ab70f5112037f627fc26899133f82fd32570342bc0f1626d34a3c",
         "signature": "2e0b9573860de5f4ddf7658c340890e252ae1006b157a56ca11903321aa042e1"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts": {
-        "version": "fa00a30b723c67df4aee8cfcee1cdb8b9778ae0d77d823e8ceb32acb8c99441f",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts": {
+        "version": "ce7e749d0da32acad0280e5001101fa709d7b48a17f2c2e124e96c8c8c6fff12",
         "signature": "d41efa32f5fe4b41b4dc4e6313b6b8c323dd8902e87d902ab63a48c203a73d19"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts": {
         "version": "b9d191f260ea686b5ea257b983b9e38b5a97b5e54dbd053d1c3df2d3130f06a4",
         "signature": "f63ba7f570cfced5b17d9e6e2cccb8ec3fd1c12e23bb3794d10313309dcc0603"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts": {
-        "version": "dfc7ba07965ad01ff9f55d9e3350847770c0f1108bc9559260221daaed050b11",
-        "signature": "856218763dc0e115e94ee5143f3d502e0c085f841b931dd9f349b56814c3a86e"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts": {
+        "version": "ff7d03d5c3494a64bf40f7d6180ab595db95f797abc83bad4c45421a9edbc4d0",
+        "signature": "3b3573b97d06910e5050f9db5b319c6b68fb2f4c8ecdeda2a25626584f44e832"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/server/app.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/server/app.ts": {
         "version": "fff9f0b1eafc0afd8a23724a59280b4104ba175749ed563688f16a12a8f45b25",
         "signature": "f761c91419d0a89422a0004ef1a92929dd4d2d5e5c16758654d8b0467d1998c6"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/server/htmlreader.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/server/htmlreader.ts": {
         "version": "8467f49b2028226d3f1c9b8fadb6cbabe223b994a81991bbe459bda58df76bb5",
         "signature": "8563c116bccef6973bd58bea5e997e462e8e26470de3d8adf3609146ad31c5b8"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/dreamspace.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/dreamspace.ts": {
         "version": "c3c63ab5560d78d8a3c016c47182a816fbc29b0be07f92e29dd50eaf224e1442",
         "signature": "c3c63ab5560d78d8a3c016c47182a816fbc29b0be07f92e29dd50eaf224e1442"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/enumerable.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/enumerable.ts": {
         "version": "7787d91e6bec6a130d18f6d74aa5c9a066344d612fe56a4ed640c298420bfc2e",
         "signature": "f2cb9c6b01c3cdb28958b66bc4c3d53b9a92f2f884eff8dfba475b6f06425f2f"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/storage.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/storage.ts": {
         "version": "5bf884778b1c2ff1abfc56555ca6ff425de9f9b0b356b6c80b755110b60dd1cb",
         "signature": "0d0d237b91298798aadee5beed66a53bf812873ea602aec1aeb936f5701faaf5"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/security.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/security.ts": {
         "version": "5d887a35cb87e5a1a6000b68008233d89e3e9f18e8acc236b66ea29d1053b624",
         "signature": "cec32f0ba0c8e78d7f131c2d3ebf26e93c3f55b43eb99c77dedfe9f6566cbb02"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/user.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/user.ts": {
         "version": "d208ea8d57ffe23523f11f925fb125fb21ddadca17bad1e7836cc674b3db979a",
         "signature": "4adbae3ef1df6370833ca410c2cea4fb7742cc8c2221939d76c715f0140a90ce"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/filemanager.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/filemanager.ts": {
         "version": "61c4dd54edf377b340d8919439c895a395059957708936800492c6723c1cd116",
         "signature": "b5df46e0b5b16af313cd86867cc72925f823fb999c2063f0cba88080839e29ba"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/hostbridge.ice.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/hostbridge.ice.ts": {
         "version": "fdfe4ab3205c64b59c3b73cb9084c00c648935f31c325680096a2595f76eba54",
         "signature": "15c011b861d55fdf79e5139491821d6e4edba8d579910a71337de87abe975cae"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/hostbridge.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/hostbridge.ts": {
         "version": "6d77798244ff8189f896fa74539417d3778abee8911869c8b33b425d0146bb8b",
         "signature": "c17b7e693230f5b30e199188a7e328088fbbd6d566bd957be842ef42a0b559ad"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/polyfills.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/polyfills.ts": {
         "version": "fc1a6ee6637ab14bfff77a02dfeb93cf3c95b50edf2f9e4ceb76baf4a313d730",
         "signature": "fe2406aae9d69b3e0507e3eeafb3d639c92ae8453a7a56dcfc920e373d31f897"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.observablecollection.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.observablecollection.ts": {
         "version": "3b76f0bf4f7cc26fc15fb27d8a0098220ab8d3d21f6c18a644f2b9f67074913e",
         "signature": "90c16c06a188436d04571c9ed81a434af62a9fbd327510301336f33eac01bc6b"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/data.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/data.ts": {
         "version": "0a360508070e3982aec720dda1f29b5bb6f02edb08190881e4cda58278cb1d79",
         "signature": "b92189540907870a3a94a703312690829cf0e3e857fa36f348bc2a1288c47b11"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/markup.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/markup.ts": {
         "version": "61a48dfd72f8367570e8b03e011e63dd0920f86108aa164a94d4240a9be035ce",
         "signature": "192cc84178472f00142dfea56bfdff092e9b1054658a43e5e8efa5388c0ed4e5"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts": {
         "version": "b2a8cf540deae62e0ac31682fd13c6c278f21b497810ff3f7342d2b6bc9f2a58",
         "signature": "249203f48ef06d075923bb58ce46a10e42a3d60c176afe0275f8475b0e109c75"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts": {
         "version": "21a88d8e089e4fd407e56679dd8421e57cf77d1a6586fae2036bce4c11054e79",
         "signature": "db27a32183d389fdc6f751e0a801a30cc446714e262042b71a20e230631d57c2"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.windows.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.windows.ts": {
         "version": "5c94ce5ab2cb27d2f588391a0188777c975a3b4adcb9eaf00cfc6d6848bf30f9",
         "signature": "154ae9dbf4a40f02a09a374c329385d818c8b7dcf9baf9694dc11bf9d89cae42"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.ts": {
         "version": "96479674ea4200042aabd5927c178b4c59eb962696fe5ea01d702ebf84b0ba81",
         "signature": "2a58a80fb41797786171dfffbb4eeab707bdf3c51e05f78d71226e43aea9c7c1"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.ts": {
         "version": "4e7556007372fc0e8b1910abdf4eded43a03a8f70ee9a8e03064a2dec260f6fe",
         "signature": "a3a0f9dbbb1e4c487429a178e1409453fbbd127ca5f783aa6d7bfbb1bcea28a8"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.application.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.application.ts": {
         "version": "0abd80297b732f39089604370cf5871f383033bcfbfcc1305d436261861d5748",
         "signature": "81d639670a39cab0e178350a627fda5cc0a16632f60c9fd49a5dbaac12b214f7"
       },
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/users~.ts": {
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/users~.ts": {
         "version": "7e4f6112c006359fb7dba90918388abef8159c831ec6945432e47b450f2105c3",
         "signature": "71c01665cf24d9b49af8b692560098f71d5c58f1d0bfb8ba824bac9762397d76"
       }
@@ -305,485 +305,486 @@
       "sourceMap": true,
       "noImplicitAny": true,
       "declaration": true,
-      "rootDir": "C:/Data/Visual Studio/Projects/Inossis/DreamSpace Studio/src/DreamSpaceStudio/TypeScript/",
-      "declarationDir": "C:/Data/Visual Studio/Projects/Inossis/DreamSpace Studio/src/public/js/server/decl",
+      "rootDir": "D:/Data/Visual Studio/Projects/Inossis/DreamSpace Studio/src/DreamSpaceStudio/TypeScript/",
+      "declarationDir": "D:/Data/Visual Studio/Projects/Inossis/DreamSpace Studio/src/public/js/server/decl",
       "experimentalDecorators": true,
       "types": [
         "debug",
         "express"
       ],
-      "configFilePath": "C:/Data/Visual Studio/Projects/Inossis/DreamSpace Studio/src/DreamSpaceStudio/TypeScript/tsconfig.json"
+      "configFilePath": "D:/Data/Visual Studio/Projects/Inossis/DreamSpace Studio/src/DreamSpaceStudio/TypeScript/tsconfig.json"
     },
     "referencedMap": {
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/inspector.d.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/inspector.d.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/inspector.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/inspector.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/range-parser/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/range-parser/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/serve-static/index.d.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/mime/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/serve-static/index.d.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/mime/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/connect/index.d.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/connect/index.d.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/body-parser/index.d.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/connect/index.d.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/body-parser/index.d.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/connect/index.d.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express/index.d.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/body-parser/index.d.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/serve-static/index.d.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express/index.d.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/body-parser/index.d.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/serve-static/index.d.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/index.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/index.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/user.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/user.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/time.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/system.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/time.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/system.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/tshelpers.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/errorhandling.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/scripts.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/uri.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/tshelpers.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/text.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/errorhandling.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/scripts.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/query.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/text.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/uri.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/io.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/text.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/query.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/text.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/delegate.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/serialization.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/io.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/delegate.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/errorhandling.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/io.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/io.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/delegate.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/serialization.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/uri.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/query.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/io.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/delegate.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/errorhandling.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/scripts.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/tshelpers.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/errorhandling.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/io.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/io.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.indexedobjectcollection.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/uri.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/query.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/io.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/system.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/scripts.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.indexedobjectcollection.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/scripts.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/tshelpers.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/errorhandling.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/serialization.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/system.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.indexedobjectcollection.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/time.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/system.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/scripts.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.indexedobjectcollection.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/time.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/serialization.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/system.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/delegate.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/delegate.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/errorhandling.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/query.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/errorhandling.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/query.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/server/app.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/debug/index.d.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express/index.d.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/index.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/user.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/server/app.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/debug/index.d.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express/index.d.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/index.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/user.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/dreamspace.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/dreamspace.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/enumerable.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/enumerable.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/storage.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/storage.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/user.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/security.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/user.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/security.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/filemanager.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/storage.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/text.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/user.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/filemanager.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/storage.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/text.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/user.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.observablecollection.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.observablecollection.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/data.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/data.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/markup.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/markup.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/enumerable.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/enumerable.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.windows.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.windows.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.windows.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.windows.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/markup.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/scripts.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.windows.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/markup.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/scripts.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.windows.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.application.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/errorhandling.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.application.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/errorhandling.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts"
       ]
     },
     "exportedModulesMap": {
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/inspector.d.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/inspector.d.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/inspector.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/inspector.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/range-parser/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/range-parser/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/serve-static/index.d.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/mime/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/serve-static/index.d.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/mime/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/connect/index.d.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/connect/index.d.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/body-parser/index.d.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/connect/index.d.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/body-parser/index.d.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/connect/index.d.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express/index.d.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/body-parser/index.d.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/serve-static/index.d.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express/index.d.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/body-parser/index.d.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/serve-static/index.d.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/index.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/index.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/user.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/user.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/time.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/system.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/query.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/system.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/io.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/query.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/io.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/delegate.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/serialization.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/delegate.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/delegate.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/serialization.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/io.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/io.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/delegate.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/uri.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/io.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/io.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/scripts.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/uri.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.indexedobjectcollection.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/scripts.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.indexedobjectcollection.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.indexedobjectcollection.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/serialization.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.indexedobjectcollection.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/time.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/serialization.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/dreamspace.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/dreamspace.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/user.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/security.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/user.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/security.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/filemanager.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/user.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/filemanager.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/user.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.observablecollection.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.observablecollection.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/markup.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/markup.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/enumerable.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/enumerable.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.windows.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.windows.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.windows.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.windows.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts"
       ],
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.application.ts": [
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts",
-        "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.application.ts": [
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts",
+        "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.ts"
       ]
     },
     "semanticDiagnosticsPerFile": [
@@ -799,67 +800,67 @@
       "c:/program files (x86)/microsoft sdks/typescript/3.4/lib.es2015.reflect.d.ts",
       "c:/program files (x86)/microsoft sdks/typescript/3.4/lib.es2015.symbol.d.ts",
       "c:/program files (x86)/microsoft sdks/typescript/3.4/lib.es2015.symbol.wellknown.d.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/server/globals.d.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/debug/index.d.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/inspector.d.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/range-parser/index.d.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/mime/index.d.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/serve-static/index.d.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/connect/index.d.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/body-parser/index.d.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express/index.d.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/index.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/user.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/time.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/system.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/tshelpers.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/errorhandling.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/uri.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/text.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/query.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/io.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/serialization.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/delegate.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/io.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/scripts.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.indexedobjectcollection.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/server/app.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/server/htmlreader.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/dreamspace.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/enumerable.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/storage.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/security.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/user.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/filemanager.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/hostbridge.ice.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/hostbridge.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/polyfills.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.observablecollection.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/data.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/markup.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.windows.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.application.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/users~.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
-      "c:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts"
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/server/globals.d.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/debug/index.d.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/inspector.d.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/node/index.d.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/range-parser/index.d.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express-serve-static-core/index.d.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/mime/index.d.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/serve-static/index.d.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/connect/index.d.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/body-parser/index.d.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/node_modules/@types/express/index.d.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/index.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/routes/user.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/system.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resources.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/utilities.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/tshelpers.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/errorhandling.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/uri.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/text.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/io.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/browser.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/serialization.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/io.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/path.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/logging.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/globals.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/server/app.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/server/htmlreader.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/dreamspace.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/enumerable.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/storage.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/security.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/user.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/filemanager.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/hostbridge.ice.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/hostbridge.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/polyfills.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/data.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/users~.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/exception.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/query.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/delegate.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/events.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/scripts.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.indexedobjectcollection.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/appdomain.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/primitivetypes.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/time.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/diagnostics.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/types.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/factories.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/resourcerequest.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/collections.observablecollection.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/markup.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/properties.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.graph.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.windows.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.ts",
+      "d:/data/visual studio/projects/inossis/dreamspace studio/src/dreamspacestudio/typescript/core/system/platform.html.application.ts"
     ]
   },
   "version": "3.4.1"

@@ -1,7 +1,4 @@
-﻿import { DreamSpace as DS, ITypeInfo } from "../Globals";
-import { Factory, factory, makeFactory } from "../Factories";
-import { getFullTypeName } from "../Types";
-import { LogTypes, log, error as log_error } from "../Logging"; // ("log_error" is just to prevent confusion with the "error" function in Exception)
+﻿import { Factory, factory, makeFactory } from "../Factories";
 import { makeDisposable } from "../PrimitiveTypes";
 
 // ############################################################################################################################
@@ -171,6 +168,9 @@ export interface IException extends Exception { }
 
 // ############################################################################################################################
 
+import { DreamSpace as DS, ITypeInfo } from "../Globals";
+import { getFullTypeName } from "../Types";
+import { LogTypes, log, error as log_error } from "../Logging"; // ("log_error" is just to prevent confusion with the "error" function in Exception)
 import { Diagnostics, ILogItem } from "./Diagnostics";
 
 // ############################################################################################################################

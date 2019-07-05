@@ -1,5 +1,7 @@
 /** @module Path The path module contains functions for working with URI based paths. */
 
+import { DreamSpace as DS } from "./DreamSpace";
+
 // ==========================================================================================================================
 
 /** Contains functions for working with URI based paths. */
@@ -149,7 +151,6 @@ export { Path };
 
 // ===============================================================================================================================
 
-import { DreamSpace as DS } from "./Globals";
 import { Utilities } from "./Utilities";
 import { Uri } from "./Uri";
 import { Query, pageQuery } from "./Query";

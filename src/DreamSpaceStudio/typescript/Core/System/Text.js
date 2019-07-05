@@ -3,7 +3,7 @@
 // Text manipulation utility functions.
 // ###########################################################################################################################
 Object.defineProperty(exports, "__esModule", { value: true });
-const Globals_1 = require("../Globals");
+const DreamSpace_1 = require("../DreamSpace");
 const Exception_1 = require("./Exception");
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
 // =======================================================================================================================
@@ -22,8 +22,8 @@ var Encoding;
         Base64Modes[Base64Modes["Custom"] = 2] = "Custom";
     })(Base64Modes = Encoding.Base64Modes || (Encoding.Base64Modes = {}));
     ;
-    Encoding.__64BASE_ENCODING_CHARS_STANDARD = Globals_1.DreamSpace.global.String("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=");
-    Encoding.__64BASE_ENCODING_CHARS_URI = Globals_1.DreamSpace.global.String("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_%3D"); // (note: %3D is treaded as one char [an % encoded '='])
+    Encoding.__64BASE_ENCODING_CHARS_STANDARD = DreamSpace_1.DreamSpace.global.String("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=");
+    Encoding.__64BASE_ENCODING_CHARS_URI = DreamSpace_1.DreamSpace.global.String("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_%3D"); // (note: %3D is treaded as one char [an % encoded '='])
     Encoding.__64BASE_ENCODING_CHARS_CUSTOM = Encoding.__64BASE_ENCODING_CHARS_STANDARD;
     // (Note: There must be exactly 65 characters [64 + 1 for padding])
     // (Note: 'String' objects MUST be used in order for the encoding functions to populate the reverse lookup indexes)
@@ -64,7 +64,7 @@ var Encoding;
         for (var i = value.length - 1; i >= 0; --i)
             if (value.charCodeAt(i) > 255) {
                 srcCharBitDepth = 16; // (Unicode mode [16-bit])
-                value = Globals_1.DreamSpace.global.String.fromCharCode(0) + value; // (note: 0 is usually understood to be a null character, and is used here to flag Unicode encoding [two 0 bytes at the beginning])
+                value = DreamSpace_1.DreamSpace.global.String.fromCharCode(0) + value; // (note: 0 is usually understood to be a null character, and is used here to flag Unicode encoding [two 0 bytes at the beginning])
                 break;
             }
         var shiftCount = srcCharBitDepth - 1;
@@ -156,7 +156,7 @@ var Encoding;
             if (writeBitIndex == srcCharBitDepth) {
                 writeBitIndex = 0;
                 if (baseCode) // (should never be 0 [null char])
-                    result += Globals_1.DreamSpace.global.String.fromCharCode(baseCode);
+                    result += DreamSpace_1.DreamSpace.global.String.fromCharCode(baseCode);
                 if (++charCount >= resultLength)
                     break; // (all expected characters written)
                 baseCode = 0;

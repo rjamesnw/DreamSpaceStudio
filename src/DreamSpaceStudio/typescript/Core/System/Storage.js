@@ -3,7 +3,7 @@
 // Application Windows
 // ###########################################################################################################################
 Object.defineProperty(exports, "__esModule", { value: true });
-const Globals_1 = require("../Globals");
+const DreamSpace_1 = require("../DreamSpace");
 class Store {
 }
 exports.Store = Store;
@@ -305,7 +305,7 @@ exports.Store = Store;
     Store.clear = clear;
     // ------------------------------------------------------------------------------------------------------------------
     // Cleanup web storage if debugging.
-    if (Globals_1.DreamSpace.isDebugging && Store.hasLocalStorage)
+    if (DreamSpace_1.DreamSpace.isDebugging && Store.hasLocalStorage)
         clear(StorageType.Local);
     // ------------------------------------------------------------------------------------------------------------------
 })(Store || (Store = {}));

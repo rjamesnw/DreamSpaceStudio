@@ -10,8 +10,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var LogItem_1;
+const DreamSpace_1 = require("../DreamSpace");
 const Factories_1 = require("../Factories");
-const Globals_1 = require("../Globals");
 // ========================================================================================================================
 var __logItemsSequenceCounter = 0;
 var __logCaptureStack = [];
@@ -28,7 +28,7 @@ let LogItem = LogItem_1 = class LogItem extends Factories_1.Factory() {
     static 'new'(parent, title, message, type = Logging_1.LogTypes.Normal, outputToConsole = true) { return null; }
     static init(o, isnew, parent, title, message, type = Logging_1.LogTypes.Normal, outputToConsole = true) {
         if (title === void 0 || title === null) {
-            if (Globals_1.DreamSpace.isEmpty(message))
+            if (DreamSpace_1.DreamSpace.isEmpty(message))
                 Logging_1.error("LogItem()", "A message is required if no title is given.", o);
             title = "";
         }
@@ -108,7 +108,7 @@ let LogItem = LogItem_1 = class LogItem extends Factories_1.Factory() {
         return txt;
     }
     // --------------------------------------------------------------------------------------------------------------------------
-    static [Globals_1.DreamSpace.constructor](factory) {
+    static [DreamSpace_1.DreamSpace.constructor](factory) {
         //factory.init = (o, isnew) => { // not dealing with private properties, so this is not needed!
         //};
     }
@@ -237,7 +237,7 @@ exports.Diagnostics = Diagnostics;
 // ############################################################################################################################
 // Basic Window hooks for client-side diagnostics (CTRL+~ to dump the log).
 // TODO: Consider opening the load in either a popup or overlay (user's choice).
-if (Globals_1.DreamSpace.host.isClient && typeof window !== 'undefined') {
+if (DreamSpace_1.DreamSpace.host.isClient && typeof window !== 'undefined') {
     // If a window error event callback is available, hook into it to provide some visual feedback in case of errors.
     // (Note: Supports the Bootstrap UI, though it may not be available if an error occurs too early)
     window.onerror = function (eventOrMessage, source, fileno) {
@@ -264,7 +264,7 @@ if (Globals_1.DreamSpace.host.isClient && typeof window !== 'undefined') {
         else {
             keyCode = evt.charCode ? evt.charCode : evt.keyCode;
         }
-        if (keyCode == 192 && evt.ctrlKey && Globals_1.DreamSpace.debugMode) { // (CTRL+~) key
+        if (keyCode == 192 && evt.ctrlKey && DreamSpace_1.DreamSpace.debugMode) { // (CTRL+~) key
             var body = document.getElementById("main");
             if (body)
                 body.style.display = ""; // (show the main element if hidden)

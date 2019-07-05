@@ -1,4 +1,4 @@
-define(["require", "exports", "../Factories", "../PrimitiveTypes", "../Globals", "../Types", "../Logging", "./Diagnostics"], function (require, exports, Factories_1, PrimitiveTypes_1, Globals_1, Types_1, Logging_1, Diagnostics_1) {
+define(["require", "exports", "../DreamSpace", "../Factories", "../Logging", "./Diagnostics", "../Utilities"], function (require, exports, DreamSpace_1, Factories_1, Logging_1, Diagnostics_1, Utilities_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Exception_1;
@@ -9,7 +9,7 @@ define(["require", "exports", "../Factories", "../PrimitiveTypes", "../Globals",
      * The Exception object is used to record information about errors that occur in an application.
      * Note: Creating an exception object automatically creates a corresponding log entry, unless the 'log' parameter is set to false.
      */
-    let Exception = Exception_1 = class Exception extends Factories_1.Factory(Factories_1.makeFactory(PrimitiveTypes_1.makeDisposable(Error))) {
+    let Exception = Exception_1 = class Exception extends Factories_1.Factory(Factories_1.makeFactory(DreamSpace_1.makeDisposable(Error))) {
         /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
         static init(o, isnew, message, source, log) {
             o.message = message;
@@ -37,7 +37,7 @@ define(["require", "exports", "../Factories", "../PrimitiveTypes", "../Globals",
                     callstack.shift();
                     isCallstackPopulated = true;
                 }
-                else if (Globals_1.DreamSpace.global["opera"] && e.message) { //Opera
+                else if (DreamSpace_1.DreamSpace.global["opera"] && e.message) { //Opera
                     var lines = e.message.split('\n');
                     for (var i = 0, len = lines.length; i < len; ++i) {
                         if (lines[i].match(/^\s*[A-Za-z0-9\-_\$]+\(/)) {
@@ -99,9 +99,9 @@ define(["require", "exports", "../Factories", "../PrimitiveTypes", "../Globals",
                 message += "\r\n\r\nStack:\r\n\r\n";
                 var stackMsg = "";
                 while (caller) {
-                    var callerName = Types_1.getFullTypeName(caller) || "/*anonymous*/";
+                    var callerName = Utilities_1.getFullTypeName(caller) || "/*anonymous*/";
                     var args = caller.arguments;
-                    var _args = args && args.length > 0 ? Globals_1.DreamSpace.global.Array.prototype.join.call(args, ', ') : "";
+                    var _args = args && args.length > 0 ? DreamSpace_1.DreamSpace.global.Array.prototype.join.call(args, ', ') : "";
                     if (stackMsg)
                         stackMsg += "called from ";
                     stackMsg += callerName + "(" + _args + ")\r\n\r\n";

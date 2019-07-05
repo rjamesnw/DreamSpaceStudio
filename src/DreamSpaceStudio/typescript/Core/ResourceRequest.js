@@ -14,7 +14,7 @@ const Logging_1 = require("./Logging");
 const ErrorHandling_1 = require("./ErrorHandling");
 const Query_1 = require("./Query");
 const Utilities_1 = require("./Utilities");
-const Globals_1 = require("./Globals");
+const DreamSpace_1 = require("./DreamSpace");
 const PrimitiveTypes_1 = require("./PrimitiveTypes");
 // ===============================================================================================================================
 /**
@@ -40,7 +40,7 @@ let ResourceRequest = ResourceRequest_1 = class ResourceRequest extends Factorie
            *
            */
         this.method = "GET";
-        this.$__transformedData = Globals_1.DreamSpace.noop;
+        this.$__transformedData = DreamSpace_1.DreamSpace.noop;
         /** The response code from the XHR response. */
         this.responseCode = 0; // (the response code returned)
         /** The response code message from the XHR response. */
@@ -84,7 +84,7 @@ let ResourceRequest = ResourceRequest_1 = class ResourceRequest extends Factorie
       * If no transformations were made, then the value in 'response' is returned.
       */
     get transformedResponse() {
-        return this.$__transformedData === Globals_1.DreamSpace.noop ? this.response : this.$__transformedData;
+        return this.$__transformedData === DreamSpace_1.DreamSpace.noop ? this.response : this.$__transformedData;
     }
     /**
      * A progress/error message related to the status (may not be the same as the response message).
@@ -232,14 +232,14 @@ let ResourceRequest = ResourceRequest_1 = class ResourceRequest extends Factorie
             // ... this request has not been started yet; attempt to load the resource ...
             // ... 1. see first if this file is cached in the web storage, then load it from there instead ...
             //    (ignore the local caching if in debug or the versions are different)
-            if (!Globals_1.DreamSpace.isDebugging && typeof Globals_1.DreamSpace.global.Storage !== void 0)
+            if (!DreamSpace_1.DreamSpace.isDebugging && typeof DreamSpace_1.DreamSpace.global.Storage !== void 0)
                 try {
-                    var currentAppVersion = Globals_1.DreamSpace.getAppVersion();
-                    var versionInLocalStorage = Globals_1.DreamSpace.global.localStorage.getItem("version");
-                    var appVersionInLocalStorage = Globals_1.DreamSpace.global.localStorage.getItem("appVersion");
-                    if (versionInLocalStorage && appVersionInLocalStorage && Globals_1.DreamSpace.version == versionInLocalStorage && currentAppVersion == appVersionInLocalStorage) {
+                    var currentAppVersion = DreamSpace_1.DreamSpace.getAppVersion();
+                    var versionInLocalStorage = DreamSpace_1.DreamSpace.global.localStorage.getItem("version");
+                    var appVersionInLocalStorage = DreamSpace_1.DreamSpace.global.localStorage.getItem("appVersion");
+                    if (versionInLocalStorage && appVersionInLocalStorage && DreamSpace_1.DreamSpace.version == versionInLocalStorage && currentAppVersion == appVersionInLocalStorage) {
                         // ... all versions match, just pull from local storage (faster) ...
-                        this.response = Globals_1.DreamSpace.global.localStorage.getItem("resource:" + this.url); // (should return 'null' if not found)
+                        this.response = DreamSpace_1.DreamSpace.global.localStorage.getItem("resource:" + this.url); // (should return 'null' if not found)
                         if (this.response !== null && this.response !== void 0) {
                             this.status = Resources_1.RequestStatuses.Loaded;
                             this._doNext();
@@ -269,11 +269,11 @@ let ResourceRequest = ResourceRequest_1 = class ResourceRequest extends Factorie
                             this.setError("Resource type mismatch: expected type was '" + this.type + "', but received '" + responseType + "' (XHR type '" + xhr.responseType + "').\r\n");
                         }
                         else {
-                            if (!Globals_1.DreamSpace.isDebugging && typeof Globals_1.DreamSpace.global.Storage !== void 0)
+                            if (!DreamSpace_1.DreamSpace.isDebugging && typeof DreamSpace_1.DreamSpace.global.Storage !== void 0)
                                 try {
-                                    Globals_1.DreamSpace.global.localStorage.setItem("version", Globals_1.DreamSpace.version);
-                                    Globals_1.DreamSpace.global.localStorage.setItem("appVersion", Globals_1.DreamSpace.getAppVersion());
-                                    Globals_1.DreamSpace.global.localStorage.setItem("resource:" + this.url, this.response);
+                                    DreamSpace_1.DreamSpace.global.localStorage.setItem("version", DreamSpace_1.DreamSpace.version);
+                                    DreamSpace_1.DreamSpace.global.localStorage.setItem("appVersion", DreamSpace_1.DreamSpace.getAppVersion());
+                                    DreamSpace_1.DreamSpace.global.localStorage.setItem("resource:" + this.url, this.response);
                                     this.message = "Resource cached in local storage.";
                                 }
                                 catch (e) {
@@ -504,7 +504,7 @@ let ResourceRequest = ResourceRequest_1 = class ResourceRequest extends Factorie
                 }
                 catch (e) {
                     this.setError("Error in ready handler.", e);
-                    if (Globals_1.DreamSpace.isDebugging && (this.type == Resources_1.ResourceTypes.Application_Script || this.type == Resources_1.ResourceTypes.Application_ECMAScript))
+                    if (DreamSpace_1.DreamSpace.isDebugging && (this.type == Resources_1.ResourceTypes.Application_Script || this.type == Resources_1.ResourceTypes.Application_ECMAScript))
                         throw e; // (propagate script errors to the browser for debuggers, if any)
                 }
             }
@@ -602,7 +602,7 @@ let ResourceRequest = ResourceRequest_1 = class ResourceRequest extends Factorie
         }
         return this;
     }
-    static [Globals_1.DreamSpace.constructor](factory) {
+    static [DreamSpace_1.DreamSpace.constructor](factory) {
         factory.init = (o, isnew, url, type, async = true) => {
             if (url === void 0 || url === null)
                 throw "A resource URL is required.";

@@ -1,14 +1,14 @@
 // ############################################################################################################################
 // Types for event management.
 // ############################################################################################################################
-define(["require", "exports", "../Globals", "../Globals", "./Delegate", "../Types", "../Factories", "./Exception", "../PrimitiveTypes", "../ErrorHandling", "./Browser"], function (require, exports, Globals_1, Globals_2, Delegate_1, Types_1, Factories_1, Exception_1, PrimitiveTypes_1, ErrorHandling_1, Browser_1) {
+define(["require", "exports", "../DreamSpace", "../DreamSpace", "./Delegate", "../Factories", "./Exception", "../PrimitiveTypes", "../ErrorHandling", "./Browser", "../Utilities"], function (require, exports, DreamSpace_1, DreamSpace_2, Delegate_1, Factories_1, Exception_1, PrimitiveTypes_1, ErrorHandling_1, Browser_1, Utilities_1) {
     "use strict";
     function __export(m) {
         for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
     }
     Object.defineProperty(exports, "__esModule", { value: true });
     var EventDispatcher_1;
-    __export(Globals_1);
+    __export(DreamSpace_1);
     ;
     ;
     /** Controls how the event progression occurs. */
@@ -188,7 +188,7 @@ define(["require", "exports", "../Globals", "../Globals", "./Delegate", "../Type
         __exception(msg, error) {
             if (error)
                 msg += "\r\nInner error: " + ErrorHandling_1.getErrorMessage(error);
-            return Exception_1.Exception.error("{EventDispatcher}.dispatchEvent():", "Error in event " + this.__eventName + " on object type '" + Types_1.getTypeName(this.owner) + "': " + msg, { exception: error, event: this, handler: this.__handlerCallInProgress });
+            return Exception_1.Exception.error("{EventDispatcher}.dispatchEvent():", "Error in event " + this.__eventName + " on object type '" + Utilities_1.getTypeName(this.owner) + "': " + msg, { exception: error, event: this, handler: this.__handlerCallInProgress });
         }
         /** Calls the event handlers that match the event mode on the current event instance. */
         onDispatchEvent(args, mode) {
@@ -299,7 +299,7 @@ define(["require", "exports", "../Globals", "../Globals", "./Delegate", "../Type
             for (var i = this.__listeners.length - 1; i >= 0; --i)
                 this.__removeListener(i);
         }
-        static [Globals_2.DreamSpace.constructor](factory) {
+        static [DreamSpace_2.DreamSpace.constructor](factory) {
             // ... factory.init must be set here in order to access private properties! ...
             factory.init = (o, isnew, owner, eventName, removeOnTrigger = false, eventTriggerHandler = null, canCancel = true) => {
                 factory.super.init(o, isnew);
@@ -337,8 +337,8 @@ define(["require", "exports", "../Globals", "../Globals", "./Delegate", "../Type
                 //x ... first, set the depreciating cross-browser compatible access method ...
                 //x type.prototype["$__" + customEventPropName] = onEventProxy; // (ex: '$__onClick')
                 // ... create the event getter property and set the "on event" getter proxy ...
-                if (Globals_2.DreamSpace.global.Object.defineProperty)
-                    Globals_2.DreamSpace.global.Object.defineProperty(type.prototype, customEventPropName, {
+                if (DreamSpace_2.DreamSpace.global.Object.defineProperty)
+                    DreamSpace_2.DreamSpace.global.Object.defineProperty(type.prototype, customEventPropName, {
                         configurable: true,
                         enumerable: true,
                         writable: true,
@@ -423,7 +423,7 @@ define(["require", "exports", "../Globals", "../Globals", "./Delegate", "../Type
             if (this.onPropertyChanged)
                 this.onPropertyChanged.dispatch(this, oldValue);
         }
-        static [Globals_2.DreamSpace.constructor](factory) {
+        static [DreamSpace_2.DreamSpace.constructor](factory) {
             factory.init = (o, isnew) => {
             };
         }
@@ -441,8 +441,8 @@ define(["require", "exports", "../Globals", "../Globals", "./Delegate", "../Type
         /** Triggered when all manifests have loaded. No modules have been executed at this point.
           * Note: 'onReady' is not called automatically if 'DreamSpace.System.Diagnostics.debug' is set to 'Debug_Wait'.
           */
-        DreamSpace_Ext.onReady = EventDispatcherFactory.new(Globals_2.DreamSpace, "onReady", true);
-        Globals_2.DreamSpace.onReady = DreamSpace_Ext.onReady;
+        DreamSpace_Ext.onReady = EventDispatcherFactory.new(DreamSpace_2.DreamSpace, "onReady", true);
+        DreamSpace_2.DreamSpace.onReady = DreamSpace_Ext.onReady;
     })(DreamSpace_Ext || (DreamSpace_Ext = {}));
 });
 // ############################################################################################################################

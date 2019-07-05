@@ -2,7 +2,7 @@
 // Application Windows
 // ###########################################################################################################################
 
-import { DreamSpace as DS } from "../Globals";
+import { DreamSpace as DS } from "../DreamSpace";
 
 abstract class Store { }
 namespace Store {

@@ -1,7 +1,7 @@
 // ###########################################################################################################################
 // Callback Delegates (serializable - closures should not be used)
 // ###########################################################################################################################
-define(["require", "exports", "../Globals", "../Factories", "../PrimitiveTypes", "./Exception", "./Browser"], function (require, exports, Globals_1, Factories_1, PrimitiveTypes_1, Exception_1, Browser_1) {
+define(["require", "exports", "../DreamSpace", "../Factories", "../PrimitiveTypes", "./Exception", "./Browser"], function (require, exports, DreamSpace_1, Factories_1, PrimitiveTypes_1, Exception_1, Browser_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Delegate_1;
@@ -52,7 +52,7 @@ define(["require", "exports", "../Globals", "../Factories", "../PrimitiveTypes",
     exports.Delegate = DelegateFactory;
     let Delegate = Delegate_1 = class Delegate extends PrimitiveTypes_1.Object {
         //? static readonly $Type = $Delegate;
-        [Globals_1.DreamSpace.constructor](factory) {
+        [DreamSpace_1.DreamSpace.constructor](factory) {
             /** Generates "case" statements for function templates.  The function template is converted into a string, the resulting cases get inserted,
               * and the compiled result is returned.  This hard-codes the logic for greatest speed, and if more parameters are need, can easily be expanded.
             */
@@ -62,7 +62,7 @@ define(["require", "exports", "../Globals", "../Factories", "../PrimitiveTypes",
                 var cases = "", argtext = "";
                 for (var i = argsIndexStart, n = argsIndexStart + caseCountMax; i < n; ++i)
                     cases += "case " + (1 + i) + ": return " + funcName + "(" + contextStr + (argtext += argsStr + "[" + i + "], ") + "this);\r\n";
-                return Globals_1.DreamSpace.safeEval("(" + ftext.replace(matchRegex, cases) + ")");
+                return DreamSpace_1.DreamSpace.safeEval("(" + ftext.replace(matchRegex, cases) + ")");
             }
             // TODO: Look into using the "...spread" operator for supported browsers, based on support: https://goo.gl/a5tvW1
             factory.fastApply = makeCases(0, 20, function (func, context, args) {

@@ -3,20 +3,23 @@
  * DreamSpaceJS reserves a global name 'DreamSpace' in the global scope to keep all globals contained in one place.
  */
 
-import { DreamSpace as DS, DEFAULT_GLOBAL_NS_NAME } from "./Globals";
+import { DreamSpace as DS, DEFAULT_GLOBAL_NS_NAME } from "./DreamSpace";
 import { Utilities } from "./Utilities";
 
 var extendStatics = Object.setPrototypeOf || ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
     function (d, b: Object) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
 
-/** Extends from a base type by chaining a derived type's 'prototype' to the base type's prototype.
-* This method takes into account any preset properties that may exist on the derived type's prototype.
-* Note: Extending an already extended derived type will recreate the prototype connection again using a new prototype instance pointing to the given base type.
-* Note: It is not possible to modify any existing chain of constructor calls.  Only the prototype can be changed.
-* @param {Function} derivedType The derived type (function) that will extend from a base type.
-* @param {Function} baseType The base type (function) to extend to the derived type.
-* @param {boolean} copyBaseProperties If true (default) behaves like the TypeScript "__extends" method, which copies forward any static base properties to the derived type.
-*/
+/**
+ * Extends from a base type by chaining a derived type's 'prototype' to the base type's prototype.
+ * This method takes into account any preset properties that may exist on the derived type's prototype.
+ * This is a special override to the default TypeScript '__extends' code for extending types in the DreamSpace system.
+ * It's also a bit more efficient given that the 'extendStatics' part is run only once and cached and not every time '__extends' is called.
+ * Note: Extending an already extended derived type will recreate the prototype connection again using a new prototype instance pointing to the given base type.
+ * Note: It is not possible to modify any existing chain of constructor calls.  Only the prototype can be changed.
+ * @param {Function} derivedType The derived type (function) that will extend from a base type.
+ * @param {Function} baseType The base type (function) to extend to the derived type.
+ * @param {boolean} copyBaseProperties If true (default) behaves like the TypeScript "__extends" method, which copies forward any static base properties to the derived type.
+ */
 export function __extends<DerivedType extends Function, BaseType extends Function>(derivedType: DerivedType, baseType: BaseType, copyStaticProperties = true): DerivedType {
     if (copyStaticProperties)
         extendStatics(derivedType, baseType);

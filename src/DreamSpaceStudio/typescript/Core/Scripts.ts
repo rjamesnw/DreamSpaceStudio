@@ -2,18 +2,17 @@
 // Types for time management.
 // ###########################################################################################################################
 
-import { DreamSpace as DS, ICallback, sealed, IErrorCallback } from "./Globals";
+import { DreamSpace as DS, ICallback, sealed, IErrorCallback } from "./DreamSpace";
 import { log, error } from "./Logging";
-import { nameof } from "./Types";
 import { Factory, factory } from "./Factories";
 import { ResourceTypes, RequestStatuses } from "./Resources";
 import { String, IAddLineNumbersFilter } from "./PrimitiveTypes";
 import { renderHelperVarDeclarations } from "./TSHelpers";
 import { Exception } from "./System/Exception";
 
-import Globals = DS.Globals;
+import { Globals } from "./Globals";
 import { getErrorMessage } from "./ErrorHandling";
-import { Utilities } from "./Utilities";
+import { Utilities, nameof } from "./Utilities";
 import { ResourceRequest, IResourceRequest } from "./ResourceRequest";
 import { Path } from "./Path";
 

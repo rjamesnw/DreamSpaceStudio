@@ -50,9 +50,9 @@
     <TypeScriptCompile Include="typescript\client\Modules\Twitter\Platform.UI.Bootstrap.ts" />
     <TypeScriptCompile Include="typescript\client\Modules\xregexp\v2_0_0.m.ts" />
     <TypeScriptCompile Include="typescript\client\Modules\xregexp\__xregexp_info.ts" />
-    <TypeScriptCompile Include="TypeScript\Core\DreamSpace.ts" />
     <TypeScriptCompile Include="TypeScript\Core\Factories.ts" />
     <TypeScriptCompile Include="TypeScript\Core\FileManager.ts" />
+    <TypeScriptCompile Include="TypeScript\Core\DreamSpace.ts" />
     <TypeScriptCompile Include="TypeScript\Core\ResourceRequest.ts" />
     <TypeScriptCompile Include="TypeScript\Core\Enumerable.ts" />
     <TypeScriptCompile Include="TypeScript\Core\System\Security.ts" />
@@ -147,6 +147,13 @@
     <Content Include="views\studio\index.html">
       <SubType>Code</SubType>
     </Content>
+    <TypeScriptCompile Include="TypeScript\System\Property.ts" />
+    <TypeScriptCompile Include="TypeScript\System\EventDefinition.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Polyfills.ts" />
+    <TypeScriptCompile Include="TypeScript\System\TrackableObject.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Component.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Utilities.ts" />
+    <TypeScriptCompile Include="typescript\System\Workflow.ts" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="typescript\" />
@@ -188,6 +195,7 @@
     <Folder Include="typescript\client\Modules\Twitter\bootstrap\fonts\" />
     <Folder Include="typescript\client\Modules\Twitter\bootstrap\js\" />
     <Folder Include="typescript\client\Modules\xregexp\" />
+    <Folder Include="TypeScript\System\" />
     <Folder Include="TypeScript\routes\" />
     <Folder Include="TypeScript\Core\" />
     <Folder Include="TypeScript\Core\System\" />

@@ -2,7 +2,7 @@
 import { IGraphNode, GraphNode } from "./Platform.Graph";
 import { Diagnostics } from "./Diagnostics";
 import { HTMLReaderModes, HTMLReader } from "./Markup";
-import { DreamSpace as DS, ITypeInfo } from "../Globals";
+import { DreamSpace as DS, ITypeInfo } from "../DreamSpace";
 import { Exception } from "./Exception";
 import { Utilities } from "../Utilities";
 import { translateModuleTypeName } from "../Scripts";

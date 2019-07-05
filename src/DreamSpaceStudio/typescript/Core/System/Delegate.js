@@ -10,7 +10,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var Delegate_1;
-const Globals_1 = require("../Globals");
+const DreamSpace_1 = require("../DreamSpace");
 const Factories_1 = require("../Factories");
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
 const Exception_1 = require("./Exception");
@@ -62,7 +62,7 @@ class DelegateFactory extends Factories_1.Factory(PrimitiveTypes_1.Object) {
 exports.Delegate = DelegateFactory;
 let Delegate = Delegate_1 = class Delegate extends PrimitiveTypes_1.Object {
     //? static readonly $Type = $Delegate;
-    [Globals_1.DreamSpace.constructor](factory) {
+    [DreamSpace_1.DreamSpace.constructor](factory) {
         /** Generates "case" statements for function templates.  The function template is converted into a string, the resulting cases get inserted,
           * and the compiled result is returned.  This hard-codes the logic for greatest speed, and if more parameters are need, can easily be expanded.
         */
@@ -72,7 +72,7 @@ let Delegate = Delegate_1 = class Delegate extends PrimitiveTypes_1.Object {
             var cases = "", argtext = "";
             for (var i = argsIndexStart, n = argsIndexStart + caseCountMax; i < n; ++i)
                 cases += "case " + (1 + i) + ": return " + funcName + "(" + contextStr + (argtext += argsStr + "[" + i + "], ") + "this);\r\n";
-            return Globals_1.DreamSpace.safeEval("(" + ftext.replace(matchRegex, cases) + ")");
+            return DreamSpace_1.DreamSpace.safeEval("(" + ftext.replace(matchRegex, cases) + ")");
         }
         // TODO: Look into using the "...spread" operator for supported browsers, based on support: https://goo.gl/a5tvW1
         factory.fastApply = makeCases(0, 20, function (func, context, args) {

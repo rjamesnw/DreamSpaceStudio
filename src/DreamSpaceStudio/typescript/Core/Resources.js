@@ -1,7 +1,7 @@
 "use strict";
 // ========================================================================================================================================
 Object.defineProperty(exports, "__esModule", { value: true });
-const Globals_1 = require("./Globals");
+const DreamSpace_1 = require("./DreamSpace");
 /** The most common mime types.  You can easily extend this enum with custom types, or force-cast strings to this type also. */
 /* NOTE: The enums entries MUST be prefixed with '<any>' in order for this mapping to work with 'ResourceExtensions' as well implicitly. */
 var ResourceTypes;
@@ -125,8 +125,8 @@ var RequestStatuses;
  * Returns the base path based on the resource type.
  */
 function basePathFromResourceType(resourceType) {
-    return (resourceType == ResourceTypes.Application_Script || resourceType == ResourceTypes.Application_ECMAScript) ? Globals_1.DreamSpace.baseScriptsURL :
-        resourceType == ResourceTypes.Text_CSS ? Globals_1.DreamSpace.baseCSSURL : Globals_1.DreamSpace.baseURL;
+    return (resourceType == ResourceTypes.Application_Script || resourceType == ResourceTypes.Application_ECMAScript) ? DreamSpace_1.DreamSpace.baseScriptsURL :
+        resourceType == ResourceTypes.Text_CSS ? DreamSpace_1.DreamSpace.baseCSSURL : DreamSpace_1.DreamSpace.baseURL;
 }
 exports.basePathFromResourceType = basePathFromResourceType;
 // ========================================================================================================================================

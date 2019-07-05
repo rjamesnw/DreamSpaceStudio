@@ -1,4 +1,4 @@
-define(["require", "exports", "./Factories", "./Globals", "./Types", "./AppDomain", "./System/Browser", "./Utilities", "./System/System"], function (require, exports, Factories_1, Globals_1, Types_1, AppDomain_1, Browser_1, Utilities_1, System_1) {
+define(["require", "exports", "./DreamSpace", "./Utilities", "./Factories", "./AppDomain", "./System/Browser", "./System/System"], function (require, exports, DreamSpace_1, Utilities_1, Factories_1, AppDomain_1, Browser_1, System_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var ObjectFactory_1, String_1, Array_1;
@@ -9,7 +9,7 @@ define(["require", "exports", "./Factories", "./Globals", "./Types", "./AppDomai
     // Thing that gets passed a function and makes a decorator:
     // =======================================================================================================================
     /** The base type for many DreamSpace classes. */
-    let ObjectFactory = ObjectFactory_1 = class ObjectFactory extends Globals_1.DreamSpace.global.Object {
+    let ObjectFactory = ObjectFactory_1 = class ObjectFactory extends DreamSpace_1.DreamSpace.global.Object {
         /**
         * Create a new basic object type.
         * @param value If specified, the value will be wrapped in the created object.
@@ -84,7 +84,7 @@ define(["require", "exports", "./Factories", "./Globals", "./Types", "./AppDomai
          */
         $__reset() {
             // ... do a dispose and complete wipe ...
-            if (this.dispose !== Globals_1.DreamSpace.noop)
+            if (this.dispose !== DreamSpace_1.DreamSpace.noop)
                 System_1.dispose(this, false); // 'false' also keeps the app domain (see 'dispose()' below), and only removes it from the "active" list.
             //??if (!this.constructor.new)
             //    throw Exception.error("{object}.new", "You need to register the class/type first: see 'AppDomain.registerClass()'.", this);
@@ -105,13 +105,13 @@ define(["require", "exports", "./Factories", "./Globals", "./Types", "./AppDomai
         * This helps to speed up future calls.
         */
         static getTypeName(object, cacheTypeName = true) {
-            this.getTypeName = Types_1.getTypeName;
-            return Types_1.getTypeName(object, cacheTypeName);
+            this.getTypeName = Utilities_1.getTypeName;
+            return Utilities_1.getTypeName(object, cacheTypeName);
         }
         /** Returns true if the given object is empty. */
         static isEmpty(obj) {
-            this.isEmpty = Globals_1.DreamSpace.isEmpty; // (make future calls use the root namespace function that already exists)
-            return Globals_1.DreamSpace.isEmpty(obj);
+            this.isEmpty = DreamSpace_1.DreamSpace.isEmpty; // (make future calls use the root namespace function that already exists)
+            return DreamSpace_1.DreamSpace.isEmpty(obj);
         }
         // -------------------------------------------------------------------------------------------------------------------
         /**
@@ -128,59 +128,6 @@ define(["require", "exports", "./Factories", "./Globals", "./Types", "./AppDomai
         Factories_1.factory(this)
     ], ObjectFactory);
     exports.Object = ObjectFactory;
-    /**
-     * Creates a 'Disposable' type from another base type. This is primarily used to extend primitive types for use as base types to DreamSpace
-     * primitives.  This is because Array and String types cannot inherit from the custom 'Object' type AND be instances of the respective primary types.
-     * Note: These types are NOT instances of 'DreamSpace.Disposable', since they must have prototype chains that link to other base types.
-     * @param {TBaseClass} baseClass The base class to inherit from.
-     * @param {boolean} isPrimitiveOrHostBase Set this to true when inheriting from primitive types. This is normally auto-detected, but can be forced in cases
-     * where 'new.target' (ES6) prevents proper inheritance from host system base types that are not primitive types.
-     * This is only valid if compiling your .ts source for ES5 while also enabling support for ES6 environments.
-     * If you compile your .ts source for ES6 then the 'class' syntax will be used and this value has no affect.
-     */
-    //? * Note 2: 'new' and 'init' functions are NOT implemented. To implement proper defaults, call 'Types.makeFactory()'.
-    function makeDisposable(baseClass, isPrimitiveOrHostBase) {
-        if (!baseClass) {
-            baseClass = Globals_1.DreamSpace.global.Object;
-            isPrimitiveOrHostBase = true;
-        }
-        else if (typeof isPrimitiveOrHostBase == 'undefined')
-            isPrimitiveOrHostBase = Types_1.isPrimitiveType(baseClass);
-        var cls = class Disposable extends baseClass {
-            ///**
-            //* Create a new basic object type.
-            //* @param value If specified, the value will be wrapped in the created object.
-            //* @param makeValuePrivate If true, the value will not be exposed, making the value immutable. Default is false.
-            //*/
-            //static 'new': (value?: any, makeValuePrivate?: boolean) => IObject;
-            ///** This is called internally to initialize a blank instance of the underlying type. Users should call the 'new()'
-            //* constructor function to get new instances, and 'dispose()' to release them when done.
-            //*/
-            //static init: (o: IObject, isnew: boolean, value?: any, makeValuePrivate?: boolean) => void;
-            /**
-            * Don't create objects using the 'new' operator. Use '{NameSpaces...ClassType}.new()' static methods instead.
-            */
-            constructor(...args) {
-                if (!Globals_1.DreamSpace.ES6Targeted && isPrimitiveOrHostBase)
-                    eval("var _super = function() { return null; };"); // (ES6 fix for extending built-in types [calling constructor not supported prior] when compiling for ES5; more details on it here: https://github.com/Microsoft/TypeScript/wiki/FAQ#why-doesnt-extending-built-ins-like-error-array-and-map-work)
-                super(...args);
-            }
-            /**
-            * Releases the object back into the object pool. This is the default implementation which simply calls 'Types.dispose(this, release)'.
-            * If overriding, make sure to call 'super.dispose()' or 'Types.dispose()' to complete the disposal process.
-            * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
-            *                          false to request that child objects remain connected after disposal (not released). This
-            *                          can allow quick initialization of a group of objects, instead of having to pull each one
-            *                          from the object pool each time.
-            */
-            dispose(release) { }
-        };
-        for (var p in Object.prototype)
-            if (Object.prototype.hasOwnProperty(p))
-                cls.prototype[p] = Object.prototype[p]; // (make these functions both the same function reference by default)
-        return cls;
-    }
-    exports.makeDisposable = makeDisposable;
     // =======================================================================================================================
     /** Copies over prototype properties from the $Object type to other base primitive types. */
     function _addObjectPrototypeProperties(type) {
@@ -190,10 +137,11 @@ define(["require", "exports", "./Factories", "./Globals", "./Types", "./AppDomai
                     type.prototype[p] = Object.prototype[p];
         return type;
     }
-    eval("var PrimitiveString = DS.global.String;");
+    class PrimitiveString extends DreamSpace_1.DreamSpace.global.String {
+    }
     /* Note: This is a DreamSpace system string object, and not the native JavaScript object. */
     /** Allows manipulation and formatting of text strings, including the determination and location of substrings within strings. */
-    let String = String_1 = class String extends Factories_1.Factory(Factories_1.makeFactory(makeDisposable(PrimitiveString))) {
+    let String = String_1 = class String extends Factories_1.Factory(Factories_1.makeFactory(DreamSpace_1.makeDisposable(PrimitiveString))) {
         /**
             * Reinitializes a disposed Delegate instance.
             * @param this The Delegate instance to initialize, or re-initialize.
@@ -202,7 +150,7 @@ define(["require", "exports", "./Factories", "./Globals", "./Types", "./AppDomai
             * @param func The function that will be called for the resulting delegate object.
             */
         static init(o, isnew, value) {
-            o.$__value = Globals_1.DreamSpace.global.String(value);
+            o.$__value = DreamSpace_1.DreamSpace.global.String(value);
             //??System.String.prototype.constructor.apply(this, arguments);
             // (IE browsers older than v9 do not populate the string object with the string characters)
             //if (Browser.type == Browser.BrowserTypes.IE && Browser.version <= 8)
@@ -258,8 +206,8 @@ define(["require", "exports", "./Factories", "./Globals", "./Types", "./AppDomai
                 llen = remainder;
             else if (rchar)
                 rlen = remainder;
-            lpad = Globals_1.DreamSpace.global.Array(llen).join(lchar); // (https://stackoverflow.com/a/24398129/1236397)
-            rpad = Globals_1.DreamSpace.global.Array(rlen).join(rchar);
+            lpad = DreamSpace_1.DreamSpace.global.Array(llen).join(lchar); // (https://stackoverflow.com/a/24398129/1236397)
+            rpad = DreamSpace_1.DreamSpace.global.Array(rlen).join(rchar);
             return lpad + s + rpad;
         }
         /** Appends the suffix string to the end of the source string, optionally using a delimiter if the source is not empty.
@@ -344,21 +292,21 @@ define(["require", "exports", "./Factories", "./Globals", "./Types", "./AppDomai
      * manually setting an array item by index past the end will not modify the length property (this may changed as
      * new features are introduce in future EcmaScript versions [such as 'Object.observe()' in ES7]).
      */
-    class ArrayFactory extends Factories_1.Factory(Factories_1.makeFactory(Globals_1.DreamSpace.global.Array)) {
+    class ArrayFactory extends Factories_1.Factory(Factories_1.makeFactory(DreamSpace_1.DreamSpace.global.Array)) {
     }
     exports.Array = ArrayFactory;
-    let Array = Array_1 = class Array extends makeDisposable(Globals_1.DreamSpace.global.Array) {
+    let Array = Array_1 = class Array extends DreamSpace_1.makeDisposable(DreamSpace_1.DreamSpace.global.Array) {
         /** Clears the array and returns it. */
         clear() { this.length = 0; return this; }
         /** The static factory constructor for this type. */
-        static [Globals_1.DreamSpace.constructor](f) {
-            if (!Globals_1.DreamSpace.ES6) // (if 'class' syntax is not supported then the 'length' property will not behave like an normal array so try to polyfill this somewhat)
-                Globals_1.DreamSpace.global.Object.defineProperty(Array_1.prototype, "length", {
+        static [DreamSpace_1.DreamSpace.constructor](f) {
+            if (!DreamSpace_1.DreamSpace.ES6) // (if 'class' syntax is not supported then the 'length' property will not behave like an normal array so try to polyfill this somewhat)
+                DreamSpace_1.DreamSpace.global.Object.defineProperty(Array_1.prototype, "length", {
                     get: function () { return this._length; },
-                    set: function (v) { this._length = +v || 0; Globals_1.DreamSpace.global.Array.prototype.splice(this._length); }
+                    set: function (v) { this._length = +v || 0; DreamSpace_1.DreamSpace.global.Array.prototype.splice(this._length); }
                 });
             f.init = (o, isnew, ...items) => {
-                if (!Globals_1.DreamSpace.ES6)
+                if (!DreamSpace_1.DreamSpace.ES6)
                     o._length = 0;
                 try {
                     o.push.apply(o, items); // (note: argument limit using this method: http://stackoverflow.com/a/9650855/1236397)

@@ -2,7 +2,7 @@
 // Text manipulation utility functions.
 // ###########################################################################################################################
 
-import { DreamSpace as DS } from "../Globals";
+import { DreamSpace as DS } from "../DreamSpace";
 import { Exception } from "./Exception";
 import { String } from "../PrimitiveTypes";
 

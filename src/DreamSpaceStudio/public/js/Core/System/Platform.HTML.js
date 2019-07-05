@@ -1,4 +1,4 @@
-define(["require", "exports", "../Factories", "./Platform.Graph", "./Diagnostics", "./Markup", "../Globals", "./Exception", "../Utilities", "../Scripts", "./Platform", "./Platform.Windows"], function (require, exports, Factories_1, Platform_Graph_1, Diagnostics_1, Markup_1, Globals_1, Exception_1, Utilities_1, Scripts_1, Platform_1, Platform_Windows_1) {
+define(["require", "exports", "../Factories", "./Platform.Graph", "./Diagnostics", "./Markup", "../DreamSpace", "./Exception", "../Utilities", "../Scripts", "./Platform", "./Platform.Windows"], function (require, exports, Factories_1, Platform_Graph_1, Diagnostics_1, Markup_1, DreamSpace_1, Exception_1, Utilities_1, Scripts_1, Platform_1, Platform_Windows_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var HTMLElement_1, PlainText_1, Phrase_1, Header_1;
@@ -20,7 +20,7 @@ define(["require", "exports", "../Factories", "./Platform.Graph", "./Diagnostics
             this._target = this._iframe = document.createElement("iframe");
             this._iframe.style.display = "none";
             this._iframe.src = this._url;
-            Globals_1.DreamSpace.global.document.body.appendChild(this._iframe);
+            DreamSpace_1.DreamSpace.global.document.body.appendChild(this._iframe);
             this._global = this._iframe.contentWindow;
         }
         _setupWorker() {
@@ -33,15 +33,15 @@ define(["require", "exports", "../Factories", "./Platform.Graph", "./Diagnostics
         /** Load a resource (usually a script or page) into this context. */
         load(url) {
             var contextType = this._contextType;
-            switch (Globals_1.DreamSpace.Environment) {
-                case Globals_1.DreamSpace.Environments.Browser:
+            switch (DreamSpace_1.DreamSpace.Environment) {
+                case DreamSpace_1.DreamSpace.Environments.Browser:
                     switch (contextType) {
                         case Platform_1.Contexts.Secure:
                         case Platform_1.Contexts.Unsecure:
                             this._setupIFrame();
-                            if (Globals_1.DreamSpace.Environment == Globals_1.DreamSpace.Environments.Browser) {
+                            if (DreamSpace_1.DreamSpace.Environment == DreamSpace_1.DreamSpace.Environments.Browser) {
                             }
-                            else if (Globals_1.DreamSpace.Environment == Globals_1.DreamSpace.Environments.Browser) {
+                            else if (DreamSpace_1.DreamSpace.Environment == DreamSpace_1.DreamSpace.Environments.Browser) {
                             }
                             else {
                                 this._target = this._worker = new Worker("DreamSpace.js");
@@ -49,21 +49,21 @@ define(["require", "exports", "../Factories", "./Platform.Graph", "./Diagnostics
                             break;
                         case Platform_1.Contexts.SecureWindow:
                         case Platform_1.Contexts.UnsecureWindow:
-                            if (Globals_1.DreamSpace.Environment == Globals_1.DreamSpace.Environments.Browser) {
+                            if (DreamSpace_1.DreamSpace.Environment == DreamSpace_1.DreamSpace.Environments.Browser) {
                                 this._target = this._iframe = document.createElement("iframe");
                                 this._iframe.style.display = "none";
                                 this._iframe.src = "index.html";
-                                Globals_1.DreamSpace.global.document.body.appendChild(this._iframe);
+                                DreamSpace_1.DreamSpace.global.document.body.appendChild(this._iframe);
                                 this._global = this._iframe.contentWindow;
                             }
-                            else if (Globals_1.DreamSpace.Environment == Globals_1.DreamSpace.Environments.Browser) {
+                            else if (DreamSpace_1.DreamSpace.Environment == DreamSpace_1.DreamSpace.Environments.Browser) {
                             }
                             else {
                                 this._target = this._worker = new Worker("DreamSpace.js");
                             }
                             break;
                         case Platform_1.Contexts.Local:
-                            this._target = this._global = Globals_1.DreamSpace.global;
+                            this._target = this._global = DreamSpace_1.DreamSpace.global;
                             break;
                     }
                     break;

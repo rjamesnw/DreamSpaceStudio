@@ -1,4 +1,4 @@
-define(["require", "exports", "./Types", "./Logging", "./Utilities", "./PrimitiveTypes", "./AppDomain", "./System/Delegate", "./Globals"], function (require, exports, Types_1, Logging_1, Utilities_1, PrimitiveTypes_1, AppDomain_1, Delegate_1, Globals_1) {
+define(["require", "exports", "./DreamSpace", "./Utilities", "./Types", "./Logging", "./PrimitiveTypes", "./AppDomain", "./System/Delegate"], function (require, exports, DreamSpace_1, Utilities_1, Types_1, Logging_1, PrimitiveTypes_1, AppDomain_1, Delegate_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     /**
@@ -9,8 +9,16 @@ define(["require", "exports", "./Types", "./Logging", "./Utilities", "./Primitiv
     * @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
     * applied (using the IFunctionInfo interface).
     */
-    function factory(moduleSpace, addMemberTypeInfo = true) {
-        return function (factory) { Types.__registerFactoryType(factory, factory, moduleSpace, addMemberTypeInfo); return factory; };
+    function factory(moduleSpace, modulePath = "", typePath = "", addMemberTypeInfo = true) {
+        return function (factory) {
+            debugger;
+            if (!modulePath)
+                if (typeof __filename != 'undefined')
+                    modulePath = __filename;
+            if (!typePath)
+                typePath = Utilities_1.getFullTypeName(factory);
+            return Types.__registerFactoryType(factory, factory, moduleSpace, modulePath, typePath, addMemberTypeInfo);
+        };
     }
     exports.factory = factory;
     /**
@@ -22,10 +30,12 @@ define(["require", "exports", "./Types", "./Logging", "./Utilities", "./Primitiv
     * @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
     * applied (using the IFunctionInfo interface).
     */
-    function usingFactory(factory, moduleSpace, addMemberTypeInfo = true) {
+    function usingFactory(factory, moduleSpace, modulePath = "", typePath = "", addMemberTypeInfo = true) {
         if (!factory.$__type)
-            throw "usingFactory(factory, ...) error: 'factory' (" + Types_1.getTypeName(factory) + ") is not a valid factory, or you forgot to use the '@factory()' decorator to register it.";
-        return function (cls) { return Types.__registerFactoryType(cls, factory, moduleSpace, addMemberTypeInfo); };
+            throw "usingFactory(factory, ...) error: 'factory' (" + Utilities_1.getTypeName(factory) + ") is not a valid factory, or you forgot to use the '@factory()' decorator to register it.";
+        return function (cls) {
+            return Types.__registerFactoryType(cls, factory, moduleSpace, modulePath, typePath, addMemberTypeInfo);
+        };
     }
     exports.usingFactory = usingFactory;
     /** Converts a non-factory object type into a factory type. Any missing 'new' and 'init' functions are populated with defaults.
@@ -45,6 +55,7 @@ define(["require", "exports", "./Types", "./Logging", "./Utilities", "./Primitiv
                 if (newO.hasOwnProperty(p))
                     o[p] = newO[p];
         };
+        obj.$__type = obj;
         return obj;
     }
     exports.makeFactory = makeFactory;
@@ -55,7 +66,7 @@ define(["require", "exports", "./Types", "./Logging", "./Utilities", "./Primitiv
     */
     function Factory(baseFactoryType) {
         if (!baseFactoryType.$__type)
-            throw "'extends Factory(base)' error: 'base' (" + Types_1.getTypeName(baseFactoryType) + ") is not a factory, or you forgot to use the '@factory()' decorator to register it."
+            throw "'extends Factory(base)' error: 'base' (" + Utilities_1.getTypeName(baseFactoryType) + ") is not a factory, or you forgot to use the '@factory()' decorator to register it."
                 + " If the base is a generic-type factory, make sure to use '@usingFactory()' on the generic instance class associated with the factory.";
         if (typeof baseFactoryType != 'function')
             baseFactoryType = PrimitiveTypes_1.Object;
@@ -109,7 +120,7 @@ define(["require", "exports", "./Types", "./Logging", "./Utilities", "./Primitiv
             var classType = factory.$__type;
             //? var classTypeInfo = <ITypeInfo>classType; // TODO: Follow up: cannot do 'IType & ITypeInfo' and still retain the 'new' signature.
             if (typeof classType != 'function')
-                Logging_1.error("__new(): Missing class type on class factory.", "The factory '" + Types_1.getFullTypeName(factory) + "' is missing the internal '$__type' class reference.", this);
+                Logging_1.error("__new(): Missing class type on class factory.", "The factory '" + Utilities_1.getFullTypeName(factory) + "' is missing the internal '$__type' class reference.", this);
             var appDomain = bridge.$__appDomain || AppDomain_1.AppDomain && AppDomain_1.AppDomain.default || void 0;
             var instance;
             var isNew = false;
@@ -124,7 +135,7 @@ define(["require", "exports", "./Types", "./Logging", "./Utilities", "./Primitiv
                 isNew = true;
             }
             // ... initialize DreamSpace and app domain references ...
-            instance.$__ds = Globals_1.DreamSpace;
+            instance.$__ds = DreamSpace_1.DreamSpace;
             instance.$__id = Types_1.Types.getNextObjectId();
             if (Types_1.Types.autoTrackInstances && (!appDomain || appDomain.autoTrackInstances === void 0 || appDomain.autoTrackInstances))
                 instance.$__globalId = Utilities_1.Utilities.createGUID(false);
@@ -136,7 +147,7 @@ define(["require", "exports", "./Types", "./Logging", "./Utilities", "./Primitiv
                 instance.$__disposed = false; // (only reset if exists)
             // ... insert [instance, isNew] without having to create a new array ...
             // TODO: Clean up the following when ...rest is more widely supported. Also needs testing to see which is actually more efficient when compiled for ES6.
-            if (Globals_1.DreamSpace.ES6Targeted) {
+            if (DreamSpace_1.DreamSpace.ES6Targeted) {
                 if (typeof this.init == 'function')
                     if (Delegate_1.Delegate)
                         Delegate_1.Delegate.fastCall(this.init, this, instance, isNew, ...arguments);
@@ -170,46 +181,48 @@ define(["require", "exports", "./Types", "./Logging", "./Utilities", "./Primitiv
          * @param {boolean} addMemberTypeInfo If true (default), all member functions on the type (function object) will have type information
          * applied (using the IFunctionInfo interface).
         */
-        function __registerFactoryType(instanceType, factoryType, moduleSpace, addMemberTypeInfo = true) {
-            if (!factory.$__type)
-                throw "__registerFactoryType() error: 'factoryType' (" + Types_1.getTypeName(factoryType) + ") is not a valid factory, or you forgot to use the '@factory()' decorator to register it."
+        function __registerFactoryType(instanceType, factoryType, moduleSpace, modulePath, typePath, addMemberTypeInfo = true) {
+            if (instanceType != factoryType && !factoryType.$__type)
+                throw "__registerFactoryType() error: 'factoryType' (" + Utilities_1.getTypeName(factoryType) + ") is not a valid base factory, or you forgot to use the '@factory()' decorator to register it."
                     + " If the base is a generic-type factory, make sure to use '@usingFactory()' on the generic instance class associated with the factory.";
             var _instanceType = instanceType;
             var factoryTypeInfo = factoryType;
             if (typeof factoryType !== 'function')
                 Logging_1.error("__registerFactoryType()", "The 'factoryType' argument is not a valid constructor function.", factoryType); // TODO: See if this can also be detected in ES2015 (ES6) using the specialized functions.
             if (typeof moduleSpace != 'object')
-                Logging_1.error("__registerFactoryType()", "No module space reference was specified for factory type '" + Types_1.getFullTypeName(factoryType) + "', which is required. If the type is in the global scope, then use 'DreamSpace.global' or other global reference.", factoryType);
+                Logging_1.error("__registerFactoryType()", "No module space reference was specified for factory type '" + Utilities_1.getFullTypeName(factoryType) + "', which is required. If the type is in the global scope, then use 'DreamSpace.global' or other global reference.", factoryType);
             //x if (!(<ITypeInfo>moduleSpace).$__fullname)
             //x     error("__registerFactoryType()", "The specified namespace given for factory type '" + getFullTypeName(factoryType) + "' is not registered. Please call 'namespace()' to register it first (before the factory is defined).", factoryType); // TODO: See if this can also be detected in ES2015 (ES6) using the specialized functions.
             if (typeof _instanceType == 'undefined')
-                Logging_1.error("__registerFactoryType()", "Factory instance type '" + Types_1.getFullTypeName(factoryType) + ".$__type' is not defined.", factoryType); // TODO: See if this can also be detected in ES2015 (ES6) using the specialized functions.
+                Logging_1.error("__registerFactoryType()", "Factory instance type '" + Utilities_1.getFullTypeName(factoryType) + ".$__type' is not defined.", factoryType); // TODO: See if this can also be detected in ES2015 (ES6) using the specialized functions.
             if (typeof _instanceType != 'function')
-                Logging_1.error("__registerFactoryType()", "'" + Types_1.getFullTypeName(factoryType) + ".$__type' is not a valid constructor function.", factoryType); // TODO: See if this can also be detected in ES2015 (ES6) using the specialized functions.
+                Logging_1.error("__registerFactoryType()", "'" + Utilities_1.getFullTypeName(factoryType) + ".$__type' is not a valid constructor function.", factoryType); // TODO: See if this can also be detected in ES2015 (ES6) using the specialized functions.
             // ... register type information first BEFORER we call any static constructor (so it is available to the user)s ...
             // TODO: (NOTE: this call takes the instance type, which may also be the factory type; if not a factory, then it should have a reference to one)
             var registeredFactory = Types_1.Types.__registerType(instanceType, moduleSpace, addMemberTypeInfo);
             factoryTypeInfo.$__type = _instanceType; // (the class type AND factory type should both have a reference to each other)
+            factoryTypeInfo.$_modulePath = modulePath;
+            factoryTypeInfo.$__fullname = typePath;
             _instanceType.$__factoryType = factoryTypeInfo; // (a properly registered class that supports the factory pattern should have a reference to its underlying factory type)
             var registeredFactoryType = Types_1.Types.__registerType(_instanceType, factoryType, addMemberTypeInfo);
             //x .. finally, update the class static properties also with the values set on the factory from the previous line (to be thorough) ...
             //x classType.$__fullname = factoryTypeInfo.$__fullname + "." + classType.$__name; // (the '$__fullname' property on a class should allow absolute reference back to it [note: '__proto__' could work here also due to static inheritance])
             // ... if the user supplied a static constructor then call it now before we do anything more ...
             // (note: the static constructor may be where 'new' and 'init' factory functions are provided, so we MUST call them first before we hook into anything)
-            if (typeof factoryTypeInfo[Globals_1.DreamSpace.constructor] == 'function')
-                factoryTypeInfo[Globals_1.DreamSpace.constructor].call(_instanceType);
-            if (typeof _instanceType[Globals_1.DreamSpace.constructor] == 'function')
-                _instanceType[Globals_1.DreamSpace.constructor](factoryType);
+            if (typeof factoryTypeInfo[DreamSpace_1.DreamSpace.constructor] == 'function')
+                factoryTypeInfo[DreamSpace_1.DreamSpace.constructor].call(_instanceType);
+            if (typeof _instanceType[DreamSpace_1.DreamSpace.constructor] == 'function')
+                _instanceType[DreamSpace_1.DreamSpace.constructor](factoryType);
             // ... hook into the 'init' and 'new' factory methods ...
             // (note: if no 'init()' function is specified, just call the base by default)
             if (_instanceType.init)
-                Logging_1.error(Types_1.getFullTypeName(_instanceType), "You cannot create a static 'init' function directly on a class that implements the factory pattern (which could also create inheritance problems).");
+                Logging_1.error(Utilities_1.getFullTypeName(_instanceType), "You cannot create a static 'init' function directly on a class that implements the factory pattern (which could also create inheritance problems).");
             var originalInit = typeof factoryType.init == 'function' ? factoryType.init : null; // (take user defined, else set to null)
             factoryType.init = function _initProxy() {
                 this.$__initCalled = true; // (flag that THIS init function was called on THIS factory type)
                 originalInit && originalInit.apply(this, arguments);
                 if (this.$__baseFactoryType && !this.$__baseFactoryType.$__initCalled)
-                    Logging_1.error(Types_1.getFullTypeName(_instanceType) + ".init()", "You did not call 'this.super.init()' to complete the initialization chain.");
+                    Logging_1.error(Utilities_1.getFullTypeName(_instanceType) + ".init()", "You did not call 'this.super.init()' to complete the initialization chain.");
                 // TODO: Once parsing of function parameters are in place we can detect this, but for now require it)
                 factoryType.init = originalInit; // (everything is ok here, so bypass this check next time)
             };
@@ -228,7 +241,7 @@ define(["require", "exports", "./Types", "./Logging", "./Utilities", "./Primitiv
                         return factoryType.new.apply(factoryType, arguments);
                     }
                     else if (typeof result != 'object')
-                        Logging_1.error(Types_1.getFullTypeName(_instanceType) + ".new()", "An object instance was expected, but instead a value of type '" + (typeof result) + "' was received.");
+                        Logging_1.error(Utilities_1.getFullTypeName(_instanceType) + ".new()", "An object instance was expected, but instead a value of type '" + (typeof result) + "' was received.");
                     // (else the call returned a valid value, so next time, just default directly to the user supplied factory function)
                     factoryType.new = originalNew;
                     return result;
@@ -248,13 +261,13 @@ define(["require", "exports", "./Types", "./Logging", "./Utilities", "./Primitiv
             if (typeof object != 'object')
                 Logging_1.error(title, "The argument given is not an object.", source);
             if (!object.$__ds)
-                Logging_1.error(title, "The object instance '" + Types_1.getFullTypeName(object) + "' is not a DreamSpace created object.", source);
-            if (object.$__ds != Globals_1.DreamSpace)
-                Logging_1.error(title, "The object instance '" + Types_1.getFullTypeName(object) + "' was created in a different DreamSpace instance and cannot be disposed by this one.", source); // (if loaded as a module perhaps, where other instance may exist [just in case])
+                Logging_1.error(title, "The object instance '" + Utilities_1.getFullTypeName(object) + "' is not a DreamSpace created object.", source);
+            if (object.$__ds != DreamSpace_1.DreamSpace)
+                Logging_1.error(title, "The object instance '" + Utilities_1.getFullTypeName(object) + "' was created in a different DreamSpace instance and cannot be disposed by this one.", source); // (if loaded as a module perhaps, where other instance may exist [just in case])
             if (typeof object.dispose != 'function')
-                Logging_1.error(title, "The object instance '" + Types_1.getFullTypeName(object) + "' does not contain a 'dispose()' function.", source);
-            if (!Types_1.isDisposable(object))
-                Logging_1.error(title, "The object instance '" + Types_1.getFullTypeName(object) + "' is not disposable.", source);
+                Logging_1.error(title, "The object instance '" + Utilities_1.getFullTypeName(object) + "' does not contain a 'dispose()' function.", source);
+            if (!DreamSpace_1.isDisposable(object))
+                Logging_1.error(title, "The object instance '" + Utilities_1.getFullTypeName(object) + "' is not disposable.", source);
         }
         Types.__disposeValidate = __disposeValidate;
         /** Disposes a specific object in this AppDomain instance.
@@ -296,7 +309,7 @@ define(["require", "exports", "./Types", "./Logging", "./Utilities", "./Primitiv
         Types.dispose = dispose;
     })(Types = exports.Types || (exports.Types = {}));
     (function (Types) {
-        Globals_1.DreamSpace.global.Object.defineProperty(Types, "__disposedObjects", { configurable: false, writable: false, value: {} });
+        DreamSpace_1.DreamSpace.global.Object.defineProperty(Types, "__disposedObjects", { configurable: false, writable: false, value: {} });
     })(Types = exports.Types || (exports.Types = {}));
 });
 // ========================================================================================================================================

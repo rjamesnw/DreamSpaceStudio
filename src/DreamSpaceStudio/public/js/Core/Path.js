@@ -1,5 +1,5 @@
 /** @module Path The path module contains functions for working with URI based paths. */
-define(["require", "exports", "./Globals", "./Utilities", "./Uri", "./Query", "./ResourceRequest", "./System/IO"], function (require, exports, Globals_1, Utilities_1, Uri_1, Query_1, ResourceRequest_1, IO_1) {
+define(["require", "exports", "./DreamSpace", "./Utilities", "./Uri", "./Query", "./ResourceRequest", "./System/IO"], function (require, exports, DreamSpace_1, Utilities_1, Uri_1, Query_1, ResourceRequest_1, IO_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // ==========================================================================================================================
@@ -56,7 +56,7 @@ define(["require", "exports", "./Globals", "./Utilities", "./Uri", "./Query", ".
            * If not specified, this is 'location.href' by default.
            * @param {string} baseURL An optional path that specifies the site's root URL.  By default this is 'DreamSpace.baseURL'.
            */
-        function resolve(path, currentResourceURL = Globals_1.DreamSpace.global.location.href, baseURL = Globals_1.DreamSpace.baseURL) {
+        function resolve(path, currentResourceURL = DreamSpace_1.DreamSpace.global.location.href, baseURL = DreamSpace_1.DreamSpace.baseURL) {
             baseURL = Utilities_1.Utilities.toString(baseURL).trim();
             currentResourceURL = Utilities_1.Utilities.toString(currentResourceURL).trim();
             if (currentResourceURL)
@@ -120,7 +120,7 @@ define(["require", "exports", "./Globals", "./Utilities", "./Uri", "./Query", ".
             query.dispose();
             if (IO_1.IO.wait)
                 IO_1.IO.wait();
-            setTimeout(() => { Globals_1.DreamSpace.global.location.href = url; }, 1); // (let events finish before setting)
+            setTimeout(() => { DreamSpace_1.DreamSpace.global.location.href = url; }, 1); // (let events finish before setting)
         }
         Path.setLocation = setLocation;
         // ==========================================================================================================================
@@ -131,19 +131,19 @@ define(["require", "exports", "./Globals", "./Utilities", "./Uri", "./Query", ".
           * @param controller A controller name (defaults to "home" if not specified)
           */
         function isView(action, controller = "home") {
-            return new RegExp("^\/" + controller + "\/" + action + "(?:[\/?&#])?", "gi").test(Globals_1.DreamSpace.global.location.pathname);
+            return new RegExp("^\/" + controller + "\/" + action + "(?:[\/?&#])?", "gi").test(DreamSpace_1.DreamSpace.global.location.pathname);
         }
         Path.isView = isView;
         // ==========================================================================================================================
         /** Subtracts the current site's base URL from the given URL and returns 'serverWebRoot' with the remained appended. */
         function map(url) {
-            if (url.substr(0, Globals_1.DreamSpace.baseURL.length).toLocaleLowerCase() == Globals_1.DreamSpace.baseURL.toLocaleLowerCase()) {
+            if (url.substr(0, DreamSpace_1.DreamSpace.baseURL.length).toLocaleLowerCase() == DreamSpace_1.DreamSpace.baseURL.toLocaleLowerCase()) {
                 // TODO: Make this more robust by parsing and checked individual URL parts properly (like default vs explicit ports in the URL).
-                var subpath = url.substr(Globals_1.DreamSpace.baseURL.length);
-                return combine(Globals_1.DreamSpace.global.serverWebRoot, subpath);
+                var subpath = url.substr(DreamSpace_1.DreamSpace.baseURL.length);
+                return combine(DreamSpace_1.DreamSpace.global.serverWebRoot, subpath);
             }
             else
-                return parse(url).toString(Globals_1.DreamSpace.global.serverWebRoot); // (the origin is not the same, so just assume everything after the URL's origin is the path)
+                return parse(url).toString(DreamSpace_1.DreamSpace.global.serverWebRoot); // (the origin is not the same, so just assume everything after the URL's origin is the path)
         }
         Path.map = map;
     })(Path || (Path = {}));

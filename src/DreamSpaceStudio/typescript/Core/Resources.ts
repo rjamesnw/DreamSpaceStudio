@@ -1,6 +1,6 @@
 // ========================================================================================================================================
 
-import { DreamSpace as DS } from "./Globals";
+import { DreamSpace as DS } from "./DreamSpace";
 
 /** The most common mime types.  You can easily extend this enum with custom types, or force-cast strings to this type also. */
 /* NOTE: The enums entries MUST be prefixed with '<any>' in order for this mapping to work with 'ResourceExtensions' as well implicitly. */

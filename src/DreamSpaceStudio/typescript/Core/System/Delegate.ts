@@ -2,10 +2,10 @@
 // Callback Delegates (serializable - closures should not be used)
 // ###########################################################################################################################
 
-import { DreamSpace as DS } from "../Globals";
+import { DreamSpace as DS } from "../DreamSpace";
 import { Factory, usingFactory } from "../Factories";
 import { Object, IObject } from "../PrimitiveTypes";
-import { INamespaceInfo, IFunctionInfo } from "../Globals";
+import { INamespaceInfo, IFunctionInfo } from "../DreamSpace";
 import { Exception } from "./Exception";
 import { Browser } from "./Browser";
 import { SerializedData } from "./Serialization";

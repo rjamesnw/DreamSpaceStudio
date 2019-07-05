@@ -2,7 +2,7 @@
 // Application Windows
 // ###########################################################################################################################
 
-import { DreamSpace as DS } from "../Globals";
+import { DreamSpace as DS } from "../DreamSpace";
 import { Factory } from "../Factories";
 import { Utilities } from "../Utilities";
 import { Object } from "../PrimitiveTypes";

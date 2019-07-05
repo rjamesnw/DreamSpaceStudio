@@ -2,7 +2,7 @@
 // Types for event management.
 // ############################################################################################################################
 
-import { DreamSpace as DS } from "../Globals";
+import { DreamSpace as DS } from "../DreamSpace";
 import { IStaticProperty } from "./Properties";
 import { Factory } from "../Factories";
 import { GraphNode } from "./Platform.Graph";

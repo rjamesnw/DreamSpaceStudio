@@ -1,4 +1,9 @@
-﻿/** 
+﻿import { DreamSpace as DS, IDisposable, ITypeInfo, IFactory, IType, IFactoryTypeInfo, IClassInfo, NewDelegate, InitDelegate, FactoryBaseType, isDisposable } from "./DreamSpace";
+import { Utilities, getTypeName, getFullTypeName } from "./Utilities";
+
+declare var __filename: string;
+
+/**
 * Designates and registers a class as a factory class type (see also 'Types.__registerType()' for non-factory supported types).
 * Any static constructors defined will also be called at this point (use the 'DreamSpace.constructor' symbol to create static constructors if desired).
 * 
@@ -6,8 +11,16 @@
 * @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
 * applied (using the IFunctionInfo interface).
 */
-export function factory(moduleSpace: object, addMemberTypeInfo = true) {
-    return function (factory: IType & IFactory): any {  Types.__registerFactoryType(factory, factory, moduleSpace, addMemberTypeInfo); return factory; };
+export function factory(moduleSpace: object, modulePath = "", typePath = "", addMemberTypeInfo = true) {
+    return function (factory: IType & IFactory): any {
+        debugger;
+        if (!modulePath)
+            if (typeof __filename != 'undefined')
+                modulePath = __filename;
+        if (!typePath)
+            typePath = getFullTypeName(factory);
+        return Types.__registerFactoryType(factory, factory, moduleSpace, modulePath, typePath, addMemberTypeInfo);
+    };
 }
 
 /** 
@@ -19,11 +32,13 @@ export function factory(moduleSpace: object, addMemberTypeInfo = true) {
 * @param addMemberTypeInfo If true (default), all member functions on the underlying class type will have type information
 * applied (using the IFunctionInfo interface).
 */
-export function usingFactory<TFactory extends IFactory>(factory: TFactory, moduleSpace: object, addMemberTypeInfo = true) {
+export function usingFactory<TFactory extends IFactory>(factory: TFactory, moduleSpace: object, modulePath = "", typePath = "", addMemberTypeInfo = true) {
     if (!(<IFactoryTypeInfo><any>factory).$__type)
         throw "usingFactory(factory, ...) error: 'factory' (" + getTypeName(factory) + ") is not a valid factory, or you forgot to use the '@factory()' decorator to register it.";
 
-    return function (cls: IType): any { return <any>Types.__registerFactoryType(cls, factory, moduleSpace, addMemberTypeInfo); };
+    return function (cls: IType): any {
+        return Types.__registerFactoryType(cls, factory, moduleSpace, modulePath, typePath, addMemberTypeInfo);
+    };
 }
 
 /** Converts a non-factory object type into a factory type. Any missing 'new' and 'init' functions are populated with defaults.
@@ -42,6 +57,7 @@ export function makeFactory<T extends IType = ObjectConstructor>(obj: T, replace
             if (newO.hasOwnProperty(p))
                 o[p] = newO[p];
     };
+    (<IFactoryTypeInfo><any>obj).$__type = obj;
     return <any>obj;
 }
 
@@ -102,7 +118,7 @@ export function Factory<TBaseFactory extends IFactory & IType = typeof Object>(b
 // Factory Pattern Types and Functions
 // ############################################################################################################################################
 
-import { getFullTypeName, Types as TypesBase, getTypeName, isDisposable } from "./Types";
+import { Types as TypesBase } from "./Types";
 
 // ========================================================================================================================================
 // Here we extend the Types import to include extra 
@@ -206,10 +222,10 @@ export namespace Types {
      * applied (using the IFunctionInfo interface).
     */
     export function __registerFactoryType<TClass extends IType, TFactory extends IFactory>
-        (instanceType: TClass, factoryType: TFactory, moduleSpace: object, addMemberTypeInfo = true) {
+        (instanceType: TClass, factoryType: TFactory, moduleSpace: object, modulePath: string, typePath: string, addMemberTypeInfo = true) {
 
-        if (!(<IFactoryTypeInfo><any>factory).$__type)
-            throw "__registerFactoryType() error: 'factoryType' (" + getTypeName(factoryType) + ") is not a valid factory, or you forgot to use the '@factory()' decorator to register it."
+        if (<object>instanceType != <object>factoryType && !(<IFactoryTypeInfo><any>factoryType).$__type)
+            throw "__registerFactoryType() error: 'factoryType' (" + getTypeName(factoryType) + ") is not a valid base factory, or you forgot to use the '@factory()' decorator to register it."
             + " If the base is a generic-type factory, make sure to use '@usingFactory()' on the generic instance class associated with the factory.";
 
         var _instanceType = <IFactory<TClass> & IClassInfo & IType & Object><any>instanceType;
@@ -236,6 +252,8 @@ export namespace Types {
         var registeredFactory = TypesBase.__registerType(instanceType, moduleSpace, addMemberTypeInfo);
 
         factoryTypeInfo.$__type = _instanceType; // (the class type AND factory type should both have a reference to each other)
+        factoryTypeInfo.$_modulePath = modulePath;
+        factoryTypeInfo.$__fullname = typePath;
         _instanceType.$__factoryType = factoryTypeInfo; // (a properly registered class that supports the factory pattern should have a reference to its underlying factory type)
 
         var registeredFactoryType = TypesBase.__registerType(_instanceType, factoryType, addMemberTypeInfo);
@@ -367,11 +385,9 @@ export namespace Types {
 // ========================================================================================================================================
 
 import { error } from "./Logging";
-import { Utilities } from "./Utilities";
 import { Object } from "./PrimitiveTypes";
 import { IDomainObjectInfo, IADBridge, AppDomain } from "./AppDomain";
 import { Delegate } from "./System/Delegate";
-import { DreamSpace as DS, IDisposable, ITypeInfo, IFactory, IType, IFactoryTypeInfo, IClassInfo, NewDelegate, InitDelegate, FactoryBaseType } from "./Globals";
 
 export namespace Types {
     /** Holds all disposed objects that can be reused. */

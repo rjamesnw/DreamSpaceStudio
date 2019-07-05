@@ -1,9 +1,9 @@
-define(["require", "exports", "./Globals", "./System/Exception"], function (require, exports, Globals_1, Exception_1) {
+// ###########################################################################################################################
+// Application Windows
+// ###########################################################################################################################
+define(["require", "exports", "./DreamSpace"], function (require, exports, DreamSpace_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    // ###########################################################################################################################
-    // Application Windows
-    // ###########################################################################################################################
     /** One or more utility functions to ease development within DreamSpace environments. */
     class Utilities {
     }
@@ -110,9 +110,9 @@ define(["require", "exports", "./Globals", "./System/Exception"], function (requ
         */
         function dereferencePropertyPath(path, origin, unsafe = false) {
             if (unsafe)
-                return Globals_1.DreamSpace.safeEval('p0.' + path, origin); // (note: this is 'DreamSpace.eval()', not a direct call to the global 'eval()')
+                return DreamSpace_1.DreamSpace.safeEval('p0.' + path, origin); // (note: this is 'DreamSpace.eval()', not a direct call to the global 'eval()')
             if (origin === void 0 || origin === null)
-                origin = this !== Globals_1.DreamSpace.global ? this : Globals_1.DreamSpace.global;
+                origin = this !== DreamSpace_1.DreamSpace.global ? this : DreamSpace_1.DreamSpace.global;
             if (typeof path !== 'string')
                 path = '' + path;
             var o = origin, c = '', pc, i = 0, n = path.length, name = '';
@@ -120,8 +120,12 @@ define(["require", "exports", "./Globals", "./System/Exception"], function (requ
                 ((c = path[i++]) == '.' || c == '[' || c == ']' || c == void 0)
                     ? (name ? (o = o[name], name = '') : (pc == '.' || pc == '[' || pc == ']' && c == ']' ? i = n + 2 : void 0), pc = c)
                     : name += c;
-            if (i == n + 2)
-                throw Exception_1.Exception.from("Invalid path: " + path, origin);
+            if (i == n + 2) {
+                var msg = new Error("Invalid path: " + path);
+                msg.__dereference_origin = origin;
+                (console.error || console.log)(msg, origin);
+                throw msg;
+            }
         } // (performance: http://jsperf.com/ways-to-dereference-a-delimited-property-string)
         Utilities.dereferencePropertyPath = dereferencePropertyPath;
         // ------------------------------------------------------------------------------------------------------------------------
@@ -169,7 +173,7 @@ define(["require", "exports", "./Globals", "./System/Exception"], function (requ
         Utilities.apply = apply;
         // ------------------------------------------------------------------------------------------------------------------------
         var _guidSeed = (function () {
-            var text = Globals_1.DreamSpace.global.navigator.userAgent + Globals_1.DreamSpace.global.location.href; // TODO: This may need fixing on the server side.
+            var text = DreamSpace_1.DreamSpace.global.navigator.userAgent + DreamSpace_1.DreamSpace.global.location.href; // TODO: This may need fixing on the server side.
             for (var i = 0, n = text.length, randseed = 0; i < n; ++i)
                 randseed += text.charCodeAt(i);
             return randseed;
@@ -184,7 +188,7 @@ define(["require", "exports", "./Globals", "./System/Exception"], function (requ
          * @param {boolean} hyphens If true (default) then hyphens (-) are inserted to separate the GUID parts.
          */
         function createGUID(hyphens = true) {
-            var time = (Date.now ? Date.now() : new Date().getTime()) + Globals_1.DreamSpace.Time.__localTimeZoneOffset; // (use current local time [not UTC] to offset the random number [there was a bug in Chrome, not sure if it was fixed yet])
+            var time = (Date.now ? Date.now() : new Date().getTime()) + DreamSpace_1.DreamSpace.Time.__localTimeZoneOffset; // (use current local time [not UTC] to offset the random number [there was a bug in Chrome, not sure if it was fixed yet])
             var randseed = time + _guidSeed;
             var hexTime = time.toString(16) + (_guidCounter <= 0xffffffff ? _guidCounter++ : _guidCounter = 0).toString(16), i = hexTime.length, pi = 0;
             var pattern = hyphens ? 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx' : 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx', len = pattern.length, result = "", c, r;
@@ -195,14 +199,105 @@ define(["require", "exports", "./Globals", "./System/Exception"], function (requ
         Utilities.createGUID = createGUID;
     })(Utilities || (Utilities = {}));
     exports.Utilities = Utilities;
+    // ============================================================================================================================
+    /** Returns the name of a namespace or variable reference at runtime. */
+    function nameof(selector, fullname = false) {
+        var s = '' + selector;
+        //var m = s.match(/return\s*([A-Z.]+)/i) || s.match(/=>\s*{?\s*([A-Z.]+)/i) || s.match(/function.*?{\s*([A-Z.]+)/i);
+        var m = s.match(/return\s+([A-Z0-9$_.]+)/i) || s.match(/.*?(?:=>|function.*?{)\s*([A-Z0-9$_.]+)/i);
+        var name = m && m[1] || "";
+        return fullname ? name : name.split('.').reverse()[0];
+    }
+    exports.nameof = nameof;
+    // (shared here: https://github.com/Microsoft/TypeScript/issues/1579#issuecomment-394551591)
+    // ============================================================================================================================
+    exports.FUNC_NAME_REGEX = /^function\s*(\S+)\s*\(/i; // (note: never use the 'g' flag here, or '{regex}.exec()' will only work once every two calls [attempts to traverse])
+    /** Attempts to pull the function name from the function object, and returns an empty string if none could be determined. */
+    function getFunctionName(func) {
+        // ... if an internal name is already set return it now ...
+        var name = func.$__name || func['name'];
+        if (name == void 0) {
+            // ... check the type (this quickly detects internal/native Browser types) ...
+            var typeString = Object.prototype.toString.call(func);
+            // (typeString is formated like "[object SomeType]")
+            if (typeString.charAt(0) == '[' && typeString.charAt(typeString.length - 1) == ']')
+                name = typeString.substring(1, typeString.length - 1).split(' ')[1];
+            if (!name || name == "Function" || name == "Object") { // (a basic function/object was found)
+                if (typeof func == 'function') {
+                    // ... if this has a function text get the name as defined (in IE, Window+'' returns '[object Window]' but in Chrome it returns 'function Window() { [native code] }') ...
+                    var fstr = Function.prototype.toString.call(func);
+                    var results = (exports.FUNC_NAME_REGEX).exec(fstr); // (note: for function expression object contexts, the constructor (type) name is always 'Function')
+                    name = (results && results.length > 1) ? results[1] : void 0;
+                }
+                else
+                    name = void 0;
+            }
+        }
+        return name || "";
+    }
+    exports.getFunctionName = getFunctionName;
+    // ############################################################################################################################
+    /** Returns the type name for an object instance registered with 'AppDomain.registerType()'.  If the object does not have
+    * type information, and the object is a function, then an attempt is made to pull the function name (if one exists).
+    * Note: This function returns the type name ONLY (not the FULL type name [no namespace path]).
+    * Note: The name will be undefined if a type name cannot be determined.
+    * @param {object} object The object to determine a type name for.  If the object type was not registered using 'AppDomain.registerType()',
+    * and the object is not a function, no type information will be available. Unregistered function objects simply
+    * return the function's name.
+    * @param {boolean} cacheTypeName (optional) If true (default), the name is cached using the 'ITypeInfo' interface via the '$__name' property.
+    * This helps to speed up future calls.
+    */
+    function getTypeName(object, cacheTypeName = true) {
+        if (object === void 0 || object === null)
+            return void 0;
+        typeInfo = object;
+        if (typeInfo.$__name === void 0 || typeInfo.$__name === null) {
+            if (typeof object == 'function')
+                if (cacheTypeName)
+                    return typeInfo.$__name = getFunctionName(object);
+                else
+                    return getFunctionName(object);
+            var typeInfo = object.constructor;
+            if (typeInfo.$__name === void 0 || typeInfo.$__name === null) {
+                if (cacheTypeName)
+                    return typeInfo.$__name = getFunctionName(object.constructor);
+                else
+                    return getFunctionName(object.constructor);
+            }
+            else
+                return typeInfo.$__name;
+        }
+        else
+            return typeInfo.$__name;
+    }
+    exports.getTypeName = getTypeName;
+    /**
+     * Returns the full type name of the type or namespace, if available, or the name o the object itself if the full name (with namespaces) is not known.
+     * @see getTypeName()
+     */
+    function getFullTypeName(object, cacheTypeName = true) {
+        if (object.$__fullname)
+            return object.$__fullname;
+        return getTypeName(object, cacheTypeName);
+    }
+    exports.getFullTypeName = getFullTypeName;
+    /** An utility to extend a TypeScript namespace, which returns a string to be executed using 'eval()'.
+     * When executed BEFORE the namespace to be added, it creates a pre-existing namespace reference that forces typescript to update.
+     * Example 1: extendNS(()=>Local.NS, "Imported.NS");
+     * Example 2: extendNS(()=>Local.NS, ()=>Imported.NS);
+     * @param selector The local namespace that will extend the target.
+     * @param name A selector or dotted identifier path to the target namespace name to extend from.
+     */
+    function extendNS(selector, name) {
+        return "var " + nameof(selector) + " = " + (typeof name == 'function' ? nameof(name) : name) + ";";
+    }
+    exports.extendNS = extendNS;
 });
-// ------------------------------------------------------------------------------------------------------------------------
-/**
- * This is a special override to the default TypeScript '__extends' code for extending types in the DreamSpace system.
- * It's also a bit more efficient given that the 'extendStatics' part is run only once and cached and not every time '__extends' is called.
- * Note: This property simply references 'DreamSpace.Utilities.extend'.
- */
-// ------------------------------------------------------------------------------------------------------------------------
+//x Best to explicitly let TS and packing utilities know of the DS access explicitly. /** An internal utility to extend the 'DS' namespace within DreamSpace modules, which returns a string to be executed using 'eval()'.
+// * It just calls 'extendNS(selector, "DS")'.
+// */
+//x export function extendDSNS(selector: () => any) { return extendNS(selector, "DS"); }
+// ############################################################################################################################
 // Notes: 
 //   * helper source: https://github.com/Microsoft/tslib/blob/master/tslib.js
 //# sourceMappingURL=Utilities.js.map

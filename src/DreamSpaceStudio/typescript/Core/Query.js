@@ -10,7 +10,7 @@ var Query_1;
 const Factories_1 = require("./Factories");
 const Text_1 = require("./System/Text");
 const Utilities_1 = require("./Utilities");
-const Globals_1 = require("./Globals");
+const DreamSpace_1 = require("./DreamSpace");
 // ==========================================================================================================================
 exports.QUERY_STRING_REGEX = /[?|&][a-zA-Z0-9-._]+(?:=[^&#$]*)?/gi;
 /**
@@ -193,6 +193,6 @@ Query = Query_1 = __decorate([
 exports.Query = Query;
 // ==========================================================================================================================
 /** This is set automatically to the query for the current page. */
-exports.pageQuery = Query.new(Globals_1.DreamSpace.global.location.href);
+exports.pageQuery = Query.new(DreamSpace_1.DreamSpace.global.location.href);
 // ==========================================================================================================================
 //# sourceMappingURL=Query.js.map

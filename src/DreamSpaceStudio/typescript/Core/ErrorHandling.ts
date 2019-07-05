@@ -1,6 +1,6 @@
 import { Diagnostics, LogItem } from "./System/Diagnostics";
 import { ScriptError } from "./Scripts";
-import { getTypeName } from "./Types";
+import { getTypeName } from "./Utilities";
 
 // =======================================================================================================================
 

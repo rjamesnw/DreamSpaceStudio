@@ -70,17 +70,17 @@ function log(title, message, type = LogTypes.Normal, source, throwOnError = true
                 (console.trace || console.info || console.log).call(console, compositeMessage);
                 break;
         }
-    if (useLogger && Diagnostics_1.Diagnostics) {
+    if (useLogger && Diagnostics) {
         if (type == LogTypes.Error) {
             if (throwOnError)
-                if (Exception_1.Exception) {
-                    throw Exception_1.Exception.error(title, message, source); // (logs automatically)
+                if (Exception) {
+                    throw Exception.error(title, message, source); // (logs automatically)
                 }
                 else
                     throw new Error(compositeMessage); // (fallback, then try the diagnostics debugger)
         }
-        if (Diagnostics_1.Diagnostics && Diagnostics_1.Diagnostics.log)
-            Diagnostics_1.Diagnostics.log(title, message, type, false); // (if 'System.Exception' is thrown it will also auto log and this line is never reached)
+        if (Diagnostics && Diagnostics.log)
+            Diagnostics.log(title, message, type, false); // (if 'System.Exception' is thrown it will also auto log and this line is never reached)
     }
     else if (throwOnError && type == LogTypes.Error)
         throw new Error(compositeMessage);
@@ -102,5 +102,7 @@ exports.error = error;
 // =======================================================================================================================
 const Diagnostics_1 = require("././System/Diagnostics"); // ("./" twice causes an "optional" flag - it will only be included if already imported elsewhere)
 const Exception_1 = require("././System/Exception"); // ("./" twice causes an "optional" flag - it will only be included if already imported elsewhere)
+var Diagnostics = Diagnostics_1.Diagnostics; // (required because TypeScript uses an 'a.b' sequence which prevents the ability to test existence)
+var Exception = Exception_1.Exception;
 // =======================================================================================================================
 //# sourceMappingURL=Logging.js.map

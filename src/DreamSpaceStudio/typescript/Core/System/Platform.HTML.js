@@ -11,7 +11,7 @@ const Factories_1 = require("../Factories");
 const Platform_Graph_1 = require("./Platform.Graph");
 const Diagnostics_1 = require("./Diagnostics");
 const Markup_1 = require("./Markup");
-const Globals_1 = require("../Globals");
+const DreamSpace_1 = require("../DreamSpace");
 const Exception_1 = require("./Exception");
 const Utilities_1 = require("../Utilities");
 const Scripts_1 = require("../Scripts");
@@ -35,7 +35,7 @@ let BrowserContext = class BrowserContext extends Platform_1.Context {
         this._target = this._iframe = document.createElement("iframe");
         this._iframe.style.display = "none";
         this._iframe.src = this._url;
-        Globals_1.DreamSpace.global.document.body.appendChild(this._iframe);
+        DreamSpace_1.DreamSpace.global.document.body.appendChild(this._iframe);
         this._global = this._iframe.contentWindow;
     }
     _setupWorker() {
@@ -48,15 +48,15 @@ let BrowserContext = class BrowserContext extends Platform_1.Context {
     /** Load a resource (usually a script or page) into this context. */
     load(url) {
         var contextType = this._contextType;
-        switch (Globals_1.DreamSpace.Environment) {
-            case Globals_1.DreamSpace.Environments.Browser:
+        switch (DreamSpace_1.DreamSpace.Environment) {
+            case DreamSpace_1.DreamSpace.Environments.Browser:
                 switch (contextType) {
                     case Platform_1.Contexts.Secure:
                     case Platform_1.Contexts.Unsecure:
                         this._setupIFrame();
-                        if (Globals_1.DreamSpace.Environment == Globals_1.DreamSpace.Environments.Browser) {
+                        if (DreamSpace_1.DreamSpace.Environment == DreamSpace_1.DreamSpace.Environments.Browser) {
                         }
-                        else if (Globals_1.DreamSpace.Environment == Globals_1.DreamSpace.Environments.Browser) {
+                        else if (DreamSpace_1.DreamSpace.Environment == DreamSpace_1.DreamSpace.Environments.Browser) {
                         }
                         else {
                             this._target = this._worker = new Worker("DreamSpace.js");
@@ -64,21 +64,21 @@ let BrowserContext = class BrowserContext extends Platform_1.Context {
                         break;
                     case Platform_1.Contexts.SecureWindow:
                     case Platform_1.Contexts.UnsecureWindow:
-                        if (Globals_1.DreamSpace.Environment == Globals_1.DreamSpace.Environments.Browser) {
+                        if (DreamSpace_1.DreamSpace.Environment == DreamSpace_1.DreamSpace.Environments.Browser) {
                             this._target = this._iframe = document.createElement("iframe");
                             this._iframe.style.display = "none";
                             this._iframe.src = "index.html";
-                            Globals_1.DreamSpace.global.document.body.appendChild(this._iframe);
+                            DreamSpace_1.DreamSpace.global.document.body.appendChild(this._iframe);
                             this._global = this._iframe.contentWindow;
                         }
-                        else if (Globals_1.DreamSpace.Environment == Globals_1.DreamSpace.Environments.Browser) {
+                        else if (DreamSpace_1.DreamSpace.Environment == DreamSpace_1.DreamSpace.Environments.Browser) {
                         }
                         else {
                             this._target = this._worker = new Worker("DreamSpace.js");
                         }
                         break;
                     case Platform_1.Contexts.Local:
-                        this._target = this._global = Globals_1.DreamSpace.global;
+                        this._target = this._global = DreamSpace_1.DreamSpace.global;
                         break;
                 }
                 break;

@@ -1,5 +1,6 @@
-﻿import { Factory, makeFactory, factory, usingFactory, Types } from "./Factories";
-import { DreamSpace as DS, IFunctionInfo, ITypeInfo, IDisposable, IType } from "./Globals";
+﻿import { DreamSpace as DS, IFunctionInfo, ITypeInfo, IDisposable, makeDisposable } from "./DreamSpace";
+import { Utilities, nameof, getTypeName } from "./Utilities";
+import { Factory, makeFactory, factory, usingFactory, Types } from "./Factories";
 
 // ###########################################################################################################################
 // Primitive types designed for use with the DreamSpace system.
@@ -155,67 +156,6 @@ export interface IObject extends ObjectFactory { }
 
 // =======================================================================================================================
 
-import { getTypeName, isPrimitiveType } from "./Types";
-
-/**
- * Creates a 'Disposable' type from another base type. This is primarily used to extend primitive types for use as base types to DreamSpace
- * primitives.  This is because Array and String types cannot inherit from the custom 'Object' type AND be instances of the respective primary types.
- * Note: These types are NOT instances of 'DreamSpace.Disposable', since they must have prototype chains that link to other base types.
- * @param {TBaseClass} baseClass The base class to inherit from.
- * @param {boolean} isPrimitiveOrHostBase Set this to true when inheriting from primitive types. This is normally auto-detected, but can be forced in cases
- * where 'new.target' (ES6) prevents proper inheritance from host system base types that are not primitive types.
- * This is only valid if compiling your .ts source for ES5 while also enabling support for ES6 environments. 
- * If you compile your .ts source for ES6 then the 'class' syntax will be used and this value has no affect.
- */
-//? * Note 2: 'new' and 'init' functions are NOT implemented. To implement proper defaults, call 'Types.makeFactory()'.
-export function makeDisposable<TBaseClass extends IType = ObjectConstructor>(baseClass: TBaseClass, isPrimitiveOrHostBase?: boolean) {
-    if (!baseClass) {
-        baseClass = <any>DS.global.Object;
-        isPrimitiveOrHostBase = true;
-    }
-    else if (typeof isPrimitiveOrHostBase == 'undefined') isPrimitiveOrHostBase = isPrimitiveType(baseClass);
-
-    var cls = class Disposable extends baseClass implements IDisposable {
-        ///**
-        //* Create a new basic object type.
-        //* @param value If specified, the value will be wrapped in the created object.
-        //* @param makeValuePrivate If true, the value will not be exposed, making the value immutable. Default is false.
-        //*/
-        //static 'new': (value?: any, makeValuePrivate?: boolean) => IObject;
-
-        ///** This is called internally to initialize a blank instance of the underlying type. Users should call the 'new()'
-        //* constructor function to get new instances, and 'dispose()' to release them when done.
-        //*/
-        //static init: (o: IObject, isnew: boolean, value?: any, makeValuePrivate?: boolean) => void;
-
-        /**
-        * Don't create objects using the 'new' operator. Use '{NameSpaces...ClassType}.new()' static methods instead.
-        */
-        constructor(...args: any[]) {
-            if (!DS.ES6Targeted && isPrimitiveOrHostBase)
-                eval("var _super = function() { return null; };"); // (ES6 fix for extending built-in types [calling constructor not supported prior] when compiling for ES5; more details on it here: https://github.com/Microsoft/TypeScript/wiki/FAQ#why-doesnt-extending-built-ins-like-error-array-and-map-work)
-            super(...args);
-        }
-        /** 
-        * Releases the object back into the object pool. This is the default implementation which simply calls 'Types.dispose(this, release)'.
-        * If overriding, make sure to call 'super.dispose()' or 'Types.dispose()' to complete the disposal process.
-        * @param {boolean} release If true (default) allows the objects to be released back into the object pool.  Set this to
-        *                          false to request that child objects remain connected after disposal (not released). This
-        *                          can allow quick initialization of a group of objects, instead of having to pull each one
-        *                          from the object pool each time.
-        */
-        dispose(release?: boolean): void { }
-    }
-
-    for (var p in Object.prototype)
-        if (Object.prototype.hasOwnProperty(p))
-            cls.prototype[p] = Object.prototype[p]; // (make these functions both the same function reference by default)
-
-    return <typeof cls & IObject><any>cls;
-}
-
-// =======================================================================================================================
-
 /** Copies over prototype properties from the $Object type to other base primitive types. */
 function _addObjectPrototypeProperties<T extends { new(...args: any[]): any }>(type: T): T & IObject {
     for (var p in Object.prototype)
@@ -231,8 +171,7 @@ export interface IAddLineNumbersFilter {
     (lineNumber: number, marginSize: number, paddedLineNumber: string, line: string): string;
 }
 
-eval("var PrimitiveString = DS.global.String;");
-declare class PrimitiveString extends DS.global.String { }
+class PrimitiveString extends DS.global.String { }
 
 /* Note: This is a DreamSpace system string object, and not the native JavaScript object. */
 /** Allows manipulation and formatting of text strings, including the determination and location of substrings within strings. */
@@ -466,6 +405,5 @@ export interface IDependencyObject extends DependentObject { }
 
 import { AppDomain, Application, IDomainObjectInfo } from "./AppDomain";
 import { Browser } from "./System/Browser";
-import { Utilities } from "./Utilities";
 import { SerializedData, ISerializable } from "./System/Serialization";
 import { dispose } from "./System/System";

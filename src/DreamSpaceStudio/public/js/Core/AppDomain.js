@@ -1,4 +1,4 @@
-define(["require", "exports", "./Factories", "./Types", "./Logging", "./Globals", "./PrimitiveTypes", "./System/Exception", "./System/System", "./Factories", "./System/Collections.IndexedObjectCollection"], function (require, exports, Factories_1, Types_1, Logging_1, Globals_1, PrimitiveTypes_1, Exception_1, System_1, Factories_2, Collections_IndexedObjectCollection_1) {
+define(["require", "exports", "./DreamSpace", "./Utilities", "./Factories", "./Logging", "./PrimitiveTypes", "./System/Exception", "./System/System", "./Factories", "./System/Collections.IndexedObjectCollection"], function (require, exports, DreamSpace_1, Utilities_1, Factories_1, Logging_1, PrimitiveTypes_1, Exception_1, System_1, Factories_2, Collections_IndexedObjectCollection_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var AppDomain_1, Application_1;
@@ -151,11 +151,11 @@ define(["require", "exports", "./Factories", "./Types", "./Logging", "./Globals"
             //var type: IFunctionInfo = <IFunctionInfo>object.constructor;
             var type = object;
             if (type.$__disposing || type.$__disposed)
-                Logging_1.error("attachObject()", "The specified object instance of type '" + Types_1.getFullTypeName(type) + "' is disposed.", type);
+                Logging_1.error("attachObject()", "The specified object instance of type '" + Utilities_1.getFullTypeName(type) + "' is disposed.", type);
             if (!type.$__ds || !type.$__appDomain || !type.dispose)
-                Logging_1.error("attachObject()", "The specified type '" + Types_1.getFullTypeName(type) + "' is not valid for this operation. Make sure to use 'DreamSpace.ClassFactory()' to create valid factory types, or make sure the 'IDomainObjectInfo' properties are satisfied.", type);
+                Logging_1.error("attachObject()", "The specified type '" + Utilities_1.getFullTypeName(type) + "' is not valid for this operation. Make sure to use 'DreamSpace.ClassFactory()' to create valid factory types, or make sure the 'IDomainObjectInfo' properties are satisfied.", type);
             if (type.$__appDomain != this)
-                Logging_1.error("attachObject()", "The specified object instance of type '" + Types_1.getFullTypeName(type) + "' is already attached to a different application domain.", type);
+                Logging_1.error("attachObject()", "The specified object instance of type '" + Utilities_1.getFullTypeName(type) + "' is already attached to a different application domain.", type);
             this.objects.addObject(object);
             return object;
         }
@@ -265,7 +265,7 @@ define(["require", "exports", "./Factories", "./Types", "./Logging", "./Globals"
             this._appDomains[0].dispose();
         }
         // -------------------------------------------------------------------------------------------------------------------------------
-        static [Globals_1.DreamSpace.constructor](f) {
+        static [DreamSpace_1.DreamSpace.constructor](f) {
             f.init = (o, isnew, title, description, appID) => {
                 f.super.init(o, isnew);
                 o.$__app = o;
@@ -288,8 +288,8 @@ define(["require", "exports", "./Factories", "./Types", "./Logging", "./Globals"
     // Create a default application domain and default application.
     // The default app domain is used for new objects created, and the default application can be used to easily represent the current web application.
     AppDomain.default = AppDomain.new();
-    Application.default = Application.new(Globals_1.DreamSpace.global.document.title, "Default Application", 0);
-    Globals_1.frozen(AppDomain);
-    Globals_1.frozen(Application);
+    Application.default = Application.new(DreamSpace_1.DreamSpace.global.document.title, "Default Application", 0);
+    DreamSpace_1.frozen(AppDomain);
+    DreamSpace_1.frozen(Application);
 });
 //# sourceMappingURL=AppDomain.js.map

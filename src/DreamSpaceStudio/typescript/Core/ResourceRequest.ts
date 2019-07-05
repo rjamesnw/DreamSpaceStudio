@@ -5,7 +5,7 @@ import { log, error, LogTypes } from "./Logging";
 import { getErrorMessage } from "./ErrorHandling";
 import { Query } from "./Query";
 import { Utilities } from "./Utilities";
-import { DreamSpace as DS, IResultCallback, ICallback, IErrorCallback } from "./Globals";
+import { DreamSpace as DS, IResultCallback, ICallback, IErrorCallback } from "./DreamSpace";
 import { Object as DSObject } from "./PrimitiveTypes";
 
 // ===============================================================================================================================

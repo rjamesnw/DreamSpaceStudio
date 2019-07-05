@@ -4,7 +4,7 @@
 
 import { Factory } from "../Factories";
 import { Object, String } from "../PrimitiveTypes";
-import { DreamSpace as DS } from "../Globals"
+import { DreamSpace as DS } from "../DreamSpace"
 
 // =======================================================================================================================
 

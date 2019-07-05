@@ -1,7 +1,7 @@
 // ###########################################################################################################################
 // Application Domains
 // ###########################################################################################################################
-define(["require", "exports", "../Globals", "../PrimitiveTypes", "./Exception", "../Factories", "../AppDomain"], function (require, exports, Globals_1, PrimitiveTypes_1, Exception_1, Factories_1, AppDomain_1) {
+define(["require", "exports", "../DreamSpace", "../PrimitiveTypes", "./Exception", "../Factories", "../AppDomain"], function (require, exports, DreamSpace_1, PrimitiveTypes_1, Exception_1, Factories_1, AppDomain_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // =======================================================================================================================
@@ -94,7 +94,7 @@ define(["require", "exports", "../Globals", "../PrimitiveTypes", "./Exception", 
         dispose(release) {
             // ... close all windows ([0] should always be the main application window, which will close last) ...
             for (var i = this._windows.length - 1; i >= 0; --i)
-                if (this._windows[i].target != Globals_1.DreamSpace.global)
+                if (this._windows[i].target != DreamSpace_1.DreamSpace.global)
                     this._windows[i].close();
             for (var i = this._windows.length - 1; i >= 0; --i)
                 this._windows[i].dispose(release);

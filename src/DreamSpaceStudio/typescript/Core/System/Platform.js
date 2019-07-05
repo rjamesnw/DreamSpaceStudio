@@ -9,7 +9,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Globals_1 = require("../Globals");
+const DreamSpace_1 = require("../DreamSpace");
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
 const Exception_1 = require("./Exception");
 const Factories_1 = require("../Factories");
@@ -104,7 +104,7 @@ let UIApplication = class UIApplication extends Factories_1.Factory(AppDomain_1.
     dispose(release) {
         // ... close all windows ([0] should always be the main application window, which will close last) ...
         for (var i = this._windows.length - 1; i >= 0; --i)
-            if (this._windows[i].target != Globals_1.DreamSpace.global)
+            if (this._windows[i].target != DreamSpace_1.DreamSpace.global)
                 this._windows[i].close();
         for (var i = this._windows.length - 1; i >= 0; --i)
             this._windows[i].dispose(release);

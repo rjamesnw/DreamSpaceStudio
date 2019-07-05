@@ -1,7 +1,7 @@
 // ############################################################################################################################################
 // Browser detection (for special cases).
 // ############################################################################################################################################
-define(["require", "exports", "../Globals", "./Events", "./Diagnostics", "../Logging"], function (require, exports, Globals_1, Events_1, Diagnostics_1, Logging_1) {
+define(["require", "exports", "../DreamSpace", "./Events", "./Diagnostics", "../Logging"], function (require, exports, DreamSpace_1, Events_1, Diagnostics_1, Logging_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     /** Contains information on the user agent (browser) being used.
@@ -166,12 +166,12 @@ define(["require", "exports", "../Globals", "./Events", "./Diagnostics", "../Log
         /** The browser version detected. */
         Browser.version = -1;
         /** Set to true if ES2015 (aka ES6) is supported ('class', 'new.target', etc.). */
-        Browser.ES6 = Globals_1.DreamSpace.ES6;
+        Browser.ES6 = DreamSpace_1.DreamSpace.ES6;
         // (Note: For extension of native types, the DreamSpace behavior changes depending on ES6 support due to the new 'new.target' feature changing how called native constructors behave)
         /** The type of browser detected. */
         Browser.type = (() => {
             var browserType = BrowserTypes.Unknown, browserInfo;
-            if (Globals_1.DreamSpace.Environment == Globals_1.DreamSpace.Environments.Browser) {
+            if (DreamSpace_1.DreamSpace.Environment == DreamSpace_1.DreamSpace.Environments.Browser) {
                 if (!Browser.browserVersionInfo)
                     Browser.browserVersionInfo = __findBrowser();
                 browserInfo = Browser.browserVersionInfo.parent;
@@ -292,7 +292,7 @@ define(["require", "exports", "../Globals", "./Events", "./Diagnostics", "../Log
             // Note: $XT is initially created with limited functionality until the system is ready!
             // If on the client side, detect when the document is ready for script downloads - this will allow the UI to show quickly, and download script while the user reads the screen.
             // (note: this is a two phased approach - DOM ready, then PAGE ready.
-            if (Globals_1.DreamSpace.Environment == Globals_1.DreamSpace.Environments.Browser)
+            if (DreamSpace_1.DreamSpace.Environment == DreamSpace_1.DreamSpace.Environments.Browser)
                 (function () {
                     var readyStateTimer;
                     // ... check document ready events first in case we can get more granular feedback...

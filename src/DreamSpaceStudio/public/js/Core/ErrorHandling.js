@@ -1,4 +1,4 @@
-define(["require", "exports", "./System/Diagnostics", "./Scripts", "./Types"], function (require, exports, Diagnostics_1, Scripts_1, Types_1) {
+define(["require", "exports", "./System/Diagnostics", "./Scripts", "./Utilities"], function (require, exports, Diagnostics_1, Scripts_1, Utilities_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     /** Returns the call stack for a given error object. */
@@ -51,7 +51,7 @@ define(["require", "exports", "./System/Diagnostics", "./Scripts", "./Types"], f
                 var error = errorSource instanceof Error ? errorSource : errorSource instanceof ErrorEvent ? errorSource.error : null;
                 var msg = '' + (Scripts_1.ScriptError && (errorSource instanceof Scripts_1.ScriptError)
                     ? errorSource.error && errorSource.error.message || errorSource.error && errorInfo.error : (errorInfo.message || errorInfo.reason || errorInfo.type));
-                var fname = errorInfo instanceof Function ? Types_1.getTypeName(errorInfo, false) : errorInfo.functionName;
+                var fname = errorInfo instanceof Function ? Utilities_1.getTypeName(errorInfo, false) : errorInfo.functionName;
                 var sourceLocation = errorInfo.fileName || errorInfo.filename || errorInfo.url;
                 if (fname)
                     msg = "(" + fname + ") " + msg;

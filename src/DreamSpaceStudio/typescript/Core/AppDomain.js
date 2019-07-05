@@ -7,10 +7,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var AppDomain_1, Application_1;
+const DreamSpace_1 = require("./DreamSpace");
+const Utilities_1 = require("./Utilities");
 const Factories_1 = require("./Factories");
-const Types_1 = require("./Types");
 const Logging_1 = require("./Logging");
-const Globals_1 = require("./Globals");
 const PrimitiveTypes_1 = require("./PrimitiveTypes");
 const Exception_1 = require("./System/Exception");
 const System_1 = require("./System/System");
@@ -164,11 +164,11 @@ let AppDomain = AppDomain_1 = class AppDomain extends Factories_1.Factory(Primit
         //var type: IFunctionInfo = <IFunctionInfo>object.constructor;
         var type = object;
         if (type.$__disposing || type.$__disposed)
-            Logging_1.error("attachObject()", "The specified object instance of type '" + Types_1.getFullTypeName(type) + "' is disposed.", type);
+            Logging_1.error("attachObject()", "The specified object instance of type '" + Utilities_1.getFullTypeName(type) + "' is disposed.", type);
         if (!type.$__ds || !type.$__appDomain || !type.dispose)
-            Logging_1.error("attachObject()", "The specified type '" + Types_1.getFullTypeName(type) + "' is not valid for this operation. Make sure to use 'DreamSpace.ClassFactory()' to create valid factory types, or make sure the 'IDomainObjectInfo' properties are satisfied.", type);
+            Logging_1.error("attachObject()", "The specified type '" + Utilities_1.getFullTypeName(type) + "' is not valid for this operation. Make sure to use 'DreamSpace.ClassFactory()' to create valid factory types, or make sure the 'IDomainObjectInfo' properties are satisfied.", type);
         if (type.$__appDomain != this)
-            Logging_1.error("attachObject()", "The specified object instance of type '" + Types_1.getFullTypeName(type) + "' is already attached to a different application domain.", type);
+            Logging_1.error("attachObject()", "The specified object instance of type '" + Utilities_1.getFullTypeName(type) + "' is already attached to a different application domain.", type);
         this.objects.addObject(object);
         return object;
     }
@@ -278,7 +278,7 @@ let Application = Application_1 = class Application extends Factories_1.Factory(
         this._appDomains[0].dispose();
     }
     // -------------------------------------------------------------------------------------------------------------------------------
-    static [Globals_1.DreamSpace.constructor](f) {
+    static [DreamSpace_1.DreamSpace.constructor](f) {
         f.init = (o, isnew, title, description, appID) => {
             f.super.init(o, isnew);
             o.$__app = o;
@@ -301,9 +301,9 @@ exports.Application = Application;
 // Create a default application domain and default application.
 // The default app domain is used for new objects created, and the default application can be used to easily represent the current web application.
 AppDomain.default = AppDomain.new();
-Application.default = Application.new(Globals_1.DreamSpace.global.document.title, "Default Application", 0);
-Globals_1.frozen(AppDomain);
-Globals_1.frozen(Application);
+Application.default = Application.new(DreamSpace_1.DreamSpace.global.document.title, "Default Application", 0);
+DreamSpace_1.frozen(AppDomain);
+DreamSpace_1.frozen(Application);
 // ========================================================================================================================================
 const Collections_IndexedObjectCollection_1 = require("./System/Collections.IndexedObjectCollection");
 //# sourceMappingURL=AppDomain.js.map

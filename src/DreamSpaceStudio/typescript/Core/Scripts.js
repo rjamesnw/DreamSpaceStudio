@@ -18,15 +18,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var ScriptResource_1;
-const Globals_1 = require("./Globals");
+const DreamSpace_1 = require("./DreamSpace");
 const Logging_1 = require("./Logging");
-const Types_1 = require("./Types");
 const Factories_1 = require("./Factories");
 const Resources_1 = require("./Resources");
 const PrimitiveTypes_1 = require("./PrimitiveTypes");
 const TSHelpers_1 = require("./TSHelpers");
 const Exception_1 = require("./System/Exception");
-var Globals = Globals_1.DreamSpace.Globals;
+const Globals_1 = require("./Globals");
 const ErrorHandling_1 = require("./ErrorHandling");
 const Utilities_1 = require("./Utilities");
 const ResourceRequest_1 = require("./ResourceRequest");
@@ -64,10 +63,10 @@ exports.Modules = {
 function moduleNamespaceToFolderPath(nsName) {
     var _nsName = ('' + nsName).trim();
     if (!nsName || !_nsName)
-        Logging_1.log(Types_1.nameof(() => moduleNamespaceToFolderPath) + "()", "A valid non-empty namespace string was expected.");
-    var sysNs1 = Types_1.nameof(() => exports.Modules) + "."; // (account for full names or relative names)
-    var sysNs2 = Types_1.nameof(() => exports.Modules) + ".";
-    var sysNs3 = Types_1.nameof(() => exports.Modules) + ".";
+        Logging_1.log(Utilities_1.nameof(() => moduleNamespaceToFolderPath) + "()", "A valid non-empty namespace string was expected.");
+    var sysNs1 = Utilities_1.nameof(() => exports.Modules) + "."; // (account for full names or relative names)
+    var sysNs2 = Utilities_1.nameof(() => exports.Modules) + ".";
+    var sysNs3 = Utilities_1.nameof(() => exports.Modules) + ".";
     if (_nsName.substr(0, sysNs1.length) === sysNs1)
         _nsName = _nsName.substr(sysNs1.length);
     else if (_nsName.substr(0, sysNs2.length) === sysNs2)
@@ -87,29 +86,29 @@ let ScriptResource = ScriptResource_1 = class ScriptResource extends Factories_1
     }
     /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DS.Globals' and 'Globals.register()'. */
     registerGlobal(name, initialValue, asHostGlobal) {
-        return Globals.register(this, name, initialValue, asHostGlobal);
+        return Globals_1.Globals.register(this, name, initialValue, asHostGlobal);
     }
     /** For help, see 'DS.Globals'. */
     globalExists(name) {
-        return Globals.exists(this, name);
+        return Globals_1.Globals.exists(this, name);
     }
     /** For help, see 'DS.Globals'. */
     eraseGlobal(name) {
-        return Globals.erase(this, name);
+        return Globals_1.Globals.erase(this, name);
     }
     /** For help, see 'DS.Globals'. */
     clearGlobals() {
-        return Globals.clear(this);
+        return Globals_1.Globals.clear(this);
     }
     /** For help, see 'DS.Globals'. */
     setGlobalValue(name, value) {
-        return Globals.setValue(this, name, value);
+        return Globals_1.Globals.setValue(this, name, value);
     }
     /** For help, see 'DS.Globals'. */
     getGlobalValue(name) {
-        return Globals.getValue(this, name);
+        return Globals_1.Globals.getValue(this, name);
     }
-    static [Globals_1.DreamSpace.constructor](factory) {
+    static [DreamSpace_1.DreamSpace.constructor](factory) {
         factory.init = (o, isnew, url) => {
         };
     }
@@ -133,7 +132,7 @@ let Manifest = class Manifest extends Factories_1.Factory(ScriptResource) {
     }
 };
 Manifest = __decorate([
-    Factories_1.factory(this), Globals_1.sealed
+    Factories_1.factory(this), DreamSpace_1.sealed
 ], Manifest);
 exports.Manifest = Manifest;
 // ====================================================================================================================
@@ -196,7 +195,7 @@ exports.ScriptError = ScriptError;
 /// <param name="script"> The script to validate. </param>
 /// <returns> A ScriptError instance if there are any parse errors, and null otherwise. </returns>
 function validateScript(script, url) {
-    if (Globals_1.DreamSpace.host.isClient) {
+    if (DreamSpace_1.DreamSpace.host.isClient) {
         var oldWinError = window.onerror, err, lineNumber, column;
         window.onerror = (errEventOrMsg, u, ln, col) => { err = errEventOrMsg; url = u || url; lineNumber = ln; column = col; };
         var s = document.createElement('script');
@@ -274,7 +273,7 @@ function getModule(path) {
             func.call(this, define); // (make sure 'this' is supplied, just in case, to help protect the global scope somewhat [instead of forcing 'strict' mode])
         }
         catch (ex) {
-            errorResult = ScriptError.fromError(ex, func && func.toString() || script, Types_1.nameof(() => getModule, true) + "() while executing " + manifestRequest.url);
+            errorResult = ScriptError.fromError(ex, func && func.toString() || script, Utilities_1.nameof(() => getModule, true) + "() while executing " + manifestRequest.url);
             Logging_1.error("getManifest(" + path + ")", "Error executing script: " + errorResult.message + "\r\nScript: \r\n" + errorResult.getFormatedSource(), manifestRequest);
         }
         manifestRequest.status = Resources_1.RequestStatuses.Executed;
@@ -321,8 +320,8 @@ class Module extends Factories_1.Factory(ScriptResource) {
           * retrieve object references.  If performance is required to access non-reference values, you should use this to read an
           * object that contains all the values and references you need (i.e. a 'root' namespace object within the module scope).
           */
-        this.getVar = Globals_1.DreamSpace.noop;
-        this.setVar = Globals_1.DreamSpace.noop;
+        this.getVar = DreamSpace_1.DreamSpace.noop;
+        this.setVar = DreamSpace_1.DreamSpace.noop;
         /** This 'exports' container exists to support loading client-side modules in a NodeJS-type fashion.  The main exception is that
           * 'require()' is not supported as it is synchronous, and an asynchronous method is required on the client side.  Instead, the
           * reference to a 'manifest' variable (of type 'DS.Scripts.IManifest') is also given to the script, and can be used to
@@ -333,7 +332,7 @@ class Module extends Factories_1.Factory(ScriptResource) {
     }
     /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
     static init(o, isnew, fullname, url, minifiedUrl) {
-        this.super.init(o, isnew, Globals_1.DreamSpace.isDebugging ? url : (minifiedUrl || url));
+        this.super.init(o, isnew, DreamSpace_1.DreamSpace.isDebugging ? url : (minifiedUrl || url));
         if (!o.type) // (if the base resource loader fails to initialize, then another resource already exists for the same location)
             throw Exception_1.Exception.from("Duplicate module load request: A previous request for '" + url + "' was already made.", o);
         o.fullname = fullname;
@@ -358,32 +357,32 @@ class Module extends Factories_1.Factory(ScriptResource) {
     toValue() { return this.fullname; }
     /** A convenient script resource method that simply Calls 'Globals.register()'. For help, see 'DS.Globals' and 'Globals.register()'. */
     registerGlobal(name, initialValue, asHostGlobal) {
-        return Globals.register(this, name, initialValue, asHostGlobal);
+        return Globals_1.Globals.register(this, name, initialValue, asHostGlobal);
     }
     /** For help, see 'DS.Globals'. */
     globalExists(name) {
-        return Globals.exists(this, name);
+        return Globals_1.Globals.exists(this, name);
     }
     /** For help, see 'DS.Globals'. */
     eraseGlobal(name) {
-        return Globals.erase(this, name);
+        return Globals_1.Globals.erase(this, name);
     }
     /** For help, see 'DS.Globals'. */
     clearGlobals() {
-        return Globals.clear(this);
+        return Globals_1.Globals.clear(this);
     }
     /** For help, see 'DS.Globals'. */
     setGlobalValue(name, value) {
-        return Globals.setValue(this, name, value);
+        return Globals_1.Globals.setValue(this, name, value);
     }
     /** For help, see 'DS.Globals'. */
     getGlobalValue(name) {
-        return Globals.getValue(this, name);
+        return Globals_1.Globals.getValue(this, name);
     }
     /** Begin loading the module's script. After the loading is completed, any dependencies are automatically detected and loaded as well. */
     start() {
         if (this.status == Resources_1.RequestStatuses.Pending && !this._moduleGlobalAccessors) { // (make sure this module was not already started nor applied)
-            this.url = Globals_1.DreamSpace.debugMode ? this.nonMinifiedURL : (this.minifiedURL || this.nonMinifiedURL); // (just in case the debugging flag changed)
+            this.url = DreamSpace_1.DreamSpace.debugMode ? this.nonMinifiedURL : (this.minifiedURL || this.nonMinifiedURL); // (just in case the debugging flag changed)
             return super.start();
         }
         return this;
@@ -397,12 +396,12 @@ class Module extends Factories_1.Factory(ScriptResource) {
                     dep.execute();
             var accessors;
             if (useGlobalScope) {
-                this._moduleGlobalAccessors = (Globals_1.DreamSpace.globalEval(this.response), Module._globalaccessors); // (use the global accessors, as the module was run in the global scope)
+                this._moduleGlobalAccessors = (DreamSpace_1.DreamSpace.globalEval(this.response), Module._globalaccessors); // (use the global accessors, as the module was run in the global scope)
             }
             else {
                 var tsHelpers = TSHelpers_1.renderHelperVarDeclarations("arguments[3]");
                 this.$__modFunc = new Function("DreamSpace", "module", "exports", tsHelpers[0] + this.response + ";\r\n return { get: function(varName) { return eval(varName); }, set: function(varName, val) { return eval(varName + ' = val;'); } };");
-                this._moduleGlobalAccessors = this.$__modFunc(Globals_1.DreamSpace, this, this.exports, tsHelpers); // (note that 'this.' effectively prevents polluting the global scope in case 'this' is used)
+                this._moduleGlobalAccessors = this.$__modFunc(DreamSpace_1.DreamSpace, this, this.exports, tsHelpers); // (note that 'this.' effectively prevents polluting the global scope in case 'this' is used)
             }
             this.getVar = this._moduleGlobalAccessors.get;
             this.setVar = this._moduleGlobalAccessors.set;
@@ -410,13 +409,13 @@ class Module extends Factories_1.Factory(ScriptResource) {
         }
     }
 }
-Module._globalaccessors = (() => { return Globals_1.DreamSpace.safeEval("({ get: function(varName) { return p0.global[varName]; }, set: function(varName, val) { return p0.global[varName] = val; } })", Globals_1.DreamSpace); })();
+Module._globalaccessors = (() => { return DreamSpace_1.DreamSpace.safeEval("({ get: function(varName) { return p0.global[varName]; }, set: function(varName, val) { return p0.global[varName] = val; } })", DreamSpace_1.DreamSpace); })();
 exports.Module = Module;
 var _runMode = 0; // (0=auto run, depending on debug flag; 1=user has requested run before the app module was ready; 2=running)
 /** Used internally to see if the application should run automatically. Developers should NOT call this directly and call 'runApp()' instead. */
 function _tryRunApp() {
     if (_runMode < 2)
-        if (_appModule && (_runMode == 1 || !Globals_1.DreamSpace.host.isDebugMode() && Globals_1.DreamSpace.debugMode != Globals_1.DreamSpace.DebugModes.Debug_Wait)) {
+        if (_appModule && (_runMode == 1 || !DreamSpace_1.DreamSpace.host.isDebugMode() && DreamSpace_1.DreamSpace.debugMode != DreamSpace_1.DreamSpace.DebugModes.Debug_Wait)) {
             // (note: if the host is in debug mode, it trumps the internal debug setting)
             if (_appModule.status == Resources_1.RequestStatuses.Ready)
                 _appModule.execute();
@@ -439,7 +438,7 @@ exports.runApp = runApp;
 // =======================================================================================================================
 /** This is the path to the root of the DreamSpace JavaScript files (Path.combine(DS.baseURL, "js/") by default).
 * Note: This should either be empty, or always end with a URL path separator ('/') character (but the system will assume to add one anyhow if missing). */
-exports.pluginFilesBasePath = Path_1.Path.combine(Globals_1.DreamSpace.baseURL, "js/");
+exports.pluginFilesBasePath = Path_1.Path.combine(DreamSpace_1.DreamSpace.baseURL, "js/");
 /** Translates a module relative or full type name to the actual type name (i.e. '.ABC' to 'DS.ABC', or 'System'/'System.' to 'DreamSpace'/'DS.'). */
 function translateModuleTypeName(moduleFullTypeName) {
     if (moduleFullTypeName.charAt(0) == '.')
@@ -707,7 +706,7 @@ function fixSourceMappingsPragmas(sourcePragmaInfo, scriptURL) {
                 script += "\r\n" + pragma; // (not for source mapping, so leave as is)
             else
                 script += "\r\n" + pragma.prefix + " " + pragma.name + "="
-                    + Path_1.Path.resolve(pragma.value, Path_1.Path.map(scriptURL), Globals_1.DreamSpace.global.serverWebRoot ? Globals_1.DreamSpace.global.serverWebRoot : Globals_1.DreamSpace.baseScriptsURL) + pragma.extras;
+                    + Path_1.Path.resolve(pragma.value, Path_1.Path.map(scriptURL), DreamSpace_1.DreamSpace.global.serverWebRoot ? DreamSpace_1.DreamSpace.global.serverWebRoot : DreamSpace_1.DreamSpace.baseScriptsURL) + pragma.extras;
         }
     return script;
 }

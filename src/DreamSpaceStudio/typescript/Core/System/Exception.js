@@ -7,8 +7,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var Exception_1;
+const DreamSpace_1 = require("../DreamSpace");
 const Factories_1 = require("../Factories");
-const PrimitiveTypes_1 = require("../PrimitiveTypes");
 // ############################################################################################################################
 // Types for error management.
 // ############################################################################################################################
@@ -16,7 +16,7 @@ const PrimitiveTypes_1 = require("../PrimitiveTypes");
  * The Exception object is used to record information about errors that occur in an application.
  * Note: Creating an exception object automatically creates a corresponding log entry, unless the 'log' parameter is set to false.
  */
-let Exception = Exception_1 = class Exception extends Factories_1.Factory(Factories_1.makeFactory(PrimitiveTypes_1.makeDisposable(Error))) {
+let Exception = Exception_1 = class Exception extends Factories_1.Factory(Factories_1.makeFactory(DreamSpace_1.makeDisposable(Error))) {
     /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
     static init(o, isnew, message, source, log) {
         o.message = message;
@@ -44,7 +44,7 @@ let Exception = Exception_1 = class Exception extends Factories_1.Factory(Factor
                 callstack.shift();
                 isCallstackPopulated = true;
             }
-            else if (Globals_1.DreamSpace.global["opera"] && e.message) { //Opera
+            else if (DreamSpace_1.DreamSpace.global["opera"] && e.message) { //Opera
                 var lines = e.message.split('\n');
                 for (var i = 0, len = lines.length; i < len; ++i) {
                     if (lines[i].match(/^\s*[A-Za-z0-9\-_\$]+\(/)) {
@@ -106,9 +106,9 @@ let Exception = Exception_1 = class Exception extends Factories_1.Factory(Factor
             message += "\r\n\r\nStack:\r\n\r\n";
             var stackMsg = "";
             while (caller) {
-                var callerName = Types_1.getFullTypeName(caller) || "/*anonymous*/";
+                var callerName = Utilities_1.getFullTypeName(caller) || "/*anonymous*/";
                 var args = caller.arguments;
-                var _args = args && args.length > 0 ? Globals_1.DreamSpace.global.Array.prototype.join.call(args, ', ') : "";
+                var _args = args && args.length > 0 ? DreamSpace_1.DreamSpace.global.Array.prototype.join.call(args, ', ') : "";
                 if (stackMsg)
                     stackMsg += "called from ";
                 stackMsg += callerName + "(" + _args + ")\r\n\r\n";
@@ -153,9 +153,8 @@ Exception = Exception_1 = __decorate([
 ], Exception);
 exports.Exception = Exception;
 // ############################################################################################################################
-const Globals_1 = require("../Globals");
-const Types_1 = require("../Types");
 const Logging_1 = require("../Logging"); // ("log_error" is just to prevent confusion with the "error" function in Exception)
 const Diagnostics_1 = require("./Diagnostics");
+const Utilities_1 = require("../Utilities");
 // ############################################################################################################################
 //# sourceMappingURL=Exception.js.map

@@ -1,7 +1,7 @@
 // ############################################################################################################################################
 // Types for specialized object property management.
 // ############################################################################################################################################
-define(["require", "exports", "../Types", "../Factories", "./Events", "./Properties", "../Globals", "./Exception", "../PrimitiveTypes"], function (require, exports, Types_1, Factories_1, Events_1, Properties_1, Globals_1, Exception_1, PrimitiveTypes_1) {
+define(["require", "exports", "../DreamSpace", "../Utilities", "../Factories", "./Events", "./Properties", "./Exception", "../PrimitiveTypes"], function (require, exports, DreamSpace_1, Utilities_1, Factories_1, Events_1, Properties_1, Exception_1, PrimitiveTypes_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     /** A graph item represents a single node on the application graph. */
@@ -68,7 +68,7 @@ define(["require", "exports", "../Types", "../Factories", "./Events", "./Propert
         */
         static registerProperty(factory, name, isVisual = false, changedCallback = null, changingCallback = null) {
             function exception(_msg) {
-                return Exception_1.Exception.from("GraphNode.registerProperty(" + Types_1.getTypeName(factory) + ", " + name + ", " + isVisual + "): " + _msg, this);
+                return Exception_1.Exception.from("GraphNode.registerProperty(" + Utilities_1.getTypeName(factory) + ", " + name + ", " + isVisual + "): " + _msg, this);
             }
             if (!factory)
                 throw exception("A class type [function] is required for property registration.");
@@ -95,9 +95,9 @@ define(["require", "exports", "../Types", "../Factories", "./Events", "./Propert
                 factory['__staticProperties'] = currentSP = typeSpecificSP;
             }
             currentSP.push(sProp);
-            if (!Globals_1.DreamSpace.global.Object.defineProperty)
+            if (!DreamSpace_1.DreamSpace.global.Object.defineProperty)
                 exception("'Object.defineProperty()' not found. This JavaScript environment is not supported.");
-            Globals_1.DreamSpace.global.Object.defineProperty(factory, name, {
+            DreamSpace_1.DreamSpace.global.Object.defineProperty(factory, name, {
                 configurable: false,
                 writable: false,
                 get: function () { return this.getValue(sProp.name); },
@@ -325,7 +325,7 @@ define(["require", "exports", "../Types", "../Factories", "./Events", "./Propert
          * Returns an iterator to support Iteration for ES5/ES3.
          */
         iterator() { return this.asEnumerable(); }
-        static [Globals_1.DreamSpace.constructor](factory) {
+        static [DreamSpace_1.DreamSpace.constructor](factory) {
             factory.init = (o, isnew) => {
             };
         }
@@ -352,7 +352,7 @@ define(["require", "exports", "../Types", "../Factories", "./Events", "./Propert
         };
     };
     exports.GraphNode = GraphNode;
-    Globals_1.DreamSpace.global.Object.defineProperty(GraphNode, 'uiElementMap', { writable: false, configurable: false });
+    DreamSpace_1.DreamSpace.global.Object.defineProperty(GraphNode, 'uiElementMap', { writable: false, configurable: false });
 });
 // ############################################################################################################################################
 //# sourceMappingURL=Platform.Graph.js.map

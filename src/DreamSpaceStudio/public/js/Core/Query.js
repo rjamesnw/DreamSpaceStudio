@@ -1,4 +1,4 @@
-define(["require", "exports", "./Factories", "./System/Text", "./Utilities", "./Globals"], function (require, exports, Factories_1, Text_1, Utilities_1, Globals_1) {
+define(["require", "exports", "./Factories", "./System/Text", "./Utilities", "./DreamSpace"], function (require, exports, Factories_1, Text_1, Utilities_1, DreamSpace_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var Query_1;
@@ -184,7 +184,7 @@ define(["require", "exports", "./Factories", "./System/Text", "./Utilities", "./
     exports.Query = Query;
     // ==========================================================================================================================
     /** This is set automatically to the query for the current page. */
-    exports.pageQuery = Query.new(Globals_1.DreamSpace.global.location.href);
+    exports.pageQuery = Query.new(DreamSpace_1.DreamSpace.global.location.href);
 });
 // ==========================================================================================================================
 //# sourceMappingURL=Query.js.map

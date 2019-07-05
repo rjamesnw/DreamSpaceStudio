@@ -1,7 +1,7 @@
 // ############################################################################################################################
 // Types for event management.
 // ############################################################################################################################
-define(["require", "exports", "../Globals", "../Factories", "./Platform.Graph", "./Exception", "./Platform.HTML", "./Diagnostics", "../ErrorHandling", "../Logging"], function (require, exports, Globals_1, Factories_1, Platform_Graph_1, Exception_1, Platform_HTML_1, Diagnostics_1, ErrorHandling_1, Logging_1) {
+define(["require", "exports", "../DreamSpace", "../Factories", "./Platform.Graph", "./Exception", "./Platform.HTML", "./Diagnostics", "../ErrorHandling", "../Logging"], function (require, exports, DreamSpace_1, Factories_1, Platform_Graph_1, Exception_1, Platform_HTML_1, Diagnostics_1, ErrorHandling_1, Logging_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // ========================================================================================================================
@@ -46,7 +46,7 @@ define(["require", "exports", "../Globals", "../Factories", "./Platform.Graph", 
         // --------------------------------------------------------------------------------------------------------------------
         /** This generates/updates the HTML elements required to display the application. */
         updateLayout(recursive = true) {
-            var log = Globals_1.DreamSpace.isDebugging() ? Diagnostics_1.Diagnostics.log(ApplicationElement, "Application is updating its layout ...").beginCapture() : null;
+            var log = DreamSpace_1.DreamSpace.isDebugging() ? Diagnostics_1.Diagnostics.log(ApplicationElement, "Application is updating its layout ...").beginCapture() : null;
             super.updateLayout(recursive);
             if (this.__element != null) {
                 var node = this._targetElement.firstChild;
@@ -78,7 +78,7 @@ define(["require", "exports", "../Globals", "../Factories", "./Platform.Graph", 
         parseTemplate(html = null) {
             var log = Diagnostics_1.Diagnostics.log(ApplicationElement, "Parsing application HTML template ...").beginCapture();
             if (!html)
-                if (Globals_1.DreamSpace.host.isClient())
+                if (DreamSpace_1.DreamSpace.host.isClient())
                     html = this.loadTemplate(); // (returns "<html>...</html>" from the DOM)
                 else
                     throw Exception_1.Exception.from("Unable to parse the client side HTML on the server side (no HTML is loaded).  Call 'loadTemplate()' instead.");
@@ -103,7 +103,7 @@ define(["require", "exports", "../Globals", "../Factories", "./Platform.Graph", 
             var contents = null;
             var log = Diagnostics_1.Diagnostics.log("Application.loadTemplate()", "Loading template from '" + htmlFileURI + "' ...").beginCapture();
             // ... load the file ...
-            if (Globals_1.DreamSpace.host.isClient()) {
+            if (DreamSpace_1.DreamSpace.host.isClient()) {
                 if (htmlFileURI) {
                     // ... use AJAX ...
                     var request = new XMLHttpRequest();

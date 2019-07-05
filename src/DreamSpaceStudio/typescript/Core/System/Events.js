@@ -13,15 +13,15 @@ function __export(m) {
 }
 Object.defineProperty(exports, "__esModule", { value: true });
 var EventDispatcher_1;
-__export(require("../Globals"));
-const Globals_1 = require("../Globals");
+__export(require("../DreamSpace"));
+const DreamSpace_1 = require("../DreamSpace");
 const Delegate_1 = require("./Delegate");
-const Types_1 = require("../Types");
 const Factories_1 = require("../Factories");
 const Exception_1 = require("./Exception");
 const PrimitiveTypes_1 = require("../PrimitiveTypes");
 const ErrorHandling_1 = require("../ErrorHandling");
 const Browser_1 = require("./Browser");
+const Utilities_1 = require("../Utilities");
 ;
 ;
 /** Controls how the event progression occurs. */
@@ -201,7 +201,7 @@ let EventDispatcher = EventDispatcher_1 = class EventDispatcher extends Primitiv
     __exception(msg, error) {
         if (error)
             msg += "\r\nInner error: " + ErrorHandling_1.getErrorMessage(error);
-        return Exception_1.Exception.error("{EventDispatcher}.dispatchEvent():", "Error in event " + this.__eventName + " on object type '" + Types_1.getTypeName(this.owner) + "': " + msg, { exception: error, event: this, handler: this.__handlerCallInProgress });
+        return Exception_1.Exception.error("{EventDispatcher}.dispatchEvent():", "Error in event " + this.__eventName + " on object type '" + Utilities_1.getTypeName(this.owner) + "': " + msg, { exception: error, event: this, handler: this.__handlerCallInProgress });
     }
     /** Calls the event handlers that match the event mode on the current event instance. */
     onDispatchEvent(args, mode) {
@@ -312,7 +312,7 @@ let EventDispatcher = EventDispatcher_1 = class EventDispatcher extends Primitiv
         for (var i = this.__listeners.length - 1; i >= 0; --i)
             this.__removeListener(i);
     }
-    static [Globals_1.DreamSpace.constructor](factory) {
+    static [DreamSpace_1.DreamSpace.constructor](factory) {
         // ... factory.init must be set here in order to access private properties! ...
         factory.init = (o, isnew, owner, eventName, removeOnTrigger = false, eventTriggerHandler = null, canCancel = true) => {
             factory.super.init(o, isnew);
@@ -350,8 +350,8 @@ let EventDispatcher = EventDispatcher_1 = class EventDispatcher extends Primitiv
             //x ... first, set the depreciating cross-browser compatible access method ...
             //x type.prototype["$__" + customEventPropName] = onEventProxy; // (ex: '$__onClick')
             // ... create the event getter property and set the "on event" getter proxy ...
-            if (Globals_1.DreamSpace.global.Object.defineProperty)
-                Globals_1.DreamSpace.global.Object.defineProperty(type.prototype, customEventPropName, {
+            if (DreamSpace_1.DreamSpace.global.Object.defineProperty)
+                DreamSpace_1.DreamSpace.global.Object.defineProperty(type.prototype, customEventPropName, {
                     configurable: true,
                     enumerable: true,
                     writable: true,
@@ -436,7 +436,7 @@ class EventObject extends Factories_1.Factory(PrimitiveTypes_1.Object) {
         if (this.onPropertyChanged)
             this.onPropertyChanged.dispatch(this, oldValue);
     }
-    static [Globals_1.DreamSpace.constructor](factory) {
+    static [DreamSpace_1.DreamSpace.constructor](factory) {
         factory.init = (o, isnew) => {
         };
     }
@@ -454,8 +454,8 @@ var DreamSpace_Ext;
     /** Triggered when all manifests have loaded. No modules have been executed at this point.
       * Note: 'onReady' is not called automatically if 'DreamSpace.System.Diagnostics.debug' is set to 'Debug_Wait'.
       */
-    DreamSpace_Ext.onReady = EventDispatcherFactory.new(Globals_1.DreamSpace, "onReady", true);
-    Globals_1.DreamSpace.onReady = DreamSpace_Ext.onReady;
+    DreamSpace_Ext.onReady = EventDispatcherFactory.new(DreamSpace_1.DreamSpace, "onReady", true);
+    DreamSpace_1.DreamSpace.onReady = DreamSpace_Ext.onReady;
 })(DreamSpace_Ext || (DreamSpace_Ext = {}));
 // ############################################################################################################################
 //# sourceMappingURL=Events.js.map

@@ -2,8 +2,8 @@
 // Types for time management.
 // ############################################################################################################################
 
+import { DreamSpace as DS, ITypeInfo } from "../DreamSpace";
 import { Factory, factory } from "../Factories";
-import { DreamSpace as DS, ITypeInfo } from "../Globals";
 
 // ========================================================================================================================
 

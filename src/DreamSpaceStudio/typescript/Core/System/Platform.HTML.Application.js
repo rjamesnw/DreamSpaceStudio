@@ -3,7 +3,7 @@
 // Types for event management.
 // ############################################################################################################################
 Object.defineProperty(exports, "__esModule", { value: true });
-const Globals_1 = require("../Globals");
+const DreamSpace_1 = require("../DreamSpace");
 const Factories_1 = require("../Factories");
 const Platform_Graph_1 = require("./Platform.Graph");
 const Exception_1 = require("./Exception");
@@ -53,7 +53,7 @@ class ApplicationElement extends Factories_1.Factory(Platform_HTML_1.HTMLElement
     // --------------------------------------------------------------------------------------------------------------------
     /** This generates/updates the HTML elements required to display the application. */
     updateLayout(recursive = true) {
-        var log = Globals_1.DreamSpace.isDebugging() ? Diagnostics_1.Diagnostics.log(ApplicationElement, "Application is updating its layout ...").beginCapture() : null;
+        var log = DreamSpace_1.DreamSpace.isDebugging() ? Diagnostics_1.Diagnostics.log(ApplicationElement, "Application is updating its layout ...").beginCapture() : null;
         super.updateLayout(recursive);
         if (this.__element != null) {
             var node = this._targetElement.firstChild;
@@ -85,7 +85,7 @@ class ApplicationElement extends Factories_1.Factory(Platform_HTML_1.HTMLElement
     parseTemplate(html = null) {
         var log = Diagnostics_1.Diagnostics.log(ApplicationElement, "Parsing application HTML template ...").beginCapture();
         if (!html)
-            if (Globals_1.DreamSpace.host.isClient())
+            if (DreamSpace_1.DreamSpace.host.isClient())
                 html = this.loadTemplate(); // (returns "<html>...</html>" from the DOM)
             else
                 throw Exception_1.Exception.from("Unable to parse the client side HTML on the server side (no HTML is loaded).  Call 'loadTemplate()' instead.");
@@ -110,7 +110,7 @@ class ApplicationElement extends Factories_1.Factory(Platform_HTML_1.HTMLElement
         var contents = null;
         var log = Diagnostics_1.Diagnostics.log("Application.loadTemplate()", "Loading template from '" + htmlFileURI + "' ...").beginCapture();
         // ... load the file ...
-        if (Globals_1.DreamSpace.host.isClient()) {
+        if (DreamSpace_1.DreamSpace.host.isClient()) {
             if (htmlFileURI) {
                 // ... use AJAX ...
                 var request = new XMLHttpRequest();

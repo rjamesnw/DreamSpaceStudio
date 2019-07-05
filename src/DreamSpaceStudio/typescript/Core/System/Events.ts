@@ -2,18 +2,18 @@
 // Types for event management.
 // ############################################################################################################################
 
-export * from "../Globals";
-import { DreamSpace as DS } from "../Globals";
-declare module "../Globals" { namespace DreamSpace { export var onReady: typeof DreamSpace_Ext.onReady; } } // (augmented with a "ready" event)
+export * from "../DreamSpace";
+import { DreamSpace as DS } from "../DreamSpace";
+declare module "../DreamSpace" { namespace DreamSpace { export var onReady: typeof DreamSpace_Ext.onReady; } } // (augmented with a "ready" event)
 
 import { IDelegate, Delegate } from "./Delegate";
-import { getTypeName } from "../Types";
 import { Factory, usingFactory, factory } from "../Factories";
 import { Exception } from "./Exception";
 import { Object, Array, DependentObject } from "../PrimitiveTypes";
 import { getErrorMessage } from "../ErrorHandling";
 
 import { Browser } from "./Browser";
+import { getTypeName } from "../Utilities";
 declare module "./Browser" { namespace Browser { export var onReady: typeof Browser_Ext.onReady; } } // (augmented with a "ready" event)
 
 // ====================================================================================================================

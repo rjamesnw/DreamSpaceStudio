@@ -2,7 +2,7 @@
 // Browser detection (for special cases).
 // ############################################################################################################################################
 
-import { DreamSpace as DS } from "../Globals";
+import { DreamSpace as DS } from "../DreamSpace";
 import { EventDispatcher } from "./Events";
 import { Diagnostics } from "./Diagnostics";
 import { LogTypes } from "../Logging";

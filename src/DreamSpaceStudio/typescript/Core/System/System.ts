@@ -1,4 +1,4 @@
-﻿import { IDisposable } from "../Globals";
+﻿import { IDisposable } from "../DreamSpace";
 
 // ###########################################################################################################################
 // Types for event management.

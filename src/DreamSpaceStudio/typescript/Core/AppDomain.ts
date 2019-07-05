@@ -1,7 +1,7 @@
-﻿import { Factory } from "./Factories";
-import { getFullTypeName } from "./Types";
+﻿import { DreamSpace as DS, IDisposable, ITypeInfo, IFactory, IType, frozen } from "./DreamSpace";
+import { getFullTypeName } from "./Utilities";
+import { Factory } from "./Factories";
 import { error } from "./Logging";
-import { DreamSpace as DS, IDisposable, ITypeInfo, IFactory, IType, frozen } from "./Globals";
 import { Object } from "./PrimitiveTypes";
 import { Exception } from "./System/Exception";
 import { dispose } from "./System/System";

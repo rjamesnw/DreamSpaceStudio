@@ -1,7 +1,7 @@
 // ###########################################################################################################################
 // Types for time management.
 // ###########################################################################################################################
-define(["require", "exports", "../Factories", "../PrimitiveTypes", "../Globals", "./Exception"], function (require, exports, Factories_1, PrimitiveTypes_1, Globals_1, Exception_1) {
+define(["require", "exports", "../Factories", "../PrimitiveTypes", "../DreamSpace", "./Exception"], function (require, exports, Factories_1, PrimitiveTypes_1, DreamSpace_1, Exception_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // =======================================================================================================================
@@ -23,33 +23,33 @@ define(["require", "exports", "../Factories", "../PrimitiveTypes", "../Globals",
         }
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
         /** Returns the time zone offset in milliseconds ({Date}.getTimezoneOffset() returns it in minutes). */
-        static getTimeZoneOffset() { return Globals_1.DreamSpace.Time.__localTimeZoneOffset; }
+        static getTimeZoneOffset() { return DreamSpace_1.DreamSpace.Time.__localTimeZoneOffset; }
         /** Creates a TimeSpan object from the current value returned by calling 'Date.now()', or 'new Date().getTime()' if 'now()' is not supported. */
         static now() { return Date.now ? TimeSpan.new(Date.now()) : TimeSpan.fromDate(new Date()); }
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
         static utcTimeToLocalYear(timeInMs) {
-            return Globals_1.DreamSpace.Time.__EpochYear + Math.floor(((timeInMs || 0) - Globals_1.DreamSpace.Time.__localTimeZoneOffset) / (Globals_1.DreamSpace.Time.__actualDaysPerYear * Globals_1.DreamSpace.Time.__millisecondsPerDay));
+            return DreamSpace_1.DreamSpace.Time.__EpochYear + Math.floor(((timeInMs || 0) - DreamSpace_1.DreamSpace.Time.__localTimeZoneOffset) / (DreamSpace_1.DreamSpace.Time.__actualDaysPerYear * DreamSpace_1.DreamSpace.Time.__millisecondsPerDay));
         }
         static utcTimeToLocalDayOfYear(timeInMs) {
-            timeInMs = (timeInMs || 0) - Globals_1.DreamSpace.Time.__localTimeZoneOffset;
-            var days = TimeSpan.daysSinceEpoch(Globals_1.DreamSpace.Time.__EpochYear + Math.floor(timeInMs / (Globals_1.DreamSpace.Time.__actualDaysPerYear * Globals_1.DreamSpace.Time.__millisecondsPerDay)));
-            var timeInMs = timeInMs - days * Globals_1.DreamSpace.Time.__millisecondsPerDay;
-            return 1 + Math.floor(timeInMs / Globals_1.DreamSpace.Time.__millisecondsPerDay);
+            timeInMs = (timeInMs || 0) - DreamSpace_1.DreamSpace.Time.__localTimeZoneOffset;
+            var days = TimeSpan.daysSinceEpoch(DreamSpace_1.DreamSpace.Time.__EpochYear + Math.floor(timeInMs / (DreamSpace_1.DreamSpace.Time.__actualDaysPerYear * DreamSpace_1.DreamSpace.Time.__millisecondsPerDay)));
+            var timeInMs = timeInMs - days * DreamSpace_1.DreamSpace.Time.__millisecondsPerDay;
+            return 1 + Math.floor(timeInMs / DreamSpace_1.DreamSpace.Time.__millisecondsPerDay);
         }
         static utcTimeToLocalHours(timeInMs) {
-            return Math.floor(((timeInMs || 0) - Globals_1.DreamSpace.Time.__localTimeZoneOffset) / Globals_1.DreamSpace.Time.__millisecondsPerDay % 1 * Globals_1.DreamSpace.Time.__hoursPerDay);
+            return Math.floor(((timeInMs || 0) - DreamSpace_1.DreamSpace.Time.__localTimeZoneOffset) / DreamSpace_1.DreamSpace.Time.__millisecondsPerDay % 1 * DreamSpace_1.DreamSpace.Time.__hoursPerDay);
         }
         static utcTimeToLocalMinutes(timeInMs) {
-            return Math.floor(((timeInMs || 0) - Globals_1.DreamSpace.Time.__localTimeZoneOffset) / Globals_1.DreamSpace.Time.__millisecondsPerHour % 1 * Globals_1.DreamSpace.Time.__minsPerHour);
+            return Math.floor(((timeInMs || 0) - DreamSpace_1.DreamSpace.Time.__localTimeZoneOffset) / DreamSpace_1.DreamSpace.Time.__millisecondsPerHour % 1 * DreamSpace_1.DreamSpace.Time.__minsPerHour);
         }
         static utcTimeToLocalSeconds(timeInMs) {
-            return Math.floor(((timeInMs || 0) - Globals_1.DreamSpace.Time.__localTimeZoneOffset) / Globals_1.DreamSpace.Time.__millisecondsPerMinute % 1 * Globals_1.DreamSpace.Time.__secondsPerMinute);
+            return Math.floor(((timeInMs || 0) - DreamSpace_1.DreamSpace.Time.__localTimeZoneOffset) / DreamSpace_1.DreamSpace.Time.__millisecondsPerMinute % 1 * DreamSpace_1.DreamSpace.Time.__secondsPerMinute);
         }
         static utcTimeToLocalMilliseconds(timeInMs) {
-            return Math.floor(((timeInMs || 0) - Globals_1.DreamSpace.Time.__localTimeZoneOffset) / Globals_1.DreamSpace.Time.__millisecondsPerSecond % 1 * Globals_1.DreamSpace.Time.__millisecondsPerSecond);
+            return Math.floor(((timeInMs || 0) - DreamSpace_1.DreamSpace.Time.__localTimeZoneOffset) / DreamSpace_1.DreamSpace.Time.__millisecondsPerSecond % 1 * DreamSpace_1.DreamSpace.Time.__millisecondsPerSecond);
         }
         static utcTimeToLocalTime(timeInMs) {
-            return TimeSpan.new((timeInMs || 0) - Globals_1.DreamSpace.Time.__localTimeZoneOffset);
+            return TimeSpan.new((timeInMs || 0) - DreamSpace_1.DreamSpace.Time.__localTimeZoneOffset);
         }
         /** Creates and returns a TimeSpan that represents the date object.
            * This relates to the 'date.getTime()' function, which returns the internal date span in milliseconds (from Epoch) with the time zone added.
@@ -74,7 +74,7 @@ define(["require", "exports", "../Factories", "../PrimitiveTypes", "../Globals",
         static __parseSQLDateTime(dateString) {
             dateString = dateString.replace(' ', 'T'); // TODO: Make more compliant.
             var ms = Date.parse(dateString);
-            ms += Globals_1.DreamSpace.Time.__localTimeZoneOffset;
+            ms += DreamSpace_1.DreamSpace.Time.__localTimeZoneOffset;
             return TimeSpan.new(ms); // (the parsed date will have the time zone added)
         }
         /** Creates and returns a TimeSpan that represents the specified date string as the local time.
@@ -112,7 +112,7 @@ define(["require", "exports", "../Factories", "../PrimitiveTypes", "../Globals",
              * Note: This returns true if the date string matches at least the first parts of the format (i.e. date, or date+time, or date+time+timezone).
              */
         static isISO8601(dateStr) {
-            return Globals_1.DreamSpace.Time.__ISO8601RegEx.test(dateStr);
+            return DreamSpace_1.DreamSpace.Time.__ISO8601RegEx.test(dateStr);
         }
         /** Returns true if the specified date is in the standard SQL based Date/Time format (YYYY-MM-DD HH:mm:ss.sss+ZZ).
             * Note: This returns true if the date string matches at least the first parts of the format (i.e. date, or date+time).
@@ -122,14 +122,14 @@ define(["require", "exports", "../Factories", "../PrimitiveTypes", "../Globals",
             */
         static isSQLDateTime(dateStr, requireTimeMatch = false) {
             return requireTimeMatch ?
-                Globals_1.DreamSpace.Time.__SQLDateTimeStrictRegEx.test(dateStr)
-                : Globals_1.DreamSpace.Time.__SQLDateTimeRegEx.test(dateStr);
+                DreamSpace_1.DreamSpace.Time.__SQLDateTimeStrictRegEx.test(dateStr)
+                : DreamSpace_1.DreamSpace.Time.__SQLDateTimeRegEx.test(dateStr);
         }
         /** Calculates the number of leap days since Epoch up to a given year (note: cannot be less than the Epoch year [1970]). */
         static daysSinceEpoch(year) {
-            if (year < Globals_1.DreamSpace.Time.__EpochYear)
-                throw Exception_1.Exception.from("Invalid year: Must be <= " + Globals_1.DreamSpace.Time.__EpochYear);
-            year = Math.floor(year - Globals_1.DreamSpace.Time.__EpochYear); // (NOTE: 'year' is a DIFFERENCE after this, NOT the actual year)
+            if (year < DreamSpace_1.DreamSpace.Time.__EpochYear)
+                throw Exception_1.Exception.from("Invalid year: Must be <= " + DreamSpace_1.DreamSpace.Time.__EpochYear);
+            year = Math.floor(year - DreamSpace_1.DreamSpace.Time.__EpochYear); // (NOTE: 'year' is a DIFFERENCE after this, NOT the actual year)
             return 365 * year
                 + Math.floor((year + 1) / 4)
                 - Math.floor((year + 69) / 100)
@@ -137,41 +137,41 @@ define(["require", "exports", "../Factories", "../PrimitiveTypes", "../Globals",
         }
         /** Calculates the number of years from the specified milliseconds, taking leap years into account. */
         static yearsSinceEpoch(ms) {
-            var mpy = Globals_1.DreamSpace.Time.__millisecondsPerYear, mpd = Globals_1.DreamSpace.Time.__millisecondsPerDay;
-            return Globals_1.DreamSpace.Time.__EpochYear + Math.floor((ms - Math.floor((ms + mpy) / (4 * mpy)) * mpd
+            var mpy = DreamSpace_1.DreamSpace.Time.__millisecondsPerYear, mpd = DreamSpace_1.DreamSpace.Time.__millisecondsPerDay;
+            return DreamSpace_1.DreamSpace.Time.__EpochYear + Math.floor((ms - Math.floor((ms + mpy) / (4 * mpy)) * mpd
                 - Math.floor((ms + 69 * mpy) / (100 * mpy)) * mpd
                 + Math.floor((ms + 369 * mpy) / (400 * mpy)) * mpd) / mpy);
         }
         static isLeapYear(year) {
             return (((year % 4 == 0) && (year % 100 != 0)) || year % 400 == 0);
         }
-        static msFromTime(year = Globals_1.DreamSpace.Time.__EpochYear, dayOfYear = 1, hours = 0, minutes = 0, seconds = 0, milliseconds = 0) {
-            return TimeSpan.daysSinceEpoch(year) * Globals_1.DreamSpace.Time.__millisecondsPerDay
-                + (dayOfYear - 1) * Globals_1.DreamSpace.Time.__millisecondsPerDay
-                + hours * Globals_1.DreamSpace.Time.__millisecondsPerHour
-                + minutes * Globals_1.DreamSpace.Time.__millisecondsPerMinute
-                + seconds * Globals_1.DreamSpace.Time.__millisecondsPerSecond
+        static msFromTime(year = DreamSpace_1.DreamSpace.Time.__EpochYear, dayOfYear = 1, hours = 0, minutes = 0, seconds = 0, milliseconds = 0) {
+            return TimeSpan.daysSinceEpoch(year) * DreamSpace_1.DreamSpace.Time.__millisecondsPerDay
+                + (dayOfYear - 1) * DreamSpace_1.DreamSpace.Time.__millisecondsPerDay
+                + hours * DreamSpace_1.DreamSpace.Time.__millisecondsPerHour
+                + minutes * DreamSpace_1.DreamSpace.Time.__millisecondsPerMinute
+                + seconds * DreamSpace_1.DreamSpace.Time.__millisecondsPerSecond
                 + milliseconds;
         }
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
         /** Returns the time zone as a string in the format "UTC[+/-]####".
             * @param {number} timezoneOffsetInMs The number of milliseconds to offset from local time to UTC time (eg. UTC-05:00 would be -(-5*60*60*1000), or 18000000).
             */
-        static getTimeZoneSuffix(timezoneOffsetInMs = Globals_1.DreamSpace.Time.__localTimeZoneOffset) {
-            var tzInHours = -(timezoneOffsetInMs / Globals_1.DreamSpace.Time.__millisecondsPerHour);
+        static getTimeZoneSuffix(timezoneOffsetInMs = DreamSpace_1.DreamSpace.Time.__localTimeZoneOffset) {
+            var tzInHours = -(timezoneOffsetInMs / DreamSpace_1.DreamSpace.Time.__millisecondsPerHour);
             var hours = Math.abs(tzInHours);
             return "UTC" + (tzInHours >= 0 ? "+" : "-")
                 + PrimitiveTypes_1.String.pad(Math.floor(hours), 2, '0')
-                + PrimitiveTypes_1.String.pad(Math.floor(hours % 1 * Globals_1.DreamSpace.Time.__minsPerHour), 2, '0');
+                + PrimitiveTypes_1.String.pad(Math.floor(hours % 1 * DreamSpace_1.DreamSpace.Time.__minsPerHour), 2, '0');
         }
         /** Returns the ISO-8601 time zone as a string in the format "[+/-]hh:mm:ss.sssZ".
             * @param {number} timezoneOffsetInMs The number of milliseconds to offset from local time to UTC time (eg. UTC-05:00 would be -(-5*60*60*1000), or 18000000).
             */
-        static getISOTimeZoneSuffix(timezoneOffsetInMs = Globals_1.DreamSpace.Time.__localTimeZoneOffset) {
-            var tzInHours = -(timezoneOffsetInMs / Globals_1.DreamSpace.Time.__millisecondsPerHour);
+        static getISOTimeZoneSuffix(timezoneOffsetInMs = DreamSpace_1.DreamSpace.Time.__localTimeZoneOffset) {
+            var tzInHours = -(timezoneOffsetInMs / DreamSpace_1.DreamSpace.Time.__millisecondsPerHour);
             var hours = Math.abs(tzInHours);
-            var minutes = Math.abs(hours % 1 * Globals_1.DreamSpace.Time.__minsPerHour);
-            var seconds = minutes % 1 * Globals_1.DreamSpace.Time.__secondsPerMinute;
+            var minutes = Math.abs(hours % 1 * DreamSpace_1.DreamSpace.Time.__minsPerHour);
+            var seconds = minutes % 1 * DreamSpace_1.DreamSpace.Time.__secondsPerMinute;
             return (tzInHours >= 0 ? "+" : "-")
                 + PrimitiveTypes_1.String.pad(hours, 2, '0') + ":"
                 + PrimitiveTypes_1.String.pad(minutes, 2, '0') + ":"
@@ -188,15 +188,15 @@ define(["require", "exports", "../Factories", "../PrimitiveTypes", "../Globals",
                 var ms = this.__ms = timeInMs || 0;
                 this.__date = null;
                 var daysToYear = TimeSpan.daysSinceEpoch(this.year = TimeSpan.yearsSinceEpoch(ms));
-                var msRemaining = ms - daysToYear * Globals_1.DreamSpace.Time.__millisecondsPerDay;
-                this.dayOfYear = 1 + Math.floor(msRemaining / Globals_1.DreamSpace.Time.__millisecondsPerDay);
-                msRemaining -= (this.dayOfYear - 1) * Globals_1.DreamSpace.Time.__millisecondsPerDay;
-                this.hours = Math.floor(msRemaining / Globals_1.DreamSpace.Time.__millisecondsPerHour);
-                msRemaining -= this.hours * Globals_1.DreamSpace.Time.__millisecondsPerHour;
-                this.minutes = Math.floor(msRemaining / Globals_1.DreamSpace.Time.__millisecondsPerMinute);
-                msRemaining -= this.minutes * Globals_1.DreamSpace.Time.__millisecondsPerMinute;
-                this.seconds = Math.floor(msRemaining / Globals_1.DreamSpace.Time.__millisecondsPerSecond);
-                msRemaining -= this.seconds * Globals_1.DreamSpace.Time.__millisecondsPerSecond;
+                var msRemaining = ms - daysToYear * DreamSpace_1.DreamSpace.Time.__millisecondsPerDay;
+                this.dayOfYear = 1 + Math.floor(msRemaining / DreamSpace_1.DreamSpace.Time.__millisecondsPerDay);
+                msRemaining -= (this.dayOfYear - 1) * DreamSpace_1.DreamSpace.Time.__millisecondsPerDay;
+                this.hours = Math.floor(msRemaining / DreamSpace_1.DreamSpace.Time.__millisecondsPerHour);
+                msRemaining -= this.hours * DreamSpace_1.DreamSpace.Time.__millisecondsPerHour;
+                this.minutes = Math.floor(msRemaining / DreamSpace_1.DreamSpace.Time.__millisecondsPerMinute);
+                msRemaining -= this.minutes * DreamSpace_1.DreamSpace.Time.__millisecondsPerMinute;
+                this.seconds = Math.floor(msRemaining / DreamSpace_1.DreamSpace.Time.__millisecondsPerSecond);
+                msRemaining -= this.seconds * DreamSpace_1.DreamSpace.Time.__millisecondsPerSecond;
                 this.milliseconds = msRemaining;
             }
             return this;
@@ -209,14 +209,14 @@ define(["require", "exports", "../Factories", "../PrimitiveTypes", "../Globals",
             if (arguments.length == 1)
                 this.setTime(this.__ms += (yearOrTimeInMS || 0));
             else
-                this.setTime(this.__ms += TimeSpan.msFromTime(Globals_1.DreamSpace.Time.__EpochYear + yearOrTimeInMS, 1 + dayOfYearOffset, hoursOffset, minutesOffset, secondsOffset, msOffset));
+                this.setTime(this.__ms += TimeSpan.msFromTime(DreamSpace_1.DreamSpace.Time.__EpochYear + yearOrTimeInMS, 1 + dayOfYearOffset, hoursOffset, minutesOffset, secondsOffset, msOffset));
             return this;
         }
         subtract(yearOrTimeInMS = 0, dayOfYearOffset = 0, hoursOffset = 0, minutesOffset = 0, secondsOffset = 0, msOffset = 0) {
             if (arguments.length == 1)
                 this.setTime(this.__ms -= (yearOrTimeInMS || 0));
             else
-                this.setTime(this.__ms -= TimeSpan.msFromTime(Globals_1.DreamSpace.Time.__EpochYear + yearOrTimeInMS, 1 + dayOfYearOffset, hoursOffset, minutesOffset, secondsOffset, msOffset));
+                this.setTime(this.__ms -= TimeSpan.msFromTime(DreamSpace_1.DreamSpace.Time.__EpochYear + yearOrTimeInMS, 1 + dayOfYearOffset, hoursOffset, minutesOffset, secondsOffset, msOffset));
             return this;
         }
         /** Returns the time span as a string (note: this is NOT a date string).
@@ -229,7 +229,7 @@ define(["require", "exports", "../Factories", "../PrimitiveTypes", "../Globals",
             */
         toString(includeTime = true, includeMilliseconds = true, includeTimezone = true) {
             if (!this.__localTS)
-                this.__localTS = TimeSpan.new(this.toValue() - Globals_1.DreamSpace.Time.__localTimeZoneOffset);
+                this.__localTS = TimeSpan.new(this.toValue() - DreamSpace_1.DreamSpace.Time.__localTimeZoneOffset);
             var localTS = this.__localTS;
             return "Year " + PrimitiveTypes_1.String.pad(localTS.year, 4, '0') + ", Day " + PrimitiveTypes_1.String.pad(localTS.dayOfYear, 3, '0')
                 + (includeTime ? " " + PrimitiveTypes_1.String.pad(localTS.hours, 2, '0') + ":" + PrimitiveTypes_1.String.pad(localTS.minutes, 2, '0') + ":" + PrimitiveTypes_1.String.pad(localTS.seconds, 2, '0')

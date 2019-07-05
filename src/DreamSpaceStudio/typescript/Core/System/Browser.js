@@ -3,7 +3,7 @@
 // Browser detection (for special cases).
 // ############################################################################################################################################
 Object.defineProperty(exports, "__esModule", { value: true });
-const Globals_1 = require("../Globals");
+const DreamSpace_1 = require("../DreamSpace");
 const Events_1 = require("./Events");
 const Diagnostics_1 = require("./Diagnostics");
 const Logging_1 = require("../Logging");
@@ -169,12 +169,12 @@ exports.Browser = Browser;
     /** The browser version detected. */
     Browser.version = -1;
     /** Set to true if ES2015 (aka ES6) is supported ('class', 'new.target', etc.). */
-    Browser.ES6 = Globals_1.DreamSpace.ES6;
+    Browser.ES6 = DreamSpace_1.DreamSpace.ES6;
     // (Note: For extension of native types, the DreamSpace behavior changes depending on ES6 support due to the new 'new.target' feature changing how called native constructors behave)
     /** The type of browser detected. */
     Browser.type = (() => {
         var browserType = BrowserTypes.Unknown, browserInfo;
-        if (Globals_1.DreamSpace.Environment == Globals_1.DreamSpace.Environments.Browser) {
+        if (DreamSpace_1.DreamSpace.Environment == DreamSpace_1.DreamSpace.Environments.Browser) {
             if (!Browser.browserVersionInfo)
                 Browser.browserVersionInfo = __findBrowser();
             browserInfo = Browser.browserVersionInfo.parent;
@@ -295,7 +295,7 @@ exports.Browser = Browser;
         // Note: $XT is initially created with limited functionality until the system is ready!
         // If on the client side, detect when the document is ready for script downloads - this will allow the UI to show quickly, and download script while the user reads the screen.
         // (note: this is a two phased approach - DOM ready, then PAGE ready.
-        if (Globals_1.DreamSpace.Environment == Globals_1.DreamSpace.Environments.Browser)
+        if (DreamSpace_1.DreamSpace.Environment == DreamSpace_1.DreamSpace.Environments.Browser)
             (function () {
                 var readyStateTimer;
                 // ... check document ready events first in case we can get more granular feedback...

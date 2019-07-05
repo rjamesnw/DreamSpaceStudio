@@ -1,7 +1,7 @@
 // ###########################################################################################################################
 // Application Windows
 // ###########################################################################################################################
-define(["require", "exports", "../Globals"], function (require, exports, Globals_1) {
+define(["require", "exports", "../DreamSpace"], function (require, exports, DreamSpace_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class Store {
@@ -305,7 +305,7 @@ define(["require", "exports", "../Globals"], function (require, exports, Globals
         Store.clear = clear;
         // ------------------------------------------------------------------------------------------------------------------
         // Cleanup web storage if debugging.
-        if (Globals_1.DreamSpace.isDebugging && Store.hasLocalStorage)
+        if (DreamSpace_1.DreamSpace.isDebugging && Store.hasLocalStorage)
             clear(StorageType.Local);
         // ------------------------------------------------------------------------------------------------------------------
     })(Store || (Store = {}));

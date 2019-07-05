@@ -1,4 +1,4 @@
-define(["require", "exports", "./Factories", "./Resources", "./Path", "./Logging", "./ErrorHandling", "./Query", "./Utilities", "./Globals", "./PrimitiveTypes"], function (require, exports, Factories_1, Resources_1, Path_1, Logging_1, ErrorHandling_1, Query_1, Utilities_1, Globals_1, PrimitiveTypes_1) {
+define(["require", "exports", "./Factories", "./Resources", "./Path", "./Logging", "./ErrorHandling", "./Query", "./Utilities", "./DreamSpace", "./PrimitiveTypes"], function (require, exports, Factories_1, Resources_1, Path_1, Logging_1, ErrorHandling_1, Query_1, Utilities_1, DreamSpace_1, PrimitiveTypes_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var ResourceRequest_1;
@@ -26,7 +26,7 @@ define(["require", "exports", "./Factories", "./Resources", "./Path", "./Logging
                *
                */
             this.method = "GET";
-            this.$__transformedData = Globals_1.DreamSpace.noop;
+            this.$__transformedData = DreamSpace_1.DreamSpace.noop;
             /** The response code from the XHR response. */
             this.responseCode = 0; // (the response code returned)
             /** The response code message from the XHR response. */
@@ -70,7 +70,7 @@ define(["require", "exports", "./Factories", "./Resources", "./Path", "./Logging
           * If no transformations were made, then the value in 'response' is returned.
           */
         get transformedResponse() {
-            return this.$__transformedData === Globals_1.DreamSpace.noop ? this.response : this.$__transformedData;
+            return this.$__transformedData === DreamSpace_1.DreamSpace.noop ? this.response : this.$__transformedData;
         }
         /**
          * A progress/error message related to the status (may not be the same as the response message).
@@ -218,14 +218,14 @@ define(["require", "exports", "./Factories", "./Resources", "./Path", "./Logging
                 // ... this request has not been started yet; attempt to load the resource ...
                 // ... 1. see first if this file is cached in the web storage, then load it from there instead ...
                 //    (ignore the local caching if in debug or the versions are different)
-                if (!Globals_1.DreamSpace.isDebugging && typeof Globals_1.DreamSpace.global.Storage !== void 0)
+                if (!DreamSpace_1.DreamSpace.isDebugging && typeof DreamSpace_1.DreamSpace.global.Storage !== void 0)
                     try {
-                        var currentAppVersion = Globals_1.DreamSpace.getAppVersion();
-                        var versionInLocalStorage = Globals_1.DreamSpace.global.localStorage.getItem("version");
-                        var appVersionInLocalStorage = Globals_1.DreamSpace.global.localStorage.getItem("appVersion");
-                        if (versionInLocalStorage && appVersionInLocalStorage && Globals_1.DreamSpace.version == versionInLocalStorage && currentAppVersion == appVersionInLocalStorage) {
+                        var currentAppVersion = DreamSpace_1.DreamSpace.getAppVersion();
+                        var versionInLocalStorage = DreamSpace_1.DreamSpace.global.localStorage.getItem("version");
+                        var appVersionInLocalStorage = DreamSpace_1.DreamSpace.global.localStorage.getItem("appVersion");
+                        if (versionInLocalStorage && appVersionInLocalStorage && DreamSpace_1.DreamSpace.version == versionInLocalStorage && currentAppVersion == appVersionInLocalStorage) {
                             // ... all versions match, just pull from local storage (faster) ...
-                            this.response = Globals_1.DreamSpace.global.localStorage.getItem("resource:" + this.url); // (should return 'null' if not found)
+                            this.response = DreamSpace_1.DreamSpace.global.localStorage.getItem("resource:" + this.url); // (should return 'null' if not found)
                             if (this.response !== null && this.response !== void 0) {
                                 this.status = Resources_1.RequestStatuses.Loaded;
                                 this._doNext();
@@ -255,11 +255,11 @@ define(["require", "exports", "./Factories", "./Resources", "./Path", "./Logging
                                 this.setError("Resource type mismatch: expected type was '" + this.type + "', but received '" + responseType + "' (XHR type '" + xhr.responseType + "').\r\n");
                             }
                             else {
-                                if (!Globals_1.DreamSpace.isDebugging && typeof Globals_1.DreamSpace.global.Storage !== void 0)
+                                if (!DreamSpace_1.DreamSpace.isDebugging && typeof DreamSpace_1.DreamSpace.global.Storage !== void 0)
                                     try {
-                                        Globals_1.DreamSpace.global.localStorage.setItem("version", Globals_1.DreamSpace.version);
-                                        Globals_1.DreamSpace.global.localStorage.setItem("appVersion", Globals_1.DreamSpace.getAppVersion());
-                                        Globals_1.DreamSpace.global.localStorage.setItem("resource:" + this.url, this.response);
+                                        DreamSpace_1.DreamSpace.global.localStorage.setItem("version", DreamSpace_1.DreamSpace.version);
+                                        DreamSpace_1.DreamSpace.global.localStorage.setItem("appVersion", DreamSpace_1.DreamSpace.getAppVersion());
+                                        DreamSpace_1.DreamSpace.global.localStorage.setItem("resource:" + this.url, this.response);
                                         this.message = "Resource cached in local storage.";
                                     }
                                     catch (e) {
@@ -490,7 +490,7 @@ define(["require", "exports", "./Factories", "./Resources", "./Path", "./Logging
                     }
                     catch (e) {
                         this.setError("Error in ready handler.", e);
-                        if (Globals_1.DreamSpace.isDebugging && (this.type == Resources_1.ResourceTypes.Application_Script || this.type == Resources_1.ResourceTypes.Application_ECMAScript))
+                        if (DreamSpace_1.DreamSpace.isDebugging && (this.type == Resources_1.ResourceTypes.Application_Script || this.type == Resources_1.ResourceTypes.Application_ECMAScript))
                             throw e; // (propagate script errors to the browser for debuggers, if any)
                     }
                 }
@@ -588,7 +588,7 @@ define(["require", "exports", "./Factories", "./Resources", "./Path", "./Logging
             }
             return this;
         }
-        static [Globals_1.DreamSpace.constructor](factory) {
+        static [DreamSpace_1.DreamSpace.constructor](factory) {
             factory.init = (o, isnew, url, type, async = true) => {
                 if (url === void 0 || url === null)
                     throw "A resource URL is required.";

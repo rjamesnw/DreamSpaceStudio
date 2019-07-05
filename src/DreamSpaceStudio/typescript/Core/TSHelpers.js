@@ -4,20 +4,23 @@
  * DreamSpaceJS reserves a global name 'DreamSpace' in the global scope to keep all globals contained in one place.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-const Globals_1 = require("./Globals");
+const DreamSpace_1 = require("./DreamSpace");
 const Utilities_1 = require("./Utilities");
 var extendStatics = Object.setPrototypeOf || ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
     function (d, b) { for (var p in b)
         if (b.hasOwnProperty(p))
             d[p] = b[p]; };
-/** Extends from a base type by chaining a derived type's 'prototype' to the base type's prototype.
-* This method takes into account any preset properties that may exist on the derived type's prototype.
-* Note: Extending an already extended derived type will recreate the prototype connection again using a new prototype instance pointing to the given base type.
-* Note: It is not possible to modify any existing chain of constructor calls.  Only the prototype can be changed.
-* @param {Function} derivedType The derived type (function) that will extend from a base type.
-* @param {Function} baseType The base type (function) to extend to the derived type.
-* @param {boolean} copyBaseProperties If true (default) behaves like the TypeScript "__extends" method, which copies forward any static base properties to the derived type.
-*/
+/**
+ * Extends from a base type by chaining a derived type's 'prototype' to the base type's prototype.
+ * This method takes into account any preset properties that may exist on the derived type's prototype.
+ * This is a special override to the default TypeScript '__extends' code for extending types in the DreamSpace system.
+ * It's also a bit more efficient given that the 'extendStatics' part is run only once and cached and not every time '__extends' is called.
+ * Note: Extending an already extended derived type will recreate the prototype connection again using a new prototype instance pointing to the given base type.
+ * Note: It is not possible to modify any existing chain of constructor calls.  Only the prototype can be changed.
+ * @param {Function} derivedType The derived type (function) that will extend from a base type.
+ * @param {Function} baseType The base type (function) to extend to the derived type.
+ * @param {boolean} copyBaseProperties If true (default) behaves like the TypeScript "__extends" method, which copies forward any static base properties to the derived type.
+ */
 function __extends(derivedType, baseType, copyStaticProperties = true) {
     if (copyStaticProperties)
         extendStatics(derivedType, baseType);
@@ -289,7 +292,7 @@ function __importDefault(mod) {
  *
  * @param {object} target Allows copying the helper functions to a different object instance other than the global scope.
  */
-function installTypeScriptHelpers(target = Globals_1.DreamSpace.global) {
+function installTypeScriptHelpers(target = DreamSpace_1.DreamSpace.global) {
     target['__extends'] = __extends;
     target['__assign'] = __assign;
     target['__rest'] = __rest;
@@ -340,8 +343,8 @@ exports.renderHelperVarDeclarations = renderHelperVarDeclarations;
  */
 function renderHelpers() {
     var __helpersName = "$__healpers_" + Utilities_1.Utilities.createGUID();
-    return "var " + __helpersName + " = " + Globals_1.DreamSpace.globalNamespaceName + ".renderHelperVarDeclarations" + "('" + __helpersName + "[1]'); eval(" + __helpersName + "[0]);";
+    return "var " + __helpersName + " = " + DreamSpace_1.DreamSpace.globalNamespaceName + ".renderHelperVarDeclarations" + "('" + __helpersName + "[1]'); eval(" + __helpersName + "[0]);";
 }
 exports.renderHelpers = renderHelpers;
-Globals_1.DreamSpace.globalEval(renderHelpers()); // (setup the global helpers to begin with)
+DreamSpace_1.DreamSpace.globalEval(renderHelpers()); // (setup the global helpers to begin with)
 //# sourceMappingURL=TSHelpers.js.map

@@ -16,10 +16,11 @@
   "include": [
     "server/globals.d.ts",
     "./server/**/*.ts",
-    "Core/**/*.ts"
+    "./System/**/*.ts"
   ],
   //"include": [ "Core/Polyfills.ts", "Core/System/Delegate.ts" ],
   "exclude": [
+    "./Core/**/*.ts",
     "node_modules",
     "client/**/*.*",
     "server/vdom.ts",

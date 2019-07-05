@@ -1,7 +1,7 @@
 // ############################################################################################################################
 // Types for time management.
 // ############################################################################################################################
-define(["require", "exports", "../Factories", "../Globals", "./Time", "./Exception", "../PrimitiveTypes", "../Logging"], function (require, exports, Factories_1, Globals_1, Time_1, Exception_1, PrimitiveTypes_1, Logging_1) {
+define(["require", "exports", "../DreamSpace", "../Factories", "./Time", "./Exception", "../PrimitiveTypes", "../Logging"], function (require, exports, DreamSpace_1, Factories_1, Time_1, Exception_1, PrimitiveTypes_1, Logging_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var LogItem_1;
@@ -21,7 +21,7 @@ define(["require", "exports", "../Factories", "../Globals", "./Time", "./Excepti
         static 'new'(parent, title, message, type = Logging_1.LogTypes.Normal, outputToConsole = true) { return null; }
         static init(o, isnew, parent, title, message, type = Logging_1.LogTypes.Normal, outputToConsole = true) {
             if (title === void 0 || title === null) {
-                if (Globals_1.DreamSpace.isEmpty(message))
+                if (DreamSpace_1.DreamSpace.isEmpty(message))
                     Logging_1.error("LogItem()", "A message is required if no title is given.", o);
                 title = "";
             }
@@ -101,7 +101,7 @@ define(["require", "exports", "../Factories", "../Globals", "./Time", "./Excepti
             return txt;
         }
         // --------------------------------------------------------------------------------------------------------------------------
-        static [Globals_1.DreamSpace.constructor](factory) {
+        static [DreamSpace_1.DreamSpace.constructor](factory) {
             //factory.init = (o, isnew) => { // not dealing with private properties, so this is not needed!
             //};
         }
@@ -230,7 +230,7 @@ define(["require", "exports", "../Factories", "../Globals", "./Time", "./Excepti
     // ############################################################################################################################
     // Basic Window hooks for client-side diagnostics (CTRL+~ to dump the log).
     // TODO: Consider opening the load in either a popup or overlay (user's choice).
-    if (Globals_1.DreamSpace.host.isClient && typeof window !== 'undefined') {
+    if (DreamSpace_1.DreamSpace.host.isClient && typeof window !== 'undefined') {
         // If a window error event callback is available, hook into it to provide some visual feedback in case of errors.
         // (Note: Supports the Bootstrap UI, though it may not be available if an error occurs too early)
         window.onerror = function (eventOrMessage, source, fileno) {
@@ -257,7 +257,7 @@ define(["require", "exports", "../Factories", "../Globals", "./Time", "./Excepti
             else {
                 keyCode = evt.charCode ? evt.charCode : evt.keyCode;
             }
-            if (keyCode == 192 && evt.ctrlKey && Globals_1.DreamSpace.debugMode) { // (CTRL+~) key
+            if (keyCode == 192 && evt.ctrlKey && DreamSpace_1.DreamSpace.debugMode) { // (CTRL+~) key
                 var body = document.getElementById("main");
                 if (body)
                     body.style.display = ""; // (show the main element if hidden)

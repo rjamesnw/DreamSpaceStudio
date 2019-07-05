@@ -2,7 +2,7 @@
 // Application Domains
 // ###########################################################################################################################
 
-import { DreamSpace as DS, IFunctionInfo } from "../Globals";
+import { DreamSpace as DS, IFunctionInfo } from "../DreamSpace";
 import { Object } from "../PrimitiveTypes";
 import { Exception } from "./Exception";
 import { factory, Factory } from "../Factories";

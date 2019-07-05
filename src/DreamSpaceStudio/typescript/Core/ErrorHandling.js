@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Diagnostics_1 = require("./System/Diagnostics");
 const Scripts_1 = require("./Scripts");
-const Types_1 = require("./Types");
+const Utilities_1 = require("./Utilities");
 /** Returns the call stack for a given error object. */
 function getErrorCallStack(errorSource) {
     if (!errorSource || !errorSource.stack)
@@ -53,7 +53,7 @@ function getErrorMessage(errorSource) {
             var error = errorSource instanceof Error ? errorSource : errorSource instanceof ErrorEvent ? errorSource.error : null;
             var msg = '' + (Scripts_1.ScriptError && (errorSource instanceof Scripts_1.ScriptError)
                 ? errorSource.error && errorSource.error.message || errorSource.error && errorInfo.error : (errorInfo.message || errorInfo.reason || errorInfo.type));
-            var fname = errorInfo instanceof Function ? Types_1.getTypeName(errorInfo, false) : errorInfo.functionName;
+            var fname = errorInfo instanceof Function ? Utilities_1.getTypeName(errorInfo, false) : errorInfo.functionName;
             var sourceLocation = errorInfo.fileName || errorInfo.filename || errorInfo.url;
             if (fname)
                 msg = "(" + fname + ") " + msg;

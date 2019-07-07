@@ -9,3 +9,5 @@ export class TrackableObject {
         this.uid = Utilities.createGUID(false);
     }
 }
+
+export interface ITrackableObject extends TrackableObject { }

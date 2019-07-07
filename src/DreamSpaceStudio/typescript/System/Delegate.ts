@@ -2,16 +2,15 @@
 // Callback Delegates (serializable - closures should not be used)
 // ###########################################################################################################################
 
-import { DreamSpace as DS } from "../DreamSpace";
-import { Factory, usingFactory } from "../Factories";
-import { Object, IObject } from "../PrimitiveTypes";
-import { INamespaceInfo, IFunctionInfo } from "../DreamSpace";
+import { DreamSpace as DS, IFunctionInfo } from "./DreamSpace";
 import { Exception } from "./Exception";
 import { Browser } from "./Browser";
+import { SerializedData } from "./Serialization";
+import { ITrackableObject } from "./TrackableObject";
 
 // ============================================================================================================================
 
-export interface DelegateFunction<TObj extends object=object> { (...args: any[]): any };
+export interface DelegateFunction<TObj extends object = object> { (...args: any[]): any };
 
 /** 
  * Represents a function of a specific object instance.
@@ -22,14 +21,7 @@ export interface DelegateFunction<TObj extends object=object> { (...args: any[])
  * serialized.
  * Note: If the target object is undefined, then 'null' is assumed and passed in as 'this'.
  */
-class DelegateFactory extends Factory(Object) {
-    /**
-     * Constructs a new Delegate object.
-     * @param {Object} object The instance on which the associated function will be called.  This should be undefined/null for static functions.
-     * @param {Function} func The function to be called on the associated object.
-     */
-    static 'new': <TObj extends object, TFunc extends DelegateFunction>(object: TObj, func: TFunc) => IDelegate<TObj, TFunc>;
-
+class Delegate<TObj extends object, TFunc extends DelegateFunction> {
     /**
     * Reinitializes a disposed Delegate instance.
     * @param o The Delegate instance to initialize, or re-initialize.
@@ -37,12 +29,11 @@ class DelegateFactory extends Factory(Object) {
     * @param object The instance to bind to the resulting delegate object.
     * @param func The function that will be called for the resulting delegate object.
     */
-    static init<TObj extends object, TFunc extends DelegateFunction>(o: IDelegate<TObj, TFunc>, isnew: boolean, object: TObj, func: TFunc): void {
-        this.super.init(o, isnew);
+    constructor(object: TObj, func: TFunc) {
         if (object === void 0) object = null;
-        o.object = object;
-        o.func = <any>func;
-        o.update();
+        this.object = object;
+        this.func = <any>func;
+        this.update();
     }
 
     /** 
@@ -58,17 +49,17 @@ class DelegateFactory extends Factory(Object) {
     static fastCall?(func: Function, context: {}, ...args: any[]): any;
 
 
-    /** Creates and returns a string that uniquely identifies the combination of the object instance and function for
-     * this delegate.  Since every delegate has a unique object ID across an application domain, key strings can help
-     * prevent storage of duplicate delegates all pointing to the same target.
-     * Note: The underlying object and function must be registered types first.
-     * See 'AppDomain.registerClass()/.registerType()' for more information.
-     */
-    static getKey<TFunc extends DelegateFunction>(object: IObject, func: TFunc): string {
-        var isstatic = DelegateFactory.__validate("getKey()", object, func);
-        var id = isstatic ? (object === void 0 || object === null ? '-1' : (<INamespaceInfo><any>object).$__fullname) : object.$__id.toString();
-        return id + "," + (<IFunctionInfo><any>func).$__name; // (note: -1 means "global scope")
-    }
+    ///** Creates and returns a string that uniquely identifies the combination of the object instance and function for
+    // * this delegate.  Since every delegate has a unique object ID across an application domain, key strings can help
+    // * prevent storage of duplicate delegates all pointing to the same target.
+    // * Note: The underlying object and function must be registered types first.
+    // * See 'AppDomain.registerClass()/.registerType()' for more information.
+    // */
+    //x static getKey<TFunc extends DelegateFunction>(object: IndexedObject, func: TFunc): string {
+    //    var isstatic = Delegate.__validate("getKey()", object, func);
+    //    var id = isstatic ? (object === void 0 || object === null ? '-1' : (<INamespaceInfo><any>object).$__fullname) : object.$__id.toString();
+    //    return id + "," + (<IFunctionInfo><any>func).$__name; // (note: -1 means "global scope")
+    //}
 
     protected static __validate(callername: string, object: NativeTypes.IObject, func: DelegateFunction): boolean { // (returns 'true' if static)
         var isstatic: boolean = object === void 0 || object === null || !!(<INamespaceInfo><any>object).$__fullname; // ('$__fullname' exists on modules and registered type objects)
@@ -76,13 +67,10 @@ class DelegateFactory extends Factory(Object) {
             throw Exception.error("Delegate." + callername, "The object for this delegate does not contain a numerical '$__id' value (used as a global object reference for serialization), or '$__fullname' value (for static type references).  See 'AppDomain.registerClass()'.", this);
         return isstatic;
     }
-}
 
-@usingFactory(DelegateFactory, this)
-class Delegate<TObj extends object, TFunc extends DelegateFunction> extends Object {
     //? static readonly $Type = $Delegate;
 
-    private [DS.constructor](factory: typeof DelegateFactory): void {
+    private [DS.constructor](factory: typeof Delegate): void {
         /** Generates "case" statements for function templates.  The function template is converted into a string, the resulting cases get inserted,
           * and the compiled result is returned.  This hard-codes the logic for greatest speed, and if more parameters are need, can easily be expanded.
         */
@@ -179,7 +167,7 @@ class Delegate<TObj extends object, TFunc extends DelegateFunction> extends Obje
         if (this.func.bind)
             this.__boundFunc = this.func.bind(this, this.object); // (this can be faster in some cases [i.e. IE])
         if (this.object instanceof Object)
-            this.__key = DelegateFactory.getKey(<any>this.object, this.func); // (this also validates the properties first)
+            this.__key = Delegate.getKey(<any>this.object, this.func); // (this also validates the properties first)
         else
             this.__key = void 0;
         return this;
@@ -214,9 +202,9 @@ class Delegate<TObj extends object, TFunc extends DelegateFunction> extends Obje
     * name are used to look up the object context and function when loading from saved data.
     */
     getData(data: SerializedData): void {
-        var isstatic = DelegateFactory['__validate']("getData()", this.object, this.func);
+        var isstatic = Delegate['__validate']("getData()", this.object, this.func);
         if (!isstatic)
-            data.addValue("id", (<IDomainObjectInfo><any>this.object).$__id);
+            data.addValue("id", (<ITrackableObject><any>this.object).uid);
         data.addValue("ft", this.__functionText);
     }
     /**
@@ -225,7 +213,7 @@ class Delegate<TObj extends object, TFunc extends DelegateFunction> extends Obje
      */
     setData(data: SerializedData): void {
         var objid = data.getNumber("id");
-        this.object = (<IDomainObjectInfo><any>this).$__appDomain.objects.getObjectForceCast<TObj>(objid);
+        this.object = (<ITrackableObject><any>this).$__appDomain.objects.getObjectForceCast<TObj>(objid);
         this.__functionText = data.getValue("ft");
         this.update();
         // TODO: Consider functions that implement ITypeInfo, and use that if they are registered.
@@ -239,8 +227,8 @@ class Delegate<TObj extends object, TFunc extends DelegateFunction> extends Obje
     // -------------------------------------------------------------------------------------------------------------------
 }
 
-export interface IDelegate<TObj extends object=object, TFunc extends DelegateFunction=DelegateFunction> extends Delegate<TObj, TFunc> { }
+export interface IDelegate<TObj extends object = object, TFunc extends DelegateFunction = DelegateFunction> extends Delegate<TObj, TFunc> { }
 
-export { DelegateFactory as Delegate, Delegate as DelegateInstance }; // (EXPORT FACTORY)
+export { Delegate as Delegate, Delegate as DelegateInstance }; // (EXPORT FACTORY)
 
 // ============================================================================================================================

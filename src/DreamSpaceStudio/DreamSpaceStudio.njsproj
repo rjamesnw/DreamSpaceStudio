@@ -147,9 +147,31 @@
     <Content Include="views\studio\index.html">
       <SubType>Code</SubType>
     </Content>
+    <TypeScriptCompile Include="TypeScript\System\Browser.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Delegate.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Diagnostics.ts" />
+    <TypeScriptCompile Include="TypeScript\System\DreamSpace.ts" />
+    <TypeScriptCompile Include="TypeScript\System\ErrorHandling.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Events.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Exception.ts" />
+    <TypeScriptCompile Include="TypeScript\System\FileManager.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Globals.ts" />
+    <TypeScriptCompile Include="TypeScript\System\IO.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Logging.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Path.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Project.ts" />
     <TypeScriptCompile Include="TypeScript\System\Property.ts" />
     <TypeScriptCompile Include="TypeScript\System\EventDefinition.ts" />
     <TypeScriptCompile Include="TypeScript\System\Polyfills.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Query.ts" />
+    <TypeScriptCompile Include="TypeScript\System\ResourceRequest.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Resources.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Security.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Serialization.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Solution.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Storage.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Text.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Time.ts" />
     <TypeScriptCompile Include="TypeScript\System\TrackableObject.ts" />
     <TypeScriptCompile Include="TypeScript\System\Component.ts" />
     <TypeScriptCompile Include="TypeScript\System\Utilities.ts" />

@@ -1,4 +1,12 @@
-﻿// ========================================================================================================================
+﻿import { TrackableObject } from "./TrackableObject";
+import { FileSystem } from "./FileManager";
+import { UserAccess } from "./Security";
+import { EventDispatcher } from "./Events";
+import { Utilities } from "./Utilities";
+import { Data } from "./Data";
+import { Site } from "./Site";
+
+// ========================================================================================================================
 
 export interface ISavedProject extends ISavedTrackableObject {
     name: string;
@@ -26,6 +34,9 @@ export class Project extends TrackableObject {
 
     /** A list of user IDs and assigned roles for this project. */
     readonly userSecurity = new UserAccess();
+
+    /** The site for this project.  Every project contains a site object, even for API-only projects. For API-only projects there are no pages. */
+    readonly site: Site = new Site();
 
     // --------------------------------------------------------------------------------------------------------------------
     // Create a type of trash-bin to hold expressions so the user can restore them, or delete permanently.
@@ -92,7 +103,7 @@ export class Project extends TrackableObject {
                 if (typeof script == 'object' && script.id) {
                     source.scripts[i] = script.id; // (replaced the object entry with the ID before saving the project graph later; these will be files instead)
 
-                    var scriptJSON = script && Utilities.Data.JSON.stringify(script) || null;
+                    var scriptJSON = script && Data.JSON.stringify(script) || null;
 
                     var file = this.directory.createFile((script.name || script.id) + ".fs", scriptJSON); // (fs: FlowScript source file)
                     this.files[file.absolutePath.toLocaleLowerCase()] = file;

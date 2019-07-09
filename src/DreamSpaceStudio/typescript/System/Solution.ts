@@ -1,4 +1,8 @@
-﻿// ========================================================================================================================
+﻿import { TrackableObject } from "./TrackableObject";
+import { Project } from "./Project";
+import { FileSystem } from "./FileManager";
+
+// ========================================================================================================================
 
 function _defaultCreateProjectHandler(solution: Solution, project: ISavedProject) {
     return new Project(solution, project.name, project.description);

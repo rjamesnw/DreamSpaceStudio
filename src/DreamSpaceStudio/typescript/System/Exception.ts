@@ -1,6 +1,6 @@
 ﻿// ############################################################################################################################
 
-import { DreamSpace as DS, ITypeInfo, makeDisposable } from "./DreamSpace";
+import { DreamSpace as DS, ITypeInfo } from "./DreamSpace";
 import { LogTypes, log, error as log_error } from "./Logging"; // ("log_error" is just to prevent confusion with the "error" function in Exception)
 import { Diagnostics, ILogItem } from "./Diagnostics";
 import { getFullTypeName } from "./Utilities";

@@ -1,5 +1,4 @@
-import { Factory, makeFactory, factory } from "./Factories";
-import { Encoding } from "./System/Text";
+import { Encoding } from "./Text";
 import { Utilities } from "./Utilities";
 import { DreamSpace as DS } from "./DreamSpace";
 
@@ -13,8 +12,7 @@ export var QUERY_STRING_REGEX: RegExp = /[?|&][a-zA-Z0-9-._]+(?:=[^&#$]*)?/gi;
   * with all values escaped and ready to be appended to a URI.
   * Note: Call 'Query.new()' to create new instances.
   */
-@factory(this)
-export class Query extends Factory() {
+export class Query {
     /** Helps to build an object of 'name:value' pairs from a URI or 'location.search' string.
     * @param {string|object} query A full URI string, a query string (such as 'location.search'), or an object to create query values from.
     * @param {boolean} makeNamesLowercase If true, then all query names are made lower case when parsing (the default is false).

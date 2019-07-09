@@ -1,5 +1,7 @@
-﻿import { Utilities } from "./Utilities";
-import { Encoding } from "./Text";
+﻿import { Encoding } from "./Text";
+import { Store } from "./Storage";
+import { User } from "./User";
+import { StringUtils } from "./Text";
 
 // ############################################################################################################################
 // FileManager
@@ -23,7 +25,7 @@ export namespace FileSystem {
         reviewTimerHandle = void 0;
     }
 
-    /** Returns slits and returns the path parts, validating each one and throwign an exception if any are invalid. */
+    /** Returns slits and returns the path parts, validating each one and throwing an exception if any are invalid. */
     export function getPathParts(path: string) {
         var parts = (typeof path !== 'string' ? '' + path : path).replace(/\\/g, '/').split('/');
         for (var i = 0, n = parts.length; i < n; ++i)
@@ -303,12 +305,12 @@ export namespace FileSystem {
         fromBase64(contentsB64: string) { this.contents = Encoding.base64Decode(contentsB64); }
 
         saveToLocal() {
-            var store = Storage.getStorage(Storage.StorageType.Local);
+            var store = Store.getStorage(Store.StorageType.Local);
             store.setItem(this.absolutePath, this.contents);
         }
 
         loadFromLocal() {
-            var store = Storage.getStorage(Storage.StorageType.Local);
+            var store = Store.getStorage(Store.StorageType.Local);
             this.contents = store.getItem(this.absolutePath);
         }
     }
@@ -324,7 +326,7 @@ export namespace FileSystem {
         static apiEndpoint = "/api/files";
 
         /** Just a local property that checks for and returns 'FlowScript.currentUser'. */
-        static get currentUser() { if (FlowScript.User.current) return FlowScript.User.current; throw "'FlowScript.currentUser' is required!"; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
+        static get currentUser() { if (User.current) return User.current; throw "'There is no current user! User.changeCurrentUser()' must be called first."; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
 
         /** The API endpoint to the directory for the current user. */
         static get currentUserEndpoint() { return combine(this.apiEndpoint, FileManager.currentUser._id); }
@@ -382,7 +384,7 @@ export namespace FileSystem {
 
     /** Combine two paths into one. */
     export function combine(path1: string, path2: string) {
-        return Utilities.append(path1, path2, '/');
+        return StringUtils.append(path1, path2, '/');
     }
 
     /** Manages the global file system for FlowScript by utilizing local storage space and remote server space. 

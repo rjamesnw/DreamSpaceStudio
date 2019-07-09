@@ -148,7 +148,9 @@
       <SubType>Code</SubType>
     </Content>
     <TypeScriptCompile Include="TypeScript\System\Browser.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Data.ts" />
     <TypeScriptCompile Include="TypeScript\System\Delegate.ts" />
+    <TypeScriptCompile Include="TypeScript\System\DependentObject.ts" />
     <TypeScriptCompile Include="TypeScript\System\Diagnostics.ts" />
     <TypeScriptCompile Include="TypeScript\System\DreamSpace.ts" />
     <TypeScriptCompile Include="TypeScript\System\ErrorHandling.ts" />
@@ -158,6 +160,8 @@
     <TypeScriptCompile Include="TypeScript\System\Globals.ts" />
     <TypeScriptCompile Include="TypeScript\System\IO.ts" />
     <TypeScriptCompile Include="TypeScript\System\Logging.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Site.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Page.ts" />
     <TypeScriptCompile Include="TypeScript\System\Path.ts" />
     <TypeScriptCompile Include="TypeScript\System\Project.ts" />
     <TypeScriptCompile Include="TypeScript\System\Property.ts" />
@@ -174,6 +178,7 @@
     <TypeScriptCompile Include="TypeScript\System\Time.ts" />
     <TypeScriptCompile Include="TypeScript\System\TrackableObject.ts" />
     <TypeScriptCompile Include="TypeScript\System\Component.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Uri.ts" />
     <TypeScriptCompile Include="TypeScript\System\Utilities.ts" />
     <TypeScriptCompile Include="typescript\System\Workflow.ts" />
   </ItemGroup>

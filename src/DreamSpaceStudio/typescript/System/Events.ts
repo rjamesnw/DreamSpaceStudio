@@ -12,6 +12,8 @@ import { getErrorMessage } from "./ErrorHandling";
 
 import { Browser } from "./Browser";
 import { getTypeName } from "./Utilities";
+import { DependentObject } from "./DependentObject";
+import { EventDefinition } from "./EventDefinition";
 declare module "./Browser" { namespace Browser { export var onReady: typeof Browser_Ext.onReady; } } // (augmented with a "ready" event)
 
 // ====================================================================================================================
@@ -45,58 +47,7 @@ type THandlerInfo<TCallback extends EventHandler = EventHandler> = IDelegate<obj
   * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
   * instance level event handler registration on the class only when necessary.
   */
-class EventDispatcherFactory {
-    /** Creates an event object for a specific even type.
-        * @param {TOwner} owner The owner which owns this event object.
-        * @param {string} eventName The name of the event which this event object represents.
-        * @param {boolean} removeOnTrigger If true, then handlers are called only once, then removed (default is false).
-        * @param {Function} eventTriggerHandler This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters.
-        * @param {boolean} canCancel If true, the event can be cancelled (prevented from completing, so no other events will fire).
-        */
-    static 'new'<TOwner extends object, TCallback extends EventHandler>(owner: TOwner, eventName: string, removeOnTrigger: boolean = false,
-        eventTriggerHandler: EventTriggerHandler<TOwner, TCallback> = null, canCancel: boolean = true): IEventDispatcher<TOwner, TCallback> { return null; }
-
-    /** Initializes/reinitializes an EventDispatcher instance. */
-    static init<TOwner extends object, TCallback extends EventHandler>(o: EventDispatcher<TOwner, TCallback>, isnew: boolean, owner: TOwner, eventName: string,
-        removeOnTrigger: boolean = false, eventTriggerHandler: EventTriggerHandler<TOwner, TCallback> = null, canCancel: boolean = true) {
-    }
-
-    /**
-        * Registers an event with a class type - typically as a static property. 
-        * @param type A class reference where the static property will be registered.
-        * @param eventName The name of the event to register.
-        * @param eventMode Specifies the desired event traveling mode.
-        * @param removeOnTrigger If true, the event only fires one time, then clears all event handlers. Attaching handlers once an event fires in this state causes them to be called immediately.
-        * @param eventTriggerCallback This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters.
-        * @param customEventPropName The name of the property that will be associated with this event, and expected on parent objects
-        * for the capturing and bubbling phases.  If left undefined/null, then the default is assumed to be
-        * 'on[EventName]', where the first event character is made uppercase automatically.
-        * @param canCancel If true (default), this event can be cancelled (prevented from completing, so no other events will fire).
-        */
-    static registerEvent<TOwner extends object, TCallback extends EventHandler>(type: { new(...args: any[]): TOwner }, eventName: string,
-        eventMode: EventModes = EventModes.Capture, removeOnTrigger: boolean = false, eventTriggerCallback?: EventTriggerHandler<TOwner, TCallback>,
-        customEventPropName?: string, canCancel: boolean = true)
-        : { _eventMode: EventModes; _eventName: string; _removeOnTrigger: boolean; eventFuncType: () => IEventDispatcher<TOwner, TCallback>; eventPropertyType: IEventDispatcher<TOwner, TCallback> } {
-        return null;
-    }
-
-    /**
-        * Creates an instance property name from a given event name by adding 'on' as a prefix.
-        * This is mainly used when registering events as static properties on types.
-        * @param {string} eventName The event name to create an event property from. If the given event name already starts with 'on', then the given name is used as is (i.e. 'click' becomes 'onClick').
-        */
-    static createEventPropertyNameFromEventName(eventName: string): string {
-        return eventName.match(/^on[^a-z]/) ? eventName : "on" + eventName.charAt(0).toUpperCase() + eventName.substring(1);
-    }
-
-    /** 
-       * Returns a formatted event name in the form of a private event name like '$__{eventName}Event' (eg. 'click' becomes '$__clickEvent'). 
-       * The private event names are used to store event instances on the owning instances so each instance has it's own handlers list to manage.
-       */
-    static createPrivateEventName(eventName: string) { return "$__" + eventName + "Event"; }
-}
-
-class EventDispatcher<TOwner extends object = object, TCallback extends EventHandler = EventHandler>{
+export class EventDispatcher<TOwner extends object = object, TCallback extends EventHandler = EventHandler> extends DependentObject {
     readonly owner: TOwner;
 
     private __eventName: string;
@@ -128,6 +79,75 @@ class EventDispatcher<TOwner extends object = object, TCallback extends EventHan
     eventTriggerHandler: EventTriggerHandler<TOwner, TCallback> = null;
     /** True if the event can be cancelled. */
     canCancel: boolean = true;
+
+    /**
+       * Registers an event with a class type - typically as a static property. 
+       * @param type A class reference where the static property will be registered.
+       * @param eventName The name of the event to register.
+       * @param eventMode Specifies the desired event traveling mode.
+       * @param removeOnTrigger If true, the event only fires one time, then clears all event handlers. Attaching handlers once an event fires in this state causes them to be called immediately.
+       * @param eventTriggerCallback This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters.
+       * @param customEventPropName The name of the property that will be associated with this event, and expected on parent objects
+       * for the capturing and bubbling phases.  If left undefined/null, then the default is assumed to be
+       * 'on[EventName]', where the first event character is made uppercase automatically.
+       * @param canCancel If true (default), this event can be cancelled (prevented from completing, so no other events will fire).
+       */
+    static registerEvent<TOwner extends object, TCallback extends EventHandler>(type: { new(...args: any[]): TOwner }, eventName: string,
+        eventMode: EventModes = EventModes.Capture, removeOnTrigger: boolean = false, eventTriggerCallback?: EventTriggerHandler<TOwner, TCallback>,
+        customEventPropName?: string, canCancel: boolean = true)
+        : { _eventMode: EventModes; _eventName: string; _removeOnTrigger: boolean; eventFuncType: () => IEventDispatcher<TOwner, TCallback>; eventPropertyType: IEventDispatcher<TOwner, TCallback> } {
+
+        customEventPropName || (customEventPropName = EventDispatcher.createEventPropertyNameFromEventName(eventName)); // (the default supports the convention of {item}.on{Event}()).
+        var privateEventName = EventDispatcher.createPrivateEventName(eventName); // (this name is used to store the new event dispatcher instance, which is created on demand for every instance)
+
+        // ... create a "getter" in the prototype for 'type' so that, when accessed by specific instances, an event object will be created on demand - this greatly reduces memory
+        //    allocations when many events exist on a lot of objects) ...
+
+        var onEventProxy = function (): IEventDispatcher<object, EventHandler> {
+            var instance = <Object>this; // (instance is the object instance on which this event property reference was made)
+            if (typeof instance !== 'object') //?  || !(instance instanceof DomainObject.$type))
+                throw Exception.error("{Object}." + eventName, "Must be called on an object instance.", instance);
+            // ... check if the instance already created the event property for registering events specific to this instance ...
+            var eventProperty: EventDispatcher<object, EventHandler> = instance[privateEventName];
+            if (typeof eventProperty !== 'object') // (undefined or not valid, so attempt to create one now)
+                instance[privateEventName] = eventProperty = new EventDispatcher<object, EventHandler>(instance, eventName, removeOnTrigger, canCancel, eventTriggerCallback);
+            eventProperty.__eventPropertyName = customEventPropName;
+            eventProperty.__eventPrivatePropertyName = privateEventName;
+            return eventProperty;
+        };
+
+        //x ... first, set the depreciating cross-browser compatible access method ...
+        //x type.prototype["$__" + customEventPropName] = onEventProxy; // (ex: '$__onClick')
+
+        // ... create the event getter property and set the "on event" getter proxy ...
+
+        if (DS.global.Object.defineProperty)
+            DS.global.Object.defineProperty(type.prototype, customEventPropName, {
+                configurable: true,
+                enumerable: true,
+                writable: true,
+                get: onEventProxy
+            });
+        else
+            throw Exception.error("registerEvent: " + eventName, "This browser does not support 'Object.defineProperty()'. To support older browsers, call '_" + customEventPropName + "()' instead to get an instance specific reference to the EventDispatcher for that event (i.e. for 'click' event, do 'obj._onClick().attach(...)').", type);
+
+        return <any>{ _eventMode: eventMode, _eventName: eventName, _removeOnTrigger: removeOnTrigger }; // (the return doesn't matter at this time)
+    }
+
+    /**
+        * Creates an instance property name from a given event name by adding 'on' as a prefix.
+        * This is mainly used when registering events as static properties on types.
+        * @param {string} eventName The event name to create an event property from. If the given event name already starts with 'on', then the given name is used as is (i.e. 'click' becomes 'onClick').
+        */
+    static createEventPropertyNameFromEventName(eventName: string): string {
+        return eventName.match(/^on[^a-z]/) ? eventName : "on" + eventName.charAt(0).toUpperCase() + eventName.substring(1);
+    }
+
+    /** 
+       * Returns a formatted event name in the form of a private event name like '$__{eventName}Event' (eg. 'click' becomes '$__clickEvent'). 
+       * The private event names are used to store event instances on the owning instances so each instance has it's own handlers list to manage.
+       */
+    static createPrivateEventName(eventName: string) { return "$__" + eventName + "Event"; }
 
     dispose(): void {
         // ... remove all handlers ...
@@ -184,7 +204,7 @@ class EventDispatcher<TOwner extends object = object, TCallback extends EventHan
     attach(handler: IDelegate<object, TCallback>, eventMode?: EventModes): this;
     attach(handler: TCallback | IDelegate<object, TCallback>, eventMode: EventModes = EventModes.Capture): this {
         if (this._getHandlerIndex(<any>handler) == -1) {
-            var delegate = handler instanceof Delegate ? <IDelegate<object, TCallback>>handler : Delegate.new(this, <TCallback>handler);
+            var delegate: THandlerInfo<TCallback> = handler instanceof Delegate ? <IDelegate<object, TCallback>>handler : new Delegate(this, <TCallback>handler);
             delegate.$__eventMode = eventMode;
             this.__listeners.push(delegate);
         }
@@ -210,7 +230,7 @@ class EventDispatcher<TOwner extends object = object, TCallback extends EventHan
 
         // ... run capture/bubbling phases; first, build the event chain ...
 
-        var eventChain: IEventDispatcher<any, any>[] = Array.new(this); // ('this' [the current instance] is the last for capture, and first for bubbling)
+        var eventChain: IEventDispatcher<any, any>[] = new Array(this); // ('this' [the current instance] is the last for capture, and first for bubbling)
 
         if (parent) {
             var eventPropertyName = this.__eventPropertyName; // (if exists, this references the 'on{EventName}' property getter that returns an even dispatcher object)
@@ -375,70 +395,28 @@ class EventDispatcher<TOwner extends object = object, TCallback extends EventHan
             this.__removeListener(i);
     }
 
-    private static [DS.constructor](factory: typeof EventDispatcherFactory) { // (A static constructor that will be executed when the factory is registered)
+    /** Constructs a new instance of the even dispatcher.
+     * @param eventTriggerHandler A global handler per event type that is triggered before any other handlers. This is a hook which is called every time an event triggers.
+     * This exists mainly to support handlers called with special parameters, such as those that may need translation, or arguments that need to be injected.
+     */
+    constructor(owner: TOwner, eventName: string, removeOnTrigger: boolean = false, canCancel: boolean = true, eventTriggerHandler: EventTriggerHandler<TOwner, TCallback> = null) {
+        super();
 
-        // ... factory.init must be set here in order to access private properties! ...
+        if (typeof eventName !== 'string') eventName = '' + eventName;
+        if (!eventName) throw "An event name is required.";
 
-        factory.init = <TOwner extends object, TCallback extends EventHandler>(o: EventDispatcher<TOwner, TCallback>, isnew: boolean, owner: TOwner, eventName: string, removeOnTrigger: boolean = false,
-            eventTriggerHandler: EventTriggerHandler<TOwner, TCallback> = null, canCancel: boolean = true) => {
-            factory.super.init(o, isnew);
+        this.__eventName = eventName;
+        this.__eventPropertyName = EventDispatcher.createEventPropertyNameFromEventName(eventName); // (fix to support the convention of {item}.on{Event}().
 
-            if (typeof eventName !== 'string') eventName = '' + eventName;
-            if (!eventName) throw "An event name is required.";
+        (<Writeable<EventDispatcher>>this).owner = owner;
+        this.associate(owner);
 
-            o.__eventName = eventName;
-            o.__eventPropertyName = EventDispatcherFactory.createEventPropertyNameFromEventName(eventName); // (fix to support the convention of {item}.on{Event}().
+        this.__eventTriggerHandler = eventTriggerHandler;
 
-            (<{ owner: typeof o.owner }>o).owner = owner;
-            o.associate(owner);
+        this.canCancel = canCancel;
+    }
 
-            o.__eventTriggerHandler = eventTriggerHandler;
-
-            o.canCancel = canCancel;
-
-            if (!isnew) {
-                o.__listeners.length = 0;
-            }
-        };
-
-        factory.registerEvent = (type, eventName, eventMode?, removeOnTrigger?, eventTriggerCallback?, customEventPropName?, canCancel?) => {
-
-            customEventPropName || (customEventPropName = EventDispatcherFactory.createEventPropertyNameFromEventName(eventName)); // (the default supports the convention of {item}.on{Event}()).
-            var privateEventName = EventDispatcherFactory.createPrivateEventName(eventName); // (this name is used to store the new event dispatcher instance, which is created on demand for every instance)
-
-            // ... create a "getter" in the prototype for 'type' so that, when accessed by specific instances, an event object will be created on demand - this greatly reduces memory
-            //    allocations when many events exist on a lot of objects) ...
-
-            var onEventProxy = function (): IEventDispatcher<object, EventHandler> {
-                var instance = <Object>this; // (instance is the object instance on which this event property reference was made)
-                if (typeof instance !== 'object') //?  || !(instance instanceof DomainObject.$type))
-                    throw Exception.error("{Object}." + eventName, "Must be called on an object instance.", instance);
-                // ... check if the instance already created the event property for registering events specific to this instance ...
-                var eventProperty: EventDispatcher<object, EventHandler> = instance[privateEventName];
-                if (typeof eventProperty !== 'object') // (undefined or not valid, so attempt to create one now)
-                    instance[privateEventName] = eventProperty = EventDispatcherFactory.new<object, EventHandler>(instance, eventName, removeOnTrigger, eventTriggerCallback, canCancel);
-                eventProperty.__eventPropertyName = customEventPropName;
-                eventProperty.__eventPrivatePropertyName = privateEventName;
-                return eventProperty;
-            };
-
-            //x ... first, set the depreciating cross-browser compatible access method ...
-            //x type.prototype["$__" + customEventPropName] = onEventProxy; // (ex: '$__onClick')
-
-            // ... create the event getter property and set the "on event" getter proxy ...
-
-            if (DS.global.Object.defineProperty)
-                DS.global.Object.defineProperty(type.prototype, customEventPropName, {
-                    configurable: true,
-                    enumerable: true,
-                    writable: true,
-                    get: onEventProxy
-                });
-            else
-                throw Exception.error("registerEvent: " + eventName, "This browser does not support 'Object.defineProperty()'. To support older browsers, call '_" + customEventPropName + "()' instead to get an instance specific reference to the EventDispatcher for that event (i.e. for 'click' event, do 'obj._onClick().attach(...)').", type);
-
-            return <any>{ _eventMode: eventMode, _eventName: eventName, _removeOnTrigger: removeOnTrigger }; // (the return doesn't matter at this time)
-        };
+    private static [DS.constructor]() { // (A static constructor that will be executed when the factory is registered)
 
         function getTriggerFunc(this: EventDispatcher, args: any[]) {
             //x args.push(void 0, this); // (add 2 optional items on end)
@@ -475,8 +453,9 @@ class EventDispatcher<TOwner extends object = object, TCallback extends EventHan
     }
 }
 
+(<any>EventDispatcher)[DS.constructor](); // ('any' is used because the static constructor is private)
+
 export interface IEventDispatcher<TOwner extends object, TCallback extends EventHandler> extends EventDispatcher<TOwner, TCallback> { }
-export { EventDispatcherFactory as EventDispatcher, EventDispatcher as EventDispatcherInstance };
 
 // =======================================================================================================================
 
@@ -497,25 +476,7 @@ export interface INotifyPropertyChanged<TSender extends IEventObject> {
     doPropertyChanged(name: string, oldValue: any): void;
 }
 
-export class EventObject extends Factory(Object) implements INotifyPropertyChanged<IEventObject> {
-    /**
-    * Constructs a new Delegate object.
-    * @param {Object} object The instance on which the associated function will be called.  This should be undefined/null for static functions.
-    * @param {Function} func The function to be called on the associated object.
-    */
-    static 'new'(): IEventObject { return null; }
-
-    /**
-    * Reinitializes a disposed Delegate instance.
-    * @param o The Delegate instance to initialize, or re-initialize.
-    * @param isnew If true, this is a new instance, otherwise it is from a cache (and may have some preexisting properties).
-    * @param object The instance to bind to the resulting delegate object.
-    * @param func The function that will be called for the resulting delegate object.
-    */
-    static init(o: IEventObject, isnew: boolean): void {
-        this.super.init(o, isnew);
-    }
-
+export class EventObject implements INotifyPropertyChanged<IEventObject> {
     /** Triggered when a supported property is about to change.  This does not work for all properties by default, but only those
      * which call 'doPropertyChanging' in their implementation.
      */
@@ -541,11 +502,6 @@ export class EventObject extends Factory(Object) implements INotifyPropertyChang
         if (this.onPropertyChanged)
             this.onPropertyChanged.dispatch(this, oldValue);
     }
-
-    private static [DS.constructor](factory: typeof EventObject) {
-        factory.init = (o, isnew) => {
-        };
-    }
 }
 
 export interface IEventObject extends EventObject { }
@@ -554,7 +510,7 @@ export interface IEventObject extends EventObject { }
 
 namespace Browser_Ext {
     /** Triggered when the DOM has completed loading. */
-    export var onReady = EventDispatcherFactory.new<typeof Browser, { (): void }>(Browser, "onReady", true);
+    export var onReady = new EventDispatcher<typeof Browser, { (): void }>(Browser, "onReady", true);
 
     Browser.onReady = onReady;
 }
@@ -563,7 +519,7 @@ namespace DreamSpace_Ext {
     /** Triggered when all manifests have loaded. No modules have been executed at this point.
       * Note: 'onReady' is not called automatically if 'DreamSpace.System.Diagnostics.debug' is set to 'Debug_Wait'.
       */
-    export var onReady = EventDispatcherFactory.new<typeof DS, { (): void }>(DS, "onReady", true);
+    export var onReady = new EventDispatcher<typeof DS, { (): void }>(DS, "onReady", true);
 
     DS.onReady = onReady;
 }

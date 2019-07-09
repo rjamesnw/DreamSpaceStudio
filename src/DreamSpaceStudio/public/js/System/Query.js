@@ -1,7 +1,6 @@
-define(["require", "exports", "./Factories", "./System/Text", "./Utilities", "./DreamSpace"], function (require, exports, Factories_1, Text_1, Utilities_1, DreamSpace_1) {
+define(["require", "exports", "./Text", "./Utilities", "./DreamSpace"], function (require, exports, Text_1, Utilities_1, DreamSpace_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var Query_1;
     // ==========================================================================================================================
     exports.QUERY_STRING_REGEX = /[?|&][a-zA-Z0-9-._]+(?:=[^&#$]*)?/gi;
     /**
@@ -10,15 +9,8 @@ define(["require", "exports", "./Factories", "./System/Text", "./Utilities", "./
       * with all values escaped and ready to be appended to a URI.
       * Note: Call 'Query.new()' to create new instances.
       */
-    let Query = Query_1 = class Query extends Factories_1.Factory() {
-        /**
-          * Helps wrap common functionality for query/search string manipulation.  An internal 'values' object stores the 'name:value'
-          * pairs from a URI or 'location.search' string, and converting the object to a string results in a proper query/search string
-          * with all values escaped and ready to be appended to a URI.
-          * Note: Call 'Query.new()' to create new instances.
-          */
+    class Query {
         constructor() {
-            super(...arguments);
             // ----------------------------------------------------------------------------------------------------------------
             this.values = {};
             // ---------------------------------------------------------------------------------------------------------------
@@ -91,7 +83,7 @@ define(["require", "exports", "./Factories", "./System/Text", "./Utilities", "./
         // ---------------------------------------------------------------------------------------------------------------
         /** Creates and returns a duplicate of this object. */
         clone() {
-            var q = Query_1.new();
+            var q = Query.new();
             for (var pname in this.values)
                 q.values[pname] = this.values[pname];
             return q;
@@ -177,10 +169,7 @@ define(["require", "exports", "./Factories", "./System/Text", "./Utilities", "./
                     qstr += (qstr ? "&" : "") + encodeURIComponent(pname) + "=" + encodeURIComponent(this.values[pname]);
             return (addQuerySeparator ? "?" : "") + qstr;
         }
-    };
-    Query = Query_1 = __decorate([
-        Factories_1.factory(this)
-    ], Query);
+    }
     exports.Query = Query;
     // ==========================================================================================================================
     /** This is set automatically to the query for the current page. */

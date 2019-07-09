@@ -1,5 +1,5 @@
 /** @module Path The path module contains functions for working with URI based paths. */
-define(["require", "exports", "./DreamSpace", "./Utilities", "./Uri", "./Query", "./ResourceRequest", "./System/IO"], function (require, exports, DreamSpace_1, Utilities_1, Uri_1, Query_1, ResourceRequest_1, IO_1) {
+define(["require", "exports", "./DreamSpace", "./Utilities", "./Uri", "./Query", "./ResourceRequest", "./IO"], function (require, exports, DreamSpace_1, Utilities_1, Uri_1, Query_1, ResourceRequest_1, IO_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // ==========================================================================================================================
@@ -117,7 +117,6 @@ define(["require", "exports", "./DreamSpace", "./Utilities", "./Uri", "./Query",
             if (url.charAt(0) == '/')
                 url = resolve(url);
             url = query.appendTo(url);
-            query.dispose();
             if (IO_1.IO.wait)
                 IO_1.IO.wait();
             setTimeout(() => { DreamSpace_1.DreamSpace.global.location.href = url; }, 1); // (let events finish before setting)

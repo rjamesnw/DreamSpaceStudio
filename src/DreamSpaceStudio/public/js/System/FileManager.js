@@ -1,4 +1,4 @@
-define(["require", "exports", "./Utilities", "./Text"], function (require, exports, Utilities_1, Text_1) {
+define(["require", "exports", "./Text", "./Storage", "./User", "./Text"], function (require, exports, Text_1, Storage_1, User_1, Text_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // ############################################################################################################################
@@ -21,7 +21,7 @@ define(["require", "exports", "./Utilities", "./Text"], function (require, expor
         function _syncFileSystem() {
             reviewTimerHandle = void 0;
         }
-        /** Returns slits and returns the path parts, validating each one and throwign an exception if any are invalid. */
+        /** Returns slits and returns the path parts, validating each one and throwing an exception if any are invalid. */
         function getPathParts(path) {
             var parts = (typeof path !== 'string' ? '' + path : path).replace(/\\/g, '/').split('/');
             for (var i = 0, n = parts.length; i < n; ++i)
@@ -251,11 +251,11 @@ define(["require", "exports", "./Utilities", "./Text"], function (require, expor
             toBase64() { return Text_1.Encoding.base64Encode(this.contents); }
             fromBase64(contentsB64) { this.contents = Text_1.Encoding.base64Decode(contentsB64); }
             saveToLocal() {
-                var store = Storage.getStorage(Storage.StorageType.Local);
+                var store = Storage_1.Store.getStorage(Storage_1.Store.StorageType.Local);
                 store.setItem(this.absolutePath, this.contents);
             }
             loadFromLocal() {
-                var store = Storage.getStorage(Storage.StorageType.Local);
+                var store = Storage_1.Store.getStorage(Storage_1.Store.StorageType.Local);
                 this.contents = store.getItem(this.absolutePath);
             }
         }
@@ -273,8 +273,8 @@ define(["require", "exports", "./Utilities", "./Text"], function (require, expor
                 this.root = new Directory(this);
             }
             /** Just a local property that checks for and returns 'FlowScript.currentUser'. */
-            static get currentUser() { if (FlowScript.User.current)
-                return FlowScript.User.current; throw "'FlowScript.currentUser' is required!"; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
+            static get currentUser() { if (User_1.User.current)
+                return User_1.User.current; throw "'There is no current user! User.changeCurrentUser()' must be called first."; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
             /** The API endpoint to the directory for the current user. */
             static get currentUserEndpoint() { return combine(this.apiEndpoint, FileManager.currentUser._id); }
             /** Gets a directory under the current user root endpoint.
@@ -315,7 +315,7 @@ define(["require", "exports", "./Utilities", "./Text"], function (require, expor
         FileSystem.isValidFileName = isValidFileName;
         /** Combine two paths into one. */
         function combine(path1, path2) {
-            return Utilities_1.Utilities.append(path1, path2, '/');
+            return Text_2.StringUtils.append(path1, path2, '/');
         }
         FileSystem.combine = combine;
         // ========================================================================================================================

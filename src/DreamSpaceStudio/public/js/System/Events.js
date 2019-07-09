@@ -1,7 +1,7 @@
 // ############################################################################################################################
 // Types for event management.
 // ############################################################################################################################
-define(["require", "exports", "./DreamSpace", "./DreamSpace", "./Delegate", "./Exception", "./ErrorHandling", "./Browser", "./Utilities"], function (require, exports, DreamSpace_1, DreamSpace_2, Delegate_1, Exception_1, ErrorHandling_1, Browser_1, Utilities_1) {
+define(["require", "exports", "./DreamSpace", "./DreamSpace", "./Delegate", "./Exception", "./ErrorHandling", "./Browser", "./Utilities", "./DependentObject"], function (require, exports, DreamSpace_1, DreamSpace_2, Delegate_1, Exception_1, ErrorHandling_1, Browser_1, Utilities_1, DependentObject_1) {
     "use strict";
     function __export(m) {
         for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
@@ -27,32 +27,81 @@ define(["require", "exports", "./DreamSpace", "./DreamSpace", "./Delegate", "./E
       * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
       * instance level event handler registration on the class only when necessary.
       */
-    class EventDispatcherFactory {
-        /** Creates an event object for a specific even type.
-            * @param {TOwner} owner The owner which owns this event object.
-            * @param {string} eventName The name of the event which this event object represents.
-            * @param {boolean} removeOnTrigger If true, then handlers are called only once, then removed (default is false).
-            * @param {Function} eventTriggerHandler This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters.
-            * @param {boolean} canCancel If true, the event can be cancelled (prevented from completing, so no other events will fire).
-            */
-        static 'new'(owner, eventName, removeOnTrigger = false, eventTriggerHandler = null, canCancel = true) { return null; }
-        /** Initializes/reinitializes an EventDispatcher instance. */
-        static init(o, isnew, owner, eventName, removeOnTrigger = false, eventTriggerHandler = null, canCancel = true) {
+    class EventDispatcher extends DependentObject_1.DependentObject {
+        /** Constructs a new instance of the even dispatcher.
+         * @param eventTriggerHandler A global handler per event type that is triggered before any other handlers. This is a hook which is called every time an event triggers.
+         * This exists mainly to support handlers called with special parameters, such as those that may need translation, or arguments that need to be injected.
+         */
+        constructor(owner, eventName, removeOnTrigger = false, canCancel = true, eventTriggerHandler = null) {
+            super();
+            this.__associations = new WeakMap(); // (a mapping between an external object and this event instance - typically used to associated this event with an external object OTHER than the owner)
+            this.__listeners = []; // (this is typed "any object type" to allow using delegate handler function objects later on)
+            /** If this is true, then any new handler added will automatically be triggered as well.
+            * This is handy in cases where an application state is persisted, and future handlers should always execute. */
+            this.autoTrigger = false;
+            /** If true, then handlers are called only once, then removed (default is false). */
+            this.removeOnTrigger = false;
+            /** This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters. */
+            this.eventTriggerHandler = null;
+            /** True if the event can be cancelled. */
+            this.canCancel = true;
+            if (typeof eventName !== 'string')
+                eventName = '' + eventName;
+            if (!eventName)
+                throw "An event name is required.";
+            this.__eventName = eventName;
+            this.__eventPropertyName = EventDispatcher.createEventPropertyNameFromEventName(eventName); // (fix to support the convention of {item}.on{Event}().
+            this.owner = owner;
+            this.associate(owner);
+            this.__eventTriggerHandler = eventTriggerHandler;
+            this.canCancel = canCancel;
         }
+        /** Return the underlying event name for this event object. */
+        getEventName() { return this.__eventName; }
+        /** Returns true if handlers exist on this event object instance. */
+        hasHandlers() { return !!this.__listeners.length; }
         /**
-            * Registers an event with a class type - typically as a static property.
-            * @param type A class reference where the static property will be registered.
-            * @param eventName The name of the event to register.
-            * @param eventMode Specifies the desired event traveling mode.
-            * @param removeOnTrigger If true, the event only fires one time, then clears all event handlers. Attaching handlers once an event fires in this state causes them to be called immediately.
-            * @param eventTriggerCallback This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters.
-            * @param customEventPropName The name of the property that will be associated with this event, and expected on parent objects
-            * for the capturing and bubbling phases.  If left undefined/null, then the default is assumed to be
-            * 'on[EventName]', where the first event character is made uppercase automatically.
-            * @param canCancel If true (default), this event can be cancelled (prevented from completing, so no other events will fire).
-            */
+           * Registers an event with a class type - typically as a static property.
+           * @param type A class reference where the static property will be registered.
+           * @param eventName The name of the event to register.
+           * @param eventMode Specifies the desired event traveling mode.
+           * @param removeOnTrigger If true, the event only fires one time, then clears all event handlers. Attaching handlers once an event fires in this state causes them to be called immediately.
+           * @param eventTriggerCallback This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters.
+           * @param customEventPropName The name of the property that will be associated with this event, and expected on parent objects
+           * for the capturing and bubbling phases.  If left undefined/null, then the default is assumed to be
+           * 'on[EventName]', where the first event character is made uppercase automatically.
+           * @param canCancel If true (default), this event can be cancelled (prevented from completing, so no other events will fire).
+           */
         static registerEvent(type, eventName, eventMode = EventModes.Capture, removeOnTrigger = false, eventTriggerCallback, customEventPropName, canCancel = true) {
-            return null;
+            customEventPropName || (customEventPropName = EventDispatcher.createEventPropertyNameFromEventName(eventName)); // (the default supports the convention of {item}.on{Event}()).
+            var privateEventName = EventDispatcher.createPrivateEventName(eventName); // (this name is used to store the new event dispatcher instance, which is created on demand for every instance)
+            // ... create a "getter" in the prototype for 'type' so that, when accessed by specific instances, an event object will be created on demand - this greatly reduces memory
+            //    allocations when many events exist on a lot of objects) ...
+            var onEventProxy = function () {
+                var instance = this; // (instance is the object instance on which this event property reference was made)
+                if (typeof instance !== 'object') //?  || !(instance instanceof DomainObject.$type))
+                    throw Exception_1.Exception.error("{Object}." + eventName, "Must be called on an object instance.", instance);
+                // ... check if the instance already created the event property for registering events specific to this instance ...
+                var eventProperty = instance[privateEventName];
+                if (typeof eventProperty !== 'object') // (undefined or not valid, so attempt to create one now)
+                    instance[privateEventName] = eventProperty = new EventDispatcher(instance, eventName, removeOnTrigger, canCancel, eventTriggerCallback);
+                eventProperty.__eventPropertyName = customEventPropName;
+                eventProperty.__eventPrivatePropertyName = privateEventName;
+                return eventProperty;
+            };
+            //x ... first, set the depreciating cross-browser compatible access method ...
+            //x type.prototype["$__" + customEventPropName] = onEventProxy; // (ex: '$__onClick')
+            // ... create the event getter property and set the "on event" getter proxy ...
+            if (DreamSpace_2.DreamSpace.global.Object.defineProperty)
+                DreamSpace_2.DreamSpace.global.Object.defineProperty(type.prototype, customEventPropName, {
+                    configurable: true,
+                    enumerable: true,
+                    writable: true,
+                    get: onEventProxy
+                });
+            else
+                throw Exception_1.Exception.error("registerEvent: " + eventName, "This browser does not support 'Object.defineProperty()'. To support older browsers, call '_" + customEventPropName + "()' instead to get an instance specific reference to the EventDispatcher for that event (i.e. for 'click' event, do 'obj._onClick().attach(...)').", type);
+            return { _eventMode: eventMode, _eventName: eventName, _removeOnTrigger: removeOnTrigger }; // (the return doesn't matter at this time)
         }
         /**
             * Creates an instance property name from a given event name by adding 'on' as a prefix.
@@ -67,26 +116,6 @@ define(["require", "exports", "./DreamSpace", "./DreamSpace", "./Delegate", "./E
            * The private event names are used to store event instances on the owning instances so each instance has it's own handlers list to manage.
            */
         static createPrivateEventName(eventName) { return "$__" + eventName + "Event"; }
-    }
-    exports.EventDispatcher = EventDispatcherFactory;
-    class EventDispatcher {
-        constructor() {
-            this.__associations = new WeakMap(); // (a mapping between an external object and this event instance - typically used to associated this event with an external object OTHER than the owner)
-            this.__listeners = []; // (this is typed "any object type" to allow using delegate handler function objects later on)
-            /** If this is true, then any new handler added will automatically be triggered as well.
-            * This is handy in cases where an application state is persisted, and future handlers should always execute. */
-            this.autoTrigger = false;
-            /** If true, then handlers are called only once, then removed (default is false). */
-            this.removeOnTrigger = false;
-            /** This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters. */
-            this.eventTriggerHandler = null;
-            /** True if the event can be cancelled. */
-            this.canCancel = true;
-        }
-        /** Return the underlying event name for this event object. */
-        getEventName() { return this.__eventName; }
-        /** Returns true if handlers exist on this event object instance. */
-        hasHandlers() { return !!this.__listeners.length; }
         dispose() {
             // ... remove all handlers ...
             this.removeAllListeners();
@@ -130,7 +159,7 @@ define(["require", "exports", "./DreamSpace", "./DreamSpace", "./Delegate", "./E
         }
         attach(handler, eventMode = EventModes.Capture) {
             if (this._getHandlerIndex(handler) == -1) {
-                var delegate = handler instanceof Delegate_1.Delegate ? handler : Delegate_1.Delegate.new(this, handler);
+                var delegate = handler instanceof Delegate_1.Delegate ? handler : new Delegate_1.Delegate(this, handler);
                 delegate.$__eventMode = eventMode;
                 this.__listeners.push(delegate);
             }
@@ -151,7 +180,7 @@ define(["require", "exports", "./DreamSpace", "./DreamSpace", "./Delegate", "./E
             // ('this.__parent' checks for event-instance-only chained events, whereas 'this.owner.parent' iterates events using the a parent-child dependency hierarchy from the owner)
             var parent = this.__parent || this.owner && this.owner.parent || null;
             // ... run capture/bubbling phases; first, build the event chain ...
-            var eventChain = Array.new(this); // ('this' [the current instance] is the last for capture, and first for bubbling)
+            var eventChain = new Array(this); // ('this' [the current instance] is the last for capture, and first for bubbling)
             if (parent) {
                 var eventPropertyName = this.__eventPropertyName; // (if exists, this references the 'on{EventName}' property getter that returns an even dispatcher object)
                 while (parent) {
@@ -294,55 +323,7 @@ define(["require", "exports", "./DreamSpace", "./DreamSpace", "./Delegate", "./E
             for (var i = this.__listeners.length - 1; i >= 0; --i)
                 this.__removeListener(i);
         }
-        static [DreamSpace_2.DreamSpace.constructor](factory) {
-            // ... factory.init must be set here in order to access private properties! ...
-            factory.init = (o, isnew, owner, eventName, removeOnTrigger = false, eventTriggerHandler = null, canCancel = true) => {
-                factory.super.init(o, isnew);
-                if (typeof eventName !== 'string')
-                    eventName = '' + eventName;
-                if (!eventName)
-                    throw "An event name is required.";
-                o.__eventName = eventName;
-                o.__eventPropertyName = EventDispatcherFactory.createEventPropertyNameFromEventName(eventName); // (fix to support the convention of {item}.on{Event}().
-                o.owner = owner;
-                o.associate(owner);
-                o.__eventTriggerHandler = eventTriggerHandler;
-                o.canCancel = canCancel;
-                if (!isnew) {
-                    o.__listeners.length = 0;
-                }
-            };
-            factory.registerEvent = (type, eventName, eventMode, removeOnTrigger, eventTriggerCallback, customEventPropName, canCancel) => {
-                customEventPropName || (customEventPropName = EventDispatcherFactory.createEventPropertyNameFromEventName(eventName)); // (the default supports the convention of {item}.on{Event}()).
-                var privateEventName = EventDispatcherFactory.createPrivateEventName(eventName); // (this name is used to store the new event dispatcher instance, which is created on demand for every instance)
-                // ... create a "getter" in the prototype for 'type' so that, when accessed by specific instances, an event object will be created on demand - this greatly reduces memory
-                //    allocations when many events exist on a lot of objects) ...
-                var onEventProxy = function () {
-                    var instance = this; // (instance is the object instance on which this event property reference was made)
-                    if (typeof instance !== 'object') //?  || !(instance instanceof DomainObject.$type))
-                        throw Exception_1.Exception.error("{Object}." + eventName, "Must be called on an object instance.", instance);
-                    // ... check if the instance already created the event property for registering events specific to this instance ...
-                    var eventProperty = instance[privateEventName];
-                    if (typeof eventProperty !== 'object') // (undefined or not valid, so attempt to create one now)
-                        instance[privateEventName] = eventProperty = EventDispatcherFactory.new(instance, eventName, removeOnTrigger, eventTriggerCallback, canCancel);
-                    eventProperty.__eventPropertyName = customEventPropName;
-                    eventProperty.__eventPrivatePropertyName = privateEventName;
-                    return eventProperty;
-                };
-                //x ... first, set the depreciating cross-browser compatible access method ...
-                //x type.prototype["$__" + customEventPropName] = onEventProxy; // (ex: '$__onClick')
-                // ... create the event getter property and set the "on event" getter proxy ...
-                if (DreamSpace_2.DreamSpace.global.Object.defineProperty)
-                    DreamSpace_2.DreamSpace.global.Object.defineProperty(type.prototype, customEventPropName, {
-                        configurable: true,
-                        enumerable: true,
-                        writable: true,
-                        get: onEventProxy
-                    });
-                else
-                    throw Exception_1.Exception.error("registerEvent: " + eventName, "This browser does not support 'Object.defineProperty()'. To support older browsers, call '_" + customEventPropName + "()' instead to get an instance specific reference to the EventDispatcher for that event (i.e. for 'click' event, do 'obj._onClick().attach(...)').", type);
-                return { _eventMode: eventMode, _eventName: eventName, _removeOnTrigger: removeOnTrigger }; // (the return doesn't matter at this time)
-            };
+        static [DreamSpace_2.DreamSpace.constructor]() {
             function getTriggerFunc(args) {
                 //x args.push(void 0, this); // (add 2 optional items on end)
                 //x var dataIndex = args.length - 2; // (set the index where the data should be set when each handler gets called)
@@ -383,24 +364,9 @@ define(["require", "exports", "./DreamSpace", "./DreamSpace", "./Delegate", "./E
             };
         }
     }
-    exports.EventDispatcherInstance = EventDispatcher;
-    class EventObject extends Factory(Object) {
-        /**
-        * Constructs a new Delegate object.
-        * @param {Object} object The instance on which the associated function will be called.  This should be undefined/null for static functions.
-        * @param {Function} func The function to be called on the associated object.
-        */
-        static 'new'() { return null; }
-        /**
-        * Reinitializes a disposed Delegate instance.
-        * @param o The Delegate instance to initialize, or re-initialize.
-        * @param isnew If true, this is a new instance, otherwise it is from a cache (and may have some preexisting properties).
-        * @param object The instance to bind to the resulting delegate object.
-        * @param func The function that will be called for the resulting delegate object.
-        */
-        static init(o, isnew) {
-            this.super.init(o, isnew);
-        }
+    exports.EventDispatcher = EventDispatcher;
+    EventDispatcher[DreamSpace_2.DreamSpace.constructor](); // ('any' is used because the static constructor is private)
+    class EventObject {
         /** Call this if you wish to implement 'changing' events for supported properties.
         * If any event handler cancels the event, then 'false' will be returned.
         */
@@ -415,17 +381,13 @@ define(["require", "exports", "./DreamSpace", "./DreamSpace", "./Delegate", "./E
             if (this.onPropertyChanged)
                 this.onPropertyChanged.dispatch(this, oldValue);
         }
-        static [DreamSpace_2.DreamSpace.constructor](factory) {
-            factory.init = (o, isnew) => {
-            };
-        }
     }
     exports.EventObject = EventObject;
     // ========================================================================================================================
     var Browser_Ext;
     (function (Browser_Ext) {
         /** Triggered when the DOM has completed loading. */
-        Browser_Ext.onReady = EventDispatcherFactory.new(Browser_1.Browser, "onReady", true);
+        Browser_Ext.onReady = new EventDispatcher(Browser_1.Browser, "onReady", true);
         Browser_1.Browser.onReady = Browser_Ext.onReady;
     })(Browser_Ext || (Browser_Ext = {}));
     var DreamSpace_Ext;
@@ -433,7 +395,7 @@ define(["require", "exports", "./DreamSpace", "./DreamSpace", "./Delegate", "./E
         /** Triggered when all manifests have loaded. No modules have been executed at this point.
           * Note: 'onReady' is not called automatically if 'DreamSpace.System.Diagnostics.debug' is set to 'Debug_Wait'.
           */
-        DreamSpace_Ext.onReady = EventDispatcherFactory.new(DreamSpace_2.DreamSpace, "onReady", true);
+        DreamSpace_Ext.onReady = new EventDispatcher(DreamSpace_2.DreamSpace, "onReady", true);
         DreamSpace_2.DreamSpace.onReady = DreamSpace_Ext.onReady;
     })(DreamSpace_Ext || (DreamSpace_Ext = {}));
 });

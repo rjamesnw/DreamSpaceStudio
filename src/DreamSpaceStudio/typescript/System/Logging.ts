@@ -100,8 +100,8 @@ export function error(title: string, message: string, source?: object, throwExce
 
 // =======================================================================================================================
 
-import { Diagnostics as _Diagnostics } from "././System/Diagnostics"; // ("./" twice causes an "optional" flag - it will only be included if already imported elsewhere)
-import { Exception as _Exception } from "././System/Exception"; // ("./" twice causes an "optional" flag - it will only be included if already imported elsewhere)
+import { Diagnostics as _Diagnostics } from "./Diagnostics"; // ("./" twice causes an "optional" flag - it will only be included if already imported elsewhere)
+import { Exception as _Exception } from "./Exception"; // ("./" twice causes an "optional" flag - it will only be included if already imported elsewhere)
 
 import Diagnostics = _Diagnostics; // (required because TypeScript uses an 'a.b' sequence which prevents the ability to test existence)
 var Exception = _Exception;

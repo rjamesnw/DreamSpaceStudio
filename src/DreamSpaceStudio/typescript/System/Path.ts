@@ -1,6 +1,11 @@
 /** @module Path The path module contains functions for working with URI based paths. */
 
 import { DreamSpace as DS } from "./DreamSpace";
+import { Utilities } from "./Utilities";
+import { Uri } from "./Uri";
+import { Query, pageQuery } from "./Query";
+import { ResourceRequest } from "./ResourceRequest";
+import { IO } from "./IO";
 
 // ==========================================================================================================================
 
@@ -116,7 +121,6 @@ namespace Path {
         if (url.charAt(0) == '/')
             url = resolve(url);
         url = query.appendTo(url);
-        query.dispose();
         if (IO.wait)
             IO.wait();
         setTimeout(() => { DS.global.location.href = url; }, 1); // (let events finish before setting)
@@ -148,13 +152,5 @@ namespace Path {
 }
 
 export { Path };
-
-// ===============================================================================================================================
-
-import { Utilities } from "./Utilities";
-import { Uri } from "./Uri";
-import { Query, pageQuery } from "./Query";
-import { ResourceRequest } from "./ResourceRequest";
-import { IO } from "./System/IO";
 
 // ===============================================================================================================================

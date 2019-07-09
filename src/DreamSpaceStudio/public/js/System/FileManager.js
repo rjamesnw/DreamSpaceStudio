@@ -1,4 +1,4 @@
-define(["require", "exports", "./Text", "./Storage", "./User", "./Text"], function (require, exports, Text_1, Storage_1, User_1, Text_2) {
+define(["require", "exports", "./Text", "./Storage", "./User", "./Path"], function (require, exports, Text_1, Storage_1, User_1, Path_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     // ############################################################################################################################
@@ -276,30 +276,30 @@ define(["require", "exports", "./Text", "./Storage", "./User", "./Text"], functi
             static get currentUser() { if (User_1.User.current)
                 return User_1.User.current; throw "'There is no current user! User.changeCurrentUser()' must be called first."; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
             /** The API endpoint to the directory for the current user. */
-            static get currentUserEndpoint() { return combine(this.apiEndpoint, FileManager.currentUser._id); }
+            static get currentUserEndpoint() { return combine(this.apiEndpoint, FileManager.currentUser._uid); }
             /** Gets a directory under the current user root endpoint.
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
             getDirectory(path, userId) {
-                return this.root.getDirectory(combine(userId || FileManager.currentUser._id, path));
+                return this.root.getDirectory(combine(userId || FileManager.currentUser._uid, path));
             }
             /** Creates a directory under the current user root endpoint.
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
             createDirectory(path, userId) {
-                return this.root.createDirectory(combine(userId || FileManager.currentUser._id, path));
+                return this.root.createDirectory(combine(userId || FileManager.currentUser._uid, path));
             }
             /** Gets a file under the current user root endpoint.
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
             getFile(filePath, userId) {
-                return this.root.getFile(combine(userId || FileManager.currentUser._id, filePath));
+                return this.root.getFile(combine(userId || FileManager.currentUser._uid, filePath));
             }
             /** Creates a file under the current user root endpoint.
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
             createFile(filePath, contents, userId) {
-                return this.root.createFile(combine(userId || FileManager.currentUser._id, filePath), contents);
+                return this.root.createFile(combine(userId || FileManager.currentUser._uid, filePath), contents);
             }
         }
         // --------------------------------------------------------------------------------------------------------------------
@@ -315,7 +315,7 @@ define(["require", "exports", "./Text", "./Storage", "./User", "./Text"], functi
         FileSystem.isValidFileName = isValidFileName;
         /** Combine two paths into one. */
         function combine(path1, path2) {
-            return Text_2.StringUtils.append(path1, path2, '/');
+            return Path_1.Path.combine(path1 instanceof Directory ? path1.absolutePath : path1, path2 instanceof Directory ? path2.absolutePath : path2);
         }
         FileSystem.combine = combine;
         // ========================================================================================================================

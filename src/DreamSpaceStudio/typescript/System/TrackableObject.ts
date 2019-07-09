@@ -4,10 +4,10 @@ import { Utilities } from "./Utilities";
 export class TrackableObject {
     [name: string]: any;
     /** A globally unique ID for this object. */
-    uid: string;
+    _uid: string;
 
     constructor() {
-        this.uid = Utilities.createGUID(false);
+        this._uid = Utilities.createGUID(false);
     }
 }
 

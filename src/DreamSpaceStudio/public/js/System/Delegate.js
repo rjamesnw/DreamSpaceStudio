@@ -150,7 +150,7 @@ define(["require", "exports", "./DreamSpace", "./Exception", "./Browser"], funct
         getData(data) {
             var isstatic = Delegate['__validate']("getData()", this.object, this.func);
             if (!isstatic)
-                data.addValue("id", this.object.uid);
+                data.addValue("id", this.object._uid);
             data.addValue("ft", this.__functionText);
         }
         /**

@@ -1,6 +1,7 @@
 ﻿import { TrackableObject } from "./TrackableObject";
 import { Project } from "./Project";
 import { FileSystem } from "./FileManager";
+import { UserAccess } from "./Security";
 
 // ========================================================================================================================
 
@@ -50,7 +51,7 @@ export class Solution extends TrackableObject {
 
     constructor() {
         super();
-        this.directory = FileSystem.fileManager.createDirectory(this._id);
+        this.directory = FileSystem.fileManager.createDirectory(this._uid);
     }
 
     /**

@@ -4,7 +4,7 @@ define(["require", "exports", "./Utilities"], function (require, exports, Utilit
     /** A common base type for all object that can be tracked by a globally unique ID. */
     class TrackableObject {
         constructor() {
-            this.uid = Utilities_1.Utilities.createGUID(false);
+            this._uid = Utilities_1.Utilities.createGUID(false);
         }
     }
     exports.TrackableObject = TrackableObject;

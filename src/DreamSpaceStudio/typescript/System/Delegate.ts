@@ -204,7 +204,7 @@ class Delegate<TObj extends object, TFunc extends DelegateFunction> {
     getData(data: SerializedData): void {
         var isstatic = Delegate['__validate']("getData()", this.object, this.func);
         if (!isstatic)
-            data.addValue("id", (<ITrackableObject><any>this.object).uid);
+            data.addValue("id", (<ITrackableObject><any>this.object)._uid);
         data.addValue("ft", this.__functionText);
     }
     /**

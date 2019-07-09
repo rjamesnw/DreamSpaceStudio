@@ -160,6 +160,7 @@
     <TypeScriptCompile Include="TypeScript\System\Globals.ts" />
     <TypeScriptCompile Include="TypeScript\System\IO.ts" />
     <TypeScriptCompile Include="TypeScript\System\Logging.ts" />
+    <TypeScriptCompile Include="TypeScript\System\Selection.ts" />
     <TypeScriptCompile Include="TypeScript\System\Site.ts" />
     <TypeScriptCompile Include="TypeScript\System\Page.ts" />
     <TypeScriptCompile Include="TypeScript\System\Path.ts" />
@@ -179,6 +180,7 @@
     <TypeScriptCompile Include="TypeScript\System\TrackableObject.ts" />
     <TypeScriptCompile Include="TypeScript\System\Component.ts" />
     <TypeScriptCompile Include="TypeScript\System\Uri.ts" />
+    <TypeScriptCompile Include="typescript\System\User.ts" />
     <TypeScriptCompile Include="TypeScript\System\Utilities.ts" />
     <TypeScriptCompile Include="typescript\System\Workflow.ts" />
   </ItemGroup>

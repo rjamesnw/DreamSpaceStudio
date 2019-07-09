@@ -5,6 +5,9 @@ import { EventDispatcher } from "./Events";
 import { Utilities } from "./Utilities";
 import { Data } from "./Data";
 import { Site } from "./Site";
+import { Solution } from "./Solution";
+import { nameof } from "../Core/Utilities";
+import { SelectedItem } from "./Selection";
 
 // ========================================================================================================================
 
@@ -46,13 +49,13 @@ export class Project extends TrackableObject {
       * Use 'addExpressionToBin()' and 'removeExpressionFromBin()' to modify this list, which also triggers the UI to update.
       */
     get expressionBin() { return this._expressionBin; }
-    private _expressionBin: Expression[] = [];
-    onExpressionBinItemAdded = new EventDispatcher<Project, { (item: Expression, project: Project): void }>(this);
-    onExpressionBinItemRemoved = new EventDispatcher<Project, { (item: Expression, project: Project): void }>(this);
+    private _expressionBin: SelectedItem[] = [];
+    onExpressionBinItemAdded = new EventDispatcher<Project, { (item: SelectedItem, project: Project): void }>(this, "onExpressionBinItemAdded");
+    onExpressionBinItemRemoved = new EventDispatcher<Project, { (item: SelectedItem, project: Project): void }>(this, "onExpressionBinItemRemoved");
 
     /** Returns the expression that was picked by the user for some operation. In the future this may also be used during drag-n-drop operations. */
-    get pickedExpression() { return this._pickedExpression; }
-    private _pickedExpression: Expression;
+    get pickedExpression() { return this._pickedItem; }
+    private _pickedItem: SelectedItem;
 
     // --------------------------------------------------------------------------------------------------------------------
 
@@ -61,10 +64,10 @@ export class Project extends TrackableObject {
             /** The title of the project. */ public name: string,
             /** The project's description. */ public description?: string
     ) {
-        super(FlowScript.createNew());
+        super();
         if (!FileSystem.isValidFileName(name))
             throw "The project title '" + name + "' must also be a valid file name. Don't include special directory characters, such as: \\ / ? % * ";
-        this.directory = FileSystem.fileManager.createDirectory(this._id);
+        this.directory = this.solution.directory.createDirectory(this._uid); // (the path is "User ID"/"project's unique ID"/ )
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -103,7 +106,7 @@ export class Project extends TrackableObject {
                 if (typeof script == 'object' && script.id) {
                     source.scripts[i] = script.id; // (replaced the object entry with the ID before saving the project graph later; these will be files instead)
 
-                    var scriptJSON = script && Data.JSON.stringify(script) || null;
+                    var scriptJSON = script && JSON.stringify(script) || null;
 
                     var file = this.directory.createFile((script.name || script.id) + ".fs", scriptJSON); // (fs: FlowScript source file)
                     this.files[file.absolutePath.toLocaleLowerCase()] = file;
@@ -112,7 +115,7 @@ export class Project extends TrackableObject {
 
         var projectJSON = this.serialize(source);
 
-        file = this.directory.createFile(this._id + ".fsp", projectJSON); // (fsp: FlowScript Project file)
+        file = this.directory.createFile(this._uid + ".fsp", projectJSON); // (fsp: FlowScript Project file)
         this.files[file.absolutePath.toLocaleLowerCase()] = file;
     }
 
@@ -134,13 +137,13 @@ export class Project extends TrackableObject {
 
     /** Saves the project to data objects (calls this.save() when 'source' is undefined) and uses the JSON object to serialize the result into a string. */
     serialize(source = this.save()): string {
-        var json = Utilities.Data.JSON.stringify(source);
+        var json = JSON.stringify(source);
         return json;
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    addToBin(expr: Expression, triggerEvent = true) {
+    addToBin(expr: SelectedItem, triggerEvent = true) {
         if (this._expressionBin.indexOf(expr) < 0) {
             this._expressionBin.push(expr);
             if (triggerEvent)
@@ -148,7 +151,7 @@ export class Project extends TrackableObject {
         }
     }
 
-    removeFromBin(expr: Expression, triggerEvent = true) {
+    removeFromBin(expr: SelectedItem, triggerEvent = true) {
         var i = this._expressionBin.indexOf(expr);
         if (i >= 0) {
             var expr = this._expressionBin.splice(i, 1)[0];
@@ -157,12 +160,12 @@ export class Project extends TrackableObject {
         }
     }
 
-    isInBin(expr: Expression) { return this._expressionBin.indexOf(expr) >= 0; }
+    isInBin(expr: SelectedItem) { return this._expressionBin.indexOf(expr) >= 0; }
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    pick(expr: Expression) {
-        this._pickedExpression = expr;
+    pick(expr: SelectedItem) {
+        this._pickedItem = expr;
     }
 
     // --------------------------------------------------------------------------------------------------------------------

@@ -1,32 +1,29 @@
 {
   "compileOnSave": true,
+  "references": [
+    { "path": "../../../../../../" },
+    { "path": "../../../../../../client" }
+  ],
   "compilerOptions": {
+    "noEmit": true,
     "incremental": true,
     "target": "es6",
     "module": "amd",
     "noImplicitAny": true,
-    "sourceMap": true,
-    "declaration": true,
-    "rootDir": "../",
-    "outDir": "../../public/js/",
-    "declarationDir": "../../public/js/client/decl",
+    "sourceMap": false,
+    "declaration": false,
     "lib": [ "es6", "dom" ],
     "noEmitHelpers": true,
     "experimentalDecorators": true,
+    "rootDir": "../../../../../../",
     "types": [ "jquery" ] // (include only types we need; prevents node types from being included)
   },
   "include": [
-    "./*.ts"
-    //"../System/**/*.ts~"
+    //"../../../../../../*.ts",
+    "_global.ts",
+    "./**/*.ts"
   ],
   "exclude": [
-    "Modules",
-    "node_modules",
-    "../Core/**/*.ts",
-    //"../DreamSpaceJS/**/*.d.ts",
-    "decl",
-    "Loader.ts",
-    "manifest.ts",
-    "**/Platform.UI.Bootstrap.ts"
+    "node_modules"
   ]
 }

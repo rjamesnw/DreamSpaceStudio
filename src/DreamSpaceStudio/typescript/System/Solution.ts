@@ -51,7 +51,7 @@ export class Solution extends TrackableObject {
 
     constructor() {
         super();
-        this.directory = FileSystem.fileManager.createDirectory(this._uid);
+        this.directory = FileSystem.fileManager.createDirectory(FileSystem.combine("solutions", this._uid));
     }
 
     /**

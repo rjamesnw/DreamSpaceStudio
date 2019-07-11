@@ -1,0 +1,21 @@
+{
+  "references": [ { "path": "../" } ],
+  "compileOnSave": true,
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "incremental": true,
+    "outFile": "client_api.js",
+    "target": "es6",
+    "lib": [ "es6", "dom" ],
+    "types": [ "node", "request" ] // (include only types we need; prevents node types from being included)
+  },
+  "include": [
+    "./*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "projects",
+    "./*.d.ts"
+  ]
+}

@@ -23,11 +23,11 @@ const path = require("path");
 const index_1 = require("../routes/index");
 const user_1 = require("../routes/user");
 //? global.XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-const DreamSpace_1 = require("../Core/DreamSpace");
-var ds = DreamSpace_1.registerGlobal();
+//? import { registerGlobal } from '../Core/DreamSpace';
+//? var ds = registerGlobal();
 var app = express();
 (() => __awaiter(this, void 0, void 0, function* () {
-    yield ds.init();
+    //await ds.init();
     try {
         // Parse URL-encoded bodies (as sent by HTML forms)
         app.use(express.urlencoded({

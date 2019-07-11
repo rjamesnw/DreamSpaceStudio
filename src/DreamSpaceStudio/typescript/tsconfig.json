@@ -4,22 +4,23 @@
     "incremental": true,
     "module": "commonjs",
     "target": "es6",
-    "lib": [ "es6", "dom" ],
+    "lib": [ "es6" ],
     "sourceMap": true,
     "noImplicitAny": true,
     "declaration": true,
     "rootDir": "./",
     "declarationDir": "../../public/js/server/decl",
     "experimentalDecorators": true,
-    "types": [ "debug", "express" ]
+    "types": [ "debug", "express", "node" ]
   },
   "include": [
-    "server/globals.d.ts",
-    "./server/**/*.ts",
-    "./System/**/*.ts"
+    //"server/globals.d.ts",
+    "./server/**/*.ts"
+    //"./System/**/*.ts"
   ],
   //"include": [ "Core/Polyfills.ts", "Core/System/Delegate.ts" ],
   "exclude": [
+    "*.ts",
     "./Core/**/*.ts",
     "node_modules",
     "client/**/*.*",

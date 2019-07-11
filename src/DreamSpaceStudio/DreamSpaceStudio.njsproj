@@ -37,6 +37,14 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\client\login.ts" />
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\client\_global.ts" />
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\server\login.ts" />
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\server\_global.ts" />
+    <TypeScriptCompile Include="solutions\client\io.ts" />
+    <TypeScriptCompile Include="solutions\io.ts" />
+    <TypeScriptCompile Include="solutions\server\io.ts" />
+    <TypeScriptCompile Include="TypeScript\client\app.ts" />
     <TypeScriptCompile Include="typescript\client\Modules\Cubiq_org\add2home_2.0.11.m.ts" />
     <TypeScriptCompile Include="typescript\client\Modules\Eyecon_ro\datepicker\datepicker.m.ts" />
     <TypeScriptCompile Include="typescript\client\Modules\Github\Ilinsky\XMLHttpRequest-20130624.m.ts" />
@@ -110,6 +118,14 @@
     <Content Include="..\..\README.md">
       <Link>README.md</Link>
     </Content>
+    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\client\tsconfig.json" />
+    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\server\tsconfig.json" />
+    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\project.json" />
+    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\solution.json" />
+    <Content Include="solutions\readme.txt" />
+    <Content Include="solutions\client\tsconfig.json" />
+    <Content Include="solutions\server\tsconfig.json" />
+    <Content Include="solutions\tsconfig.json" />
     <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\.gitignore" />
     <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\custom-message\index.html" />
     <Content Include="typescript\client\Modules\Cubiq_org\AddToHomeScreen-2.0.11\examples\hash-trick\index.html" />
@@ -142,6 +158,8 @@
     <Content Include="public\stylesheets\main.css" />
     <Content Include="TypeScript\client\tsconfig.json" />
     <Content Include="TypeScript\Core\Scripting Symanics Ideas.txt" />
+    <Content Include="users\F7E1685E6F654C2A84EBF34A9FDE5DB4\user.json" />
+    <Content Include="users\readme.txt" />
     <Content Include="views\studio\error.html" />
     <Content Include="views\studio\layout.html" />
     <Content Include="views\studio\index.html">
@@ -185,6 +203,17 @@
     <TypeScriptCompile Include="typescript\System\Workflow.ts" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\client\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\server\" />
+    <Folder Include="solutions\client\" />
+    <Folder Include="solutions\server\" />
+    <Folder Include="users\" />
+    <Folder Include="solutions\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\" />
     <Folder Include="typescript\" />
     <Folder Include="public\" />
     <Folder Include="public\images\" />
@@ -231,6 +260,7 @@
     <Folder Include="TypeScript\client\" />
     <Folder Include="TypeScript\types\" />
     <Folder Include="typescript\server\" />
+    <Folder Include="users\F7E1685E6F654C2A84EBF34A9FDE5DB4\" />
     <Folder Include="views\" />
     <Folder Include="views\studio\" />
   </ItemGroup>

@@ -67,7 +67,7 @@ export class Project extends TrackableObject {
         super();
         if (!FileSystem.isValidFileName(name))
             throw "The project title '" + name + "' must also be a valid file name. Don't include special directory characters, such as: \\ / ? % * ";
-        this.directory = this.solution.directory.createDirectory(this._uid); // (the path is "User ID"/"project's unique ID"/ )
+        this.directory = this.solution.directory.createDirectory(FileSystem.combine("projects", this._uid)); // (the path is "User ID"/"project's unique ID"/ )
     }
 
     // --------------------------------------------------------------------------------------------------------------------

@@ -10,6 +10,7 @@ node-modules/
 monaco-editor/
 **/libs/V8.NET/
 *.git
+*.tsbuildinfo
 
 # User-specific files
 *.suo

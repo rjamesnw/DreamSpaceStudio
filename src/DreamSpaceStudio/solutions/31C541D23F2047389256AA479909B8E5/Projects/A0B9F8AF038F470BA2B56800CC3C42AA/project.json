@@ -1,0 +1,12 @@
+{
+  "uid": "A0B9F8AF038F470BA2B56800CC3C42AA",
+  "name": "DreamSpace Studio (IDE)",
+  "codeBase": "file://~/projects/A0B9F8AF038F470BA2B56800CC3C42AA",
+  "workflows": [
+    {
+      "name": "Login",
+      "description": "Handles the developer login process.",
+      "source": "file://~/files/code"
+    }
+  ]
+}

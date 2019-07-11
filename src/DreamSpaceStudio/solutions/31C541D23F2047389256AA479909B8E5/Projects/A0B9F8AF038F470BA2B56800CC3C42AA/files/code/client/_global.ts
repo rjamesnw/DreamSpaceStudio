@@ -1,0 +1,1 @@
+// Contains common global code and types for the client side.

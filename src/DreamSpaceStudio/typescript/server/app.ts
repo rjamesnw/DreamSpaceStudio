@@ -23,13 +23,13 @@ import users from '../routes/user';
 
 //? global.XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
-import { registerGlobal } from '../Core/DreamSpace';
+//? import { registerGlobal } from '../Core/DreamSpace';
 
-var ds = registerGlobal();
+//? var ds = registerGlobal();
 var app = express();
 
 (async () => {
-    await ds.init();
+    //await ds.init();
 
     try {
 

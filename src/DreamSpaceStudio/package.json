@@ -12,10 +12,12 @@
   "main": "app.js",
   "dependencies": {
     "@types/jquery": "^3.3.29",
+    "@types/request": "^2.48.1",
     "debug": "^2.2.0",
     "express": "^4.14.0",
     "monaco-editor": "^0.16.2",
-    "node-xhrstub": "^1.1.1"
+    "node-xhrstub": "^1.1.1",
+    "request": "^2.88.0"
   },
   "devDependencies": {
     "@types/debug": "0.0.30",

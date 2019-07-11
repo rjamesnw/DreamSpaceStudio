@@ -1,10 +1,10 @@
 // ... many of these are to appease the TypeScript compiler as there is run-time checking for server vs client, and related types ...
 
-declare namespace NodeJS {
-    export interface Global {
-        XMLHttpRequest: XMLHttpRequest;
-    }
-}
+//declare namespace NodeJS {
+//    export interface Global {
+//        XMLHttpRequest: XMLHttpRequest;
+//    }
+//}
 
 //declare var XMLHttpRequestBase: any;
 //declare class XMLHttpRequest extends XMLHttpRequestBase { [index: string]: any; }

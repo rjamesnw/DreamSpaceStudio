@@ -1,16 +1,16 @@
 {
   "extends": "../../tsconfig_server_base.json",
-  "compileOnSave": true,
   "references": [
-    { "path": "../../2677A76EE8A34818873FB0587B8C3108/server" }
+    { "path": "../../../" },
+    { "path": "../../../server" }
   ],
+  "compileOnSave": true,
   "compilerOptions": {
+    "outDir": "HTMLReader",
+    "outFile": "HTMLReader/index.js",
+    "typeRoots": [ "../../2677A76EE8A34818873FB0587B8C3108/server" ]
   },
   "include": [
     "../**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "../**/client"
   ]
 }

@@ -16,7 +16,7 @@ namespace DS {
         if (includeExistingQuery)
             query.addOrUpdate(pageQuery.values);
         if (url.charAt(0) == '/')
-            url = resolve(url);
+            url = Path.resolve(url);
         url = query.appendTo(url);
         if (IO.wait)
             IO.wait();

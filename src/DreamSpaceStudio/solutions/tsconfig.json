@@ -10,7 +10,9 @@
     "types": [ "node", "request" ] // (include only types we need; prevents node types from being included)
   },
   "include": [
-    "./_global.ts", // (make sure this is always first)
+    "_global.ts", // (make sure this is always first)
+    "TrackableObject.ts",
+    "DependentObject.ts",
     "./*.ts"
   ],
   "exclude": [

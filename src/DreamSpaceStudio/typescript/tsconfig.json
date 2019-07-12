@@ -3,7 +3,7 @@
   "compilerOptions": {
     "noEmit": true,
     "declaration": false,
-    "incremental": true,
+    "incremental": false,
     "target": "es6",
     "lib": [ "es6", "dom" ],
     "types": [ "node", "request" ] // (include only types we need; prevents node types from being included)
@@ -12,6 +12,10 @@
     "./*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "./Core",
+    "./client",
+    "./types",
+    "./System"
   ]
 }

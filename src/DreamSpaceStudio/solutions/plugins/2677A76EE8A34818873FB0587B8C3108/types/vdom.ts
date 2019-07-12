@@ -1,4 +1,5 @@
-﻿namespace VDOM {
+﻿export abstract class VDOM { }
+export namespace VDOM {
     export abstract class NodeIteratorBase<T> {
         readonly root: Node;
         protected _node: Node;
@@ -53,7 +54,7 @@
 
         get length() { var count = 0, node = this._owner.firstChild; while (node) { node = node.nextSibling; ++count; } return count; }
 
-        constructor(owner: Node, firstNode: Node) { this._owner = owner; this._owner.firstChild = firstNode; }
+        constructor(owner: Node, firstNode: Node) { this._owner = owner; (<Writeable<Node>>this._owner).firstChild = firstNode; }
 
         forEach(callback: (currentValue: Node, currentIndex: number, listObj: this) => void, thisArg?: {}): void {
             var index = 0;

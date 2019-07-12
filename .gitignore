@@ -4,6 +4,9 @@
 **/TypeScript/*.d.ts
 **/TypeScript/*.js
 **/TypeScript/*.js.map
+**/solution/*.d.ts
+**/solution/*.js
+**/solution/*.js.map
 **/public/js/**/*.js.map
 **/public/js/**/*.d.ts
 node-modules/

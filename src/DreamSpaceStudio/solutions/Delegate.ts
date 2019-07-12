@@ -50,16 +50,16 @@ namespace DS {
          * Note: The underlying object and function must be registered types first.
          * See 'AppDomain.registerClass()/.registerType()' for more information.
          */
-        static getKey<TFunc extends DelegateFunction>(object: IndexedObject, func: TFunc): string {
+        static getKey<TFunc extends DelegateFunction>(object: TrackableObject, func: TFunc): string {
             var isstaticctx = Delegate.__validate("getKey()", object, func);
-            var id = isstaticctx ? '-1' : object.uid.toString();
+            var id = isstaticctx ? '-1' : object._uid.toString();
             return id + "," + (<IFunctionInfo><any>func).$__name; // (note: -1 means "global scope")
         }
 
         protected static __validate(callername: string, object: NativeTypes.IObject, func: DelegateFunction): boolean { // (returns 'true' if static)
             var isstaticctx: boolean = object === void 0 || object === null; // ('$__fullname' exists on modules and registered type objects)
-            if (!isstaticctx && typeof object.uid != 'number')
-                throw Exception.error("Delegate." + callername, "The object for this delegate does not contain a numerical '$__id' value (used as a global object reference for serialization), or '$__fullname' value (for static type references).  See 'AppDomain.registerClass()'.", this);
+            if (!isstaticctx && typeof (<TrackableObject>object)._uid != 'number')
+                throw Exception.error("Delegate." + callername, "The object for this delegate does not contain a numerical '_uid' value (used as a global object reference for serialization), or '$__fullname' value (for static type references).  See 'AppDomain.registerClass()'.", this);
             return isstaticctx;
         }
 

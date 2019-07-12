@@ -142,23 +142,23 @@ declare namespace DS {
      * @param uniqueGlobalVarName The global name to use.  By default this is the constant 'DEFAULT_ROOT_NS_NAME', which uses a NAME + GUID to guarantee no collisions.
      */
     function registerGlobal(uniqueGlobalVarName?: string): typeof DS;
+    /**
+     * A TypeScript decorator used to seal a function and its prototype. Properties cannot be added, but existing ones can be updated.
+     */
+    function sealed<T extends IType>(target: T): T;
+    function sealed<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T;
+    /**
+    * A TypeScript decorator used to freeze a function and its prototype.  Properties cannot be added, and existing ones cannot be changed.
+    */
+    function frozen<T extends IType>(target: T): T;
+    function frozen<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T;
+    /**
+     * A decorator used to add DI information for a function parameter.
+     * @param args A list of items which are either fully qualified type names, or references to the type functions.
+     * The order specified is important.  A new (transient) or existing (singleton) instance of the first matching type found is returned.
+     */
+    function $(...args: (IType<any> | string)[]): (target: any, paramName: string, index: number) => void;
 }
-/**
- * A TypeScript decorator used to seal a function and its prototype. Properties cannot be added, but existing ones can be updated.
- */
-declare function sealed<T extends IType>(target: T): T;
-declare function sealed<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T;
-/**
-* A TypeScript decorator used to freeze a function and its prototype.  Properties cannot be added, and existing ones cannot be changed.
-*/
-declare function frozen<T extends IType>(target: T): T;
-declare function frozen<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T;
-/**
- * A decorator used to add DI information for a function parameter.
- * @param args A list of items which are either fully qualified type names, or references to the type functions.
- * The order specified is important.  A new (transient) or existing (singleton) instance of the first matching type found is returned.
- */
-declare function $(...args: (IType<any> | string)[]): (target: any, paramName: string, index: number) => void;
 /** Provides a mechanism for object cleanup.
 * See also: 'dispose(...)' helper functions. */
 interface IDisposable {
@@ -224,6 +224,26 @@ interface IResultCallback<TSender> {
 }
 interface IErrorCallback<TSender> {
     (sender?: TSender, error?: any): any;
+}
+declare namespace DS {
+    /** A common base type for all object that can be tracked by a globally unique ID. */
+    class TrackableObject {
+        [name: string]: any;
+        /** A globally unique ID for this object. */
+        _uid: string;
+        constructor();
+    }
+    interface ITrackableObject extends TrackableObject {
+    }
+}
+declare namespace DS {
+    /** Represents an object that can have a parent object. */
+    abstract class DependentObject extends TrackableObject {
+        readonly parent: DependentObject;
+        protected __parent: DependentObject;
+    }
+    interface IDependencyObject extends DependentObject {
+    }
 }
 declare namespace DS {
     /** Contains information on the user agent (browser) being used.
@@ -441,7 +461,7 @@ declare namespace DS {
          * Note: The underlying object and function must be registered types first.
          * See 'AppDomain.registerClass()/.registerType()' for more information.
          */
-        static getKey<TFunc extends DelegateFunction>(object: IndexedObject, func: TFunc): string;
+        static getKey<TFunc extends DelegateFunction>(object: TrackableObject, func: TFunc): string;
         protected static __validate(callername: string, object: NativeTypes.IObject, func: DelegateFunction): boolean;
         /** A read-only key string that uniquely identifies the combination of object instance and function in this delegate.
         * This property is set for new instances by default.  Calling 'update()' will update it if necessary.

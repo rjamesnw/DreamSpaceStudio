@@ -335,49 +335,47 @@ namespace DS {
     }
 
     // ========================================================================================================================
-}
 
-// ###########################################################################################################################
+    /**
+     * A TypeScript decorator used to seal a function and its prototype. Properties cannot be added, but existing ones can be updated.
+     */
+    export function sealed<T extends IType>(target: T): T;
+    export function sealed<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T;
+    export function sealed<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T {
+        if (typeof target == 'object')
+            Object.seal(target);
+        if (typeof (<any>target).prototype == 'object')
+            Object.seal((<any>target).prototype);
+        return target;
+    }
 
-/**
- * A TypeScript decorator used to seal a function and its prototype. Properties cannot be added, but existing ones can be updated.
- */
-function sealed<T extends IType>(target: T): T;
-function sealed<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T;
-function sealed<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T {
-    if (typeof target == 'object')
-        Object.seal(target);
-    if (typeof (<any>target).prototype == 'object')
-        Object.seal((<any>target).prototype);
-    return target;
-}
+    /**
+    * A TypeScript decorator used to freeze a function and its prototype.  Properties cannot be added, and existing ones cannot be changed.
+    */
+    export function frozen<T extends IType>(target: T): T;
+    export function frozen<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T;
+    export function frozen<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T {
+        if (typeof target == 'object')
+            Object.freeze(target);
+        if (typeof (<any>target).prototype == 'object')
+            Object.freeze((<any>target).prototype);
+        return target;
+    }
 
-/**
-* A TypeScript decorator used to freeze a function and its prototype.  Properties cannot be added, and existing ones cannot be changed.
-*/
-function frozen<T extends IType>(target: T): T;
-function frozen<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T;
-function frozen<T extends {}>(target: T, propertyName?: string, descriptor?: TypedPropertyDescriptor<any>): T {
-    if (typeof target == 'object')
-        Object.freeze(target);
-    if (typeof (<any>target).prototype == 'object')
-        Object.freeze((<any>target).prototype);
-    return target;
-}
+    // =======================================================================================================================
+    // Function Parameter Dependency Injection Support
+    // TODO: Consider DI support at some point.
 
-// =======================================================================================================================
-// Function Parameter Dependency Injection Support
-// TODO: Consider DI support at some point.
-
-/**
- * A decorator used to add DI information for a function parameter.
- * @param args A list of items which are either fully qualified type names, or references to the type functions.
- * The order specified is important.  A new (transient) or existing (singleton) instance of the first matching type found is returned.
- */
-function $(...args: (IType<any> | string)[]) { // this is the decorator factory
-    return function (target: any, paramName: string, index: number) { // this is the decorator
-        var _target = <IFunctionInfo>target;
-        _target.$__argumentTypes[index] = args;
+    /**
+     * A decorator used to add DI information for a function parameter.
+     * @param args A list of items which are either fully qualified type names, or references to the type functions.
+     * The order specified is important.  A new (transient) or existing (singleton) instance of the first matching type found is returned.
+     */
+    export function $(...args: (IType<any> | string)[]) { // this is the decorator factory
+        return function (target: any, paramName: string, index: number) { // this is the decorator
+            var _target = <IFunctionInfo>target;
+            _target.$__argumentTypes[index] = args;
+        }
     }
 }
 

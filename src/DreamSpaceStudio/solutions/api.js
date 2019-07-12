@@ -286,37 +286,59 @@ var DS;
         return DS;
     }
     DS.registerGlobal = registerGlobal;
-    // ========================================================================================================================
+    function sealed(target, propertyName, descriptor) {
+        if (typeof target == 'object')
+            Object.seal(target);
+        if (typeof target.prototype == 'object')
+            Object.seal(target.prototype);
+        return target;
+    }
+    DS.sealed = sealed;
+    function frozen(target, propertyName, descriptor) {
+        if (typeof target == 'object')
+            Object.freeze(target);
+        if (typeof target.prototype == 'object')
+            Object.freeze(target.prototype);
+        return target;
+    }
+    DS.frozen = frozen;
+    // =======================================================================================================================
+    // Function Parameter Dependency Injection Support
+    // TODO: Consider DI support at some point.
+    /**
+     * A decorator used to add DI information for a function parameter.
+     * @param args A list of items which are either fully qualified type names, or references to the type functions.
+     * The order specified is important.  A new (transient) or existing (singleton) instance of the first matching type found is returned.
+     */
+    function $(...args) {
+        return function (target, paramName, index) {
+            var _target = target;
+            _target.$__argumentTypes[index] = args;
+        };
+    }
+    DS.$ = $;
 })(DS || (DS = {}));
-function sealed(target, propertyName, descriptor) {
-    if (typeof target == 'object')
-        Object.seal(target);
-    if (typeof target.prototype == 'object')
-        Object.seal(target.prototype);
-    return target;
-}
-function frozen(target, propertyName, descriptor) {
-    if (typeof target == 'object')
-        Object.freeze(target);
-    if (typeof target.prototype == 'object')
-        Object.freeze(target.prototype);
-    return target;
-}
-// =======================================================================================================================
-// Function Parameter Dependency Injection Support
-// TODO: Consider DI support at some point.
-/**
- * A decorator used to add DI information for a function parameter.
- * @param args A list of items which are either fully qualified type names, or references to the type functions.
- * The order specified is important.  A new (transient) or existing (singleton) instance of the first matching type found is returned.
- */
-function $(...args) {
-    return function (target, paramName, index) {
-        var _target = target;
-        _target.$__argumentTypes[index] = args;
-    };
-}
 // ###########################################################################################################################
+var DS;
+(function (DS) {
+    /** A common base type for all object that can be tracked by a globally unique ID. */
+    class TrackableObject {
+        constructor() {
+            this._uid = DS.Utilities.createGUID(false);
+        }
+    }
+    DS.TrackableObject = TrackableObject;
+})(DS || (DS = {}));
+var DS;
+(function (DS) {
+    // ====================================================================================================================================
+    /** Represents an object that can have a parent object. */
+    class DependentObject extends DS.TrackableObject {
+        get parent() { return this.__parent; }
+    }
+    DS.DependentObject = DependentObject;
+    // =======================================================================================================================
+})(DS || (DS = {}));
 // ############################################################################################################################################
 // Browser detection (for special cases).
 // ############################################################################################################################################
@@ -736,13 +758,13 @@ var DS;
          */
         static getKey(object, func) {
             var isstaticctx = Delegate.__validate("getKey()", object, func);
-            var id = isstaticctx ? '-1' : object.uid.toString();
+            var id = isstaticctx ? '-1' : object._uid.toString();
             return id + "," + func.$__name; // (note: -1 means "global scope")
         }
         static __validate(callername, object, func) {
             var isstaticctx = object === void 0 || object === null; // ('$__fullname' exists on modules and registered type objects)
-            if (!isstaticctx && typeof object.uid != 'number')
-                throw DS.Exception.error("Delegate." + callername, "The object for this delegate does not contain a numerical '$__id' value (used as a global object reference for serialization), or '$__fullname' value (for static type references).  See 'AppDomain.registerClass()'.", this);
+            if (!isstaticctx && typeof object._uid != 'number')
+                throw DS.Exception.error("Delegate." + callername, "The object for this delegate does not contain a numerical '_uid' value (used as a global object reference for serialization), or '$__fullname' value (for static type references).  See 'AppDomain.registerClass()'.", this);
             return isstaticctx;
         }
         //? static readonly $Type = $Delegate;

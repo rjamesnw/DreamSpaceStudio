@@ -1,7 +1,18 @@
+import { VDOM } from "VDOM";
+import { HTMLReader, HTMLReaderModes } from "../types/HTMLReader";
 
 // =====================================================================================================================================
 
-interface IHTMLParseResult { rootElements: IGraphNode[]; templates: { [id: string]: IDataTemplate; } }
+/** Data template information as extracted from HTML template text. */
+export interface IDataTemplate {
+    id: string;
+    originalHTML: string;
+    templateHTML: string;
+    templateItem: VDOM.Node;
+    childTemplates: IDataTemplate[];
+}
+
+export interface IHTMLParseResult { rootElements: VDOM.Node[]; templates: { [id: string]: IDataTemplate; } }
 
 /** Parses HTML to create a graph object tree, and also returns any templates found.
 * This concept is similar to using XAML to load objects in WPF. As such, you have the option to use an HTML template, or dynamically build your
@@ -14,14 +25,14 @@ interface IHTMLParseResult { rootElements: IGraphNode[]; templates: { [id: strin
 * @param {boolean} strictMode If true, then the parser will produce errors on ill-formed HTML (eg. 'attribute=' with no value).
 * This can greatly help keep your html clean, AND identify possible areas of page errors.  If strict formatting is not important, pass in false.
 */
-function parse(html: string = null, strictMode?: boolean): IHTMLParseResult {
-    var log = Diagnostics.log(HTML, "Parsing HTML template ...").beginCapture();
+export function parse(html: string = null, strictMode?: boolean): IHTMLParseResult {
+    var log = DS.Diagnostics.log(HTML, "Parsing HTML template ...").beginCapture();
     log.write("Template: " + html);
 
     if (!html) return null;
 
     // ... parsing is done by passing each new graph item the current scan position in a recursive pattern, until the end of the HTML text is found ...
-    var htmlReader = HTMLReader.new(html);
+    var htmlReader = new HTMLReader(html);
     if (strictMode !== void 0)
         htmlReader.strictMode = !!strictMode;
 
@@ -30,7 +41,7 @@ function parse(html: string = null, strictMode?: boolean): IHTMLParseResult {
     var classMatch = /^[$.][A-Za-z0-9_$]*(\.[A-Za-z0-9_$]*)*(\s+|$)/;
     var attribName: string;
 
-    var storeRunningText = (parent: IGraphNode) => {
+    var storeRunningText = (parent: VDOM.Node) => {
         if (htmlReader.runningText) { // (if there is running text, then create a text node for it under the given parent node)
             //?if (!host.isClient())
             //?    HTMLElement.new(parent).setValue((htmlReader.runningText.indexOf('&') < 0 ? "text" : "html"), htmlReader.runningText); // (not for the UI, so doesn't matter)
@@ -163,24 +174,24 @@ function parse(html: string = null, strictMode?: boolean): IHTMLParseResult {
                                 // ... auto detect the DreamSpace UI GraphNode type based on the tag name (all valid HTML4/5 tags: http://www.w3schools.com/tags/) ...
                                 switch (currentTagName) {
                                     // (phrases)
-                                    case 'abbr': nodeType = Phrase; properties[Phrase.PhraseType.name] = PhraseTypes.Abbreviation; break;
-                                    case 'acronym': nodeType = Phrase; properties[Phrase.PhraseType.name] = PhraseTypes.Acronym; break;
-                                    case 'em': nodeType = Phrase; properties[Phrase.PhraseType.name] = PhraseTypes.Emphasis; break;
-                                    case 'strong': nodeType = Phrase; properties[Phrase.PhraseType.name] = PhraseTypes.Strong; break;
-                                    case 'cite': nodeType = Phrase; properties[Phrase.PhraseType.name] = PhraseTypes.Cite; break;
-                                    case 'dfn': nodeType = Phrase; properties[Phrase.PhraseType.name] = PhraseTypes.Defining; break;
-                                    case 'code': nodeType = Phrase; properties[Phrase.PhraseType.name] = PhraseTypes.Code; break;
-                                    case 'samp': nodeType = Phrase; properties[Phrase.PhraseType.name] = PhraseTypes.Sample; break;
-                                    case 'kbd': nodeType = Phrase; properties[Phrase.PhraseType.name] = PhraseTypes.Keyboard; break;
-                                    case 'var': nodeType = Phrase; properties[Phrase.PhraseType.name] = PhraseTypes.Variable; break;
+                                    case 'abbr': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Abbreviation; break;
+                                    case 'acronym': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Acronym; break;
+                                    case 'em': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Emphasis; break;
+                                    case 'strong': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Strong; break;
+                                    case 'cite': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Cite; break;
+                                    case 'dfn': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Defining; break;
+                                    case 'code': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Code; break;
+                                    case 'samp': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Sample; break;
+                                    case 'kbd': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Keyboard; break;
+                                    case 'var': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Variable; break;
 
                                     // (headers)
-                                    case 'h1': nodeType = Header; properties[Header.HeaderLevel.name] = 1; break;
-                                    case 'h2': nodeType = Header; properties[Header.HeaderLevel.name] = 2; break;
-                                    case 'h3': nodeType = Header; properties[Header.HeaderLevel.name] = 3; break;
-                                    case 'h4': nodeType = Header; properties[Header.HeaderLevel.name] = 4; break;
-                                    case 'h5': nodeType = Header; properties[Header.HeaderLevel.name] = 5; break;
-                                    case 'h6': nodeType = Header; properties[Header.HeaderLevel.name] = 6; break;
+                                    case 'h1': nodeType = VDOM.HTMLElement; properties[Header.HeaderLevel.name] = 1; break;
+                                    case 'h2': nodeType = VDOM.HTMLElement; properties[Header.HeaderLevel.name] = 2; break;
+                                    case 'h3': nodeType = VDOM.HTMLElement; properties[Header.HeaderLevel.name] = 3; break;
+                                    case 'h4': nodeType = VDOM.HTMLElement; properties[Header.HeaderLevel.name] = 4; break;
+                                    case 'h5': nodeType = VDOM.HTMLElement; properties[Header.HeaderLevel.name] = 5; break;
+                                    case 'h6': nodeType = VDOM.HTMLElement; properties[Header.HeaderLevel.name] = 6; break;
 
                                     default: nodeType = HTMLElement; // (just create a basic object to use with htmlReader.tagName)
                                 }

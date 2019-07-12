@@ -1,41 +1,397 @@
-// Contains DreamSpace API functions and types that user code can use to work with the system.
-// This API will be a layer of abstraction for the client side only.
+// ############################################################################################################################
+// Types for event management.
+// ############################################################################################################################
 var DS;
 (function (DS) {
-    let IO;
-    (function (IO) {
-        // ========================================================================================================================
-        /** This even is triggered when the user should wait for an action to complete. */
-        IO.onBeginWait = new EventDispatcher(IO, "onBeginWait", true);
-        /** This even is triggered when the user no longer needs to wait for an action to complete. */
-        IO.onEndWait = new EventDispatcher(IO, "onEndWait", true);
-        var __waitRequestCounter = 0; // (allows stacking calls to 'wait()')
-        /**
-         * Blocks user input until 'closeWait()' is called. Plugins can hook into 'onBeginWait' to receive notifications.
-         * Note: Each call stacks, but the 'onBeginWait' event is triggered only once.
-         * @param msg An optional message to display (default is 'Please wait...').
+    // ========================================================================================================================
+    ;
+    ;
+    /** Controls how the event progression occurs. */
+    let EventModes;
+    (function (EventModes) {
+        /** Trigger event on the way up to the target. */
+        EventModes[EventModes["Capture"] = 0] = "Capture";
+        /** Trigger event on the way down from the target. */
+        EventModes[EventModes["Bubble"] = 1] = "Bubble";
+        /** Trigger event on both the way up to the target, then back down again. */
+        EventModes[EventModes["CaptureAndBubble"] = 2] = "CaptureAndBubble";
+    })(EventModes = DS.EventModes || (DS.EventModes = {}));
+    ;
+    /**
+      * The EventDispatcher wraps a specific event type, and manages the triggering of "handlers" (callbacks) when that event type
+      * must be dispatched. Events are usually registered as static properties first (to prevent having to create and initialize
+      * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
+      * instance level event handler registration on the class only when necessary.
+      */
+    class EventDispatcher extends DS.DependentObject {
+        /** Constructs a new instance of the even dispatcher.
+         * @param eventTriggerHandler A global handler per event type that is triggered before any other handlers. This is a hook which is called every time an event triggers.
+         * This exists mainly to support handlers called with special parameters, such as those that may need translation, or arguments that need to be injected.
          */
-        function wait(msg = "Please wait ...") {
-            if (__waitRequestCounter == 0) // (fire only one time)
-                IO.onBeginWait.dispatch(msg);
-            __waitRequestCounter++;
+        constructor(owner, eventName, removeOnTrigger = false, canCancel = true, eventTriggerHandler = null) {
+            super();
+            this.__associations = new WeakMap(); // (a mapping between an external object and this event instance - typically used to associated this event with an external object OTHER than the owner)
+            this.__listeners = []; // (this is typed "any object type" to allow using delegate handler function objects later on)
+            /** If this is true, then any new handler added will automatically be triggered as well.
+            * This is handy in cases where an application state is persisted, and future handlers should always execute. */
+            this.autoTrigger = false;
+            /** If true, then handlers are called only once, then removed (default is false). */
+            this.removeOnTrigger = false;
+            /** This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters. */
+            this.eventTriggerHandler = null;
+            /** True if the event can be cancelled. */
+            this.canCancel = true;
+            if (typeof eventName !== 'string')
+                eventName = '' + eventName;
+            if (!eventName)
+                throw "An event name is required.";
+            this.__eventName = eventName;
+            this.__eventPropertyName = EventDispatcher.createEventPropertyNameFromEventName(eventName); // (fix to support the convention of {item}.on{Event}().
+            this.owner = owner;
+            this.associate(owner);
+            this.__eventTriggerHandler = eventTriggerHandler;
+            this.canCancel = canCancel;
         }
-        IO.wait = wait;
+        /** Return the underlying event name for this event object. */
+        getEventName() { return this.__eventName; }
+        /** Returns true if handlers exist on this event object instance. */
+        hasHandlers() { return !!this.__listeners.length; }
         /**
-         * Unblocks user input if 'wait()' was previously called. The number of 'closeWait()' calls must match the number of wait calls in order to unblock the user.
-         * Plugins can hook into the 'onEndWait' event to be notified.
-         * @param force If true, then the number of calls to 'wait' is ignored and the block is forcibly removed (default if false).
+           * Registers an event with a class type - typically as a static property.
+           * @param type A class reference where the static property will be registered.
+           * @param eventName The name of the event to register.
+           * @param eventMode Specifies the desired event traveling mode.
+           * @param removeOnTrigger If true, the event only fires one time, then clears all event handlers. Attaching handlers once an event fires in this state causes them to be called immediately.
+           * @param eventTriggerCallback This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters.
+           * @param customEventPropName The name of the property that will be associated with this event, and expected on parent objects
+           * for the capturing and bubbling phases.  If left undefined/null, then the default is assumed to be
+           * 'on[EventName]', where the first event character is made uppercase automatically.
+           * @param canCancel If true (default), this event can be cancelled (prevented from completing, so no other events will fire).
+           */
+        static registerEvent(type, eventName, eventMode = EventModes.Capture, removeOnTrigger = false, eventTriggerCallback, customEventPropName, canCancel = true) {
+            customEventPropName || (customEventPropName = EventDispatcher.createEventPropertyNameFromEventName(eventName)); // (the default supports the convention of {item}.on{Event}()).
+            var privateEventName = EventDispatcher.createPrivateEventName(eventName); // (this name is used to store the new event dispatcher instance, which is created on demand for every instance)
+            // ... create a "getter" in the prototype for 'type' so that, when accessed by specific instances, an event object will be created on demand - this greatly reduces memory
+            //    allocations when many events exist on a lot of objects) ...
+            var onEventProxy = function () {
+                var instance = this; // (instance is the object instance on which this event property reference was made)
+                if (typeof instance !== 'object') //?  || !(instance instanceof DomainObject.$type))
+                    throw DS.Exception.error("{Object}." + eventName, "Must be called on an object instance.", instance);
+                // ... check if the instance already created the event property for registering events specific to this instance ...
+                var eventProperty = instance[privateEventName];
+                if (typeof eventProperty !== 'object') // (undefined or not valid, so attempt to create one now)
+                    instance[privateEventName] = eventProperty = new EventDispatcher(instance, eventName, removeOnTrigger, canCancel, eventTriggerCallback);
+                eventProperty.__eventPropertyName = customEventPropName;
+                eventProperty.__eventPrivatePropertyName = privateEventName;
+                return eventProperty;
+            };
+            //x ... first, set the depreciating cross-browser compatible access method ...
+            //x type.prototype["$__" + customEventPropName] = onEventProxy; // (ex: '$__onClick')
+            // ... create the event getter property and set the "on event" getter proxy ...
+            if (DS.global.Object.defineProperty)
+                DS.global.Object.defineProperty(type.prototype, customEventPropName, {
+                    configurable: true,
+                    enumerable: true,
+                    writable: true,
+                    get: onEventProxy
+                });
+            else
+                throw DS.Exception.error("registerEvent: " + eventName, "This browser does not support 'Object.defineProperty()'. To support older browsers, call '_" + customEventPropName + "()' instead to get an instance specific reference to the EventDispatcher for that event (i.e. for 'click' event, do 'obj._onClick().attach(...)').", type);
+            return { _eventMode: eventMode, _eventName: eventName, _removeOnTrigger: removeOnTrigger }; // (the return doesn't matter at this time)
+        }
+        /**
+            * Creates an instance property name from a given event name by adding 'on' as a prefix.
+            * This is mainly used when registering events as static properties on types.
+            * @param {string} eventName The event name to create an event property from. If the given event name already starts with 'on', then the given name is used as is (i.e. 'click' becomes 'onClick').
+            */
+        static createEventPropertyNameFromEventName(eventName) {
+            return eventName.match(/^on[^a-z]/) ? eventName : "on" + eventName.charAt(0).toUpperCase() + eventName.substring(1);
+        }
+        /**
+           * Returns a formatted event name in the form of a private event name like '$__{eventName}Event' (eg. 'click' becomes '$__clickEvent').
+           * The private event names are used to store event instances on the owning instances so each instance has it's own handlers list to manage.
+           */
+        static createPrivateEventName(eventName) { return "$__" + eventName + "Event"; }
+        dispose() {
+            // ... remove all handlers ...
+            this.removeAllListeners();
+            // TODO: Detach from owner as well? //?
+        }
+        /**
+         * Associates this event instance with an object using a weak map. The owner of the instance is already associated by default.
+         * Use this function to associate other external objects other than the owner, such as DOM elements (there should only be one
+         * specific event instance per any object).
          */
-        function closeWait(force = false) {
-            if (__waitRequestCounter > 0 && (force || --__waitRequestCounter == 0)) {
-                __waitRequestCounter = 0;
-                IO.onEndWait.dispatch();
+        associate(obj) {
+            this.__associations.set(obj, this);
+            return this;
+        }
+        /** Disassociates this event instance from an object (an internal weak map is used for associations). */
+        disassociate(obj) {
+            this.__associations.delete(obj);
+            return this;
+        }
+        /** Returns true if this event instance is already associated with the specified object (a weak map is used). */
+        isAssociated(obj) {
+            return this.__associations.has(obj);
+        }
+        _getHandlerIndex(handler) {
+            if (handler instanceof DS.Delegate) {
+                var object = handler.object;
+                var func = handler.func;
+            }
+            else if (handler instanceof Function) {
+                object = null;
+                func = handler;
+            }
+            else
+                throw DS.Exception.error("_getHandlerIndex()", "The given handler is not valid.  A Delegate type or function was expected.", this);
+            for (var i = 0, n = this.__listeners.length; i < n; ++i) {
+                var h = this.__listeners[i];
+                if (h.object == object && h.func == func)
+                    return i;
+            }
+            return -1;
+        }
+        attach(handler, eventMode = EventModes.Capture) {
+            if (this._getHandlerIndex(handler) == -1) {
+                var delegate = handler instanceof DS.Delegate ? handler : new DS.Delegate(this, handler);
+                delegate.$__eventMode = eventMode;
+                this.__listeners.push(delegate);
+            }
+            return this;
+        }
+        /** Dispatch the underlying event. Typically 'dispatch()' is called instead of calling this directly. Returns 'true' if all events completed, and 'false' if any handler cancelled the event.
+          * @param {any} triggerState If supplied, the event will not trigger unless the current state is different from the last state.  This is useful in making
+          * sure events only trigger once per state.  Pass in null (the default) to always dispatch regardless.  Pass 'undefined' to used the event
+          * name as the trigger state (this can be used for a "trigger only once" scenario).
+          * @param {boolean} canBubble Set to true to allow the event to bubble (where supported).
+          * @param {boolean} canCancel Set to true if handlers can abort the event (false means it has or will occur regardless).
+          * @param {string[]} args Custom arguments that will be passed on to the event handlers.
+          */
+        dispatchEvent(triggerState = null, ...args) {
+            if (!this.setTriggerState(triggerState))
+                return; // (no change in state, so ignore this request)
+            // ... for capture phases, start at the bottom and work up; but need to build the chain first (http://stackoverflow.com/a/10654134/1236397) ...
+            // ('this.__parent' checks for event-instance-only chained events, whereas 'this.owner.parent' iterates events using the a parent-child dependency hierarchy from the owner)
+            var parent = this.__parent || this.owner && this.owner.parent || null;
+            // ... run capture/bubbling phases; first, build the event chain ...
+            var eventChain = new Array(this); // ('this' [the current instance] is the last for capture, and first for bubbling)
+            if (parent) {
+                var eventPropertyName = this.__eventPropertyName; // (if exists, this references the 'on{EventName}' property getter that returns an even dispatcher object)
+                while (parent) {
+                    var eventInstance = parent[eventPropertyName];
+                    if (eventInstance instanceof EventDispatcher)
+                        eventChain.push(eventInstance);
+                    parent = parent['__parent'];
+                }
+            }
+            var cancelled = false;
+            // ... do capture phase (root, towards target) ...
+            for (var n = eventChain.length, i = n - 1; i >= 0; --i) {
+                if (cancelled)
+                    break;
+                var dispatcher = eventChain[i];
+                if (dispatcher.__listeners.length)
+                    cancelled = dispatcher.onDispatchEvent(args, EventModes.Capture);
+            }
+            // ... do bubbling phase (target, towards root) ...
+            for (var i = 0, n = eventChain.length; i < n; ++i) {
+                if (cancelled)
+                    break;
+                var dispatcher = eventChain[i];
+                if (dispatcher.__listeners.length)
+                    cancelled = dispatcher.onDispatchEvent(args, EventModes.Bubble);
+            }
+            return !cancelled;
+        }
+        __exception(msg, error) {
+            if (error)
+                msg += "\r\nInner error: " + DS.getErrorMessage(error);
+            return DS.Exception.error("{EventDispatcher}.dispatchEvent():", "Error in event " + this.__eventName + " on object type '" + DS.getTypeName(this.owner) + "': " + msg, { exception: error, event: this, handler: this.__handlerCallInProgress });
+        }
+        /** Calls the event handlers that match the event mode on the current event instance. */
+        onDispatchEvent(args, mode) {
+            args.push(this); // (add this event instance to the end of the arguments list to allow an optional target parameters to get a reference to the calling event)
+            this.__cancelled = false;
+            this.__dispatchInProgress = true;
+            try {
+                for (var i = 0, n = this.__listeners.length; i < n; ++i) {
+                    var delegate = this.__listeners[i];
+                    var cancelled = false;
+                    if (delegate.$__eventMode == mode && delegate) {
+                        this.__handlerCallInProgress = delegate;
+                        if (this.__eventTriggerHandler)
+                            cancelled = this.__eventTriggerHandler(this, delegate, args, delegate.$__eventMode) === false; // (call any special trigger handler)
+                        else
+                            cancelled = delegate.apply(args) === false;
+                    }
+                    if (cancelled && this.canCancel) {
+                        this.__cancelled = true;
+                        break;
+                    }
+                }
+            }
+            catch (ex) {
+                throw this.__exception("Error executing handler #" + i + ".", ex);
+            }
+            finally {
+                this.__dispatchInProgress = false;
+                this.__handlerCallInProgress = null;
+            }
+            return this.__cancelled;
+        }
+        /** If the given state value is different from the last state value, the internal trigger state value will be updated, and true will be returned.
+            * If a state value of null is given, the request will be ignored, and true will always be returned.
+            * If you don't specify a value ('triggerState' is 'undefined') then the internal event name becomes the trigger state value (this can be used for a "trigger
+            * only once" scenario).  Use 'resetTriggerState()' to reset the internal trigger state when needed.
+            */
+        setTriggerState(triggerState) {
+            if (triggerState === void 0)
+                triggerState = this.__eventName;
+            if (triggerState !== null)
+                if (triggerState === this.__lastTriggerState)
+                    return false; // (no change in state, so ignore this request)
+                else
+                    this.__lastTriggerState = triggerState;
+            return true;
+        }
+        /** Resets the current internal trigger state to null. The next call to 'setTriggerState()' will always return true.
+            * This is usually called after a sequence of events have completed, in which it is possible for the cycle to repeat.
+            */
+        resetTriggerState() { this.__lastTriggerState = null; }
+        /** A simple way to pass arguments to event handlers using arguments with static typing (calls 'dispatchEvent(null, false, false, arguments)').
+        * If not cancelled, then 'true' is returned.
+        * TIP: To prevent triggering the same event multiple times, use a custom state value in a call to 'setTriggerState()', and only call
+        * 'dispatch()' if true is returned (example: "someEvent.setTriggerState(someState) && someEvent.dispatch(...);", where the call to 'dispatch()'
+        * only occurs if true is returned from the previous statement).
+        * Note: Call 'dispatchAsync()' to allow current script execution to complete before any handlers get called.
+        * @see dispatchAsync
+        */
+        dispatch(...args) { return void 0; }
+        /** Trigger this event by calling all the handlers.
+         * If a handler cancels the process, then the promise is rejected.
+         * This method allows scheduling events to fire after current script execution completes.
+         */
+        dispatchAsync(...args) { return void 0; }
+        /** If called within a handler, prevents the other handlers from being called. */
+        cancel() {
+            if (this.__dispatchInProgress)
+                if (this.canCancel)
+                    this.__cancelled = true;
+                else
+                    throw this.__exception("This even dispatcher does not support canceling events.");
+        }
+        __indexOf(object, handler) {
+            for (var i = this.__listeners.length - 1; i >= 0; --i) {
+                var d = this.__listeners[i];
+                if (d.object == object && d.func == handler)
+                    return i;
+            }
+            return -1;
+        }
+        __removeListener(i) {
+            if (i >= 0 && i < this.__listeners.length) {
+                var handlerInfo = (i == this.__listeners.length - 1 ? this.__listeners.pop() : this.__listeners.splice(i, 1)[0]);
+                if (this.__dispatchInProgress && this.__handlerCallInProgress === handlerInfo)
+                    throw this.__exception("Cannot remove a listener while it is executing.");
+                //    --this.__handlerCountBeforeDispatch; // (if the handler being removed is not the current one in progress, then it will never be called, and thus the original count needs to change)
+                //if (handlerInfo.addFunctionName == "addEventListener")
+                //    document.removeEventListener(this.__eventName, handlerInfo.__internalCallback, false);
+                //else if (handlerInfo.addFunctionName == "attachEvent")
+                //    (<any>document.documentElement).detachEvent("onpropertychange", handlerInfo.__internalCallback);
+                // (else this is most likely the server side, and removing it from the array is good enough)
+                //? this[handlerInfo.key] = void 0; // (faster than deleting it, and prevents having to create the property over and over)
+                return handlerInfo;
+            }
+            return void 0;
+        }
+        removeListener(handler, func) {
+            // ... check if a delegate is given, otherwise attempt to create one ...
+            if (typeof func == 'function') {
+                this.__removeListener(this.__indexOf(handler, func));
+            }
+            else {
+                this.__removeListener(this.__indexOf(handler.object, handler.func));
             }
         }
-        IO.closeWait = closeWait;
-    })(IO = DS.IO || (DS.IO = {}));
+        removeAllListeners() {
+            for (var i = this.__listeners.length - 1; i >= 0; --i)
+                this.__removeListener(i);
+        }
+        static [DS.constructor]() {
+            function getTriggerFunc(args) {
+                //x args.push(void 0, this); // (add 2 optional items on end)
+                //x var dataIndex = args.length - 2; // (set the index where the data should be set when each handler gets called)
+                return function _trigger() {
+                    //x for (var i = 0, n = this._handlers.length; i < n; ++i) {
+                    //    var h = <IEventDispatcherHandlerInfo<any, any>>this._handlers[i];
+                    //    args[dataIndex] = h.data;
+                    //    var result = this.eventCaller ? this.eventCaller.call(this._owner || this, h.handler, args) : h.handler.apply(this._owner || this, args);
+                    //    if (this.canCancel && result === false) return false;
+                    //    if (h.removeOnTrigger) { this._handlers.splice(i, 1); --i; --n; }
+                    //x }
+                    // 
+                    //return !this.onCompleted || this.onCompleted.apply(this._owner || this, args) !== false;
+                    return this.dispatchEvent.apply(this, (args.unshift(null), args));
+                };
+            }
+            ;
+            EventDispatcher.prototype.dispatch = function dispatch(...args) {
+                var _trigger = getTriggerFunc.call(this, args);
+                if (!this.synchronous && typeof setTimeout == 'function')
+                    setTimeout(() => { _trigger.call(this); }, 0);
+                else
+                    return _trigger.call(this);
+            };
+            EventDispatcher.prototype.dispatchAsync = function dispatchAsync(...args) {
+                var _trigger = getTriggerFunc.call(this, args);
+                return new Promise((resolve, reject) => {
+                    if (!this.synchronous && typeof setTimeout == 'function')
+                        setTimeout(() => { if (_trigger.call(this))
+                            resolve();
+                        else
+                            reject(); }, 0);
+                    else if (_trigger.call(this))
+                        resolve();
+                    else
+                        reject();
+                });
+            };
+        }
+    }
+    DS.EventDispatcher = EventDispatcher;
+    EventDispatcher[DS.constructor](); // ('any' is used because the static constructor is private)
+    class EventObject {
+        /** Call this if you wish to implement 'changing' events for supported properties.
+        * If any event handler cancels the event, then 'false' will be returned.
+        */
+        doPropertyChanging(name, newValue) {
+            if (this.onPropertyChanging)
+                return this.onPropertyChanging.dispatch(this, newValue);
+            else
+                return true;
+        }
+        /** Call this if you wish to implement 'changed' events for supported properties. */
+        doPropertyChanged(name, oldValue) {
+            if (this.onPropertyChanged)
+                this.onPropertyChanged.dispatch(this, oldValue);
+        }
+    }
+    DS.EventObject = EventObject;
+    // ========================================================================================================================
+    let Browser;
+    (function (Browser) {
+        /** Triggered when the DOM has completed loading. */
+        Browser.onReady = new EventDispatcher(Browser, "onReady", true);
+    })(Browser = DS.Browser || (DS.Browser = {}));
+    /** Triggered when all manifests have loaded. No modules have been executed at this point.
+      * Note: 'onReady' is not called automatically if 'DreamSpace.System.Diagnostics.debug' is set to 'Debug_Wait'.
+      */
+    DS.onReady = new EventDispatcher(DS, "onReady", true);
     // ========================================================================================================================
 })(DS || (DS = {}));
+// ############################################################################################################################
 // ############################################################################################################################################
 // Browser detection (for special cases).
 // ############################################################################################################################################
@@ -47,181 +403,6 @@ var DS;
       */
     let Browser;
     (function (Browser) {
-        // (Browser detection is a highly modified version of "http://www.quirksmode.org/js/detect.html".)
-        // (Note: This is only required for quirk detection in special circumstances [such as IE's native JSON whitespace parsing issue], and not for object feature support)
-        /** A list of browsers that can be currently detected. */
-        let BrowserTypes;
-        (function (BrowserTypes) {
-            /** Browser is not yet detected, or detection failed. */
-            BrowserTypes[BrowserTypes["Unknown"] = 0] = "Unknown";
-            /** Represents a non-browser environment. Any value > 1 represents a valid DOM environment (and not in a web worker). */
-            BrowserTypes[BrowserTypes["None"] = -1] = "None";
-            BrowserTypes[BrowserTypes["IE"] = 1] = "IE";
-            BrowserTypes[BrowserTypes["Chrome"] = 2] = "Chrome";
-            BrowserTypes[BrowserTypes["FireFox"] = 3] = "FireFox";
-            BrowserTypes[BrowserTypes["Safari"] = 4] = "Safari";
-            BrowserTypes[BrowserTypes["Opera"] = 5] = "Opera";
-            BrowserTypes[BrowserTypes["Netscape"] = 6] = "Netscape";
-            BrowserTypes[BrowserTypes["OmniWeb"] = 7] = "OmniWeb";
-            BrowserTypes[BrowserTypes["iCab"] = 8] = "iCab";
-            BrowserTypes[BrowserTypes["Konqueror"] = 9] = "Konqueror";
-            BrowserTypes[BrowserTypes["Camino"] = 10] = "Camino";
-        })(BrowserTypes = Browser.BrowserTypes || (Browser.BrowserTypes = {}));
-        /** A list of operating systems that can be currently detected. */
-        let OperatingSystems;
-        (function (OperatingSystems) {
-            /** OS is not yet detected, or detection failed. */
-            OperatingSystems[OperatingSystems["Unknown"] = 0] = "Unknown";
-            OperatingSystems[OperatingSystems["Windows"] = 1] = "Windows";
-            OperatingSystems[OperatingSystems["Mac"] = 2] = "Mac";
-            OperatingSystems[OperatingSystems["Linux"] = 3] = "Linux";
-            OperatingSystems[OperatingSystems["iOS"] = 4] = "iOS";
-        })(OperatingSystems = Browser.OperatingSystems || (Browser.OperatingSystems = {}));
-        var __browserList = (() => {
-            var list = [];
-            list[BrowserTypes.Chrome] =
-                {
-                    name: "Chrome", vendor: "Google", identity: BrowserTypes.Chrome,
-                    versions: [{ nameTag: null, versionPrefix: null }] // (list of browser versions; string values default to the browser name if null)
-                };
-            list[BrowserTypes.OmniWeb] =
-                {
-                    name: "OmniWeb", vendor: "The Omni Group", identity: BrowserTypes.OmniWeb,
-                    versions: [{ nameTag: null, versionPrefix: null }]
-                };
-            list[BrowserTypes.Safari] =
-                {
-                    name: "Safari", vendor: "Apple", identity: BrowserTypes.Safari,
-                    versions: [{ nameTag: null, versionPrefix: "Version" }]
-                };
-            list[BrowserTypes.Opera] =
-                {
-                    name: "Opera", vendor: "Opera Mediaworks", identity: BrowserTypes.Opera,
-                    versions: [{ nameTag: null, versionPrefix: "Version" }]
-                };
-            if (window.opera)
-                Browser.browserVersionInfo = __browserList[BrowserTypes.Opera].versions[0];
-            list[BrowserTypes.iCab] =
-                {
-                    name: "iCab", vendor: "Alexander Clauss", identity: BrowserTypes.iCab,
-                    versions: [{ nameTag: null, versionPrefix: null }]
-                };
-            list[BrowserTypes.Konqueror] =
-                {
-                    name: "Konqueror", vendor: "KDE e.V.", identity: BrowserTypes.Konqueror,
-                    versions: [{ nameTag: "KDE", versionPrefix: "Konqueror" }]
-                };
-            list[BrowserTypes.FireFox] =
-                {
-                    name: "Firefox", vendor: "Mozilla Foundation", identity: BrowserTypes.FireFox,
-                    versions: [{ nameTag: null, versionPrefix: null }]
-                };
-            list[BrowserTypes.Camino] =
-                {
-                    name: "Camino", vendor: "", identity: BrowserTypes.Camino,
-                    versions: [{ nameTag: null, versionPrefix: null }]
-                };
-            list[BrowserTypes.Netscape] =
-                {
-                    name: "Netscape", vendor: "AOL", identity: BrowserTypes.Netscape,
-                    versions: [
-                        { nameTag: null, versionPrefix: null },
-                        { nameTag: "Mozilla", versionPrefix: "Mozilla", vendor: "Netscape Communications (now AOL)" } // for older Netscapes (4-)
-                    ]
-                };
-            list[BrowserTypes.IE] =
-                {
-                    name: "Internet Explorer", vendor: "Microsoft", identity: BrowserTypes.IE,
-                    versions: [{ nameTag: "MSIE", versionPrefix: "MSIE " }]
-                };
-            // ... connect the parents and return the static list ...
-            for (var i = list.length - 1; i >= 0; --i)
-                if (list[i] && list[i].versions)
-                    for (var i2 = list[i].versions.length - 1; i2 >= 0; --i2)
-                        if (list[i].versions[i2])
-                            list[i].versions[i2].parent = list[i];
-            return list;
-        })();
-        var __osList = [
-            {
-                name: "iPhone",
-                identity: OperatingSystems.iOS
-            },
-            {
-                name: "Linux",
-                identity: OperatingSystems.Linux
-            },
-            {
-                name: "Win",
-                identity: OperatingSystems.Windows
-            },
-            {
-                name: "Mac",
-                identity: OperatingSystems.Mac
-            }
-        ];
-        /** Holds a reference to the agent data detected regarding browser name and versions. */
-        Browser.browserVersionInfo = null;
-        /** Holds a reference to the agent data detected regarding the host operating system. */
-        Browser.osInfo = null;
-        var __findBrowser = () => {
-            var agent = navigator.vendor + "," + navigator.userAgent, bInfo, version, versionPrefix;
-            for (var i = 0, n = __browserList.length; i < n; ++i) {
-                bInfo = __browserList[i];
-                if (bInfo)
-                    for (var i2 = 0, n2 = bInfo.versions.length; i2 < n2; ++i2) {
-                        version = bInfo.versions[i2];
-                        versionPrefix = version.versionPrefix || (bInfo.name + '/');
-                        if (version && agent.indexOf(version.nameTag || bInfo.name) != -1 && agent.indexOf(versionPrefix) != -1)
-                            return version;
-                    }
-            }
-            return null;
-        };
-        var __findOS = () => {
-            var osStrData = navigator.platform || navigator.userAgent;
-            for (var i = 0, n = __osList.length; i < n; ++i)
-                if (osStrData.indexOf(__osList[i].name) != -1)
-                    return __osList[i];
-        };
-        var __detectVersion = (versionInfo) => {
-            var versionStr = navigator.userAgent + " / " + navigator.appVersion;
-            var versionPrefix = versionInfo.versionPrefix || (versionInfo.parent.name + "/");
-            var index = versionStr.indexOf(versionPrefix);
-            if (index == -1)
-                return -1;
-            return parseFloat(versionStr.substring(index + versionPrefix.length));
-        };
-        /** The name of the detected browser. */
-        Browser.name = "";
-        /** The browser's vendor. */
-        Browser.vendor = "";
-        /** The operating system detected. */
-        Browser.os = OperatingSystems.Unknown;
-        /** The browser version detected. */
-        Browser.version = -1;
-        /** Set to true if ES2015 (aka ES6) is supported ('class', 'new.target', etc.). */
-        Browser.ES6 = DS.ES6;
-        // (Note: For extension of native types, the DreamSpace behavior changes depending on ES6 support due to the new 'new.target' feature changing how called native constructors behave)
-        /** The type of browser detected. */
-        Browser.type = (() => {
-            var browserType = BrowserTypes.Unknown, browserInfo;
-            if (DS.Environment == DS.Environments.Browser) {
-                if (!Browser.browserVersionInfo)
-                    Browser.browserVersionInfo = __findBrowser();
-                browserInfo = Browser.browserVersionInfo.parent;
-                Browser.osInfo = __findOS();
-                browserType = browserInfo.identity;
-                Browser.name = browserInfo.name;
-                Browser.vendor = Browser.browserVersionInfo.vendor || Browser.browserVersionInfo.parent.vendor;
-                browserType = browserInfo != null ? browserInfo.identity : BrowserTypes.Unknown;
-                Browser.version = __detectVersion(Browser.browserVersionInfo);
-                Browser.os = Browser.osInfo != null ? Browser.osInfo.identity : OperatingSystems.Unknown;
-            }
-            else
-                browserType = BrowserTypes.None;
-            return browserType;
-        })();
         // ------------------------------------------------------------------------------------------------------------------
         /** Uses cross-browser methods to return the browser window's viewport size. */
         function getViewportSize() {
@@ -261,7 +442,7 @@ var DS;
         let DOM;
         (function (DOM) {
             /** Fired when the HTML has completed loading and was parsed. */
-            DOM.onDOMLoaded = EventDispatcher.new(DOM, "onDOMLoaded", true);
+            DOM.onDOMLoaded = new DS.EventDispatcher(DOM, "onDOMLoaded", true);
             var _domLoaded = false;
             /** True when the DOM has completed loading. */
             function isDOMReady() { return _domLoaded; }
@@ -269,11 +450,11 @@ var DS;
             var _domReady = false;
             var _pageLoaded = false;
             /** Fired when a page is loaded, but before it gets parsed. */
-            DOM.onPageLoaded = EventDispatcher.new(DOM, "onPageLoaded", true);
+            DOM.onPageLoaded = new DS.EventDispatcher(DOM, "onPageLoaded", true);
             /** Called when the page has loaded.
               * Returns true if running upon return, or already running, and false if not ready and queued to run later. */
             function onReady() {
-                var log = Diagnostics.log("DOM Loading", "Page loading completed; DOM is ready.").beginCapture();
+                var log = DS.Diagnostics.log("DOM Loading", "Page loading completed; DOM is ready.").beginCapture();
                 //??if ($ICE != null) {
                 //    $ICE.loadLibraries(); // (load all ICE libraries after the DreamSpace system is ready, but before the ICE libraries are loaded so proper error details can be displayed if required)
                 //}
@@ -284,17 +465,17 @@ var DS;
                 //event.initEvent('load', false, false);
                 //window.dispatchEvent(event);
                 // ... the system and all modules are loaded and ready ...
-                log.write("Dispatching DOM 'onReady event ...", LogTypes.Info);
+                log.write("Dispatching DOM 'onReady event ...", DS.LogTypes.Info);
                 Browser.onReady.autoTrigger = true;
                 Browser.onReady.dispatchEvent();
-                log.write("'DreamSpace.DOM.Loader' completed.", LogTypes.Success);
+                log.write("'DreamSpace.DOM.Loader' completed.", DS.LogTypes.Success);
                 log.endCapture();
                 return true;
             }
             ;
             /** Implicit request to run only if ready, and not in debug mode. If not ready, or debug mode is set, ignore the request. (used internally) */
             function _doReady() {
-                var log = Diagnostics.log("DOM Loading", "Checking if ready...").beginCapture();
+                var log = DS.Diagnostics.log("DOM Loading", "Checking if ready...").beginCapture();
                 if (_domLoaded && _pageLoaded)
                     onReady();
                 log.endCapture();
@@ -304,7 +485,7 @@ var DS;
             function _doOnDOMLoaded() {
                 if (!_domLoaded) {
                     _domLoaded = true;
-                    var log = Diagnostics.log("DOM Loading", "HTML document was loaded and parsed. Loading any sub-resources next (CSS, JS, etc.)...", LogTypes.Success).beginCapture();
+                    var log = DS.Diagnostics.log("DOM Loading", "HTML document was loaded and parsed. Loading any sub-resources next (CSS, JS, etc.)...", DS.LogTypes.Success).beginCapture();
                     DOM.onDOMLoaded.autoTrigger = true;
                     DOM.onDOMLoaded.dispatchEvent();
                     log.endCapture();
@@ -316,7 +497,7 @@ var DS;
                 if (!_pageLoaded) {
                     _doOnDOMLoaded(); // (just in case - the DOM load must precede the page load!)
                     _pageLoaded = true;
-                    var log = Diagnostics.log("DOM Loading", "The document and all sub-resources have finished loading.", LogTypes.Success).beginCapture();
+                    var log = DS.Diagnostics.log("DOM Loading", "The document and all sub-resources have finished loading.", DS.LogTypes.Success).beginCapture();
                     DOM.onPageLoaded.autoTrigger = true;
                     DOM.onPageLoaded.dispatchEvent();
                     _doReady();
@@ -404,14 +585,88 @@ var DS;
             if (typeof replaceWith !== 'string')
                 replaceWith = "" + replaceWith;
             if (ignoreCase)
-                return source.replace(new RegExp(Utilities.escapeRegex(replaceWhat), 'gi'), replaceWith);
+                return source.replace(new RegExp(DS.Utilities.escapeRegex(replaceWhat), 'gi'), replaceWith);
             else if (DS.Browser.type == DS.Browser.BrowserTypes.Chrome)
                 return source.split(replaceWhat).join(replaceWith); // (MUCH faster in Chrome [including Chrome mobile])
             else
-                return source.replace(new RegExp(Utilities.escapeRegex(replaceWhat), 'g'), replaceWith);
+                return source.replace(new RegExp(DS.Utilities.escapeRegex(replaceWhat), 'g'), replaceWith);
         };
         // ========================================================================================================================
     })(StringUtils = DS.StringUtils || (DS.StringUtils = {}));
     // ############################################################################################################################
 })(DS || (DS = {}));
-// ############################################################################################################################
+// Contains DreamSpace API functions and types that user code can use to work with the system.
+// This API will be a layer of abstraction for the client side only.
+var DS;
+(function (DS) {
+    let IO;
+    (function (IO) {
+        // ========================================================================================================================
+        /** This even is triggered when the user should wait for an action to complete. */
+        IO.onBeginWait = new DS.EventDispatcher(IO, "onBeginWait", true);
+        /** This even is triggered when the user no longer needs to wait for an action to complete. */
+        IO.onEndWait = new DS.EventDispatcher(IO, "onEndWait", true);
+        var __waitRequestCounter = 0; // (allows stacking calls to 'wait()')
+        /**
+         * Blocks user input until 'closeWait()' is called. Plugins can hook into 'onBeginWait' to receive notifications.
+         * Note: Each call stacks, but the 'onBeginWait' event is triggered only once.
+         * @param msg An optional message to display (default is 'Please wait...').
+         */
+        function wait(msg = "Please wait ...") {
+            if (__waitRequestCounter == 0) // (fire only one time)
+                IO.onBeginWait.dispatch(msg);
+            __waitRequestCounter++;
+        }
+        IO.wait = wait;
+        /**
+         * Unblocks user input if 'wait()' was previously called. The number of 'closeWait()' calls must match the number of wait calls in order to unblock the user.
+         * Plugins can hook into the 'onEndWait' event to be notified.
+         * @param force If true, then the number of calls to 'wait' is ignored and the block is forcibly removed (default if false).
+         */
+        function closeWait(force = false) {
+            if (__waitRequestCounter > 0 && (force || --__waitRequestCounter == 0)) {
+                __waitRequestCounter = 0;
+                IO.onEndWait.dispatch();
+            }
+        }
+        IO.closeWait = closeWait;
+    })(IO = DS.IO || (DS.IO = {}));
+    // ========================================================================================================================
+})(DS || (DS = {}));
+var DS;
+(function (DS) {
+    // ==========================================================================================================================
+    //! if (pageQuery.getValue('debug', '') == 'true') Diagnostics.debug = Diagnostics.DebugModes.Debug_Run; // (only allow this on the sandbox and development servers)
+    //! var demo = demo || pageQuery.getValue('demo', '') == 'true'; // (only allow this on the sandbox and development servers)
+    /**
+       * Redirect the current page to another location.
+       * @param {string} url The URL to redirect to.
+       * @param {boolean} url If true, the current page query string is merged. The default is false,
+       * @param {boolean} bustCache If true, the current page query string is merged. The default is false,
+       */
+    function setLocation(url, includeExistingQuery = false, bustCache = false) {
+        var query = DS.Query.new(url);
+        if (bustCache)
+            query.values[DS.ResourceRequest.cacheBustingVar] = Date.now().toString();
+        if (includeExistingQuery)
+            query.addOrUpdate(DS.pageQuery.values);
+        if (url.charAt(0) == '/')
+            url = DS.Path.resolve(url);
+        url = query.appendTo(url);
+        if (DS.IO.wait)
+            DS.IO.wait();
+        setTimeout(() => { DS.global.location.href = url; }, 1); // (let events finish before setting)
+    }
+    DS.setLocation = setLocation;
+    // ==========================================================================================================================
+    /**
+      * Returns true if the page URL contains the given controller and action names (not case sensitive).
+      * This only works with typical default routing of "{host}/Controller/Action/etc.".
+      * @param action A controller action name.
+      * @param controller A controller name (defaults to "home" if not specified)
+      */
+    function isView(action, controller = "home") {
+        return new RegExp("^\/" + controller + "\/" + action + "(?:[\/?&#])?", "gi").test(DS.global.location.pathname);
+    }
+    DS.isView = isView;
+})(DS || (DS = {}));

@@ -1,22 +1,25 @@
-// This has to be in the TypeScript folder to set default TS compiling to be the server, which is the main part of the app.
 {
   "compileOnSave": true,
-  "references": [
-    { "path": "../" },
-    { "path": "../server" }
-  ],
+  //"references": [
+  //  { "path": "../" },
+  //  { "path": "../server" }
+  //],
   "compilerOptions": {
-    "composite": true,
-    "outFile": "plugin.js",
     "incremental": true,
     "target": "es6",
     "lib": [ "es6" ],
+    "module": "commonjs",
     "noImplicitAny": true,
     "sourceMap": true,
     "declaration": true,
     "noEmitHelpers": true,
     "experimentalDecorators": true,
-    "rootDir": "../",
-    "types": [ "node" ] // (include only types we need; prevents node types from being included)
-  }
+    "rootDir": "../"
+    //"types": [ "node" ] // (include only types we need; prevents node types from being included)
+  },
+  "exclude": [
+    "node_modules",
+    "**/server",
+    "**/*.d.ts"
+  ]
 }

@@ -1,15 +1,15 @@
 {
   "extends": "../../tsconfig_client_base.json",
-  "compileOnSave": true,
   "references": [
+    { "path": "../../../" },
+    { "path": "../../../client" }
   ],
+  "compileOnSave": true,
   "compilerOptions": {
+    "outDir": "VDOM",
+    "outFile": "VDOM/index.js"
   },
   "include": [
     "../**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "../**/server"
   ]
 }

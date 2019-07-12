@@ -1,21 +1,25 @@
 {
   "compileOnSave": true,
-  "references": [
-    { "path": "../" },
-    { "path": "../client" }
-  ],
+  //"references": [
+  //  { "path": "../" },
+  //  { "path": "../client" }
+  //],
   "compilerOptions": {
-    "composite": true,
-    "outFile": "plugin.js",
     "incremental": true,
     "target": "es6",
     "lib": [ "es6", "dom" ],
+    "module": "amd",
     "noImplicitAny": true,
     "sourceMap": true,
     "declaration": true,
     "noEmitHelpers": true,
     "experimentalDecorators": true,
-    "rootDir": "../",
-    "types": [ "jquery" ] // (include only types we need; prevents node types from being included)
-  }
+    "rootDir": "../"
+    //"types": [ "jquery" ] // (include only types we need; prevents node types from being included)
+  },
+  "exclude": [
+    "node_modules",
+    "**/client",
+    "**/*.d.ts"
+  ]
 }

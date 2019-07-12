@@ -11,6 +11,7 @@
     "types": [ "node", "request" ] // (include only types we need; prevents node types from being included)
   },
   "include": [
+    "Events.ts",
     "./*.ts"
   ],
   "exclude": [

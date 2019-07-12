@@ -2,28 +2,21 @@
 {
   "compileOnSave": true,
   "references": [
-    { "path": "../../../../../../" },
-    { "path": "../../../../../../server" }
+    { "path": "../" },
+    { "path": "../server" }
   ],
   "compilerOptions": {
-    "noEmit": true,
+    "composite": true,
+    "outFile": "plugin.js",
     "incremental": true,
-    "module": "commonjs",
     "target": "es6",
     "lib": [ "es6" ],
-    "sourceMap": false,
     "noImplicitAny": true,
-    "declaration": false,
+    "sourceMap": true,
+    "declaration": true,
+    "noEmitHelpers": true,
     "experimentalDecorators": true,
-    "rootDir": "../../../../../../",
+    "rootDir": "../",
     "types": [ "node" ] // (include only types we need; prevents node types from being included)
-  },
-  "include": [
-    //"../../../../../../*.ts",
-    "_global.ts",
-    "./**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  }
 }

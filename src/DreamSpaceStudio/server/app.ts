@@ -18,8 +18,9 @@ import express = require('express');
 import path = require('path');
 import { Socket } from "net";
 
-import routes from '../routes/index';
-import users from '../routes/user';
+import indexRoutes from './routes/index';
+import ideRoutes from './routes/ide';
+import userRoutes from './routes/user';
 
 //? global.XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
 
@@ -47,8 +48,9 @@ var app = express();
 
         app.use(express.static(path.join(__dirname, 'public')));
 
-        app.use('/', routes);
-        app.use('/users', users);
+        app.use('/', indexRoutes);
+        app.use('/ide', ideRoutes);
+        app.use('/users', userRoutes);
 
         // catch 404 and forward to error handler
         app.use(function (req, res, next) {

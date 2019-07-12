@@ -1,29 +1,28 @@
 {
   "compileOnSave": true,
   "references": [
-    { "path": "../../../../../../" },
-    { "path": "../../../../../../client" }
+    { "path": "../../../../" },
+    { "path": "../../../../client" }
   ],
   "compilerOptions": {
     "noEmit": true,
     "incremental": true,
     "target": "es6",
-    "module": "amd",
+    "module": "none",
     "noImplicitAny": true,
     "sourceMap": false,
     "declaration": false,
     "lib": [ "es6", "dom" ],
     "noEmitHelpers": true,
     "experimentalDecorators": true,
-    "rootDir": "../../../../../../",
+    "rootDir": "../../../../",
     "types": [ "jquery" ] // (include only types we need; prevents node types from being included)
   },
   "include": [
-    //"../../../../../../*.ts",
-    "_global.ts",
-    "./**/*.ts"
+    "../**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "../**/server"
   ]
 }

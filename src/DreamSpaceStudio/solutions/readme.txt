@@ -1,1 +1,1 @@
-Solutions and projects are stored as files, instead of a database, which allows developers quick and easy access to edit their project configurations quickly without needing to fire up and log in to a database tool (like most desktop IDEs).
+Solutions and projects are stored as files, instead of a database, which allows developers quick and easy access to edit their project configurations quickly without needing to fire up and log in to a database tool (like most desktop IDEs). This also allows using the TypeScript compiler (TSC) to compile solutions naturally.

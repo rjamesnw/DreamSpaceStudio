@@ -1,0 +1,13 @@
+{
+  "uid": "2ADEEEBF3D90423EA4CE7BA7389DC6FA",
+  "uri": "HTMLReader",
+  "name": "HTMLReader",
+  "displayName": "HTML Reader",
+  "description": "Parses HTML for further processing. The user can traverse",
+  "components": [
+    { "src": "file//~/parse" }
+  ],
+  "types": [
+    { "src": "file//~/HTMLReader", "platform": "any" }
+  ]
+}

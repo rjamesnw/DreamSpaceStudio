@@ -8,7 +8,7 @@
     <LastActiveSolutionConfig>Debug|Any CPU</LastActiveSolutionConfig>
     <SaveNodeJsSettingsInProjectFile>True</SaveNodeJsSettingsInProjectFile>
     <TypeScriptBuildMode>true</TypeScriptBuildMode>
-    <LaunchUrl>http://localhost:45000/</LaunchUrl>
+    <LaunchUrl>http://localhost:45000/ide</LaunchUrl>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -16,7 +16,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>299b48b6-ada3-487d-b803-ad33d3471265</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>typescript\server\app.ts</StartupFile>
+    <StartupFile>server\app.ts</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -28,7 +28,7 @@
     <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
     <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
     <EnableTypeScript>true</EnableTypeScript>
-    <StartWebBrowser>False</StartWebBrowser>
+    <StartWebBrowser>True</StartWebBrowser>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -37,13 +37,39 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\client\login.ts" />
-    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\client\_global.ts" />
-    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\server\login.ts" />
-    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\server\_global.ts" />
+    <TypeScriptCompile Include="server\routes\ide.ts" />
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\login.ts" />
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\types\_global.ts" />
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\login.ts" />
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\types\_global.ts" />
+    <TypeScriptCompile Include="solutions\Browser.ts" />
+    <TypeScriptCompile Include="solutions\client\Browser.ts" />
+    <TypeScriptCompile Include="solutions\client\Events.ts" />
+    <TypeScriptCompile Include="solutions\client\StringUtils.ts" />
+    <TypeScriptCompile Include="solutions\Delegate.ts" />
+    <TypeScriptCompile Include="solutions\DependentObject.ts" />
+    <TypeScriptCompile Include="solutions\Diagnostics.ts" />
     <TypeScriptCompile Include="solutions\client\io.ts" />
+    <TypeScriptCompile Include="solutions\Data.ts" />
+    <TypeScriptCompile Include="solutions\ErrorHandling.ts" />
+    <TypeScriptCompile Include="solutions\Exception.ts" />
+    <TypeScriptCompile Include="solutions\client\navigation.ts" />
+    <TypeScriptCompile Include="solutions\ResourceRequest.ts" />
+    <TypeScriptCompile Include="solutions\Resources.ts" />
+    <TypeScriptCompile Include="solutions\Time.ts" />
+    <TypeScriptCompile Include="solutions\TrackableObject.ts" />
+    <TypeScriptCompile Include="solutions\_global.ts" />
+    <TypeScriptCompile Include="solutions\Logging.ts" />
+    <TypeScriptCompile Include="solutions\Path.ts" />
+    <TypeScriptCompile Include="solutions\plugins\2ADEEEBF3D90423EA4CE7BA7389DC6FA\components\parse.ts" />
+    <TypeScriptCompile Include="solutions\plugins\2ADEEEBF3D90423EA4CE7BA7389DC6FA\types\HTMLReader.ts" />
     <TypeScriptCompile Include="solutions\io.ts" />
+    <TypeScriptCompile Include="solutions\Polyfills.ts" />
+    <TypeScriptCompile Include="solutions\Query.ts" />
     <TypeScriptCompile Include="solutions\server\io.ts" />
+    <TypeScriptCompile Include="solutions\StringUtils.ts" />
+    <TypeScriptCompile Include="solutions\Uri.ts" />
+    <TypeScriptCompile Include="solutions\Utilities.ts" />
     <TypeScriptCompile Include="TypeScript\client\app.ts" />
     <TypeScriptCompile Include="typescript\client\Modules\Cubiq_org\add2home_2.0.11.m.ts" />
     <TypeScriptCompile Include="typescript\client\Modules\Eyecon_ro\datepicker\datepicker.m.ts" />
@@ -72,7 +98,7 @@
     <TypeScriptCompile Include="TypeScript\Core\Query.ts" />
     <TypeScriptCompile Include="TypeScript\Core\Path.ts" />
     <TypeScriptCompile Include="TypeScript\Core\IO.ts" />
-    <TypeScriptCompile Include="typescript\server\globals.d.ts" />
+    <TypeScriptCompile Include="server\globals.d.ts" />
     <None Include="TypeScript\types\DreamSpace~.ts" />
     <TypeScriptCompile Include="TypeScript\Core\Resources.ts" />
     <TypeScriptCompile Include="TypeScript\Core\ErrorHandling.ts" />
@@ -108,20 +134,28 @@
     <TypeScriptCompile Include="TypeScript\Core\System\Users~.ts" />
     <TypeScriptCompile Include="TypeScript\Core\Types.ts" />
     <TypeScriptCompile Include="TypeScript\Core\Utilities.ts" />
-    <TypeScriptCompile Include="typescript\server\vdom.ts" />
-    <TypeScriptCompile Include="typescript\server\app.ts" />
-    <TypeScriptCompile Include="TypeScript\routes\index.ts" />
-    <TypeScriptCompile Include="TypeScript\routes\user.ts" />
+    <TypeScriptCompile Include="solutions\plugins\2677A76EE8A34818873FB0587B8C3108\types\vdom.ts" />
+    <TypeScriptCompile Include="server\app.ts" />
+    <TypeScriptCompile Include="server\routes\index.ts" />
+    <TypeScriptCompile Include="server\routes\user.ts" />
     <Content Include="..\..\LICENSE">
       <Link>LICENSE</Link>
     </Content>
     <Content Include="..\..\README.md">
       <Link>README.md</Link>
     </Content>
-    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\client\tsconfig.json" />
-    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\server\tsconfig.json" />
+    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\tsconfig.json" />
+    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\tsconfig.json" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\project.json" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\solution.json" />
+    <Content Include="solutions\plugins\2677A76EE8A34818873FB0587B8C3108\client\tsconfig.json" />
+    <Content Include="solutions\plugins\2677A76EE8A34818873FB0587B8C3108\plugin.json" />
+    <Content Include="solutions\plugins\2677A76EE8A34818873FB0587B8C3108\server\tsconfig.json" />
+    <Content Include="solutions\plugins\2ADEEEBF3D90423EA4CE7BA7389DC6FA\client\tsconfig.json" />
+    <Content Include="solutions\plugins\2ADEEEBF3D90423EA4CE7BA7389DC6FA\plugin.json" />
+    <Content Include="solutions\plugins\2ADEEEBF3D90423EA4CE7BA7389DC6FA\server\tsconfig.json" />
+    <Content Include="solutions\plugins\tsconfig_client_base.json" />
+    <Content Include="solutions\plugins\tsconfig_server_base.json" />
     <Content Include="solutions\readme.txt" />
     <Content Include="solutions\client\tsconfig.json" />
     <Content Include="solutions\server\tsconfig.json" />
@@ -153,11 +187,12 @@
     <Content Include="typescript\client\Modules\Twitter\bootstrap\fonts\glyphicons-halflings-regular.ttf" />
     <Content Include="typescript\client\Modules\Twitter\bootstrap\fonts\glyphicons-halflings-regular.woff" />
     <Content Include="TypeScript\Core\tsconfig~.json" />
-    <Content Include="TypeScript\tsconfig.json" />
+    <Content Include="server\tsconfig.json" />
     <Content Include="package.json" />
     <Content Include="public\stylesheets\main.css" />
     <Content Include="TypeScript\client\tsconfig.json" />
     <Content Include="TypeScript\Core\Scripting Symanics Ideas.txt" />
+    <Content Include="TypeScript\tsconfig.json" />
     <Content Include="users\F7E1685E6F654C2A84EBF34A9FDE5DB4\user.json" />
     <Content Include="users\readme.txt" />
     <Content Include="views\studio\error.html" />
@@ -175,7 +210,7 @@
     <TypeScriptCompile Include="TypeScript\System\Events.ts" />
     <TypeScriptCompile Include="TypeScript\System\Exception.ts" />
     <TypeScriptCompile Include="TypeScript\System\FileManager.ts" />
-    <TypeScriptCompile Include="TypeScript\System\Globals.ts" />
+    <TypeScriptCompile Include="solutions\Globals.ts" />
     <TypeScriptCompile Include="TypeScript\System\IO.ts" />
     <TypeScriptCompile Include="TypeScript\System\Logging.ts" />
     <TypeScriptCompile Include="TypeScript\System\Selection.ts" />
@@ -206,8 +241,22 @@
     <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\" />
     <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\" />
     <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\client\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\types\" />
     <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\code\server\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\types\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\" />
     <Folder Include="solutions\client\" />
+    <Folder Include="solutions\plugins\" />
+    <Folder Include="solutions\plugins\2677A76EE8A34818873FB0587B8C3108\client\" />
+    <Folder Include="solutions\plugins\2677A76EE8A34818873FB0587B8C3108\server\" />
+    <Folder Include="solutions\plugins\2677A76EE8A34818873FB0587B8C3108\types\" />
+    <Folder Include="solutions\plugins\2ADEEEBF3D90423EA4CE7BA7389DC6FA\" />
+    <Folder Include="solutions\plugins\2ADEEEBF3D90423EA4CE7BA7389DC6FA\client\" />
+    <Folder Include="solutions\plugins\2ADEEEBF3D90423EA4CE7BA7389DC6FA\components\" />
+    <Folder Include="solutions\plugins\2677A76EE8A34818873FB0587B8C3108\" />
+    <Folder Include="solutions\plugins\2ADEEEBF3D90423EA4CE7BA7389DC6FA\server\" />
+    <Folder Include="solutions\plugins\2ADEEEBF3D90423EA4CE7BA7389DC6FA\types\" />
     <Folder Include="solutions\server\" />
     <Folder Include="users\" />
     <Folder Include="solutions\" />
@@ -254,12 +303,12 @@
     <Folder Include="typescript\client\Modules\Twitter\bootstrap\js\" />
     <Folder Include="typescript\client\Modules\xregexp\" />
     <Folder Include="TypeScript\System\" />
-    <Folder Include="TypeScript\routes\" />
+    <Folder Include="server\routes\" />
     <Folder Include="TypeScript\Core\" />
     <Folder Include="TypeScript\Core\System\" />
     <Folder Include="TypeScript\client\" />
     <Folder Include="TypeScript\types\" />
-    <Folder Include="typescript\server\" />
+    <Folder Include="server\" />
     <Folder Include="users\F7E1685E6F654C2A84EBF34A9FDE5DB4\" />
     <Folder Include="views\" />
     <Folder Include="views\studio\" />

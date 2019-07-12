@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig_server_base.json",
+  "compileOnSave": true,
+  "references": [
+    { "path": "../../2677A76EE8A34818873FB0587B8C3108/server" }
+  ],
+  "compilerOptions": {
+  },
+  "include": [
+    "../**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "../**/client"
+  ]
+}

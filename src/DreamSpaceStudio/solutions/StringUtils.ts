@@ -132,7 +132,7 @@ namespace DS {
         // (Note: There must be exactly 65 characters [64 + 1 for padding])
         // (Note: 'String' objects MUST be used in order for the encoding functions to populate the reverse lookup indexes)
 
-        function __CreateCharIndex(str: NativeTypes.IString & Object) {
+        function __CreateCharIndex(str: String & Object) {
             if (str.length < 65)
                 throw Exception.from("65 characters expected for base64 encoding characters (last character is for padding), but only " + str.length + " were specified.", <any>str);
             if (typeof str !== "object" && !(<any>str instanceof String))
@@ -159,7 +159,7 @@ namespace DS {
             if (usePadding === void 0)
                 usePadding = (mode != Base64Modes.URI);
 
-            var encodingChars: NativeTypes.IString & Object = <any>(mode == Base64Modes.Standard ? __64BASE_ENCODING_CHARS_STANDARD : (mode == Base64Modes.URI ? __64BASE_ENCODING_CHARS_URI : __64BASE_ENCODING_CHARS_CUSTOM));
+            var encodingChars: String & Object = <any>(mode == Base64Modes.Standard ? __64BASE_ENCODING_CHARS_STANDARD : (mode == Base64Modes.URI ? __64BASE_ENCODING_CHARS_URI : __64BASE_ENCODING_CHARS_CUSTOM));
 
             // ... make sure the reverse lookup exists, and populate if missing  (which also serves to validate the encoding chars) ...
 
@@ -229,7 +229,7 @@ namespace DS {
             if (value === void 0 || value === null) value = ""; else value = "" + value;
             if (value.length == 0) return "";
 
-            var encodingChars: NativeTypes.IString & Object = <any>(mode == Base64Modes.Standard ? __64BASE_ENCODING_CHARS_STANDARD : (mode == Base64Modes.URI ? __64BASE_ENCODING_CHARS_URI : __64BASE_ENCODING_CHARS_CUSTOM));
+            var encodingChars: String & Object = <any>(mode == Base64Modes.Standard ? __64BASE_ENCODING_CHARS_STANDARD : (mode == Base64Modes.URI ? __64BASE_ENCODING_CHARS_URI : __64BASE_ENCODING_CHARS_CUSTOM));
 
             // ... make sure the reverse lookup exists, and populate if missing  (which also serves to validate the encoding chars) ...
 

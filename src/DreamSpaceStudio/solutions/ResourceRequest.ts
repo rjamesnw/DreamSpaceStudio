@@ -74,10 +74,11 @@ namespace DS {
         type: ResourceTypes | string;
 
         /**
-           * The XMLHttpRequest object used for this request.  It's marked private to discourage access, but experienced
+           * The XMLHttpRequest (client) or require('xhr2') (server) instance used for this request.  It's marked private to discourage access, but experienced
            * developers should be able to use it if necessary to further configure the request for advanced reasons.
+           * When using this just type cast to the expected object type based on the platform (client=instanceof XMLHttpRequest, server=instanceof require('xhr2') [XMLHttpRequest for NodeJS])
            */
-        _xhr: XMLHttpRequest; // (for parallel loading, each request has its own connection)
+        _xhr: IndexedObject; // (for parallel loading, each request has its own connection)
 
         /**
            * The raw data returned from the HTTP request.
@@ -86,8 +87,8 @@ namespace DS {
            */
         response: any; // (The response entity body according to responseType, as an ArrayBuffer, Blob, Document, JavaScript object (from JSON), or string. This is null if the request is not complete or was not successful.)
 
-        /** This gets set to data returned from callback handlers as the 'response' property value gets transformed.
-          * If no transformations were made, then the value in 'response' is returned.
+        /** This gets the transformed response as a result of callback handlers (if any).
+          * If no transformations were made, then the value in 'response' is returned as is.
           */
         get transformedResponse(): any {
             return this.$__transformedData === DS.noop ? this.response : this.$__transformedData;
@@ -292,6 +293,40 @@ namespace DS {
                 for (var i = 0, n = this._parentRequests.length; i < n; ++i)
                     this._parentRequests[i].start();
 
+            var url = this.url;
+            var xhr: XMLHttpRequest = <any>this._xhr;
+
+            function loaded(status: number, statusText: string, response: any, responseType: string) {
+                if (status == 200 || status == 304) {
+                    this.response = response;
+                    this.status == RequestStatuses.Loaded;
+                    this.message = status == 304 ? "Loading completed (from browser cache)." : "Loading completed.";
+
+                    // ... check if the expected mime type matches, otherwise throw an error to be safe ...
+                    if (this.type && responseType && <string><any>this.type != responseType) {
+                        this.setError("Resource type mismatch: expected type was '" + this.type + "', but received '" + responseType + "' (XHR type '" + xhr.responseType + "').\r\n");
+                    }
+                    else {
+                        if (!DS.isDebugging && typeof DS.global.Storage !== void 0)
+                            try {
+                                DS.global.localStorage.setItem("version", DS.version);
+                                DS.global.localStorage.setItem("appVersion", DS.getAppVersion());
+                                DS.global.localStorage.setItem("resource:" + this.url, this.response);
+                                this.message = "Resource cached in local storage.";
+                            } catch (e) {
+                                // .. failed: out of space? ...
+                                // TODO: consider saving to web SQL as well, or on failure (as a backup; perhaps create a storage class with this support). //?
+                            }
+                        else this.message = "Resource not cached in local storage because of debug mode. Release mode will use local storage to help survive clearing DreamSpace files when temporary content files are deleted.";
+
+                        this._doNext();
+                    }
+                }
+                else {
+                    this.setError("There was a problem loading the resource (status code " + status + ": " + statusText + ").\r\n");
+                }
+            };
+
             if (this.status == RequestStatuses.Pending) {
                 this.status = RequestStatuses.Loading; // (do this first to protect against any possible cyclical calls)
                 this.message = "Loading resource ...";
@@ -326,78 +361,42 @@ namespace DS {
 
                 // TODO: Message DreamSpace core system for resource data. // TODO: need to build the bridge class first.
 
-                // ... next, create an XHR object and try to load the resource ...
+                // ... next, determine the best way to load the resource ...
 
-                if (!this._xhr) {
-                    this._xhr = new XMLHttpRequest();
+                if (XMLHttpRequest) {
+                    if (!this._xhr) {
+                        this._xhr = isNode ? new (<typeof XMLHttpRequest>require("xhr2"))() : new XMLHttpRequest();
 
-                    var xhr = this._xhr;
+                        // ... this script is not cached, so load it ...
 
-                    var loaded = () => {
-                        if (xhr.status == 200 || xhr.status == 304) {
-                            this.response = xhr.response;
-                            this.status == RequestStatuses.Loaded;
-                            this.message = xhr.status == 304 ? "Loading completed (from browser cache)." : "Loading completed.";
-
-                            // ... check if the expected mime type matches, otherwise throw an error to be safe ...
-                            var responseType = xhr.getResponseHeader('content-type');
-                            if (this.type && responseType && <string><any>this.type != responseType) {
-                                this.setError("Resource type mismatch: expected type was '" + this.type + "', but received '" + responseType + "' (XHR type '" + xhr.responseType + "').\r\n");
+                        xhr.onreadystatechange = () => { // (onreadystatechange is supported by all browsers)
+                            switch (xhr.readyState) {
+                                case XMLHttpRequest.UNSENT: break;
+                                case XMLHttpRequest.OPENED: this.message = "Opened connection ..."; break;
+                                case XMLHttpRequest.HEADERS_RECEIVED: this.message = "Headers received ..."; break;
+                                case XMLHttpRequest.LOADING: break; // (this will be handled by the progress event)
+                                case XMLHttpRequest.DONE: loaded(xhr.status, xhr.statusText, xhr.response, xhr.getResponseHeader('content-type')); break;
                             }
-                            else {
-                                if (!DS.isDebugging && typeof DS.global.Storage !== void 0)
-                                    try {
-                                        DS.global.localStorage.setItem("version", DS.version);
-                                        DS.global.localStorage.setItem("appVersion", DS.getAppVersion());
-                                        DS.global.localStorage.setItem("resource:" + this.url, this.response);
-                                        this.message = "Resource cached in local storage.";
-                                    } catch (e) {
-                                        // .. failed: out of space? ...
-                                        // TODO: consider saving to web SQL as well, or on failure (as a backup; perhaps create a storage class with this support). //?
-                                    }
-                                else this.message = "Resource not cached in local storage because of debug mode. Release mode will use local storage to help survive clearing DreamSpace files when temporary content files are deleted.";
+                        };
 
-                                this._doNext();
-                            }
-                        }
-                        else {
-                            this.setError("There was a problem loading the resource (status code " + xhr.status + ": " + xhr.statusText + ").\r\n");
-                        }
-                    };
+                        xhr.onerror = (ev: ProgressEvent) => { this.setError(void 0, ev); this._doError(); };
+                        xhr.onabort = () => { this.setError("Request aborted."); };
+                        xhr.ontimeout = () => { this.setError("Request timed out."); };
+                        xhr.onprogress = (evt: ProgressEvent) => {
+                            this.message = Math.round(evt.loaded / evt.total * 100) + "% loaded ...";
+                            if (this._onProgress && this._onProgress.length)
+                                this._doOnProgress(evt.loaded / evt.total * 100);
+                        };
 
-                    // ... this script is not cached, so load it ...
-
-                    xhr.onreadystatechange = () => { // (onreadystatechange is supported by all browsers)
-                        switch (xhr.readyState) {
-                            case XMLHttpRequest.UNSENT: break;
-                            case XMLHttpRequest.OPENED: this.message = "Opened connection ..."; break;
-                            case XMLHttpRequest.HEADERS_RECEIVED: this.message = "Headers received ..."; break;
-                            case XMLHttpRequest.LOADING: break; // (this will be handled by the progress event)
-                            case XMLHttpRequest.DONE: loaded(); break;
-                        }
-                    };
-
-                    xhr.onerror = (ev: ProgressEvent) => { this.setError(void 0, ev); this._doError(); };
-                    xhr.onabort = () => { this.setError("Request aborted."); };
-                    xhr.ontimeout = () => { this.setError("Request timed out."); };
-                    xhr.onprogress = (evt: ProgressEvent) => {
-                        this.message = Math.round(evt.loaded / evt.total * 100) + "% loaded ...";
-                        if (this._onProgress && this._onProgress.length)
-                            this._doOnProgress(evt.loaded / evt.total * 100);
-                    };
-
-                    // (note: all event 'on...' properties only available in IE10+)
+                        // (note: all event 'on...' properties only available in IE10+)
+                    }
                 }
-
             }
-            else { // (this request was already started)
+            else // (this request was already started)
                 return;
-            }
 
-            if (xhr.readyState != 0)
+            if (xhr && xhr.readyState != 0)
                 xhr.abort(); // (abort existing, just in case)
-
-            var url = this.url;
 
             try {
                 // ... check if we need to bust the cache ...
@@ -421,6 +420,12 @@ namespace DS {
                         var q = Query.new(payload);
                         payload = q.toString(false);
                     } else {
+                        if (this.type == ResourceTypes.Application_JSON) {
+                            if (typeof payload == 'object')
+                                payload = JSON.stringify(payload);
+                            xhr.setRequestHeader("Content-Type", ResourceTypes.Application_JSON + ";charset=UTF-8");
+                        }
+
                         var formData = new FormData(); // TODO: Test if "multipart/form-data" is needed.
                         for (var p in payload)
                             formData.append(p, payload[p]);

@@ -97,7 +97,7 @@
         */
         export function erase(obj: Object, ignore?: { [name: string]: boolean }): {} {
             for (var p in obj)
-                if ((p != "__proto__" && p != 'constructor' && <NativeTypes.IObject>obj).hasOwnProperty(p))
+                if ((p != "__proto__" && p != 'constructor' && <Object>obj).hasOwnProperty(p))
                     if (!ignore || !ignore[p])
                         obj[p] = void 0;
             return obj;
@@ -187,7 +187,7 @@
         * Note: This must be null for special host functions, such as 'setTimeout' in IE7.
         * @param {any} args The arguments to apply to given function reference (the 'func' argument).
         */
-        export function apply(func: Function, _this: NativeTypes.IObject, args: any[]): any {
+        export function apply(func: Function, _this: Object, args: any[]): any {
             if (func.apply) {
                 return func.apply(_this, args);
             } else {

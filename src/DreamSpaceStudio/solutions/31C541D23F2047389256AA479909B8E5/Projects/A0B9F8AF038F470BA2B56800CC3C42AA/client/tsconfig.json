@@ -8,18 +8,19 @@
     "noEmit": true,
     "incremental": true,
     "target": "es6",
-    "module": "none",
+    "module": "amd",
     "noImplicitAny": true,
     "sourceMap": false,
     "declaration": false,
     "lib": [ "es6", "dom" ],
     "noEmitHelpers": true,
     "experimentalDecorators": true,
-    "rootDir": "../../../../",
+    "outDir": "./",
+    "rootDir": "./",
     "types": [ "jquery" ] // (include only types we need; prevents node types from being included)
   },
   "include": [
-    "../**/*.ts"
+    "./**/*.ts"
   ],
   "exclude": [
     "node_modules",

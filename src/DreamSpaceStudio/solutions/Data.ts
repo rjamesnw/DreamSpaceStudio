@@ -15,7 +15,7 @@ namespace DS {
             /** Converts a JSON string into an object with nested objects as required.
              * The given JSON string is validated first before it is parsed for security reasons. Invalid JSON will throw an exception.
             */
-            export function ToObject(jsonText: string): NativeTypes.IObject {
+            export function ToObject(jsonText: string): Object {
                 if (typeof jsonText !== "string" || !jsonText)
                     return null;
 
@@ -93,9 +93,9 @@ namespace DS {
             private static __PathPartRegEx = /\[|\]|\(|\)|"|'|\\|\.|[^\[\]\(\)"'\.\\]*/gi;
 
             origin: {};
-            namePath: NativeTypes.IArray<string>;
-            arguments: NativeTypes.IArray<any[]>;
-            indexes: NativeTypes.IArray<any>;
+            namePath: Array<string>;
+            arguments: Array<any[]>;
+            indexes: Array<any>;
 
             // ---------------------------------------------------------------------------------------------------------------
 

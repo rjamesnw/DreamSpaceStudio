@@ -2,15 +2,18 @@
   "extends": "../../tsconfig_server_base.json",
   "references": [
     { "path": "../../../" },
-    { "path": "../../../server" }
+    { "path": "../../../server" },
+    { "path": "../../2677A76EE8A34818873FB0587B8C3108/server" },
+    { "path": "../../2677A76EE8A34818873FB0587B8C3108/shared" },
+    { "path": "../shared" }
   ],
   "compileOnSave": true,
   "compilerOptions": {
-    "outDir": "HTMLReader",
-    "outFile": "HTMLReader/index.js",
-    "typeRoots": [ "../../2677A76EE8A34818873FB0587B8C3108/server" ]
+    "outDir": "./",
+    "rootDir": "./"
+    //"typeRoots": [ "../../2677A76EE8A34818873FB0587B8C3108/server" ]
   },
   "include": [
-    "../**/*.ts"
+    "./**/*.ts"
   ]
 }

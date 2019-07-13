@@ -22,65 +22,32 @@ interface SymbolConstructor {
     [index: string]: any;
 }
 
-interface IndexedObject {
-    [name: string]: any;
-}
-
-type Writeable<T> = {
-    -readonly [P in keyof T]: T[P];
-};
-
-declare namespace NativeTypes { // ('declare' used so no code is actually exported)
-    export interface IFunction extends Function { }
-    export interface IObject extends Object, IndexedObject { }
-    export interface IArray<T> extends Array<T> { }
-    export interface IString extends String { } //x [i: number]: string 
-    export interface INumber extends Number { }
-    export interface IBoolean extends Boolean { }
-    export interface IRegExp extends RegExp { }
-    export interface IDate extends Date { }
-    export interface IIMath extends Math { }
-    export interface IError extends Error { }
-    export interface IXMLHttpRequest extends XMLHttpRequest { }
-    export interface IHTMLElement extends HTMLElement { }
-    export interface IWindow extends Window { }
-}
+//declare namespace NativeTypes { // ('declare' used so no code is actually exported)
+//    export interface IFunction extends Function { }
+//    export interface IObject extends Object, IndexedObject { }
+//    export interface IArray<T> extends Array<T> { }
+//    export interface IString extends String { } //x [i: number]: string 
+//    export interface INumber extends Number { }
+//    export interface IBoolean extends Boolean { }
+//    export interface IRegExp extends RegExp { }
+//    export interface IDate extends Date { }
+//    export interface IIMath extends Math { }
+//    export interface IError extends Error { }
+//    export interface IXMLHttpRequest extends XMLHttpRequest { }
+//    export interface IHTMLElement extends HTMLElement { }
+//    export interface IWindow extends Window { }
+//}
 
 interface IStaticGlobals extends Window {
-    [index: string]: any;
-    Function: FunctionConstructor;
-    Object: ObjectConstructor;
-    Array: ArrayConstructor;
-    String: StringConstructor;
-    Number: NumberConstructor;
-    Boolean: BooleanConstructor;
-    RegExp: RegExpConstructor;
-    Date: DateConstructor;
-    Math: Math;
-    Error: ErrorConstructor;
     XMLHttpRequest: typeof XMLHttpRequest;
     Node: typeof Node;
     Element: typeof Element;
     HTMLElement: typeof HTMLElement;
     Text: typeof Text;
     Window: typeof Window;
-
-    /**
-    * This is set by default when '@RenderDreamSpaceJSConfigurations()' is called at the top of the layout page and a debugger is attached. It is
-    * used to resolve source maps delivered through XHR while debugging.
-    * Typically the server side web root file path matches the same root as the http root path in 'baseURL'.
-    */
-    serverWebRoot: string;
-
-    /** An optional site root URL if the main site root path is in a virtual path. */
-    siteBaseURL: string;
-    /** Root location of the application scripts, which by default is {site URL}+"/js/". */
-    scriptsBaseURL: string;
-    /** Root location of the CSS files, which by default is {site URL}+"/css/". */
-    cssBaseURL: string;
 }
 
-type KeyOf<T> = keyof Required<T>; //?
+//type KeyOf<T> = keyof Required<T>; //?
 
 // ... add in some simply polyfills required by the system just in case ...
 

@@ -1,4 +1,4 @@
-async function login(username: string, password: string): Promise<IResponse<boolean>> {
+export async function login(username: string, password: string): Promise<IResponse<boolean>> {
     var response: IResponse<boolean>;
     // ### USER CODE START ###
 

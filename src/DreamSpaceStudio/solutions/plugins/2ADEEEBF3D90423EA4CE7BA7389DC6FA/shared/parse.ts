@@ -1,18 +1,4 @@
-import { VDOM } from "VDOM";
-import { HTMLReader, HTMLReaderModes } from "../types/HTMLReader";
-
-// =====================================================================================================================================
-
-/** Data template information as extracted from HTML template text. */
-export interface IDataTemplate {
-    id: string;
-    originalHTML: string;
-    templateHTML: string;
-    templateItem: VDOM.Node;
-    childTemplates: IDataTemplate[];
-}
-
-export interface IHTMLParseResult { rootElements: VDOM.Node[]; templates: { [id: string]: IDataTemplate; } }
+import { IHTMLParseResult } from "./interfaces";
 
 /** Parses HTML to create a graph object tree, and also returns any templates found.
 * This concept is similar to using XAML to load objects in WPF. As such, you have the option to use an HTML template, or dynamically build your
@@ -25,13 +11,18 @@ export interface IHTMLParseResult { rootElements: VDOM.Node[]; templates: { [id:
 * @param {boolean} strictMode If true, then the parser will produce errors on ill-formed HTML (eg. 'attribute=' with no value).
 * This can greatly help keep your html clean, AND identify possible areas of page errors.  If strict formatting is not important, pass in false.
 */
-export function parse(html: string = null, strictMode?: boolean): IHTMLParseResult {
-    var log = DS.Diagnostics.log(HTML, "Parsing HTML template ...").beginCapture();
+export async function parse(html: string = null, strictMode?: boolean): Promise<IResponse<IHTMLParseResult>> {
+    var response: IResponse<IHTMLParseResult>;
+    // ### USER CODE START ###
+
+    var log = DS.Diagnostics.log("Parse HTML", "Parsing HTML template ...").beginCapture();
     log.write("Template: " + html);
 
     if (!html) return null;
 
     // ... parsing is done by passing each new graph item the current scan position in a recursive pattern, until the end of the HTML text is found ...
+    var HTMLReader = (await import("./HTMLReader")).HTMLReader;
+    var HTMLReaderModes = (await import("./HTMLReader")).HTMLReaderModes;
     var htmlReader = new HTMLReader(html);
     if (strictMode !== void 0)
         htmlReader.strictMode = !!strictMode;
@@ -53,15 +44,15 @@ export function parse(html: string = null, strictMode?: boolean): IHTMLParseResu
         }
     };
 
-    var rootElements: IGraphNode[] = [];
+    var rootElements: VDOM.Node[] = [];
     var globalTemplatesReference: { [id: string]: IDataTemplate; } = {};
 
-    type TNodeFactoryType = { new: (parent: IGraphNode, ...args: any[]) => IHTMLNode };
+    type TNodeFactoryType = { new: (parent: VDOM.Node, ...args: any[]) => VDOM.Node };
 
-    var processTags = (parent: IGraphNode): IDataTemplate[] => { // (returns the data templates found for the immediate children only)
+    var processTags = (parent: VDOM.Node): IDataTemplate[] => { // (returns the data templates found for the immediate children only)
         var graphItemType: string, graphItemTypePrefix: string;
         var nodeType: TNodeFactoryType;
-        var nodeItem: IHTMLNode;
+        var nodeItem: VDOM.Node;
         var properties: IndexedObject;
         var currentTagName: string;
         var isDataTemplate: boolean = false, dataTemplateID: string, dataTemplateHTML: string;
@@ -253,5 +244,12 @@ export function parse(html: string = null, strictMode?: boolean): IHTMLParseResu
 
     log.write("HTML template parsing complete.").endCapture();
 
-    return { rootElements: rootElements, templates: globalTemplatesReference };
+    response = {
+        statusCode: HttpStatus.OK,
+        notSerializable: true,
+        data: { rootElements: rootElements, templates: globalTemplatesReference }
+    };
+
+    // ### USER CODE END ###
+    return response;
 }

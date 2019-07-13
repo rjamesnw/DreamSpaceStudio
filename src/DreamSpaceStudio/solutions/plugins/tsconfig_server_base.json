@@ -5,6 +5,7 @@
   //  { "path": "../server" }
   //],
   "compilerOptions": {
+    "composite": true,
     "incremental": true,
     "target": "es6",
     "lib": [ "es6" ],
@@ -14,8 +15,7 @@
     "declaration": true,
     "noEmitHelpers": true,
     "experimentalDecorators": true,
-    "rootDir": "../"
-    //"types": [ "node" ] // (include only types we need; prevents node types from being included)
+    "types": [ "node" ] // (include only types we need; prevents node types from being included)
   },
   "exclude": [
     "node_modules",

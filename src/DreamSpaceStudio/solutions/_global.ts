@@ -3,6 +3,42 @@
 // such as DS.init() to execute callbacks to finalize to loading process (must be called by the end user).
 // ###########################################################################################################################
 
+interface IndexedObject {
+    [name: string]: any;
+}
+
+type Writeable<T> = {
+    -readonly [P in keyof T]: T[P];
+};
+
+interface IStaticGlobals {
+    [index: string]: any;
+    Function: FunctionConstructor;
+    Object: ObjectConstructor;
+    Array: ArrayConstructor;
+    String: StringConstructor;
+    Number: NumberConstructor;
+    Boolean: BooleanConstructor;
+    RegExp: RegExpConstructor;
+    Date: DateConstructor;
+    Math: Math;
+    Error: ErrorConstructor;
+
+    /**
+    * This is set by default when '@RenderDreamSpaceJSConfigurations()' is called at the top of the layout page and a debugger is attached. It is
+    * used to resolve source maps delivered through XHR while debugging.
+    * Typically the server side web root file path matches the same root as the http root path in 'baseURL'.
+    */
+    serverWebRoot: string;
+
+    /** An optional site root URL if the main site root path is in a virtual path. */
+    siteBaseURL: string;
+    /** Root location of the application scripts, which by default is {site URL}+"/js/". */
+    scriptsBaseURL: string;
+    /** Root location of the CSS files, which by default is {site URL}+"/css/". */
+    cssBaseURL: string;
+}
+
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
  * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.
  * Note: A symbol is not used, since callbacks placed into API URLs must be strings. Instead, a static pre-generated GUID is appended.

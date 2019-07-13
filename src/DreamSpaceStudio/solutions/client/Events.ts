@@ -366,7 +366,7 @@ namespace DS {
             return void 0;
         }
 
-        removeListener(object: NativeTypes.IObject, func: TCallback): void;
+        removeListener(object: Object, func: TCallback): void;
         removeListener(handler: IDelegate<TOwner, TCallback>): void;
         removeListener(handler: IDelegate<TOwner, TCallback>, func?: TCallback): void {
             // ... check if a delegate is given, otherwise attempt to create one ...

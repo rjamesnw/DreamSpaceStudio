@@ -18,44 +18,16 @@ namespace DS {
 
     export namespace IO {
         /** Contains the results of a component's operation. */
-        export function get<T = object>(url: string, type?: "json", method?: Methods, data?: any): Promise<T>;
-        export function get<T = string>(url: string, type?: "xml", method?: Methods, data?: any): Promise<T>;
-        export function get<T = string>(url: string, type?: "text", method?: Methods, data?: any): Promise<T>;
-        export function get<T = boolean>(url: string, type?: "boolean", method?: Methods, data?: any): Promise<T>;
-        export function get<T = number>(url: string, type?: "number", method?: Methods, data?: any): Promise<T>;
+        export function get<T = object>(url: string, type?: ResourceTypes.Application_JSON, method?: Methods, data?: any): Promise<T>;
+        export function get<T = string>(url: string, type?: ResourceTypes.Text_XML, method?: Methods, data?: any): Promise<T>;
+        export function get<T = string>(url: string, type?: ResourceTypes.Text_Plain, method?: Methods, data?: any): Promise<T>;
         export function get<T = any>(url: string, type?: string, method?: Methods, data?: any): Promise<T>;
-        export function get<T>(url: string, type = "any", method: Methods = "GET", data?: any): Promise<T> {
-            type = typeof type == 'string' ? type.toLocaleLowerCase() : 'any';
+        export function get<T>(url: string, type: ResourceTypes, method: Methods = "GET", data?: any): Promise<T> {
             return new Promise<any>((resolve, reject) => {
-                if (isNode) {
-                    var request: typeof import("request") = require("request");
-                    request.get(url, { method: method, body: data }, (err, response, body) => {
-                        if (err) { reject(err); return; }
-                        resolve(response);
-                    });
-                    //var data = '';
-                    //function response(msg: import('http').IncomingMessage) {
-                    //    msg.on('data', (chunk) => { data += chunk; });
-                    //    msg.on('end', () => res(data));
-                    //}
-                    //if (url.substr(0, 6).toLowerCase() == "https:")
-                    //    var request = https.request({ url: url, method: method, json: type.toLowerCase && type.toLowerCase() == "json" }, response);
-                    //else
-                    //    var request = http.request(url, response);
-                    //request.on('error', (err) => { rej(err); })
-                }
-                else {
-                    var xhr = new XMLHttpRequest();
-                    xhr.addEventListener('load', () => { resolve(xhr.response); })
-                    xhr.addEventListener('error', (err) => { reject(err); })
-                    xhr.open(method, url);
-                    if (type == "json") {
-                        if (typeof data == 'object')
-                            data = JSON.stringify(data);
-                        xhr.setRequestHeader("Content-Type", ResourceTypes.Application_JSON + ";charset=UTF-8");
-                    }
-                    xhr.send(data);
-                }
+                var request = new ResourceRequest(url, type);
+                request.ready((req) => { resolve(req.transformedResponse); })
+                request.catch((req, err) => { reject(err); })
+                request.start();
             });
         }
     }

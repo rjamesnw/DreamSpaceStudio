@@ -15,7 +15,8 @@
     "lib": [ "es6", "dom" ],
     "noEmitHelpers": true,
     "experimentalDecorators": true,
-    "rootDir": "../../"
+    "rootDir": "../../",
+    "typeRoots": [ "../2677A76EE8A34818873FB0587B8C3108/server" ]
   },
   "include": [
     "./types/**/*.ts",

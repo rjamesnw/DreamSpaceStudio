@@ -142,7 +142,7 @@ declare namespace DS {
         cancel(): void;
         private __indexOf;
         private __removeListener;
-        removeListener(object: NativeTypes.IObject, func: TCallback): void;
+        removeListener(object: Object, func: TCallback): void;
         removeListener(handler: IDelegate<TOwner, TCallback>): void;
         removeAllListeners(): void;
         /** Constructs a new instance of the even dispatcher.
@@ -257,4 +257,35 @@ declare namespace DS {
       * @param controller A controller name (defaults to "home" if not specified)
       */
     function isView(action: string, controller?: string): boolean;
+}
+interface Function {
+    [index: string]: any;
+}
+interface Object {
+    [index: string]: any;
+}
+interface Array<T> {
+    [index: string]: any;
+}
+interface SymbolConstructor {
+    [index: string]: any;
+}
+interface IStaticGlobals extends Window {
+    XMLHttpRequest: typeof XMLHttpRequest;
+    Node: typeof Node;
+    Element: typeof Element;
+    HTMLElement: typeof HTMLElement;
+    Text: typeof Text;
+    Window: typeof Window;
+}
+interface Array<T> {
+    last: () => T;
+    first: () => T;
+    append: (items: Array<T>) => Array<T>;
+    select: <T2>(selector: {
+        (item: T): T2;
+    }) => Array<T2>;
+    where: (selector: {
+        (item: T): boolean;
+    }) => Array<T>;
 }

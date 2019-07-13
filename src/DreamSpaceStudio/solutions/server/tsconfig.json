@@ -8,7 +8,7 @@
     "outFile": "server_api.js",
     "target": "es6",
     "lib": [ "es6", "dom" ],
-    "types": [ "node", "request" ] // (include only types we need; prevents node types from being included)
+    "types": [ "node" ] // (include only types we need; prevents node types from being included)
   },
   "include": [
     "./*.ts"

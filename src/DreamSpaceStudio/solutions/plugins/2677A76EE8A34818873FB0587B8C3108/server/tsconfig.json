@@ -2,14 +2,15 @@
   "extends": "../../tsconfig_server_base.json",
   "references": [
     { "path": "../../../" },
-    { "path": "../../../server" }
+    { "path": "../../../server" },
+    { "path": "../shared" }
   ],
   "compileOnSave": true,
   "compilerOptions": {
-    "outDir": "VDOM",
-    "outFile": "VDOM/index.js"
+    "outDir": "./",
+    "rootDir": "./"
   },
   "include": [
-    "../**/*.ts"
+    "./**/*.ts"
   ]
 }

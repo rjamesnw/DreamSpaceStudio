@@ -1,3 +1,34 @@
+interface IndexedObject {
+    [name: string]: any;
+}
+declare type Writeable<T> = {
+    -readonly [P in keyof T]: T[P];
+};
+interface IStaticGlobals {
+    [index: string]: any;
+    Function: FunctionConstructor;
+    Object: ObjectConstructor;
+    Array: ArrayConstructor;
+    String: StringConstructor;
+    Number: NumberConstructor;
+    Boolean: BooleanConstructor;
+    RegExp: RegExpConstructor;
+    Date: DateConstructor;
+    Math: Math;
+    Error: ErrorConstructor;
+    /**
+    * This is set by default when '@RenderDreamSpaceJSConfigurations()' is called at the top of the layout page and a debugger is attached. It is
+    * used to resolve source maps delivered through XHR while debugging.
+    * Typically the server side web root file path matches the same root as the http root path in 'baseURL'.
+    */
+    serverWebRoot: string;
+    /** An optional site root URL if the main site root path is in a virtual path. */
+    siteBaseURL: string;
+    /** Root location of the application scripts, which by default is {site URL}+"/js/". */
+    scriptsBaseURL: string;
+    /** Root location of the CSS files, which by default is {site URL}+"/css/". */
+    cssBaseURL: string;
+}
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
  * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.
  * Note: A symbol is not used, since callbacks placed into API URLs must be strings. Instead, a static pre-generated GUID is appended.
@@ -195,7 +226,7 @@ interface ITypeInfo {
     $__fullname?: string;
 }
 interface IType<TInstance = object> {
-    new (...args: any[]): TInstance;
+    new(...args: any[]): TInstance;
 }
 interface IFunction<ReturnType = any> {
     (...args: any[]): ReturnType;
@@ -335,7 +366,7 @@ declare namespace DS {
             /** Converts a JSON string into an object with nested objects as required.
              * The given JSON string is validated first before it is parsed for security reasons. Invalid JSON will throw an exception.
             */
-            function ToObject(jsonText: string): NativeTypes.IObject;
+            function ToObject(jsonText: string): Object;
         }
         /** Represents a value conversion object. */
         interface IValueConverter {
@@ -364,9 +395,9 @@ declare namespace DS {
         class PropertyPath {
             private static __PathPartRegEx;
             origin: {};
-            namePath: NativeTypes.IArray<string>;
-            arguments: NativeTypes.IArray<any[]>;
-            indexes: NativeTypes.IArray<any>;
+            namePath: Array<string>;
+            arguments: Array<any[]>;
+            indexes: Array<any>;
             constructor(origin: {}, path: string);
             /** Parses the specified path string and updates this PropertyPath instance with the details. */
             parsePath(path: string): PropertyPath;
@@ -462,7 +493,7 @@ declare namespace DS {
          * See 'AppDomain.registerClass()/.registerType()' for more information.
          */
         static getKey<TFunc extends DelegateFunction>(object: TrackableObject, func: TFunc): string;
-        protected static __validate(callername: string, object: NativeTypes.IObject, func: DelegateFunction): boolean;
+        protected static __validate(callername: string, object: Object, func: DelegateFunction): boolean;
         /** A read-only key string that uniquely identifies the combination of object instance and function in this delegate.
         * This property is set for new instances by default.  Calling 'update()' will update it if necessary.
         */
@@ -757,7 +788,7 @@ declare namespace DS {
            * If not specified, this is 'location.href' by default.
            * @param {string} baseURL An optional path that specifies the site's root URL.  By default this is 'DreamSpace.baseURL'.
            */
-        function resolve(path: string, currentResourceURL?: string, baseURL?: string): string;
+        function resolve(path: string, currentResourceURL?: any, baseURL?: string): any;
         /** Fixes a URL by splitting it apart, trimming it, then recombining it along with a trailing forward slash (/) at the end. */
         function fix(url: string): string;
         /** Returns true if the specified extension is missing from the end of 'pathToFile'.
@@ -769,95 +800,6 @@ declare namespace DS {
         /** Subtracts the current site's base URL from the given URL and returns 'serverWebRoot' with the remained appended. */
         function map(url: string): string;
     }
-}
-interface Function {
-    [index: string]: any;
-}
-interface Object {
-    [index: string]: any;
-}
-interface Array<T> {
-    [index: string]: any;
-}
-interface SymbolConstructor {
-    [index: string]: any;
-}
-interface IndexedObject {
-    [name: string]: any;
-}
-declare type Writeable<T> = {
-    -readonly [P in keyof T]: T[P];
-};
-declare namespace NativeTypes {
-    interface IFunction extends Function {
-    }
-    interface IObject extends Object, IndexedObject {
-    }
-    interface IArray<T> extends Array<T> {
-    }
-    interface IString extends String {
-    }
-    interface INumber extends Number {
-    }
-    interface IBoolean extends Boolean {
-    }
-    interface IRegExp extends RegExp {
-    }
-    interface IDate extends Date {
-    }
-    interface IIMath extends Math {
-    }
-    interface IError extends Error {
-    }
-    interface IXMLHttpRequest extends XMLHttpRequest {
-    }
-    interface IHTMLElement extends HTMLElement {
-    }
-    interface IWindow extends Window {
-    }
-}
-interface IStaticGlobals extends Window {
-    [index: string]: any;
-    Function: FunctionConstructor;
-    Object: ObjectConstructor;
-    Array: ArrayConstructor;
-    String: StringConstructor;
-    Number: NumberConstructor;
-    Boolean: BooleanConstructor;
-    RegExp: RegExpConstructor;
-    Date: DateConstructor;
-    Math: Math;
-    Error: ErrorConstructor;
-    XMLHttpRequest: typeof XMLHttpRequest;
-    Node: typeof Node;
-    Element: typeof Element;
-    HTMLElement: typeof HTMLElement;
-    Text: typeof Text;
-    Window: typeof Window;
-    /**
-    * This is set by default when '@RenderDreamSpaceJSConfigurations()' is called at the top of the layout page and a debugger is attached. It is
-    * used to resolve source maps delivered through XHR while debugging.
-    * Typically the server side web root file path matches the same root as the http root path in 'baseURL'.
-    */
-    serverWebRoot: string;
-    /** An optional site root URL if the main site root path is in a virtual path. */
-    siteBaseURL: string;
-    /** Root location of the application scripts, which by default is {site URL}+"/js/". */
-    scriptsBaseURL: string;
-    /** Root location of the CSS files, which by default is {site URL}+"/css/". */
-    cssBaseURL: string;
-}
-declare type KeyOf<T> = keyof Required<T>;
-interface Array<T> {
-    last: () => T;
-    first: () => T;
-    append: (items: Array<T>) => Array<T>;
-    select: <T2>(selector: {
-        (item: T): T2;
-    }) => Array<T2>;
-    where: (selector: {
-        (item: T): boolean;
-    }) => Array<T>;
 }
 declare namespace DS {
     var QUERY_STRING_REGEX: RegExp;
@@ -981,18 +923,19 @@ declare namespace DS {
         /** The requested resource type (to match against the server returned MIME type for data type verification). */
         type: ResourceTypes | string;
         /**
-           * The XMLHttpRequest object used for this request.  It's marked private to discourage access, but experienced
+           * The XMLHttpRequest (client) or require('xhr2') (server) instance used for this request.  It's marked private to discourage access, but experienced
            * developers should be able to use it if necessary to further configure the request for advanced reasons.
+           * When using this just type cast to the expected object type based on the platform (client=instanceof XMLHttpRequest, server=instanceof require('xhr2') [XMLHttpRequest for NodeJS])
            */
-        _xhr: XMLHttpRequest;
+        _xhr: IndexedObject;
         /**
            * The raw data returned from the HTTP request.
            * Note: This does not change with new data returned from callback handlers (new data is passed on as the first argument to
            * the next call [see 'transformedData']).
            */
         response: any;
-        /** This gets set to data returned from callback handlers as the 'response' property value gets transformed.
-          * If no transformations were made, then the value in 'response' is returned.
+        /** This gets the transformed response as a result of callback handlers (if any).
+          * If no transformations were made, then the value in 'response' is returned as is.
           */
         readonly transformedResponse: any;
         private $__transformedData;
@@ -1444,22 +1387,22 @@ declare namespace DS {
         /** A password for login (not recommended!). Note: Depreciated, as stated in RFC 3986 3.2.1. */
         password?: string;
         constructor(
-        /** Protocol (without '://'). */
-        protocol?: string, 
-        /** URL host. */
-        hostName?: string, 
-        /** Host port. */
-        port?: string, 
-        /** URL path. */
-        path?: string, 
-        /** Query (without '?'). */
-        query?: string, 
-        /** Fragment (without '#'). */
-        fragment?: string, 
-        /** A username for login. Note: Depreciated, as stated in RFC 3986 3.2.1. */
-        username?: string, // (see also: https://goo.gl/94ivpK)
-        /** A password for login (not recommended!). Note: Depreciated, as stated in RFC 3986 3.2.1. */
-        password?: string);
+            /** Protocol (without '://'). */
+            protocol?: string,
+            /** URL host. */
+            hostName?: string,
+            /** Host port. */
+            port?: string,
+            /** URL path. */
+            path?: string,
+            /** Query (without '?'). */
+            query?: string,
+            /** Fragment (without '#'). */
+            fragment?: string,
+            /** A username for login. Note: Depreciated, as stated in RFC 3986 3.2.1. */
+            username?: string, // (see also: https://goo.gl/94ivpK)
+            /** A password for login (not recommended!). Note: Depreciated, as stated in RFC 3986 3.2.1. */
+            password?: string);
         /** Returns only  host + port parts combined. */
         host(): string;
         /** Returns only the protocol + host + port parts combined. */
@@ -1581,7 +1524,7 @@ declare namespace DS {
         * Note: This must be null for special host functions, such as 'setTimeout' in IE7.
         * @param {any} args The arguments to apply to given function reference (the 'func' argument).
         */
-        function apply(func: Function, _this: NativeTypes.IObject, args: any[]): any;
+        function apply(func: Function, _this: Object, args: any[]): any;
         /**
          * Creates and returns a new version-4 (randomized) GUID/UUID (unique identifier). The uniqueness of the result
          * is enforced by locking the first part down to the current local date/time (not UTC) in milliseconds, along with
@@ -1625,8 +1568,10 @@ declare namespace DS {
 declare type Methods = "GET" | "POST" | "PUT" | "DELETE";
 interface IResponse<TData = any> {
     statusCode: HttpStatus;
-    message: string;
+    message?: string;
     data?: TData;
+    /** If this is true then the data cannot be send between platforms (client vs server). This is typically used with special instances. */
+    notSerializable?: boolean;
 }
 declare var isNode: string;
 /** This is the root to all DreamSpaceJS utilities.
@@ -1635,11 +1580,9 @@ declare var isNode: string;
 declare namespace DS {
     namespace IO {
         /** Contains the results of a component's operation. */
-        function get<T = object>(url: string, type?: "json", method?: Methods, data?: any): Promise<T>;
-        function get<T = string>(url: string, type?: "xml", method?: Methods, data?: any): Promise<T>;
-        function get<T = string>(url: string, type?: "text", method?: Methods, data?: any): Promise<T>;
-        function get<T = boolean>(url: string, type?: "boolean", method?: Methods, data?: any): Promise<T>;
-        function get<T = number>(url: string, type?: "number", method?: Methods, data?: any): Promise<T>;
+        function get<T = object>(url: string, type?: ResourceTypes.Application_JSON, method?: Methods, data?: any): Promise<T>;
+        function get<T = string>(url: string, type?: ResourceTypes.Text_XML, method?: Methods, data?: any): Promise<T>;
+        function get<T = string>(url: string, type?: ResourceTypes.Text_Plain, method?: Methods, data?: any): Promise<T>;
         function get<T = any>(url: string, type?: string, method?: Methods, data?: any): Promise<T>;
     }
 }

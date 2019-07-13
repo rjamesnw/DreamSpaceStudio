@@ -15,11 +15,12 @@
     "noImplicitAny": true,
     "declaration": false,
     "experimentalDecorators": true,
-    "rootDir": "../../../../",
+    "outDir": "./",
+    "rootDir": "./",
     "types": [ "node" ] // (include only types we need; prevents node types from being included)
   },
   "include": [
-    "../**/*.ts"
+    "./**/*.ts"
   ],
   "exclude": [
     "node_modules",

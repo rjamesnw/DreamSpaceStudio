@@ -1746,287 +1746,6 @@ var DS;
         Path.map = map;
     })(Path = DS.Path || (DS.Path = {}));
 })(DS || (DS = {}));
-// ###########################################################################################################################
-// Browser detection (for special cases).
-// This file also adds in any browser-only features as needed by the system within NodeJS (such as setTimeout, etc.).
-// ###########################################################################################################################
-Array.prototype.last = function () { return this[this.length - 1]; };
-Array.prototype.first = function () { return this[0]; };
-Array.prototype.append = function (items) { this.push.apply(this, items); return this; };
-Array.prototype.select = function (func) { if (!func)
-    return this; var _ = [], __; for (var i = 0; i < this.length; ++i)
-    _[i] = func(this[i]); return _; };
-Array.prototype.where = function (func) { if (!func)
-    return this; var _ = [], __; for (var i = 0; i < this.length; ++i)
-    if (func(__ = this[i]))
-        _.push(__); return _; };
-(() => {
-    // =======================================================================================================================
-    //declare function Symbol(desc?: string): string;
-    if (typeof this['Symbol'] == 'undefined') { // (mainly for IE 11)
-        // ... create a simple polyfill for this ...
-        this['Symbol'] = function Symbol(desc) { var d = new Date().getTime(), dStr = '$' + d; this.valueOf = () => dStr; this.toString = () => dStr; return this; };
-    }
-    // -------------------------------------------------------------------------------------------------------------------
-    //var String = global.String;
-    //var Array = global.Array;
-    //var RegExp = global.RegExp;
-    if (!Number.MAX_SAFE_INTEGER)
-        Number.MAX_SAFE_INTEGER = 9007199254740991;
-    if (!Number.MIN_SAFE_INTEGER)
-        Number.MIN_SAFE_INTEGER = -9007199254740991;
-    // -------------------------------------------------------------------------------------------------------------------
-    // ... add 'trim()' if missing, which only exists in more recent browser versions, such as IE 9+ ...
-    // (source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/Trim?redirectlocale=en-US&redirectslug=JavaScript%2FReference%2FGlobal_Objects%2FString%2FTrim)
-    if (!String.prototype.trim) {
-        String.prototype.trim = function () {
-            if (!this)
-                throw new TypeError("'trim()' requires an object instance.");
-            return this.replace(/^\s+|\s+$/g, '');
-        };
-    }
-    // -------------------------------------------------------------------------------------------------------------------
-    // ... fix head not accessible in IE7/8 ...
-    if (document && !document.head)
-        document.head = document.getElementsByTagName('head')[0];
-    // -------------------------------------------------------------------------------------------------------------------
-    // ... add 'now()' if missing (exists as a standard in newer browsers) ...
-    // (see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/now)
-    if (!Date.now) { // (used internally for log item times)
-        Date.now = function now() {
-            return new Date().getTime();
-        };
-    }
-    // -------------------------------------------------------------------------------------------------------------------
-    // ... fix the non-standard {string}.split() in older IE browsers, which strips out the empty strings ...
-    // (this version accepts an optional third parameter, which is a list of already existing delimiters if available, which then ignores the 'separator' value [more efficient])
-    if (":".split(/:/g).length == 0) {
-        String.prototype['$__DreamSpace_oldsplit'] = String.prototype.split; // (this is only executed once because of the ext line)
-        String.prototype.split = function (separator, limit, delimiterList) {
-            var delimiters, nonDelimiters;
-            if (!this)
-                throw new TypeError("'split()' requires an object instance.");
-            if (delimiterList)
-                delimiters = delimiterList;
-            else if (!(separator instanceof RegExp))
-                return String.prototype['$__DreamSpace_oldsplit'](separator, limit); // (old function works find for non-RegExp splits)
-            else
-                delimiters = this.match(separator);
-            nonDelimiters = [];
-            // ... since empty spaces get removed, this has to be done manually by scanning across the text and matching the found delimiters ...
-            var i, n, delimiter, startdi = 0, enddi = 0;
-            if (delimiters) {
-                for (i = 0, n = delimiters.length; i < n; ++i) {
-                    delimiter = delimiters[i];
-                    enddi = this.indexOf(delimiter, startdi);
-                    if (enddi == startdi)
-                        nonDelimiters.push("");
-                    else
-                        nonDelimiters.push(this.substring(startdi, enddi));
-                    startdi = enddi + delimiter.length;
-                }
-                if (startdi < this.length)
-                    nonDelimiters.push(this.substring(startdi, this.length)); // (get any text past the last delimiter)
-                else
-                    nonDelimiters.push(""); // (there must always by something after the last delimiter)
-            }
-            return nonDelimiters;
-        };
-    }
-    // -------------------------------------------------------------------------------------------------------------------
-    // ... add support for the new "{Array}.indexOf/.lastIndexOf" standard ...
-    // (base on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf)
-    if (!Array.prototype.indexOf)
-        Array.prototype['indexOf'] = function (searchElement, fromIndex) {
-            if (!this)
-                throw new TypeError("'indexOf()' requires an object instance.");
-            var i, length = this.length;
-            if (!length)
-                return -1;
-            if (typeof fromIndex === 'undefined')
-                fromIndex = 0;
-            else {
-                fromIndex = +fromIndex; // ('+' converts any boolean or string to a number)
-                if (isNaN(fromIndex))
-                    return -1;
-                if (fromIndex >= length)
-                    fromIndex = length - 1;
-            }
-            if (fromIndex >= length)
-                return -1;
-            if (fromIndex < 0)
-                fromIndex += length;
-            for (i = fromIndex; i < length; ++i)
-                if (this[i] === searchElement)
-                    return i;
-            return -1;
-        };
-    // -------------------------------------------------------------------------------------------------------------------
-    if (!Array.prototype.lastIndexOf)
-        Array.prototype['lastIndexOf'] = function (searchElement, fromIndex) {
-            if (!this)
-                throw new TypeError("'lastIndexOf()' requires an object instance.");
-            var i, length = this.length;
-            if (!length)
-                return -1;
-            if (typeof fromIndex == 'undefined')
-                fromIndex = length - 1;
-            else {
-                fromIndex = +fromIndex; // ('+' converts any boolean or string to a number)
-                if (isNaN(fromIndex))
-                    return -1;
-                if (fromIndex >= length)
-                    fromIndex = length - 1;
-            }
-            if (fromIndex < 0)
-                fromIndex += length;
-            for (i = fromIndex; i >= 0; --i)
-                if (this[i] === searchElement)
-                    return i;
-            return -1;
-        };
-    // -------------------------------------------------------------------------------------------------------------------
-    // ... add any missing support for "window.location.origin" ...
-    if (typeof window.location !== 'undefined' && !window.location.origin)
-        window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port : '');
-    // -------------------------------------------------------------------------------------------------------------------
-    // ... add basic support for 'classList' on elements if missing ...
-    if (typeof Element !== 'undefined' && !("classList" in document.createElement("_"))) { //TODO: Needs testing.
-        (function () {
-            var names = null; // (if 'names' is null, it is updated, and if not, use existing values [more efficient])
-            Element.prototype['classList'] = {
-                contains(name) {
-                    if (!names) {
-                        names = this.className.split(' ');
-                        var namesUpdated = true;
-                    }
-                    var exists = names.indexOf(name) >= 0;
-                    if (namesUpdated)
-                        names = null;
-                    return exists;
-                },
-                add(name) {
-                    if (!names) {
-                        names = this.className.split(' ');
-                        var namesUpdated = true;
-                    }
-                    if (names.indexOf(name) < 0)
-                        this.className += ' ' + name;
-                    if (namesUpdated)
-                        names = null;
-                },
-                remove(name) {
-                    if (!names) {
-                        names = this.className.split(' ');
-                        var namesUpdated = true;
-                    }
-                    var i = names.indexOf(name);
-                    if (i >= 0) {
-                        names.splice(i);
-                        this.className = names.join(' ');
-                    }
-                    if (namesUpdated)
-                        names = null;
-                },
-                toggle(name, force) {
-                    if (!names) {
-                        names = this.className.split(' ');
-                        var namesUpdated = true;
-                    }
-                    var exists = this.contains(name);
-                    if (typeof force === 'undefined')
-                        force = !exists;
-                    if (exists) {
-                        // ... exists, so remove it ...
-                        if (!force) // If force is set to true, the class will be added but not removed.
-                            this.remove(name);
-                    }
-                    else {
-                        // ... missing, so add it ...
-                        if (force) // If it’s false, the opposite will happen — the class will be removed but not added.
-                            this.add(name);
-                    }
-                    if (namesUpdated)
-                        names = null;
-                    return !exists;
-                },
-                toString() {
-                    return this.className;
-                }
-            };
-        })();
-    }
-    ;
-    // -------------------------------------------------------------------------------------------------------------------
-    // ... add support for "Object.create" if missing ...
-    if (typeof Object.create != 'function') {
-        (function () {
-            var _ = function () { };
-            Object.create = function (proto, propertiesObject) {
-                if (propertiesObject !== void 0) {
-                    throw Error("'propertiesObject' parameter not supported.");
-                }
-                if (proto === null) {
-                    throw Error("'proto' [prototype] parameter cannot be null.");
-                }
-                if (typeof proto != 'object') {
-                    throw TypeError("'proto' [prototype] must be an object.");
-                }
-                _.prototype = proto;
-                return new _();
-            };
-        })();
-    }
-    // -------------------------------------------------------------------------------------------------------------------
-    if (typeof Array.isArray != 'function') // Performance investigations: http://jsperf.com/array-isarray-vs-instanceof-array/5
-        Array.isArray = function (arg) { return typeof arg == 'object' && arg instanceof Array; };
-    // -------------------------------------------------------------------------------------------------------------------
-    // (Source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind)
-    if (!Function.prototype.bind) {
-        Function.prototype.bind = function (oThis) {
-            if (typeof this !== 'function') {
-                // closest thing possible to the ECMAScript 5
-                // internal IsCallable function
-                throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
-            }
-            var aArgs = Array.prototype.slice.call(arguments, 1), fToBind = this, fNOP = function () { }, fBound = function () {
-                return fToBind.apply(this instanceof fNOP
-                    ? this
-                    : oThis, aArgs.concat(Array.prototype.slice.call(arguments)));
-            };
-            if (this.prototype) {
-                // native functions don't have a prototype
-                fNOP.prototype = this.prototype;
-            }
-            fBound.prototype = new fNOP();
-            return fBound;
-        };
-    }
-    // -------------------------------------------------------------------------------------------------------------------
-    // (prevent links from clicking into mobile safari if launching from a home screen shortcut [native full-screen mode])
-    if (window.navigator && ("standalone" in window.navigator) && window.navigator["standalone"]) {
-        var noddy, remotes = false;
-        document.addEventListener('click', function (event) {
-            noddy = event.target;
-            // ... locate an anchor parent ...
-            while (noddy.nodeName !== "A" && noddy.nodeName !== "HTML") {
-                noddy = noddy.parentNode;
-            }
-            if ('href' in noddy && noddy.href == '#') { // ('#' is a special link used for bootstrap buttons)
-                event.preventDefault();
-            }
-        }, false);
-    }
-    // ... polyfill some XHR 'readyState' constants ...
-    if (!XMLHttpRequest.DONE) {
-        XMLHttpRequest.UNSENT = 0;
-        XMLHttpRequest.OPENED = 1;
-        XMLHttpRequest.HEADERS_RECEIVED = 2;
-        XMLHttpRequest.LOADING = 3;
-        XMLHttpRequest.DONE = 4;
-    }
-})();
-// #######################################################################################
 var DS;
 (function (DS) {
     // ==========================================================================================================================
@@ -2274,8 +1993,8 @@ var DS;
             return this._url;
         }
         set url(value) { this._url = value; }
-        /** This gets set to data returned from callback handlers as the 'response' property value gets transformed.
-          * If no transformations were made, then the value in 'response' is returned.
+        /** This gets the transformed response as a result of callback handlers (if any).
+          * If no transformations were made, then the value in 'response' is returned as is.
           */
         get transformedResponse() {
             return this.$__transformedData === DS.noop ? this.response : this.$__transformedData;
@@ -2420,6 +2139,39 @@ var DS;
             if (this._parentRequests)
                 for (var i = 0, n = this._parentRequests.length; i < n; ++i)
                     this._parentRequests[i].start();
+            var url = this.url;
+            var xhr = this._xhr;
+            function loaded(status, statusText, response, responseType) {
+                if (status == 200 || status == 304) {
+                    this.response = response;
+                    this.status == DS.RequestStatuses.Loaded;
+                    this.message = status == 304 ? "Loading completed (from browser cache)." : "Loading completed.";
+                    // ... check if the expected mime type matches, otherwise throw an error to be safe ...
+                    if (this.type && responseType && this.type != responseType) {
+                        this.setError("Resource type mismatch: expected type was '" + this.type + "', but received '" + responseType + "' (XHR type '" + xhr.responseType + "').\r\n");
+                    }
+                    else {
+                        if (!DS.isDebugging && typeof DS.global.Storage !== void 0)
+                            try {
+                                DS.global.localStorage.setItem("version", DS.version);
+                                DS.global.localStorage.setItem("appVersion", DS.getAppVersion());
+                                DS.global.localStorage.setItem("resource:" + this.url, this.response);
+                                this.message = "Resource cached in local storage.";
+                            }
+                            catch (e) {
+                                // .. failed: out of space? ...
+                                // TODO: consider saving to web SQL as well, or on failure (as a backup; perhaps create a storage class with this support). //?
+                            }
+                        else
+                            this.message = "Resource not cached in local storage because of debug mode. Release mode will use local storage to help survive clearing DreamSpace files when temporary content files are deleted.";
+                        this._doNext();
+                    }
+                }
+                else {
+                    this.setError("There was a problem loading the resource (status code " + status + ": " + statusText + ").\r\n");
+                }
+            }
+            ;
             if (this.status == DS.RequestStatuses.Pending) {
                 this.status = DS.RequestStatuses.Loading; // (do this first to protect against any possible cyclical calls)
                 this.message = "Loading resource ...";
@@ -2448,74 +2200,42 @@ var DS;
                 // TODO: Consider Web SQL Database as well. (though not supported by IE yet, as usual, but could help greatly on the others) //?
                 // ... 3. if not in web storage, try loading from a DreamSpace core system, if available ...
                 // TODO: Message DreamSpace core system for resource data. // TODO: need to build the bridge class first.
-                // ... next, create an XHR object and try to load the resource ...
-                if (!this._xhr) {
-                    this._xhr = new XMLHttpRequest();
-                    var xhr = this._xhr;
-                    var loaded = () => {
-                        if (xhr.status == 200 || xhr.status == 304) {
-                            this.response = xhr.response;
-                            this.status == DS.RequestStatuses.Loaded;
-                            this.message = xhr.status == 304 ? "Loading completed (from browser cache)." : "Loading completed.";
-                            // ... check if the expected mime type matches, otherwise throw an error to be safe ...
-                            var responseType = xhr.getResponseHeader('content-type');
-                            if (this.type && responseType && this.type != responseType) {
-                                this.setError("Resource type mismatch: expected type was '" + this.type + "', but received '" + responseType + "' (XHR type '" + xhr.responseType + "').\r\n");
+                // ... next, determine the best way to load the resource ...
+                if (XMLHttpRequest) {
+                    if (!this._xhr) {
+                        this._xhr = isNode ? new (require("xhr2"))() : new XMLHttpRequest();
+                        // ... this script is not cached, so load it ...
+                        xhr.onreadystatechange = () => {
+                            switch (xhr.readyState) {
+                                case XMLHttpRequest.UNSENT: break;
+                                case XMLHttpRequest.OPENED:
+                                    this.message = "Opened connection ...";
+                                    break;
+                                case XMLHttpRequest.HEADERS_RECEIVED:
+                                    this.message = "Headers received ...";
+                                    break;
+                                case XMLHttpRequest.LOADING: break; // (this will be handled by the progress event)
+                                case XMLHttpRequest.DONE:
+                                    loaded(xhr.status, xhr.statusText, xhr.response, xhr.getResponseHeader('content-type'));
+                                    break;
                             }
-                            else {
-                                if (!DS.isDebugging && typeof DS.global.Storage !== void 0)
-                                    try {
-                                        DS.global.localStorage.setItem("version", DS.version);
-                                        DS.global.localStorage.setItem("appVersion", DS.getAppVersion());
-                                        DS.global.localStorage.setItem("resource:" + this.url, this.response);
-                                        this.message = "Resource cached in local storage.";
-                                    }
-                                    catch (e) {
-                                        // .. failed: out of space? ...
-                                        // TODO: consider saving to web SQL as well, or on failure (as a backup; perhaps create a storage class with this support). //?
-                                    }
-                                else
-                                    this.message = "Resource not cached in local storage because of debug mode. Release mode will use local storage to help survive clearing DreamSpace files when temporary content files are deleted.";
-                                this._doNext();
-                            }
-                        }
-                        else {
-                            this.setError("There was a problem loading the resource (status code " + xhr.status + ": " + xhr.statusText + ").\r\n");
-                        }
-                    };
-                    // ... this script is not cached, so load it ...
-                    xhr.onreadystatechange = () => {
-                        switch (xhr.readyState) {
-                            case XMLHttpRequest.UNSENT: break;
-                            case XMLHttpRequest.OPENED:
-                                this.message = "Opened connection ...";
-                                break;
-                            case XMLHttpRequest.HEADERS_RECEIVED:
-                                this.message = "Headers received ...";
-                                break;
-                            case XMLHttpRequest.LOADING: break; // (this will be handled by the progress event)
-                            case XMLHttpRequest.DONE:
-                                loaded();
-                                break;
-                        }
-                    };
-                    xhr.onerror = (ev) => { this.setError(void 0, ev); this._doError(); };
-                    xhr.onabort = () => { this.setError("Request aborted."); };
-                    xhr.ontimeout = () => { this.setError("Request timed out."); };
-                    xhr.onprogress = (evt) => {
-                        this.message = Math.round(evt.loaded / evt.total * 100) + "% loaded ...";
-                        if (this._onProgress && this._onProgress.length)
-                            this._doOnProgress(evt.loaded / evt.total * 100);
-                    };
-                    // (note: all event 'on...' properties only available in IE10+)
+                        };
+                        xhr.onerror = (ev) => { this.setError(void 0, ev); this._doError(); };
+                        xhr.onabort = () => { this.setError("Request aborted."); };
+                        xhr.ontimeout = () => { this.setError("Request timed out."); };
+                        xhr.onprogress = (evt) => {
+                            this.message = Math.round(evt.loaded / evt.total * 100) + "% loaded ...";
+                            if (this._onProgress && this._onProgress.length)
+                                this._doOnProgress(evt.loaded / evt.total * 100);
+                        };
+                        // (note: all event 'on...' properties only available in IE10+)
+                    }
                 }
             }
-            else { // (this request was already started)
+            else // (this request was already started)
                 return;
-            }
-            if (xhr.readyState != 0)
+            if (xhr && xhr.readyState != 0)
                 xhr.abort(); // (abort existing, just in case)
-            var url = this.url;
             try {
                 // ... check if we need to bust the cache ...
                 if (this.cacheBusting) {
@@ -2539,6 +2259,11 @@ var DS;
                         payload = q.toString(false);
                     }
                     else {
+                        if (this.type == DS.ResourceTypes.Application_JSON) {
+                            if (typeof payload == 'object')
+                                payload = JSON.stringify(payload);
+                            xhr.setRequestHeader("Content-Type", DS.ResourceTypes.Application_JSON + ";charset=UTF-8");
+                        }
                         var formData = new FormData(); // TODO: Test if "multipart/form-data" is needed.
                         for (var p in payload)
                             formData.append(p, payload[p]);
@@ -3996,41 +3721,12 @@ var DS;
 (function (DS) {
     let IO;
     (function (IO) {
-        function get(url, type = "any", method = "GET", data) {
-            type = typeof type == 'string' ? type.toLocaleLowerCase() : 'any';
+        function get(url, type, method = "GET", data) {
             return new Promise((resolve, reject) => {
-                if (isNode) {
-                    var request = require("request");
-                    request.get(url, { method: method, body: data }, (err, response, body) => {
-                        if (err) {
-                            reject(err);
-                            return;
-                        }
-                        resolve(response);
-                    });
-                    //var data = '';
-                    //function response(msg: import('http').IncomingMessage) {
-                    //    msg.on('data', (chunk) => { data += chunk; });
-                    //    msg.on('end', () => res(data));
-                    //}
-                    //if (url.substr(0, 6).toLowerCase() == "https:")
-                    //    var request = https.request({ url: url, method: method, json: type.toLowerCase && type.toLowerCase() == "json" }, response);
-                    //else
-                    //    var request = http.request(url, response);
-                    //request.on('error', (err) => { rej(err); })
-                }
-                else {
-                    var xhr = new XMLHttpRequest();
-                    xhr.addEventListener('load', () => { resolve(xhr.response); });
-                    xhr.addEventListener('error', (err) => { reject(err); });
-                    xhr.open(method, url);
-                    if (type == "json") {
-                        if (typeof data == 'object')
-                            data = JSON.stringify(data);
-                        xhr.setRequestHeader("Content-Type", DS.ResourceTypes.Application_JSON + ";charset=UTF-8");
-                    }
-                    xhr.send(data);
-                }
+                var request = new DS.ResourceRequest(url, type);
+                request.ready((req) => { resolve(req.transformedResponse); });
+                request.catch((req, err) => { reject(err); });
+                request.start();
             });
         }
         IO.get = get;

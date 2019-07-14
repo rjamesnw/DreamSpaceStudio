@@ -172,7 +172,7 @@ export class HTMLReader {
 
     throwError(msg: string) {
         this.__readNext(); // (includes the delimiter and next text in the running text)
-        throw Exception.from(msg + " on line " + this.getCurrentLineNumber() + ": <br/>\r\n" + this.getCurrentRunningText());
+        throw DS.Exception.from(msg + " on line " + this.getCurrentLineNumber() + ": <br/>\r\n" + this.getCurrentRunningText());
     }
 
     // -------------------------------------------------------------------------------------------------------------------

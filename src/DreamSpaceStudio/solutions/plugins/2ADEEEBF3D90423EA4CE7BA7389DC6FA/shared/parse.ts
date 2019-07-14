@@ -1,4 +1,5 @@
 import { IHTMLParseResult } from "./interfaces";
+async function import_VDOM() { return import("../../2677A76EE8A34818873FB0587B8C3108/shared/VDOM"); };
 
 /** Parses HTML to create a graph object tree, and also returns any templates found.
 * This concept is similar to using XAML to load objects in WPF. As such, you have the option to use an HTML template, or dynamically build your
@@ -31,7 +32,9 @@ export async function parse(html: string = null, strictMode?: boolean): Promise<
     var mode: number = 0; // (0 = app scope not found yet, 1 = app root found, begin parsing application scope elements, 2 = creating objects)
     var classMatch = /^[$.][A-Za-z0-9_$]*(\.[A-Za-z0-9_$]*)*(\s+|$)/;
     var attribName: string;
-
+    //type Node = typeof import("../../2677A76EE8A34818873FB0587B8C3108/shared/VDOM");
+    var VDOM_mod = await import_VDOM();
+    
     var storeRunningText = (parent: VDOM.Node) => {
         if (htmlReader.runningText) { // (if there is running text, then create a text node for it under the given parent node)
             //?if (!host.isClient())

@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-function import_VDOM() {
-    return __awaiter(this, void 0, void 0, function* () { return Promise.resolve().then(() => require("../../2677A76EE8A34818873FB0587B8C3108/shared/VDOM")); });
+class Modules {
+    static get VDOM() { return Promise.resolve().then(() => require("../../2677A76EE8A34818873FB0587B8C3108/shared/VDOM")); }
+    ;
 }
-;
 /** Parses HTML to create a graph object tree, and also returns any templates found.
 * This concept is similar to using XAML to load objects in WPF. As such, you have the option to use an HTML template, or dynamically build your
 * graph items directly in code.
@@ -34,7 +34,7 @@ function parse(html = null, strictMode) {
         var classMatch = /^[$.][A-Za-z0-9_$]*(\.[A-Za-z0-9_$]*)*(\s+|$)/;
         var attribName;
         //type Node = typeof import("../../2677A76EE8A34818873FB0587B8C3108/shared/VDOM");
-        var VDOM_mod = yield import_VDOM();
+        var VDOM_mod = yield Modules.VDOM;
         var storeRunningText = (parent) => {
             if (htmlReader.runningText) { // (if there is running text, then create a text node for it under the given parent node)
                 //?if (!host.isClient())

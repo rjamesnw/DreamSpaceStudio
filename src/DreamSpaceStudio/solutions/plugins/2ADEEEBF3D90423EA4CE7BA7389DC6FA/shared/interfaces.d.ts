@@ -1,4 +1,4 @@
-import { VDOM } from "../../2677A76EE8A34818873FB0587B8C3108/shared/VDOM";
+import { VDOM } from "./modules";
 /** Data template information as extracted from HTML template text. */
 export interface IDataTemplate {
     id: string;

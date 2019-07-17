@@ -1,9 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-class Modules {
-    static get VDOM() { return Promise.resolve().then(() => require("../../2677A76EE8A34818873FB0587B8C3108/shared/VDOM")); }
-    ;
-}
+const modules_1 = require("./modules");
+var nameOf_Templating_Phrase_phraseType = DS.nameof(() => modules_1.Templating.Phrase.prototype.phraseType);
+var nameOf_Templating_Header_headerLevel = DS.nameof(() => modules_1.Templating.Header.prototype.headerLevel);
 /** Parses HTML to create a graph object tree, and also returns any templates found.
 * This concept is similar to using XAML to load objects in WPF. As such, you have the option to use an HTML template, or dynamically build your
 * graph items directly in code.
@@ -34,22 +33,22 @@ function parse(html = null, strictMode) {
         var classMatch = /^[$.][A-Za-z0-9_$]*(\.[A-Za-z0-9_$]*)*(\s+|$)/;
         var attribName;
         //type Node = typeof import("../../2677A76EE8A34818873FB0587B8C3108/shared/VDOM");
-        var VDOM_mod = yield Modules.VDOM;
+        yield DS.modules(modules_1.VDOM, modules_1.Templating);
         var storeRunningText = (parent) => {
             if (htmlReader.runningText) { // (if there is running text, then create a text node for it under the given parent node)
                 //?if (!host.isClient())
                 //?    HTMLElement.new(parent).setValue((htmlReader.runningText.indexOf('&') < 0 ? "text" : "html"), htmlReader.runningText); // (not for the UI, so doesn't matter)
                 //?else
                 if (htmlReader.runningText.indexOf('&') < 0)
-                    PlainText.new(parent, htmlReader.runningText);
+                    parent.appendChild(new modules_1.VDOM.Text(htmlReader.runningText));
                 else
-                    HTMLText.new(parent, htmlReader.runningText);
+                    parent.appendChild(new modules_1.VDOM.HTMLElement('span').$__set("innerHTML", htmlReader.runningText));
             }
         };
         var rootElements = [];
         var globalTemplatesReference = {};
         var processTags = (parent) => {
-            var graphItemType, graphItemTypePrefix;
+            var vnodeItemType, graphItemTypePrefix;
             var nodeType;
             var nodeItem;
             var properties;
@@ -118,104 +117,105 @@ function parse(html = null, strictMode) {
                             }
                             else if (mode == 2 && htmlReader.readMode == HTMLReaderModes.EndOfTag) { // (end of attributes, so create the tag graph item)
                                 // ... this is either the end of the tag with inner html/text, or a self ending tag (XML style) ...
-                                graphItemType = properties['class']; // (this may hold an explicit object type to create [note expected format: module.full.name.classname])
+                                vnodeItemType = properties['class']; // (this may hold an explicit object type to create [note expected format: module.full.name.classname])
                                 nodeItem = null;
                                 nodeType = null;
-                                if (graphItemType && classMatch.test(graphItemType)) {
+                                if (vnodeItemType && classMatch.test(vnodeItemType)) {
                                     graphItemTypePrefix = RegExp.lastMatch.substring(0, 1); // ('$' [DS full type name prefix], or '.' [default UI type name])
                                     if (graphItemTypePrefix == '$') {
-                                        graphItemType = RegExp.lastMatch.substring(1);
-                                        if (graphItemType.charAt(0) == '.') // (just in case there's a '.' after '$', allow this as well)
+                                        vnodeItemType = RegExp.lastMatch.substring(1);
+                                        if (vnodeItemType.charAt(0) == '.') // (just in case there's a '.' after '$', allow this as well)
                                             graphItemTypePrefix = '.';
                                     }
                                     else
-                                        graphItemType = RegExp.lastMatch; // (type is either a full type, or starts with '.' [relative])
+                                        vnodeItemType = RegExp.lastMatch; // (type is either a full type, or starts with '.' [relative])
                                     if (graphItemTypePrefix == '.')
-                                        graphItemType = "DreamSpace.System.UI" + graphItemType;
-                                    //? var graphFactory = GraphNode;
-                                    nodeType = Utilities.dereferencePropertyPath(translateModuleTypeName(graphItemType));
+                                        vnodeItemType = "DreamSpace.System.UI" + vnodeItemType;
+                                    nodeType = DS.Utilities.dereferencePropertyPath(vnodeItemType, modules_1.VDOM);
                                     if (nodeType === void 0)
-                                        throw Exception.from("The graph item type '" + graphItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " was not found.");
-                                    if (typeof nodeType !== 'function' || typeof HTMLElement.defaultHTMLTagName === void 0)
-                                        throw Exception.from("The graph item type '" + graphItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " does not resolve to a GraphItem class type.");
+                                        throw DS.Exception.from("The node item type '" + vnodeItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " was not found.");
+                                    if (typeof nodeType !== 'function' || typeof modules_1.VDOM.HTMLElement.defaultHTMLTagName === void 0)
+                                        throw DS.Exception.from("The node item type '" + vnodeItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " does not resolve to a valid VDOM class type.");
                                 }
                                 if (nodeType == null) {
-                                    // ... auto detect the DreamSpace UI GraphNode type based on the tag name (all valid HTML4/5 tags: http://www.w3schools.com/tags/) ...
+                                    // ... auto detect the node types based on the tag name (all valid HTML4/5 tags: http://www.w3schools.com/tags/) ...
                                     switch (currentTagName) {
                                         // (phrases)
                                         case 'abbr':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Phrase.PhraseType.name] = PhraseTypes.Abbreviation;
+                                            nodeType = modules_1.Templating.Phrase;
+                                            properties[nameOf_Templating_Phrase_phraseType] = modules_1.Templating.PhraseTypes.Abbreviation;
                                             break;
                                         case 'acronym':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Phrase.PhraseType.name] = PhraseTypes.Acronym;
+                                            nodeType = modules_1.Templating.Phrase;
+                                            properties[nameOf_Templating_Phrase_phraseType] = modules_1.Templating.PhraseTypes.Acronym;
                                             break;
                                         case 'em':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Phrase.PhraseType.name] = PhraseTypes.Emphasis;
+                                            nodeType = modules_1.Templating.Phrase;
+                                            properties[nameOf_Templating_Phrase_phraseType] = modules_1.Templating.PhraseTypes.Emphasis;
                                             break;
                                         case 'strong':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Phrase.PhraseType.name] = PhraseTypes.Strong;
+                                            nodeType = modules_1.Templating.Phrase;
+                                            properties[nameOf_Templating_Phrase_phraseType] = modules_1.Templating.PhraseTypes.Strong;
                                             break;
                                         case 'cite':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Phrase.PhraseType.name] = PhraseTypes.Cite;
+                                            nodeType = modules_1.Templating.Phrase;
+                                            properties[nameOf_Templating_Phrase_phraseType] = modules_1.Templating.PhraseTypes.Cite;
                                             break;
                                         case 'dfn':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Phrase.PhraseType.name] = PhraseTypes.Defining;
+                                            nodeType = modules_1.Templating.Phrase;
+                                            properties[nameOf_Templating_Phrase_phraseType] = modules_1.Templating.PhraseTypes.Defining;
                                             break;
                                         case 'code':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Phrase.PhraseType.name] = PhraseTypes.Code;
+                                            nodeType = modules_1.Templating.Phrase;
+                                            properties[nameOf_Templating_Phrase_phraseType] = modules_1.Templating.PhraseTypes.Code;
                                             break;
                                         case 'samp':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Phrase.PhraseType.name] = PhraseTypes.Sample;
+                                            nodeType = modules_1.Templating.Phrase;
+                                            properties[nameOf_Templating_Phrase_phraseType] = modules_1.Templating.PhraseTypes.Sample;
                                             break;
                                         case 'kbd':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Phrase.PhraseType.name] = PhraseTypes.Keyboard;
+                                            nodeType = modules_1.Templating.Phrase;
+                                            properties[nameOf_Templating_Phrase_phraseType] = modules_1.Templating.PhraseTypes.Keyboard;
                                             break;
                                         case 'var':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Phrase.PhraseType.name] = PhraseTypes.Variable;
+                                            nodeType = modules_1.Templating.Phrase;
+                                            properties[nameOf_Templating_Phrase_phraseType] = modules_1.Templating.PhraseTypes.Variable;
                                             break;
                                         // (headers)
                                         case 'h1':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Header.HeaderLevel.name] = 1;
+                                            nodeType = modules_1.VDOM.HTMLElement;
+                                            properties[nameOf_Templating_Header_headerLevel] = 1;
                                             break;
                                         case 'h2':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Header.HeaderLevel.name] = 2;
+                                            nodeType = modules_1.VDOM.HTMLElement;
+                                            properties[nameOf_Templating_Header_headerLevel] = 2;
                                             break;
                                         case 'h3':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Header.HeaderLevel.name] = 3;
+                                            nodeType = modules_1.VDOM.HTMLElement;
+                                            properties[nameOf_Templating_Header_headerLevel] = 3;
                                             break;
                                         case 'h4':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Header.HeaderLevel.name] = 4;
+                                            nodeType = modules_1.VDOM.HTMLElement;
+                                            properties[nameOf_Templating_Header_headerLevel] = 4;
                                             break;
                                         case 'h5':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Header.HeaderLevel.name] = 5;
+                                            nodeType = modules_1.VDOM.HTMLElement;
+                                            properties[nameOf_Templating_Header_headerLevel] = 5;
                                             break;
                                         case 'h6':
-                                            nodeType = VDOM.HTMLElement;
-                                            properties[Header.HeaderLevel.name] = 6;
+                                            nodeType = modules_1.VDOM.HTMLElement;
+                                            properties[nameOf_Templating_Header_headerLevel] = 6;
                                             break;
-                                        default: nodeType = HTMLElement; // (just create a basic object to use with htmlReader.tagName)
+                                        default: nodeType = modules_1.VDOM.HTMLElement; // (just create a basic object to use with htmlReader.tagName)
                                     }
                                 }
                                 if (!nodeItem) { // (only create if not explicitly created)
-                                    nodeItem = nodeType.new(isDataTemplate ? null : parent);
+                                    nodeItem = new nodeType();
+                                    if (!isDataTemplate)
+                                        parent.appendChild(nodeItem);
                                 }
                                 for (var pname in properties)
-                                    nodeItem.setValue(pname, properties[pname], true);
+                                    nodeItem[pname] = properties[pname];
                                 nodeItem.tagName = currentTagName;
                                 // ... some tags are not allowed to have children (and don't have to have closing tags, so null the graph item and type now)...
                                 switch (currentTagName) {
@@ -256,7 +256,7 @@ function parse(html = null, strictMode) {
                                     immediateChildTemplates = processTags(nodeItem); // ('graphItem' was just created for the last tag read, but the end tag is still yet to be read)
                                     // (the previous call will continue until an end tag is found, in which case it returns that tag to be handled by this parent level)
                                     if (htmlReader.tagName != nodeItem.tagName) // (the previous level should be parsed now, and the current tag should be an end tag that doesn't match anything in the immediate nested level, which should be the end tag for this parent tag)
-                                        throw Exception.from("The closing tag '</" + htmlReader.tagName + ">' was unexpected for current tag '<" + nodeItem.tagName + ">' on line " + htmlReader.getCurrentLineNumber() + ".");
+                                        throw DS.Exception.from("The closing tag '</" + htmlReader.tagName + ">' was unexpected for current tag '<" + nodeItem.tagName + ">' on line " + htmlReader.getCurrentLineNumber() + ".");
                                     continue; // (need to continue on the last item read before returning)
                                 }
                                 if (currentTagName == "body" && !approotID)

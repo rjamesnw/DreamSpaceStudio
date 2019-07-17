@@ -317,6 +317,25 @@ var DS;
         };
     }
     DS.$ = $;
+    // =======================================================================================================================
+    /** Must be used to load a module before it can be used.
+     * This call returns a reference to the loaded module.
+     * See 'modules$()' for loading multiple modules. */
+    function module(ns) {
+        return __awaiter(this, void 0, void 0, function* () { return ns instanceof Promise ? yield ns : ns; });
+    }
+    DS.module = module;
+    /** Can be used to load multiple modules. You can also use 'module()' to load and return a single module. */
+    function modules(...ns) {
+        return __awaiter(this, void 0, void 0, function* () { for (var i = 0, n = ns.length; i < n; ++i)
+            yield module(ns[i]); });
+    }
+    DS.modules = modules;
+    /** Must be used to load a type before it can be used. */
+    DS.type = module;
+    /** Can be used to load multiple types. You can also use 'type()' to load and return a single type. */
+    DS.types = modules;
+    // =======================================================================================================================
 })(DS || (DS = {}));
 // ###########################################################################################################################
 var DS;

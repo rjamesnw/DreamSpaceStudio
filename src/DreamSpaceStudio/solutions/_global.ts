@@ -413,6 +413,24 @@ namespace DS {
             _target.$__argumentTypes[index] = args;
         }
     }
+
+    // =======================================================================================================================
+
+    /** Must be used to load a module before it can be used.
+     * This call returns a reference to the loaded module. 
+     * See 'modules$()' for loading multiple modules. */
+    export async function module<T extends {}>(ns: T): Promise<T> { return ns instanceof Promise ? await ns : ns; }
+
+    /** Can be used to load multiple modules. You can also use 'module()' to load and return a single module. */
+    export async function modules(...ns: {}[]): Promise<void> { for (var i = 0, n = ns.length; i < n; ++i) await module(ns[i]); }
+
+    /** Must be used to load a type before it can be used. */
+    export var type = module;
+
+    /** Can be used to load multiple types. You can also use 'type()' to load and return a single type. */
+    export var types = modules;
+
+    // =======================================================================================================================
 }
 
 // ########################################################################################################################

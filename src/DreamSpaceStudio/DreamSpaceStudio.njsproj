@@ -56,9 +56,12 @@
     <TypeScriptCompile Include="solutions\ErrorHandling.ts" />
     <TypeScriptCompile Include="solutions\Exception.ts" />
     <TypeScriptCompile Include="solutions\client\navigation.ts" />
+    <TypeScriptCompile Include="solutions\plugins\2677A76EE8A34818873FB0587B8C3108\shared\Templating.ts" />
     <TypeScriptCompile Include="solutions\plugins\2677A76EE8A34818873FB0587B8C3108\shared\VDOM.ts" />
+    <TypeScriptCompile Include="solutions\plugins\2ADEEEBF3D90423EA4CE7BA7389DC6FA\client\test.ts" />
     <TypeScriptCompile Include="solutions\plugins\2ADEEEBF3D90423EA4CE7BA7389DC6FA\shared\HTMLReader.ts" />
     <TypeScriptCompile Include="solutions\plugins\2ADEEEBF3D90423EA4CE7BA7389DC6FA\shared\interfaces.ts" />
+    <TypeScriptCompile Include="solutions\plugins\2ADEEEBF3D90423EA4CE7BA7389DC6FA\shared\modules.ts" />
     <TypeScriptCompile Include="solutions\ResourceRequest.ts" />
     <TypeScriptCompile Include="solutions\Resources.ts" />
     <TypeScriptCompile Include="solutions\Time.ts" />

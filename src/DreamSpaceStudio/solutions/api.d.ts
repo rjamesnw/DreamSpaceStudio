@@ -189,6 +189,16 @@ declare namespace DS {
      * The order specified is important.  A new (transient) or existing (singleton) instance of the first matching type found is returned.
      */
     function $(...args: (IType<any> | string)[]): (target: any, paramName: string, index: number) => void;
+    /** Must be used to load a module before it can be used.
+     * This call returns a reference to the loaded module.
+     * See 'modules$()' for loading multiple modules. */
+    function module<T extends {}>(ns: T): Promise<T>;
+    /** Can be used to load multiple modules. You can also use 'module()' to load and return a single module. */
+    function modules(...ns: {}[]): Promise<void>;
+    /** Must be used to load a type before it can be used. */
+    var type: typeof module;
+    /** Can be used to load multiple types. You can also use 'type()' to load and return a single type. */
+    var types: typeof modules;
 }
 /** Provides a mechanism for object cleanup.
 * See also: 'dispose(...)' helper functions. */
@@ -226,7 +236,7 @@ interface ITypeInfo {
     $__fullname?: string;
 }
 interface IType<TInstance = object> {
-    new(...args: any[]): TInstance;
+    new (...args: any[]): TInstance;
 }
 interface IFunction<ReturnType = any> {
     (...args: any[]): ReturnType;
@@ -1387,22 +1397,22 @@ declare namespace DS {
         /** A password for login (not recommended!). Note: Depreciated, as stated in RFC 3986 3.2.1. */
         password?: string;
         constructor(
-            /** Protocol (without '://'). */
-            protocol?: string,
-            /** URL host. */
-            hostName?: string,
-            /** Host port. */
-            port?: string,
-            /** URL path. */
-            path?: string,
-            /** Query (without '?'). */
-            query?: string,
-            /** Fragment (without '#'). */
-            fragment?: string,
-            /** A username for login. Note: Depreciated, as stated in RFC 3986 3.2.1. */
-            username?: string, // (see also: https://goo.gl/94ivpK)
-            /** A password for login (not recommended!). Note: Depreciated, as stated in RFC 3986 3.2.1. */
-            password?: string);
+        /** Protocol (without '://'). */
+        protocol?: string, 
+        /** URL host. */
+        hostName?: string, 
+        /** Host port. */
+        port?: string, 
+        /** URL path. */
+        path?: string, 
+        /** Query (without '?'). */
+        query?: string, 
+        /** Fragment (without '#'). */
+        fragment?: string, 
+        /** A username for login. Note: Depreciated, as stated in RFC 3986 3.2.1. */
+        username?: string, // (see also: https://goo.gl/94ivpK)
+        /** A password for login (not recommended!). Note: Depreciated, as stated in RFC 3986 3.2.1. */
+        password?: string);
         /** Returns only  host + port parts combined. */
         host(): string;
         /** Returns only the protocol + host + port parts combined. */
@@ -1570,7 +1580,9 @@ interface IResponse<TData = any> {
     statusCode: HttpStatus;
     message?: string;
     data?: TData;
-    /** If this is true then the data cannot be send between platforms (client vs server). This is typically used with special instances. */
+    /** If true then the data can be serialized. The default is false (undefined), which then allows transferring data using 'JSON.stringify()'
+     * This prevents server-side-only or client-side-only data from being able to transfer between platforms.
+     */
     notSerializable?: boolean;
 }
 declare var isNode: string;

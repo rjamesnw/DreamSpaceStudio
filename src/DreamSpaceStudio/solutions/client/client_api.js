@@ -568,109 +568,6 @@ var DS;
 })(DS || (DS = {}));
 // ############################################################################################################################################
 // ###########################################################################################################################
-// Text manipulation utility functions.
-// ###########################################################################################################################
-var DS;
-(function (DS) {
-    // ========================================================================================================================
-    let StringUtils;
-    (function (StringUtils) {
-        // (this is a more efficient client-side replacement for Chrome)
-        StringUtils.replace = function replace(source, replaceWhat, replaceWith, ignoreCase) {
-            // (split+join is faster in some browsers, or very close in speed) http://jsperf.com/split-join-vs-regex-replace-the-raven
-            if (typeof source !== 'string')
-                source = "" + source;
-            if (typeof replaceWhat !== 'string')
-                replaceWhat = "" + replaceWhat;
-            if (typeof replaceWith !== 'string')
-                replaceWith = "" + replaceWith;
-            if (ignoreCase)
-                return source.replace(new RegExp(DS.Utilities.escapeRegex(replaceWhat), 'gi'), replaceWith);
-            else if (DS.Browser.type == DS.Browser.BrowserTypes.Chrome)
-                return source.split(replaceWhat).join(replaceWith); // (MUCH faster in Chrome [including Chrome mobile])
-            else
-                return source.replace(new RegExp(DS.Utilities.escapeRegex(replaceWhat), 'g'), replaceWith);
-        };
-        // ========================================================================================================================
-    })(StringUtils = DS.StringUtils || (DS.StringUtils = {}));
-    // ############################################################################################################################
-})(DS || (DS = {}));
-// Contains DreamSpace API functions and types that user code can use to work with the system.
-// This API will be a layer of abstraction for the client side only.
-var DS;
-(function (DS) {
-    let IO;
-    (function (IO) {
-        // ========================================================================================================================
-        /** This even is triggered when the user should wait for an action to complete. */
-        IO.onBeginWait = new DS.EventDispatcher(IO, "onBeginWait", true);
-        /** This even is triggered when the user no longer needs to wait for an action to complete. */
-        IO.onEndWait = new DS.EventDispatcher(IO, "onEndWait", true);
-        var __waitRequestCounter = 0; // (allows stacking calls to 'wait()')
-        /**
-         * Blocks user input until 'closeWait()' is called. Plugins can hook into 'onBeginWait' to receive notifications.
-         * Note: Each call stacks, but the 'onBeginWait' event is triggered only once.
-         * @param msg An optional message to display (default is 'Please wait...').
-         */
-        function wait(msg = "Please wait ...") {
-            if (__waitRequestCounter == 0) // (fire only one time)
-                IO.onBeginWait.dispatch(msg);
-            __waitRequestCounter++;
-        }
-        IO.wait = wait;
-        /**
-         * Unblocks user input if 'wait()' was previously called. The number of 'closeWait()' calls must match the number of wait calls in order to unblock the user.
-         * Plugins can hook into the 'onEndWait' event to be notified.
-         * @param force If true, then the number of calls to 'wait' is ignored and the block is forcibly removed (default if false).
-         */
-        function closeWait(force = false) {
-            if (__waitRequestCounter > 0 && (force || --__waitRequestCounter == 0)) {
-                __waitRequestCounter = 0;
-                IO.onEndWait.dispatch();
-            }
-        }
-        IO.closeWait = closeWait;
-    })(IO = DS.IO || (DS.IO = {}));
-    // ========================================================================================================================
-})(DS || (DS = {}));
-var DS;
-(function (DS) {
-    // ==========================================================================================================================
-    //! if (pageQuery.getValue('debug', '') == 'true') Diagnostics.debug = Diagnostics.DebugModes.Debug_Run; // (only allow this on the sandbox and development servers)
-    //! var demo = demo || pageQuery.getValue('demo', '') == 'true'; // (only allow this on the sandbox and development servers)
-    /**
-       * Redirect the current page to another location.
-       * @param {string} url The URL to redirect to.
-       * @param {boolean} url If true, the current page query string is merged. The default is false,
-       * @param {boolean} bustCache If true, the current page query string is merged. The default is false,
-       */
-    function setLocation(url, includeExistingQuery = false, bustCache = false) {
-        var query = DS.Query.new(url);
-        if (bustCache)
-            query.values[DS.ResourceRequest.cacheBustingVar] = Date.now().toString();
-        if (includeExistingQuery)
-            query.addOrUpdate(DS.pageQuery.values);
-        if (url.charAt(0) == '/')
-            url = DS.Path.resolve(url);
-        url = query.appendTo(url);
-        if (DS.IO.wait)
-            DS.IO.wait();
-        setTimeout(() => { DS.global.location.href = url; }, 1); // (let events finish before setting)
-    }
-    DS.setLocation = setLocation;
-    // ==========================================================================================================================
-    /**
-      * Returns true if the page URL contains the given controller and action names (not case sensitive).
-      * This only works with typical default routing of "{host}/Controller/Action/etc.".
-      * @param action A controller action name.
-      * @param controller A controller name (defaults to "home" if not specified)
-      */
-    function isView(action, controller = "home") {
-        return new RegExp("^\/" + controller + "\/" + action + "(?:[\/?&#])?", "gi").test(DS.global.location.pathname);
-    }
-    DS.isView = isView;
-})(DS || (DS = {}));
-// ###########################################################################################################################
 // Browser detection (for special cases).
 // This file also adds in any browser-only features as needed by the system within NodeJS (such as setTimeout, etc.).
 // ###########################################################################################################################
@@ -951,3 +848,106 @@ Array.prototype.where = function (func) { if (!func)
     }
 })();
 // #######################################################################################
+// ###########################################################################################################################
+// Text manipulation utility functions.
+// ###########################################################################################################################
+var DS;
+(function (DS) {
+    // ========================================================================================================================
+    let StringUtils;
+    (function (StringUtils) {
+        // (this is a more efficient client-side replacement for Chrome)
+        StringUtils.replace = function replace(source, replaceWhat, replaceWith, ignoreCase) {
+            // (split+join is faster in some browsers, or very close in speed) http://jsperf.com/split-join-vs-regex-replace-the-raven
+            if (typeof source !== 'string')
+                source = "" + source;
+            if (typeof replaceWhat !== 'string')
+                replaceWhat = "" + replaceWhat;
+            if (typeof replaceWith !== 'string')
+                replaceWith = "" + replaceWith;
+            if (ignoreCase)
+                return source.replace(new RegExp(DS.Utilities.escapeRegex(replaceWhat), 'gi'), replaceWith);
+            else if (DS.Browser.type == DS.Browser.BrowserTypes.Chrome)
+                return source.split(replaceWhat).join(replaceWith); // (MUCH faster in Chrome [including Chrome mobile])
+            else
+                return source.replace(new RegExp(DS.Utilities.escapeRegex(replaceWhat), 'g'), replaceWith);
+        };
+        // ========================================================================================================================
+    })(StringUtils = DS.StringUtils || (DS.StringUtils = {}));
+    // ############################################################################################################################
+})(DS || (DS = {}));
+// Contains DreamSpace API functions and types that user code can use to work with the system.
+// This API will be a layer of abstraction for the client side only.
+var DS;
+(function (DS) {
+    let IO;
+    (function (IO) {
+        // ========================================================================================================================
+        /** This even is triggered when the user should wait for an action to complete. */
+        IO.onBeginWait = new DS.EventDispatcher(IO, "onBeginWait", true);
+        /** This even is triggered when the user no longer needs to wait for an action to complete. */
+        IO.onEndWait = new DS.EventDispatcher(IO, "onEndWait", true);
+        var __waitRequestCounter = 0; // (allows stacking calls to 'wait()')
+        /**
+         * Blocks user input until 'closeWait()' is called. Plugins can hook into 'onBeginWait' to receive notifications.
+         * Note: Each call stacks, but the 'onBeginWait' event is triggered only once.
+         * @param msg An optional message to display (default is 'Please wait...').
+         */
+        function wait(msg = "Please wait ...") {
+            if (__waitRequestCounter == 0) // (fire only one time)
+                IO.onBeginWait.dispatch(msg);
+            __waitRequestCounter++;
+        }
+        IO.wait = wait;
+        /**
+         * Unblocks user input if 'wait()' was previously called. The number of 'closeWait()' calls must match the number of wait calls in order to unblock the user.
+         * Plugins can hook into the 'onEndWait' event to be notified.
+         * @param force If true, then the number of calls to 'wait' is ignored and the block is forcibly removed (default if false).
+         */
+        function closeWait(force = false) {
+            if (__waitRequestCounter > 0 && (force || --__waitRequestCounter == 0)) {
+                __waitRequestCounter = 0;
+                IO.onEndWait.dispatch();
+            }
+        }
+        IO.closeWait = closeWait;
+    })(IO = DS.IO || (DS.IO = {}));
+    // ========================================================================================================================
+})(DS || (DS = {}));
+var DS;
+(function (DS) {
+    // ==========================================================================================================================
+    //! if (pageQuery.getValue('debug', '') == 'true') Diagnostics.debug = Diagnostics.DebugModes.Debug_Run; // (only allow this on the sandbox and development servers)
+    //! var demo = demo || pageQuery.getValue('demo', '') == 'true'; // (only allow this on the sandbox and development servers)
+    /**
+       * Redirect the current page to another location.
+       * @param {string} url The URL to redirect to.
+       * @param {boolean} url If true, the current page query string is merged. The default is false,
+       * @param {boolean} bustCache If true, the current page query string is merged. The default is false,
+       */
+    function setLocation(url, includeExistingQuery = false, bustCache = false) {
+        var query = DS.Query.new(url);
+        if (bustCache)
+            query.values[DS.ResourceRequest.cacheBustingVar] = Date.now().toString();
+        if (includeExistingQuery)
+            query.addOrUpdate(DS.pageQuery.values);
+        if (url.charAt(0) == '/')
+            url = DS.Path.resolve(url);
+        url = query.appendTo(url);
+        if (DS.IO.wait)
+            DS.IO.wait();
+        setTimeout(() => { DS.global.location.href = url; }, 1); // (let events finish before setting)
+    }
+    DS.setLocation = setLocation;
+    // ==========================================================================================================================
+    /**
+      * Returns true if the page URL contains the given controller and action names (not case sensitive).
+      * This only works with typical default routing of "{host}/Controller/Action/etc.".
+      * @param action A controller action name.
+      * @param controller A controller name (defaults to "home" if not specified)
+      */
+    function isView(action, controller = "home") {
+        return new RegExp("^\/" + controller + "\/" + action + "(?:[\/?&#])?", "gi").test(DS.global.location.pathname);
+    }
+    DS.isView = isView;
+})(DS || (DS = {}));

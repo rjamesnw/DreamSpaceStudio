@@ -5,8 +5,12 @@ type Methods = "GET" | "POST" | "PUT" | "DELETE";
 
 interface IResponse<TData = any> {
     statusCode: HttpStatus;
-    message: string;
+    message?: string;
     data?: TData;
+    /** If true then the data can be serialized. The default is false (undefined), which then allows transferring data using 'JSON.stringify()'
+     * This prevents server-side-only or client-side-only data from being able to transfer between platforms.
+     */
+    notSerializable?: boolean;
 }
 
 var isNode = typeof global == 'object' && global.process && global.process.versions && global.process.versions.node;

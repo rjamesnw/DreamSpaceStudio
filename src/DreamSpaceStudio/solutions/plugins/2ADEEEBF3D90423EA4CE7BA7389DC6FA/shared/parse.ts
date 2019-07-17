@@ -1,7 +1,8 @@
-import { IHTMLParseResult } from "./interfaces";
-abstract class Modules {
-    static get VDOM() { return import("../../2677A76EE8A34818873FB0587B8C3108/shared/VDOM"); };
-}
+import { VDOM, Templating } from "./modules";
+import { IHTMLParseResult, IDataTemplate } from "./interfaces";
+
+var nameOf_Templating_Phrase_phraseType = DS.nameof(() => Templating.Phrase.prototype.phraseType)
+var nameOf_Templating_Header_headerLevel = DS.nameof(() => Templating.Header.prototype.headerLevel)
 
 /** Parses HTML to create a graph object tree, and also returns any templates found.
 * This concept is similar to using XAML to load objects in WPF. As such, you have the option to use an HTML template, or dynamically build your
@@ -35,7 +36,8 @@ export async function parse(html: string = null, strictMode?: boolean): Promise<
     var classMatch = /^[$.][A-Za-z0-9_$]*(\.[A-Za-z0-9_$]*)*(\s+|$)/;
     var attribName: string;
     //type Node = typeof import("../../2677A76EE8A34818873FB0587B8C3108/shared/VDOM");
-    var VDOM_mod = await Modules.VDOM;
+
+    await DS.modules(VDOM, Templating);
 
     var storeRunningText = (parent: VDOM.Node) => {
         if (htmlReader.runningText) { // (if there is running text, then create a text node for it under the given parent node)
@@ -43,19 +45,19 @@ export async function parse(html: string = null, strictMode?: boolean): Promise<
             //?    HTMLElement.new(parent).setValue((htmlReader.runningText.indexOf('&') < 0 ? "text" : "html"), htmlReader.runningText); // (not for the UI, so doesn't matter)
             //?else
             if (htmlReader.runningText.indexOf('&') < 0)
-                PlainText.new(parent, htmlReader.runningText);
+                parent.appendChild(new VDOM.Text(htmlReader.runningText));
             else
-                HTMLText.new(parent, htmlReader.runningText);
+                parent.appendChild(new VDOM.HTMLElement('span').$__set("innerHTML", htmlReader.runningText));
         }
     };
 
     var rootElements: VDOM.Node[] = [];
     var globalTemplatesReference: { [id: string]: IDataTemplate; } = {};
 
-    type TNodeFactoryType = { new: (parent: VDOM.Node, ...args: any[]) => VDOM.Node };
+    type TNodeFactoryType = { new(...args: any[]): VDOM.Node };
 
     var processTags = (parent: VDOM.Node): IDataTemplate[] => { // (returns the data templates found for the immediate children only)
-        var graphItemType: string, graphItemTypePrefix: string;
+        var vnodeItemType: string, graphItemTypePrefix: string;
         var nodeType: TNodeFactoryType;
         var nodeItem: VDOM.Node;
         var properties: IndexedObject;
@@ -139,66 +141,67 @@ export async function parse(html: string = null, strictMode?: boolean): Promise<
 
                             // ... this is either the end of the tag with inner html/text, or a self ending tag (XML style) ...
 
-                            graphItemType = properties['class']; // (this may hold an explicit object type to create [note expected format: module.full.name.classname])
+                            vnodeItemType = properties['class']; // (this may hold an explicit object type to create [note expected format: module.full.name.classname])
                             nodeItem = null;
                             nodeType = null;
 
-                            if (graphItemType && classMatch.test(graphItemType)) {
+                            if (vnodeItemType && classMatch.test(vnodeItemType)) {
                                 graphItemTypePrefix = RegExp.lastMatch.substring(0, 1); // ('$' [DS full type name prefix], or '.' [default UI type name])
 
                                 if (graphItemTypePrefix == '$') {
-                                    graphItemType = RegExp.lastMatch.substring(1);
-                                    if (graphItemType.charAt(0) == '.') // (just in case there's a '.' after '$', allow this as well)
+                                    vnodeItemType = RegExp.lastMatch.substring(1);
+                                    if (vnodeItemType.charAt(0) == '.') // (just in case there's a '.' after '$', allow this as well)
                                         graphItemTypePrefix = '.';
                                 } else
-                                    graphItemType = RegExp.lastMatch; // (type is either a full type, or starts with '.' [relative])
+                                    vnodeItemType = RegExp.lastMatch; // (type is either a full type, or starts with '.' [relative])
 
                                 if (graphItemTypePrefix == '.')
-                                    graphItemType = "DreamSpace.System.UI" + graphItemType;
+                                    vnodeItemType = "DreamSpace.System.UI" + vnodeItemType;
 
-                                //? var graphFactory = GraphNode;
-                                nodeType = <TNodeFactoryType>Utilities.dereferencePropertyPath(translateModuleTypeName(graphItemType));
+                                nodeType = <TNodeFactoryType>DS.Utilities.dereferencePropertyPath(vnodeItemType, VDOM);
 
                                 if (nodeType === void 0)
-                                    throw Exception.from("The graph item type '" + graphItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " was not found.");
+                                    throw DS.Exception.from("The node item type '" + vnodeItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " was not found.");
 
-                                if (typeof nodeType !== 'function' || typeof HTMLElement.defaultHTMLTagName === void 0)
-                                    throw Exception.from("The graph item type '" + graphItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " does not resolve to a GraphItem class type.");
+                                if (typeof nodeType !== 'function' || typeof VDOM.HTMLElement.defaultHTMLTagName === void 0)
+                                    throw DS.Exception.from("The node item type '" + vnodeItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " does not resolve to a valid VDOM class type.");
                             }
 
                             if (nodeType == null) {
-                                // ... auto detect the DreamSpace UI GraphNode type based on the tag name (all valid HTML4/5 tags: http://www.w3schools.com/tags/) ...
+                                // ... auto detect the node types based on the tag name (all valid HTML4/5 tags: http://www.w3schools.com/tags/) ...
                                 switch (currentTagName) {
                                     // (phrases)
-                                    case 'abbr': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Abbreviation; break;
-                                    case 'acronym': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Acronym; break;
-                                    case 'em': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Emphasis; break;
-                                    case 'strong': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Strong; break;
-                                    case 'cite': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Cite; break;
-                                    case 'dfn': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Defining; break;
-                                    case 'code': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Code; break;
-                                    case 'samp': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Sample; break;
-                                    case 'kbd': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Keyboard; break;
-                                    case 'var': nodeType = VDOM.HTMLElement; properties[Phrase.PhraseType.name] = PhraseTypes.Variable; break;
+                                    case 'abbr': nodeType = Templating.Phrase; properties[nameOf_Templating_Phrase_phraseType] = Templating.PhraseTypes.Abbreviation; break;
+                                    case 'acronym': nodeType = Templating.Phrase; properties[nameOf_Templating_Phrase_phraseType] = Templating.PhraseTypes.Acronym; break;
+                                    case 'em': nodeType = Templating.Phrase; properties[nameOf_Templating_Phrase_phraseType] = Templating.PhraseTypes.Emphasis; break;
+                                    case 'strong': nodeType = Templating.Phrase; properties[nameOf_Templating_Phrase_phraseType] = Templating.PhraseTypes.Strong; break;
+                                    case 'cite': nodeType = Templating.Phrase; properties[nameOf_Templating_Phrase_phraseType] = Templating.PhraseTypes.Cite; break;
+                                    case 'dfn': nodeType = Templating.Phrase; properties[nameOf_Templating_Phrase_phraseType] = Templating.PhraseTypes.Defining; break;
+                                    case 'code': nodeType = Templating.Phrase; properties[nameOf_Templating_Phrase_phraseType] = Templating.PhraseTypes.Code; break;
+                                    case 'samp': nodeType = Templating.Phrase; properties[nameOf_Templating_Phrase_phraseType] = Templating.PhraseTypes.Sample; break;
+                                    case 'kbd': nodeType = Templating.Phrase; properties[nameOf_Templating_Phrase_phraseType] = Templating.PhraseTypes.Keyboard; break;
+                                    case 'var': nodeType = Templating.Phrase; properties[nameOf_Templating_Phrase_phraseType] = Templating.PhraseTypes.Variable; break;
 
                                     // (headers)
-                                    case 'h1': nodeType = VDOM.HTMLElement; properties[Header.HeaderLevel.name] = 1; break;
-                                    case 'h2': nodeType = VDOM.HTMLElement; properties[Header.HeaderLevel.name] = 2; break;
-                                    case 'h3': nodeType = VDOM.HTMLElement; properties[Header.HeaderLevel.name] = 3; break;
-                                    case 'h4': nodeType = VDOM.HTMLElement; properties[Header.HeaderLevel.name] = 4; break;
-                                    case 'h5': nodeType = VDOM.HTMLElement; properties[Header.HeaderLevel.name] = 5; break;
-                                    case 'h6': nodeType = VDOM.HTMLElement; properties[Header.HeaderLevel.name] = 6; break;
+                                    case 'h1': nodeType = VDOM.HTMLElement; properties[nameOf_Templating_Header_headerLevel] = 1; break;
+                                    case 'h2': nodeType = VDOM.HTMLElement; properties[nameOf_Templating_Header_headerLevel] = 2; break;
+                                    case 'h3': nodeType = VDOM.HTMLElement; properties[nameOf_Templating_Header_headerLevel] = 3; break;
+                                    case 'h4': nodeType = VDOM.HTMLElement; properties[nameOf_Templating_Header_headerLevel] = 4; break;
+                                    case 'h5': nodeType = VDOM.HTMLElement; properties[nameOf_Templating_Header_headerLevel] = 5; break;
+                                    case 'h6': nodeType = VDOM.HTMLElement; properties[nameOf_Templating_Header_headerLevel] = 6; break;
 
-                                    default: nodeType = HTMLElement; // (just create a basic object to use with htmlReader.tagName)
+                                    default: nodeType = VDOM.HTMLElement; // (just create a basic object to use with htmlReader.tagName)
                                 }
                             }
 
                             if (!nodeItem) { // (only create if not explicitly created)
-                                nodeItem = nodeType.new(isDataTemplate ? null : parent);
+                                nodeItem = new nodeType();
+                                if (!isDataTemplate)
+                                    parent.appendChild(nodeItem);
                             }
 
                             for (var pname in properties)
-                                nodeItem.setValue(pname, properties[pname], true);
+                                nodeItem[pname] = properties[pname];
 
                             nodeItem.tagName = currentTagName;
 
@@ -227,7 +230,7 @@ export async function parse(html: string = null, strictMode?: boolean): Promise<
                                 immediateChildTemplates = processTags(nodeItem); // ('graphItem' was just created for the last tag read, but the end tag is still yet to be read)
                                 // (the previous call will continue until an end tag is found, in which case it returns that tag to be handled by this parent level)
                                 if (htmlReader.tagName != nodeItem.tagName) // (the previous level should be parsed now, and the current tag should be an end tag that doesn't match anything in the immediate nested level, which should be the end tag for this parent tag)
-                                    throw Exception.from("The closing tag '</" + htmlReader.tagName + ">' was unexpected for current tag '<" + nodeItem.tagName + ">' on line " + htmlReader.getCurrentLineNumber() + ".");
+                                    throw DS.Exception.from("The closing tag '</" + htmlReader.tagName + ">' was unexpected for current tag '<" + nodeItem.tagName + ">' on line " + htmlReader.getCurrentLineNumber() + ".");
                                 continue; // (need to continue on the last item read before returning)
                             }
 

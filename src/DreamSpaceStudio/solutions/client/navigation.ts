@@ -11,7 +11,7 @@ namespace DS {
        * @param {boolean} bustCache If true, the current page query string is merged. The default is false,
        */
     export function setLocation(url: string, includeExistingQuery = false, bustCache = false) {
-        var query = Query.new(url);
+        var query = new Query(url);
         if (bustCache) query.values[ResourceRequest.cacheBustingVar] = Date.now().toString();
         if (includeExistingQuery)
             query.addOrUpdate(pageQuery.values);

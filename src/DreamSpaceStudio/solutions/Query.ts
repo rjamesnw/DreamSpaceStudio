@@ -15,16 +15,10 @@ namespace DS {
         * @param {string|object} query A full URI string, a query string (such as 'location.search'), or an object to create query values from.
         * @param {boolean} makeNamesLowercase If true, then all query names are made lower case when parsing (the default is false).
         */
-        static 'new': (query?: string | object, makeNamesLowercase?: boolean) => IQuery;
-
-        /** Helps to build an object of 'name:value' pairs from a URI or 'location.search' string.
-        * @param {string|object} query A full URI string, a query string (such as 'location.search'), or an object to create query values from.
-        * @param {boolean} makeNamesLowercase If true, then all query names are made lower case when parsing (the default is false).
-        */
-        static init(o: IQuery, isnew: boolean, query?: string | object, makeNamesLowercase?: boolean): void {
+        constructor(query?: string | object, makeNamesLowercase?: boolean) {
             if (query)
                 if (typeof query == 'object')
-                    o.addOrUpdate(query, makeNamesLowercase);
+                    this.addOrUpdate(query, makeNamesLowercase);
                 else {
                     if (typeof query != 'string') query = Utilities.toString(query);
                     var nameValuePairs = query.match(QUERY_STRING_REGEX);
@@ -35,9 +29,9 @@ namespace DS {
                             eqIndex = nameValue.indexOf('='); // (need to get first instance of the '=' char)
                             if (eqIndex == -1) eqIndex = nameValue.length; // (whole string is the name)
                             if (makeNamesLowercase)
-                                o.values[decodeURIComponent(nameValue).substring(1, eqIndex).toLowerCase()] = decodeURIComponent(nameValue.substring(eqIndex + 1)); // (note: the RegEx match always includes a delimiter)
+                                this.values[decodeURIComponent(nameValue).substring(1, eqIndex).toLowerCase()] = decodeURIComponent(nameValue.substring(eqIndex + 1)); // (note: the RegEx match always includes a delimiter)
                             else
-                                o.values[decodeURIComponent(nameValue).substring(1, eqIndex)] = decodeURIComponent(nameValue.substring(eqIndex + 1)); // (note: the RegEx match always includes a delimiter)
+                                this.values[decodeURIComponent(nameValue).substring(1, eqIndex)] = decodeURIComponent(nameValue.substring(eqIndex + 1)); // (note: the RegEx match always includes a delimiter)
                         }
                 }
         }
@@ -95,7 +89,7 @@ namespace DS {
 
         /** Creates and returns a duplicate of this object. */
         clone(): IQuery {
-            var q = Query.new();
+            var q = new Query();
             for (var pname in this.values)
                 q.values[pname] = this.values[pname];
             return q;
@@ -200,7 +194,7 @@ namespace DS {
     // ==========================================================================================================================
 
     /** This is set automatically to the query for the current page. */
-    export var pageQuery = Query.new(DS.global.location.href);
+    export var pageQuery = DS.global.location && DS.global.location.href ? new Query(DS.global.location.href) : void 0;
 
 }
 

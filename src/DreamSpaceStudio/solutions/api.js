@@ -23,11 +23,8 @@ var USER_GIVEN_GLOBAL_NS_NAME;
  */
 var DS;
 (function (DS) {
-    eval("var DSStaticProperties = DS;");
-    class DSStaticProperties {
-        static get globalNamespaceName() { return USER_GIVEN_GLOBAL_NS_NAME || DEFAULT_GLOBAL_NS_NAME; }
-        static get rootns() { return DS.global[DS.globalNamespaceName]; }
-    }
+    Object.defineProperty(DS, "globalNamespaceName", { configurable: false, enumerable: true, get: () => { return USER_GIVEN_GLOBAL_NS_NAME || DEFAULT_GLOBAL_NS_NAME; } });
+    Object.defineProperty(DS, "rootns", { configurable: false, enumerable: true, get: () => { return DS.global[DS.globalNamespaceName]; } });
     /**
      * The root namespace for the DreamSpace system.
      */
@@ -341,6 +338,326 @@ var DS;
 if (isNode && exports)
     eval("exports.DS = DS;"); // (when require('api') is used we need to export the DS namespace, which will contain the whole DS global API)
 // ###########################################################################################################################
+var DS;
+(function (DS) {
+    // ========================================================================================================================
+    // ========================================================================================================================
+    /**
+     * Contains some basic static values and calculations used by time related functions within the system.
+     */
+    let Time;
+    (function (Time) {
+        Time.__millisecondsPerSecond = 1000;
+        Time.__secondsPerMinute = 60;
+        Time.__minsPerHour = 60;
+        Time.__hoursPerDay = 24;
+        Time.__daysPerYear = 365;
+        Time.__actualDaysPerYear = 365.2425;
+        Time.__EpochYear = 1970;
+        Time.__millisecondsPerMinute = Time.__secondsPerMinute * Time.__millisecondsPerSecond;
+        Time.__millisecondsPerHour = Time.__minsPerHour * Time.__millisecondsPerMinute;
+        Time.__millisecondsPerDay = Time.__hoursPerDay * Time.__millisecondsPerHour;
+        Time.__millisecondsPerYear = Time.__daysPerYear * Time.__millisecondsPerDay;
+        Time.__ISO8601RegEx = /^\d{4}-\d\d-\d\d(?:[Tt]\d\d:\d\d(?::\d\d(?:\.\d+?(?:[+-]\d\d?(?::\d\d(?::\d\d(?:.\d+)?)?)?)?)?)?[Zz]?)?$/;
+        Time.__SQLDateTimeRegEx = /^\d{4}-\d\d-\d\d(?: \d\d:\d\d(?::\d\d(?:.\d{1,3})?)?(?:\+\d\d)?)?$/; // (Standard SQL Date/Time Format)
+        Time.__SQLDateTimeStrictRegEx = /^\d{4}-\d\d-\d\d \d\d:\d\d(?::\d\d(?:.\d{1,3})?)?(?:\+\d\d)?$/; // (Standard SQL Date/Time Format)
+        /** The time zone offset in milliseconds ({Date}.getTimezoneOffset() returns it in minutes). */
+        Time.__localTimeZoneOffset = (new Date()).getTimezoneOffset() * Time.__millisecondsPerMinute; // ('getTimezoneOffset()' returns minutes, which is converted to ms for '__localTimeZoneOffset')
+    })(Time = DS.Time || (DS.Time = {}));
+    // ========================================================================================================================
+    /** One or more utility functions to ease development within DreamSpace environments. */
+    let Utilities;
+    (function (Utilities) {
+        // --------------------------------------------------------------------------------------------------------------------
+        /**
+         * Returns an array of all matches of 'regex' in 'text', grouped into sub-arrays (string[matches][groups], where
+         * 'groups' index 0 is the full matched text, and 1 onwards are any matched groups).
+         */
+        function matches(regex, text) {
+            var matchesFound = [], result;
+            if (!regex.global)
+                throw new Error("The 'global' flag is required in order to find all matches.");
+            regex.lastIndex = 0;
+            while ((result = regex.exec(text)) !== null)
+                matchesFound.push(result.slice());
+            return matchesFound;
+        }
+        Utilities.matches = matches;
+        /**
+         * Converts the given value to a string and returns it.  'undefined' (void 0) and null become empty, string types are
+         * returned as is, and everything else will be converted to a string by calling 'toString()', or simply '""+value' if
+         * 'value.toString' is not a function. If for some reason a call to 'toString()' does not return a string the cycle
+         * starts over with the new value until a string is returned.
+         * Note: If no arguments are passed in (i.e. 'Utilities.toString()'), then undefined is returned.
+         */
+        function toString(value) {
+            if (arguments.length == 0)
+                return void 0;
+            if (value === void 0 || value === null)
+                return "";
+            if (typeof value == 'string')
+                return value;
+            return typeof value.toString == 'function' ? toString(value.toString()) : "" + value; // ('value.toString()' should be a string, but in case it is not, this will cycle until a string type value is found, or no 'toString()' function exists)
+        }
+        Utilities.toString = toString;
+        // -------------------------------------------------------------------------------------------------------------------
+        /** Escapes a RegEx string so it behaves like a normal string. This is useful for RexEx string based operations, such as 'replace()'. */
+        function escapeRegex(regExStr) {
+            return regExStr.replace(/([.?*+^$[\]\\(){}-])/g, "\\$1"); // TODO: Verify completeness.
+        }
+        Utilities.escapeRegex = escapeRegex;
+        // ------------------------------------------------------------------------------------------------------------------------
+        /** This locates names of properties where only a reference and the object context is known.
+        * If a reference match is found, the property name is returned, otherwise the result is 'undefined'.
+        */
+        function getReferenceName(obj, reference) {
+            for (var p in obj)
+                if (obj[p] === reference)
+                    return p;
+            return void 0;
+        }
+        Utilities.getReferenceName = getReferenceName;
+        // ------------------------------------------------------------------------------------------------------------------------
+        /** Erases all properties on the object, instead of deleting them (which takes longer).
+        * @param {boolean} ignore An optional list of properties to ignore when erasing. The properties to ignore should equate to 'true'.
+        * This parameter expects an object type because that is faster for lookups than arrays, and developers can statically store these in most cases.
+        */
+        function erase(obj, ignore) {
+            for (var p in obj)
+                if ((p != "__proto__" && p != 'constructor' && obj).hasOwnProperty(p))
+                    if (!ignore || !ignore[p])
+                        obj[p] = void 0;
+            return obj;
+        }
+        Utilities.erase = erase;
+        /** Makes a deep copy of the specified value and returns it. If the value is not an object, it is returned immediately.
+        * For objects, the deep copy is made by */
+        function clone(value) {
+            if (typeof value !== 'object')
+                return value;
+            var newObject, p, rcCount, v;
+            if (clone.arguments.length > 1) {
+                rcCount = clone.arguments[clone.arguments.length - 1];
+                if (value['@__recursiveCheck'] === rcCount)
+                    return value; // (this object has already been cloned for this request, which makes it a cyclical reference, so skip)
+            }
+            else
+                rcCount = (value['@__recursiveCheck'] || 0) + 1; // (initially, rcCount will be set to the root __recursiveCheck value, +1, rather than re-creating all properties over and over for each clone request [much faster]) 
+            value['@__recursiveCheck'] = rcCount;
+            newObject = {};
+            for (p in value) { // (note: not using "hasOwnProperty()" here because replicating any inheritance is not supported (nor usually needed), so all properties will be flattened for the new object instance)
+                v = value[p];
+                if (typeof v !== 'object')
+                    newObject[p] = v; // (faster to test and set than to call a function)
+                else
+                    newObject[p] = clone(v, rcCount);
+            }
+            return newObject;
+        }
+        Utilities.clone = clone;
+        ;
+        // ------------------------------------------------------------------------------------------------------------------------
+        /** Dereferences a property path in the form "A.B.C[*].D..." and returns the right most property value, if exists, otherwise
+        * 'undefined' is returned.  If path is invalid, an exception will be thrown.
+        * @param {string} path The delimited property path to parse.
+        * @param {object} origin The object to begin dereferencing with.  If this is null or undefined then it defaults to the global scope.
+        * @param {boolean} unsafe If false (default) a fast algorithm is used to parse the path.  If true, then the expression is evaluated at the host global scope (faster).
+        *                         The reason for the option is that 'eval' is up to 4x faster, and is best used only if the path is guaranteed not to contain user entered
+        *                         values, or ANY text transmitted insecurely.
+        *                         Note: The 'eval' used is 'DreamSpace.eval()', which is closed over the global scope (and not the DreamSpace module's private scope).
+        *                         'window.eval()' is not called directly in this function.
+        */
+        function dereferencePropertyPath(path, origin, unsafe = false) {
+            if (unsafe)
+                return DS.safeEval('p0.' + path, origin); // (note: this is 'DreamSpace.eval()', not a direct call to the global 'eval()')
+            if (origin === void 0 || origin === null)
+                origin = this !== DS.global ? this : DS.global;
+            if (typeof path !== 'string')
+                path = '' + path;
+            var o = origin, c = '', pc, i = 0, n = path.length, name = '';
+            if (n)
+                ((c = path[i++]) == '.' || c == '[' || c == ']' || c == void 0)
+                    ? (name ? (o = o[name], name = '') : (pc == '.' || pc == '[' || pc == ']' && c == ']' ? i = n + 2 : void 0), pc = c)
+                    : name += c;
+            if (i == n + 2) {
+                var msg = new Error("Invalid path: " + path);
+                msg.__dereference_origin = origin;
+                (console.error || console.log)(msg, origin);
+                throw msg;
+            }
+        } // (performance: http://jsperf.com/ways-to-dereference-a-delimited-property-string)
+        Utilities.dereferencePropertyPath = dereferencePropertyPath;
+        // ------------------------------------------------------------------------------------------------------------------------
+        /** Waits until a property of an object becomes available (i.e. is no longer 'undefined').
+          * @param {Object} obj The object for the property.
+          * @param {string} propertyName The object property.
+          * @param {number} timeout The general amount of timeout to wait before failing, or a negative value to wait indefinitely.
+          */
+        function waitReady(obj, propertyName, callback, timeout = 60000, timeoutCallback) {
+            if (!callback)
+                throw "'callback' is required.";
+            if (!obj)
+                throw "'obj' is required.";
+            if (obj[propertyName] !== void 0)
+                callback();
+            else {
+                if (timeout != 0) {
+                    if (timeout > 0)
+                        timeout--;
+                    setTimeout(() => {
+                        waitReady(obj, propertyName, callback);
+                    }, 1);
+                }
+                else if (timeoutCallback)
+                    timeoutCallback();
+            }
+        }
+        Utilities.waitReady = waitReady;
+        // ------------------------------------------------------------------------------------------------------------------------
+        /** Helps support cases where 'apply' is missing for a host function object (i.e. IE7 'setTimeout', etc.).  This function
+        * will attempt to call '.apply()' on the specified function, and fall back to a work around if missing.
+        * @param {Function} func The function to call '.apply()' on.
+        * @param {Object} _this The calling object, which is the 'this' reference in the called function (the 'func' argument).
+        * Note: This must be null for special host functions, such as 'setTimeout' in IE7.
+        * @param {any} args The arguments to apply to given function reference (the 'func' argument).
+        */
+        function apply(func, _this, args) {
+            if (func.apply) {
+                return func.apply(_this, args);
+            }
+            else {
+                return Function.prototype.apply.apply(func, [_this, args]);
+            }
+        }
+        Utilities.apply = apply;
+        // ------------------------------------------------------------------------------------------------------------------------
+        var _guidSeed = (function () {
+            var text = DS.global.navigator.userAgent + DS.global.location.href; // TODO: This may need fixing on the server side.
+            for (var i = 0, n = text.length, randseed = 0; i < n; ++i)
+                randseed += text.charCodeAt(i);
+            return randseed;
+        })();
+        var _guidCounter = 0;
+        /**
+         * Creates and returns a new version-4 (randomized) GUID/UUID (unique identifier). The uniqueness of the result
+         * is enforced by locking the first part down to the current local date/time (not UTC) in milliseconds, along with
+         * a counter value in case of fast repetitive calls. The rest of the ID is also randomized with the current local
+         * time, along with a checksum of the browser's "agent" string and the current document URL.
+         * This function is also supported server side; however, the "agent" string and document location are fixed values.
+         * @param {boolean} hyphens If true (default) then hyphens (-) are inserted to separate the GUID parts.
+         */
+        function createGUID(hyphens = true) {
+            var time = (Date.now ? Date.now() : new Date().getTime()) + Time.__localTimeZoneOffset; // (use current local time [not UTC] to offset the random number [there was a bug in Chrome, not sure if it was fixed yet])
+            var randseed = time + _guidSeed;
+            var hexTime = time.toString(16) + (_guidCounter <= 0xffffffff ? _guidCounter++ : _guidCounter = 0).toString(16), i = hexTime.length, pi = 0;
+            var pattern = hyphens ? 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx' : 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx', len = pattern.length, result = "", c, r;
+            while (pi < len)
+                c = pattern[pi++], result += c != 'x' && c != 'y' ? c : i > 0 ? hexTime[--i] : (r = Math.random() * randseed % 16 | 0, c == 'x' ? r : r & 0x3 | 0x8).toString(16);
+            return result;
+        }
+        Utilities.createGUID = createGUID;
+    })(Utilities = DS.Utilities || (DS.Utilities = {}));
+    // ============================================================================================================================
+    /** Returns the name of a namespace or variable reference at runtime. */
+    function nameof(selector, fullname = false) {
+        var s = '' + selector;
+        //var m = s.match(/return\s*([A-Z.]+)/i) || s.match(/=>\s*{?\s*([A-Z.]+)/i) || s.match(/function.*?{\s*([A-Z.]+)/i);
+        var m = s.match(/return\s+([A-Z0-9$_.]+)/i) || s.match(/.*?(?:=>|function.*?{)\s*([A-Z0-9$_.]+)/i);
+        var name = m && m[1] || "";
+        return fullname ? name : name.split('.').reverse()[0];
+    }
+    DS.nameof = nameof;
+    // (shared here: https://github.com/Microsoft/TypeScript/issues/1579#issuecomment-394551591)
+    // ============================================================================================================================
+    DS.FUNC_NAME_REGEX = /^function\s*(\S+)\s*\(/i; // (note: never use the 'g' flag here, or '{regex}.exec()' will only work once every two calls [attempts to traverse])
+    /** Attempts to pull the function name from the function object, and returns an empty string if none could be determined. */
+    function getFunctionName(func) {
+        // ... if an internal name is already set return it now ...
+        var name = func.$__name || func['name'];
+        if (name == void 0) {
+            // ... check the type (this quickly detects internal/native Browser types) ...
+            var typeString = Object.prototype.toString.call(func);
+            // (typeString is formated like "[object SomeType]")
+            if (typeString.charAt(0) == '[' && typeString.charAt(typeString.length - 1) == ']')
+                name = typeString.substring(1, typeString.length - 1).split(' ')[1];
+            if (!name || name == "Function" || name == "Object") { // (a basic function/object was found)
+                if (typeof func == 'function') {
+                    // ... if this has a function text get the name as defined (in IE, Window+'' returns '[object Window]' but in Chrome it returns 'function Window() { [native code] }') ...
+                    var fstr = Function.prototype.toString.call(func);
+                    var results = (DS.FUNC_NAME_REGEX).exec(fstr); // (note: for function expression object contexts, the constructor (type) name is always 'Function')
+                    name = (results && results.length > 1) ? results[1] : void 0;
+                }
+                else
+                    name = void 0;
+            }
+        }
+        return name || "";
+    }
+    DS.getFunctionName = getFunctionName;
+    // ############################################################################################################################
+    /** Returns the type name for an object instance registered with 'AppDomain.registerType()'.  If the object does not have
+    * type information, and the object is a function, then an attempt is made to pull the function name (if one exists).
+    * Note: This function returns the type name ONLY (not the FULL type name [no namespace path]).
+    * Note: The name will be undefined if a type name cannot be determined.
+    * @param {object} object The object to determine a type name for.  If the object type was not registered using 'AppDomain.registerType()',
+    * and the object is not a function, no type information will be available. Unregistered function objects simply
+    * return the function's name.
+    * @param {boolean} cacheTypeName (optional) If true (default), the name is cached using the 'ITypeInfo' interface via the '$__name' property.
+    * This helps to speed up future calls.
+    */
+    function getTypeName(object, cacheTypeName = true) {
+        if (object === void 0 || object === null)
+            return void 0;
+        typeInfo = object;
+        if (typeInfo.$__name === void 0 || typeInfo.$__name === null) {
+            if (typeof object == 'function')
+                if (cacheTypeName)
+                    return typeInfo.$__name = getFunctionName(object);
+                else
+                    return getFunctionName(object);
+            var typeInfo = object.constructor;
+            if (typeInfo.$__name === void 0 || typeInfo.$__name === null) {
+                if (cacheTypeName)
+                    return typeInfo.$__name = getFunctionName(object.constructor);
+                else
+                    return getFunctionName(object.constructor);
+            }
+            else
+                return typeInfo.$__name;
+        }
+        else
+            return typeInfo.$__name;
+    }
+    DS.getTypeName = getTypeName;
+    /**
+     * Returns the full type name of the type or namespace, if available, or the name o the object itself if the full name (with namespaces) is not known.
+     * @see getTypeName()
+     */
+    function getFullTypeName(object, cacheTypeName = true) {
+        if (object.$__fullname)
+            return object.$__fullname;
+        return getTypeName(object, cacheTypeName);
+    }
+    DS.getFullTypeName = getFullTypeName;
+    /** An utility to extend a TypeScript namespace, which returns a string to be executed using 'eval()'.
+     * When executed BEFORE the namespace to be added, it creates a pre-existing namespace reference that forces typescript to update.
+     * Example 1: extendNS(()=>Local.NS, "Imported.NS");
+     * Example 2: extendNS(()=>Local.NS, ()=>Imported.NS);
+     * @param selector The local namespace that will extend the target.
+     * @param name A selector or dotted identifier path to the target namespace name to extend from.
+     */
+    function extendNS(selector, name) {
+        return "var " + nameof(selector) + " = " + (typeof name == 'function' ? nameof(name) : name) + ";";
+    }
+    DS.extendNS = extendNS;
+    //x Best to explicitly let TS and packing utilities know of the DS access explicitly. /** An internal utility to extend the 'DS' namespace within DreamSpace modules, which returns a string to be executed using 'eval()'.
+    // * It just calls 'extendNS(selector, "DS")'.
+    // */
+    //x export function extendDSNS(selector: () => any) { return extendNS(selector, "DS"); }
+})(DS || (DS = {}));
+// ############################################################################################################################
+// Notes: 
+//   * helper source: https://github.com/Microsoft/tslib/blob/master/tslib.js
 var DS;
 (function (DS) {
     /** A common base type for all object that can be tracked by a globally unique ID. */
@@ -2522,19 +2839,16 @@ var DS;
       * Note: Call 'Query.new()' to create new instances.
       */
     class Query {
-        constructor() {
-            // ----------------------------------------------------------------------------------------------------------------
-            this.values = {};
-            // ---------------------------------------------------------------------------------------------------------------
-        }
         /** Helps to build an object of 'name:value' pairs from a URI or 'location.search' string.
         * @param {string|object} query A full URI string, a query string (such as 'location.search'), or an object to create query values from.
         * @param {boolean} makeNamesLowercase If true, then all query names are made lower case when parsing (the default is false).
         */
-        static init(o, isnew, query, makeNamesLowercase) {
+        constructor(query, makeNamesLowercase) {
+            // ----------------------------------------------------------------------------------------------------------------
+            this.values = {};
             if (query)
                 if (typeof query == 'object')
-                    o.addOrUpdate(query, makeNamesLowercase);
+                    this.addOrUpdate(query, makeNamesLowercase);
                 else {
                     if (typeof query != 'string')
                         query = DS.Utilities.toString(query);
@@ -2547,9 +2861,9 @@ var DS;
                             if (eqIndex == -1)
                                 eqIndex = nameValue.length; // (whole string is the name)
                             if (makeNamesLowercase)
-                                o.values[decodeURIComponent(nameValue).substring(1, eqIndex).toLowerCase()] = decodeURIComponent(nameValue.substring(eqIndex + 1)); // (note: the RegEx match always includes a delimiter)
+                                this.values[decodeURIComponent(nameValue).substring(1, eqIndex).toLowerCase()] = decodeURIComponent(nameValue.substring(eqIndex + 1)); // (note: the RegEx match always includes a delimiter)
                             else
-                                o.values[decodeURIComponent(nameValue).substring(1, eqIndex)] = decodeURIComponent(nameValue.substring(eqIndex + 1)); // (note: the RegEx match always includes a delimiter)
+                                this.values[decodeURIComponent(nameValue).substring(1, eqIndex)] = decodeURIComponent(nameValue.substring(eqIndex + 1)); // (note: the RegEx match always includes a delimiter)
                         }
                 }
         }
@@ -2595,7 +2909,7 @@ var DS;
         // ---------------------------------------------------------------------------------------------------------------
         /** Creates and returns a duplicate of this object. */
         clone() {
-            var q = Query.new();
+            var q = new Query();
             for (var pname in this.values)
                 q.values[pname] = this.values[pname];
             return q;
@@ -2685,7 +2999,7 @@ var DS;
     DS.Query = Query;
     // ==========================================================================================================================
     /** This is set automatically to the query for the current page. */
-    DS.pageQuery = Query.new(DS.global.location.href);
+    DS.pageQuery = DS.global.location && DS.global.location.href ? new Query(DS.global.location.href) : void 0;
 })(DS || (DS = {}));
 // ==========================================================================================================================
 var DS;
@@ -3020,7 +3334,7 @@ var DS;
                 if (typeof payload == 'object' && payload.__proto__ == Object.prototype) {
                     // (can't send object literals! convert to something else ...)
                     if (_method == 'GET') {
-                        var q = DS.Query.new(payload);
+                        var q = new DS.Query(payload);
                         payload = q.toString(false);
                     }
                     else {
@@ -4433,326 +4747,6 @@ var DS;
     DS.Uri = Uri;
 })(DS || (DS = {}));
 // ############################################################################################################################
-var DS;
-(function (DS) {
-    // ========================================================================================================================
-    // ========================================================================================================================
-    /**
-     * Contains some basic static values and calculations used by time related functions within the system.
-     */
-    let Time;
-    (function (Time) {
-        Time.__millisecondsPerSecond = 1000;
-        Time.__secondsPerMinute = 60;
-        Time.__minsPerHour = 60;
-        Time.__hoursPerDay = 24;
-        Time.__daysPerYear = 365;
-        Time.__actualDaysPerYear = 365.2425;
-        Time.__EpochYear = 1970;
-        Time.__millisecondsPerMinute = Time.__secondsPerMinute * Time.__millisecondsPerSecond;
-        Time.__millisecondsPerHour = Time.__minsPerHour * Time.__millisecondsPerMinute;
-        Time.__millisecondsPerDay = Time.__hoursPerDay * Time.__millisecondsPerHour;
-        Time.__millisecondsPerYear = Time.__daysPerYear * Time.__millisecondsPerDay;
-        Time.__ISO8601RegEx = /^\d{4}-\d\d-\d\d(?:[Tt]\d\d:\d\d(?::\d\d(?:\.\d+?(?:[+-]\d\d?(?::\d\d(?::\d\d(?:.\d+)?)?)?)?)?)?[Zz]?)?$/;
-        Time.__SQLDateTimeRegEx = /^\d{4}-\d\d-\d\d(?: \d\d:\d\d(?::\d\d(?:.\d{1,3})?)?(?:\+\d\d)?)?$/; // (Standard SQL Date/Time Format)
-        Time.__SQLDateTimeStrictRegEx = /^\d{4}-\d\d-\d\d \d\d:\d\d(?::\d\d(?:.\d{1,3})?)?(?:\+\d\d)?$/; // (Standard SQL Date/Time Format)
-        /** The time zone offset in milliseconds ({Date}.getTimezoneOffset() returns it in minutes). */
-        Time.__localTimeZoneOffset = (new Date()).getTimezoneOffset() * Time.__millisecondsPerMinute; // ('getTimezoneOffset()' returns minutes, which is converted to ms for '__localTimeZoneOffset')
-    })(Time = DS.Time || (DS.Time = {}));
-    // ========================================================================================================================
-    /** One or more utility functions to ease development within DreamSpace environments. */
-    let Utilities;
-    (function (Utilities) {
-        // --------------------------------------------------------------------------------------------------------------------
-        /**
-         * Returns an array of all matches of 'regex' in 'text', grouped into sub-arrays (string[matches][groups], where
-         * 'groups' index 0 is the full matched text, and 1 onwards are any matched groups).
-         */
-        function matches(regex, text) {
-            var matchesFound = [], result;
-            if (!regex.global)
-                throw new Error("The 'global' flag is required in order to find all matches.");
-            regex.lastIndex = 0;
-            while ((result = regex.exec(text)) !== null)
-                matchesFound.push(result.slice());
-            return matchesFound;
-        }
-        Utilities.matches = matches;
-        /**
-         * Converts the given value to a string and returns it.  'undefined' (void 0) and null become empty, string types are
-         * returned as is, and everything else will be converted to a string by calling 'toString()', or simply '""+value' if
-         * 'value.toString' is not a function. If for some reason a call to 'toString()' does not return a string the cycle
-         * starts over with the new value until a string is returned.
-         * Note: If no arguments are passed in (i.e. 'Utilities.toString()'), then undefined is returned.
-         */
-        function toString(value) {
-            if (arguments.length == 0)
-                return void 0;
-            if (value === void 0 || value === null)
-                return "";
-            if (typeof value == 'string')
-                return value;
-            return typeof value.toString == 'function' ? toString(value.toString()) : "" + value; // ('value.toString()' should be a string, but in case it is not, this will cycle until a string type value is found, or no 'toString()' function exists)
-        }
-        Utilities.toString = toString;
-        // -------------------------------------------------------------------------------------------------------------------
-        /** Escapes a RegEx string so it behaves like a normal string. This is useful for RexEx string based operations, such as 'replace()'. */
-        function escapeRegex(regExStr) {
-            return regExStr.replace(/([.?*+^$[\]\\(){}-])/g, "\\$1"); // TODO: Verify completeness.
-        }
-        Utilities.escapeRegex = escapeRegex;
-        // ------------------------------------------------------------------------------------------------------------------------
-        /** This locates names of properties where only a reference and the object context is known.
-        * If a reference match is found, the property name is returned, otherwise the result is 'undefined'.
-        */
-        function getReferenceName(obj, reference) {
-            for (var p in obj)
-                if (obj[p] === reference)
-                    return p;
-            return void 0;
-        }
-        Utilities.getReferenceName = getReferenceName;
-        // ------------------------------------------------------------------------------------------------------------------------
-        /** Erases all properties on the object, instead of deleting them (which takes longer).
-        * @param {boolean} ignore An optional list of properties to ignore when erasing. The properties to ignore should equate to 'true'.
-        * This parameter expects an object type because that is faster for lookups than arrays, and developers can statically store these in most cases.
-        */
-        function erase(obj, ignore) {
-            for (var p in obj)
-                if ((p != "__proto__" && p != 'constructor' && obj).hasOwnProperty(p))
-                    if (!ignore || !ignore[p])
-                        obj[p] = void 0;
-            return obj;
-        }
-        Utilities.erase = erase;
-        /** Makes a deep copy of the specified value and returns it. If the value is not an object, it is returned immediately.
-        * For objects, the deep copy is made by */
-        function clone(value) {
-            if (typeof value !== 'object')
-                return value;
-            var newObject, p, rcCount, v;
-            if (clone.arguments.length > 1) {
-                rcCount = clone.arguments[clone.arguments.length - 1];
-                if (value['@__recursiveCheck'] === rcCount)
-                    return value; // (this object has already been cloned for this request, which makes it a cyclical reference, so skip)
-            }
-            else
-                rcCount = (value['@__recursiveCheck'] || 0) + 1; // (initially, rcCount will be set to the root __recursiveCheck value, +1, rather than re-creating all properties over and over for each clone request [much faster]) 
-            value['@__recursiveCheck'] = rcCount;
-            newObject = {};
-            for (p in value) { // (note: not using "hasOwnProperty()" here because replicating any inheritance is not supported (nor usually needed), so all properties will be flattened for the new object instance)
-                v = value[p];
-                if (typeof v !== 'object')
-                    newObject[p] = v; // (faster to test and set than to call a function)
-                else
-                    newObject[p] = clone(v, rcCount);
-            }
-            return newObject;
-        }
-        Utilities.clone = clone;
-        ;
-        // ------------------------------------------------------------------------------------------------------------------------
-        /** Dereferences a property path in the form "A.B.C[*].D..." and returns the right most property value, if exists, otherwise
-        * 'undefined' is returned.  If path is invalid, an exception will be thrown.
-        * @param {string} path The delimited property path to parse.
-        * @param {object} origin The object to begin dereferencing with.  If this is null or undefined then it defaults to the global scope.
-        * @param {boolean} unsafe If false (default) a fast algorithm is used to parse the path.  If true, then the expression is evaluated at the host global scope (faster).
-        *                         The reason for the option is that 'eval' is up to 4x faster, and is best used only if the path is guaranteed not to contain user entered
-        *                         values, or ANY text transmitted insecurely.
-        *                         Note: The 'eval' used is 'DreamSpace.eval()', which is closed over the global scope (and not the DreamSpace module's private scope).
-        *                         'window.eval()' is not called directly in this function.
-        */
-        function dereferencePropertyPath(path, origin, unsafe = false) {
-            if (unsafe)
-                return DS.safeEval('p0.' + path, origin); // (note: this is 'DreamSpace.eval()', not a direct call to the global 'eval()')
-            if (origin === void 0 || origin === null)
-                origin = this !== DS.global ? this : DS.global;
-            if (typeof path !== 'string')
-                path = '' + path;
-            var o = origin, c = '', pc, i = 0, n = path.length, name = '';
-            if (n)
-                ((c = path[i++]) == '.' || c == '[' || c == ']' || c == void 0)
-                    ? (name ? (o = o[name], name = '') : (pc == '.' || pc == '[' || pc == ']' && c == ']' ? i = n + 2 : void 0), pc = c)
-                    : name += c;
-            if (i == n + 2) {
-                var msg = new Error("Invalid path: " + path);
-                msg.__dereference_origin = origin;
-                (console.error || console.log)(msg, origin);
-                throw msg;
-            }
-        } // (performance: http://jsperf.com/ways-to-dereference-a-delimited-property-string)
-        Utilities.dereferencePropertyPath = dereferencePropertyPath;
-        // ------------------------------------------------------------------------------------------------------------------------
-        /** Waits until a property of an object becomes available (i.e. is no longer 'undefined').
-          * @param {Object} obj The object for the property.
-          * @param {string} propertyName The object property.
-          * @param {number} timeout The general amount of timeout to wait before failing, or a negative value to wait indefinitely.
-          */
-        function waitReady(obj, propertyName, callback, timeout = 60000, timeoutCallback) {
-            if (!callback)
-                throw "'callback' is required.";
-            if (!obj)
-                throw "'obj' is required.";
-            if (obj[propertyName] !== void 0)
-                callback();
-            else {
-                if (timeout != 0) {
-                    if (timeout > 0)
-                        timeout--;
-                    setTimeout(() => {
-                        waitReady(obj, propertyName, callback);
-                    }, 1);
-                }
-                else if (timeoutCallback)
-                    timeoutCallback();
-            }
-        }
-        Utilities.waitReady = waitReady;
-        // ------------------------------------------------------------------------------------------------------------------------
-        /** Helps support cases where 'apply' is missing for a host function object (i.e. IE7 'setTimeout', etc.).  This function
-        * will attempt to call '.apply()' on the specified function, and fall back to a work around if missing.
-        * @param {Function} func The function to call '.apply()' on.
-        * @param {Object} _this The calling object, which is the 'this' reference in the called function (the 'func' argument).
-        * Note: This must be null for special host functions, such as 'setTimeout' in IE7.
-        * @param {any} args The arguments to apply to given function reference (the 'func' argument).
-        */
-        function apply(func, _this, args) {
-            if (func.apply) {
-                return func.apply(_this, args);
-            }
-            else {
-                return Function.prototype.apply.apply(func, [_this, args]);
-            }
-        }
-        Utilities.apply = apply;
-        // ------------------------------------------------------------------------------------------------------------------------
-        var _guidSeed = (function () {
-            var text = DS.global.navigator.userAgent + DS.global.location.href; // TODO: This may need fixing on the server side.
-            for (var i = 0, n = text.length, randseed = 0; i < n; ++i)
-                randseed += text.charCodeAt(i);
-            return randseed;
-        })();
-        var _guidCounter = 0;
-        /**
-         * Creates and returns a new version-4 (randomized) GUID/UUID (unique identifier). The uniqueness of the result
-         * is enforced by locking the first part down to the current local date/time (not UTC) in milliseconds, along with
-         * a counter value in case of fast repetitive calls. The rest of the ID is also randomized with the current local
-         * time, along with a checksum of the browser's "agent" string and the current document URL.
-         * This function is also supported server side; however, the "agent" string and document location are fixed values.
-         * @param {boolean} hyphens If true (default) then hyphens (-) are inserted to separate the GUID parts.
-         */
-        function createGUID(hyphens = true) {
-            var time = (Date.now ? Date.now() : new Date().getTime()) + Time.__localTimeZoneOffset; // (use current local time [not UTC] to offset the random number [there was a bug in Chrome, not sure if it was fixed yet])
-            var randseed = time + _guidSeed;
-            var hexTime = time.toString(16) + (_guidCounter <= 0xffffffff ? _guidCounter++ : _guidCounter = 0).toString(16), i = hexTime.length, pi = 0;
-            var pattern = hyphens ? 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx' : 'xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx', len = pattern.length, result = "", c, r;
-            while (pi < len)
-                c = pattern[pi++], result += c != 'x' && c != 'y' ? c : i > 0 ? hexTime[--i] : (r = Math.random() * randseed % 16 | 0, c == 'x' ? r : r & 0x3 | 0x8).toString(16);
-            return result;
-        }
-        Utilities.createGUID = createGUID;
-    })(Utilities = DS.Utilities || (DS.Utilities = {}));
-    // ============================================================================================================================
-    /** Returns the name of a namespace or variable reference at runtime. */
-    function nameof(selector, fullname = false) {
-        var s = '' + selector;
-        //var m = s.match(/return\s*([A-Z.]+)/i) || s.match(/=>\s*{?\s*([A-Z.]+)/i) || s.match(/function.*?{\s*([A-Z.]+)/i);
-        var m = s.match(/return\s+([A-Z0-9$_.]+)/i) || s.match(/.*?(?:=>|function.*?{)\s*([A-Z0-9$_.]+)/i);
-        var name = m && m[1] || "";
-        return fullname ? name : name.split('.').reverse()[0];
-    }
-    DS.nameof = nameof;
-    // (shared here: https://github.com/Microsoft/TypeScript/issues/1579#issuecomment-394551591)
-    // ============================================================================================================================
-    DS.FUNC_NAME_REGEX = /^function\s*(\S+)\s*\(/i; // (note: never use the 'g' flag here, or '{regex}.exec()' will only work once every two calls [attempts to traverse])
-    /** Attempts to pull the function name from the function object, and returns an empty string if none could be determined. */
-    function getFunctionName(func) {
-        // ... if an internal name is already set return it now ...
-        var name = func.$__name || func['name'];
-        if (name == void 0) {
-            // ... check the type (this quickly detects internal/native Browser types) ...
-            var typeString = Object.prototype.toString.call(func);
-            // (typeString is formated like "[object SomeType]")
-            if (typeString.charAt(0) == '[' && typeString.charAt(typeString.length - 1) == ']')
-                name = typeString.substring(1, typeString.length - 1).split(' ')[1];
-            if (!name || name == "Function" || name == "Object") { // (a basic function/object was found)
-                if (typeof func == 'function') {
-                    // ... if this has a function text get the name as defined (in IE, Window+'' returns '[object Window]' but in Chrome it returns 'function Window() { [native code] }') ...
-                    var fstr = Function.prototype.toString.call(func);
-                    var results = (DS.FUNC_NAME_REGEX).exec(fstr); // (note: for function expression object contexts, the constructor (type) name is always 'Function')
-                    name = (results && results.length > 1) ? results[1] : void 0;
-                }
-                else
-                    name = void 0;
-            }
-        }
-        return name || "";
-    }
-    DS.getFunctionName = getFunctionName;
-    // ############################################################################################################################
-    /** Returns the type name for an object instance registered with 'AppDomain.registerType()'.  If the object does not have
-    * type information, and the object is a function, then an attempt is made to pull the function name (if one exists).
-    * Note: This function returns the type name ONLY (not the FULL type name [no namespace path]).
-    * Note: The name will be undefined if a type name cannot be determined.
-    * @param {object} object The object to determine a type name for.  If the object type was not registered using 'AppDomain.registerType()',
-    * and the object is not a function, no type information will be available. Unregistered function objects simply
-    * return the function's name.
-    * @param {boolean} cacheTypeName (optional) If true (default), the name is cached using the 'ITypeInfo' interface via the '$__name' property.
-    * This helps to speed up future calls.
-    */
-    function getTypeName(object, cacheTypeName = true) {
-        if (object === void 0 || object === null)
-            return void 0;
-        typeInfo = object;
-        if (typeInfo.$__name === void 0 || typeInfo.$__name === null) {
-            if (typeof object == 'function')
-                if (cacheTypeName)
-                    return typeInfo.$__name = getFunctionName(object);
-                else
-                    return getFunctionName(object);
-            var typeInfo = object.constructor;
-            if (typeInfo.$__name === void 0 || typeInfo.$__name === null) {
-                if (cacheTypeName)
-                    return typeInfo.$__name = getFunctionName(object.constructor);
-                else
-                    return getFunctionName(object.constructor);
-            }
-            else
-                return typeInfo.$__name;
-        }
-        else
-            return typeInfo.$__name;
-    }
-    DS.getTypeName = getTypeName;
-    /**
-     * Returns the full type name of the type or namespace, if available, or the name o the object itself if the full name (with namespaces) is not known.
-     * @see getTypeName()
-     */
-    function getFullTypeName(object, cacheTypeName = true) {
-        if (object.$__fullname)
-            return object.$__fullname;
-        return getTypeName(object, cacheTypeName);
-    }
-    DS.getFullTypeName = getFullTypeName;
-    /** An utility to extend a TypeScript namespace, which returns a string to be executed using 'eval()'.
-     * When executed BEFORE the namespace to be added, it creates a pre-existing namespace reference that forces typescript to update.
-     * Example 1: extendNS(()=>Local.NS, "Imported.NS");
-     * Example 2: extendNS(()=>Local.NS, ()=>Imported.NS);
-     * @param selector The local namespace that will extend the target.
-     * @param name A selector or dotted identifier path to the target namespace name to extend from.
-     */
-    function extendNS(selector, name) {
-        return "var " + nameof(selector) + " = " + (typeof name == 'function' ? nameof(name) : name) + ";";
-    }
-    DS.extendNS = extendNS;
-    //x Best to explicitly let TS and packing utilities know of the DS access explicitly. /** An internal utility to extend the 'DS' namespace within DreamSpace modules, which returns a string to be executed using 'eval()'.
-    // * It just calls 'extendNS(selector, "DS")'.
-    // */
-    //x export function extendDSNS(selector: () => any) { return extendNS(selector, "DS"); }
-})(DS || (DS = {}));
-// ############################################################################################################################
-// Notes: 
-//   * helper source: https://github.com/Microsoft/tslib/blob/master/tslib.js
 // Contains DreamSpace API functions and types that user code can use to work with the system.
 // This API will be a layer of abstraction that keeps things similar between server and client sides.
 /** This is the root to all DreamSpaceJS utilities.
@@ -4802,6 +4796,413 @@ var DS;
         }
     }
     DS.EventDefinition = EventDefinition;
+})(DS || (DS = {}));
+// ############################################################################################################################
+// Types for INTERNAL event management.  This has nothing to do with the workflow events. See 'Events.ts' for that.
+// ############################################################################################################################
+var DS;
+(function (DS) {
+    // ====================================================================================================================
+    ;
+    ;
+    /** Controls how the event progression occurs. */
+    let EventModes;
+    (function (EventModes) {
+        /** Trigger event on the way up to the target. */
+        EventModes[EventModes["Capture"] = 0] = "Capture";
+        /** Trigger event on the way down from the target. */
+        EventModes[EventModes["Bubble"] = 1] = "Bubble";
+        /** Trigger event on both the way up to the target, then back down again. */
+        EventModes[EventModes["CaptureAndBubble"] = 2] = "CaptureAndBubble";
+    })(EventModes = DS.EventModes || (DS.EventModes = {}));
+    ;
+    /**
+      * The EventDispatcher wraps a specific event type, and manages the triggering of "handlers" (callbacks) when that event type
+      * must be dispatched. Events are usually registered as static properties first (to prevent having to create and initialize
+      * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
+      * instance level event handler registration on the class only when necessary.
+      */
+    class EventDispatcher extends DS.DependentObject {
+        /** Constructs a new instance of the even dispatcher.
+         * @param eventTriggerHandler A global handler per event type that is triggered before any other handlers. This is a hook which is called every time an event triggers.
+         * This exists mainly to support handlers called with special parameters, such as those that may need translation, or arguments that need to be injected.
+         */
+        constructor(owner, eventName, removeOnTrigger = false, canCancel = true, eventTriggerHandler = null) {
+            super();
+            this.__associations = new WeakMap(); // (a mapping between an external object and this event instance - typically used to associated this event with an external object OTHER than the owner)
+            this.__listeners = []; // (this is typed "any object type" to allow using delegate handler function objects later on)
+            /** If this is true, then any new handler added will automatically be triggered as well.
+            * This is handy in cases where an application state is persisted, and future handlers should always execute. */
+            this.autoTrigger = false;
+            /** If true, then handlers are called only once, then removed (default is false). */
+            this.removeOnTrigger = false;
+            /** This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters. */
+            this.eventTriggerHandler = null;
+            /** True if the event can be cancelled. */
+            this.canCancel = true;
+            if (typeof eventName !== 'string')
+                eventName = '' + eventName;
+            if (!eventName)
+                throw "An event name is required.";
+            this.__eventName = eventName;
+            this.__eventPropertyName = EventDispatcher.createEventPropertyNameFromEventName(eventName); // (fix to support the convention of {item}.on{Event}().
+            this.owner = owner;
+            this.associate(owner);
+            this.__eventTriggerHandler = eventTriggerHandler;
+            this.canCancel = canCancel;
+        }
+        /** Return the underlying event name for this event object. */
+        getEventName() { return this.__eventName; }
+        /** Returns true if handlers exist on this event object instance. */
+        hasHandlers() { return !!this.__listeners.length; }
+        /**
+           * Registers an event with a class type - typically as a static property.
+           * @param type A class reference where the static property will be registered.
+           * @param eventName The name of the event to register.
+           * @param eventMode Specifies the desired event traveling mode.
+           * @param removeOnTrigger If true, the event only fires one time, then clears all event handlers. Attaching handlers once an event fires in this state causes them to be called immediately.
+           * @param eventTriggerCallback This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters.
+           * @param customEventPropName The name of the property that will be associated with this event, and expected on parent objects
+           * for the capturing and bubbling phases.  If left undefined/null, then the default is assumed to be
+           * 'on[EventName]', where the first event character is made uppercase automatically.
+           * @param canCancel If true (default), this event can be cancelled (prevented from completing, so no other events will fire).
+           */
+        static registerEvent(type, eventName, eventMode = EventModes.Capture, removeOnTrigger = false, eventTriggerCallback, customEventPropName, canCancel = true) {
+            customEventPropName || (customEventPropName = EventDispatcher.createEventPropertyNameFromEventName(eventName)); // (the default supports the convention of {item}.on{Event}()).
+            var privateEventName = EventDispatcher.createPrivateEventName(eventName); // (this name is used to store the new event dispatcher instance, which is created on demand for every instance)
+            // ... create a "getter" in the prototype for 'type' so that, when accessed by specific instances, an event object will be created on demand - this greatly reduces memory
+            //    allocations when many events exist on a lot of objects) ...
+            var onEventProxy = function () {
+                var instance = this; // (instance is the object instance on which this event property reference was made)
+                if (typeof instance !== 'object') //?  || !(instance instanceof DomainObject.$type))
+                    throw DS.Exception.error("{Object}." + eventName, "Must be called on an object instance.", instance);
+                // ... check if the instance already created the event property for registering events specific to this instance ...
+                var eventProperty = instance[privateEventName];
+                if (typeof eventProperty !== 'object') // (undefined or not valid, so attempt to create one now)
+                    instance[privateEventName] = eventProperty = new EventDispatcher(instance, eventName, removeOnTrigger, canCancel, eventTriggerCallback);
+                eventProperty.__eventPropertyName = customEventPropName;
+                eventProperty.__eventPrivatePropertyName = privateEventName;
+                return eventProperty;
+            };
+            //x ... first, set the depreciating cross-browser compatible access method ...
+            //x type.prototype["$__" + customEventPropName] = onEventProxy; // (ex: '$__onClick')
+            // ... create the event getter property and set the "on event" getter proxy ...
+            if (DS.global.Object.defineProperty)
+                DS.global.Object.defineProperty(type.prototype, customEventPropName, {
+                    configurable: true,
+                    enumerable: true,
+                    writable: true,
+                    get: onEventProxy
+                });
+            else
+                throw DS.Exception.error("registerEvent: " + eventName, "This browser does not support 'Object.defineProperty()'. To support older browsers, call '_" + customEventPropName + "()' instead to get an instance specific reference to the EventDispatcher for that event (i.e. for 'click' event, do 'obj._onClick().attach(...)').", type);
+            return { _eventMode: eventMode, _eventName: eventName, _removeOnTrigger: removeOnTrigger }; // (the return doesn't matter at this time)
+        }
+        /**
+            * Creates an instance property name from a given event name by adding 'on' as a prefix.
+            * This is mainly used when registering events as static properties on types.
+            * @param {string} eventName The event name to create an event property from. If the given event name already starts with 'on', then the given name is used as is (i.e. 'click' becomes 'onClick').
+            */
+        static createEventPropertyNameFromEventName(eventName) {
+            return eventName.match(/^on[^a-z]/) ? eventName : "on" + eventName.charAt(0).toUpperCase() + eventName.substring(1);
+        }
+        /**
+           * Returns a formatted event name in the form of a private event name like '$__{eventName}Event' (eg. 'click' becomes '$__clickEvent').
+           * The private event names are used to store event instances on the owning instances so each instance has it's own handlers list to manage.
+           */
+        static createPrivateEventName(eventName) { return "$__" + eventName + "Event"; }
+        dispose() {
+            // ... remove all handlers ...
+            this.removeAllListeners();
+            // TODO: Detach from owner as well? //?
+        }
+        /**
+         * Associates this event instance with an object using a weak map. The owner of the instance is already associated by default.
+         * Use this function to associate other external objects other than the owner, such as DOM elements (there should only be one
+         * specific event instance per any object).
+         */
+        associate(obj) {
+            this.__associations.set(obj, this);
+            return this;
+        }
+        /** Disassociates this event instance from an object (an internal weak map is used for associations). */
+        disassociate(obj) {
+            this.__associations.delete(obj);
+            return this;
+        }
+        /** Returns true if this event instance is already associated with the specified object (a weak map is used). */
+        isAssociated(obj) {
+            return this.__associations.has(obj);
+        }
+        _getHandlerIndex(handler) {
+            if (handler instanceof DS.Delegate) {
+                var object = handler.object;
+                var func = handler.func;
+            }
+            else if (handler instanceof Function) {
+                object = null;
+                func = handler;
+            }
+            else
+                throw DS.Exception.error("_getHandlerIndex()", "The given handler is not valid.  A Delegate type or function was expected.", this);
+            for (var i = 0, n = this.__listeners.length; i < n; ++i) {
+                var h = this.__listeners[i];
+                if (h.object == object && h.func == func)
+                    return i;
+            }
+            return -1;
+        }
+        attach(handler, eventMode = EventModes.Capture) {
+            if (this._getHandlerIndex(handler) == -1) {
+                var delegate = handler instanceof DS.Delegate ? handler : new DS.Delegate(this, handler);
+                delegate.$__eventMode = eventMode;
+                this.__listeners.push(delegate);
+            }
+            return this;
+        }
+        /** Dispatch the underlying event. Typically 'dispatch()' is called instead of calling this directly. Returns 'true' if all events completed, and 'false' if any handler cancelled the event.
+          * @param {any} triggerState If supplied, the event will not trigger unless the current state is different from the last state.  This is useful in making
+          * sure events only trigger once per state.  Pass in null (the default) to always dispatch regardless.  Pass 'undefined' to used the event
+          * name as the trigger state (this can be used for a "trigger only once" scenario).
+          * @param {boolean} canBubble Set to true to allow the event to bubble (where supported).
+          * @param {boolean} canCancel Set to true if handlers can abort the event (false means it has or will occur regardless).
+          * @param {string[]} args Custom arguments that will be passed on to the event handlers.
+          */
+        dispatchEvent(triggerState = null, ...args) {
+            if (!this.setTriggerState(triggerState))
+                return; // (no change in state, so ignore this request)
+            // ... for capture phases, start at the bottom and work up; but need to build the chain first (http://stackoverflow.com/a/10654134/1236397) ...
+            // ('this.__parent' checks for event-instance-only chained events, whereas 'this.owner.parent' iterates events using the a parent-child dependency hierarchy from the owner)
+            var parent = this.__parent || this.owner && this.owner.parent || null;
+            // ... run capture/bubbling phases; first, build the event chain ...
+            var eventChain = new Array(this); // ('this' [the current instance] is the last for capture, and first for bubbling)
+            if (parent) {
+                var eventPropertyName = this.__eventPropertyName; // (if exists, this references the 'on{EventName}' property getter that returns an even dispatcher object)
+                while (parent) {
+                    var eventInstance = parent[eventPropertyName];
+                    if (eventInstance instanceof EventDispatcher)
+                        eventChain.push(eventInstance);
+                    parent = parent['__parent'];
+                }
+            }
+            var cancelled = false;
+            // ... do capture phase (root, towards target) ...
+            for (var n = eventChain.length, i = n - 1; i >= 0; --i) {
+                if (cancelled)
+                    break;
+                var dispatcher = eventChain[i];
+                if (dispatcher.__listeners.length)
+                    cancelled = dispatcher.onDispatchEvent(args, EventModes.Capture);
+            }
+            // ... do bubbling phase (target, towards root) ...
+            for (var i = 0, n = eventChain.length; i < n; ++i) {
+                if (cancelled)
+                    break;
+                var dispatcher = eventChain[i];
+                if (dispatcher.__listeners.length)
+                    cancelled = dispatcher.onDispatchEvent(args, EventModes.Bubble);
+            }
+            return !cancelled;
+        }
+        __exception(msg, error) {
+            if (error)
+                msg += "\r\nInner error: " + DS.getErrorMessage(error);
+            return DS.Exception.error("{EventDispatcher}.dispatchEvent():", "Error in event " + this.__eventName + " on object type '" + DS.getTypeName(this.owner) + "': " + msg, { exception: error, event: this, handler: this.__handlerCallInProgress });
+        }
+        /** Calls the event handlers that match the event mode on the current event instance. */
+        onDispatchEvent(args, mode) {
+            args.push(this); // (add this event instance to the end of the arguments list to allow an optional target parameters to get a reference to the calling event)
+            this.__cancelled = false;
+            this.__dispatchInProgress = true;
+            try {
+                for (var i = 0, n = this.__listeners.length; i < n; ++i) {
+                    var delegate = this.__listeners[i];
+                    var cancelled = false;
+                    if (delegate.$__eventMode == mode && delegate) {
+                        this.__handlerCallInProgress = delegate;
+                        if (this.__eventTriggerHandler)
+                            cancelled = this.__eventTriggerHandler(this, delegate, args, delegate.$__eventMode) === false; // (call any special trigger handler)
+                        else
+                            cancelled = delegate.apply(args) === false;
+                    }
+                    if (cancelled && this.canCancel) {
+                        this.__cancelled = true;
+                        break;
+                    }
+                }
+            }
+            catch (ex) {
+                throw this.__exception("Error executing handler #" + i + ".", ex);
+            }
+            finally {
+                this.__dispatchInProgress = false;
+                this.__handlerCallInProgress = null;
+            }
+            return this.__cancelled;
+        }
+        /** If the given state value is different from the last state value, the internal trigger state value will be updated, and true will be returned.
+            * If a state value of null is given, the request will be ignored, and true will always be returned.
+            * If you don't specify a value ('triggerState' is 'undefined') then the internal event name becomes the trigger state value (this can be used for a "trigger
+            * only once" scenario).  Use 'resetTriggerState()' to reset the internal trigger state when needed.
+            */
+        setTriggerState(triggerState) {
+            if (triggerState === void 0)
+                triggerState = this.__eventName;
+            if (triggerState !== null)
+                if (triggerState === this.__lastTriggerState)
+                    return false; // (no change in state, so ignore this request)
+                else
+                    this.__lastTriggerState = triggerState;
+            return true;
+        }
+        /** Resets the current internal trigger state to null. The next call to 'setTriggerState()' will always return true.
+            * This is usually called after a sequence of events have completed, in which it is possible for the cycle to repeat.
+            */
+        resetTriggerState() { this.__lastTriggerState = null; }
+        /** A simple way to pass arguments to event handlers using arguments with static typing (calls 'dispatchEvent(null, false, false, arguments)').
+        * If not cancelled, then 'true' is returned.
+        * TIP: To prevent triggering the same event multiple times, use a custom state value in a call to 'setTriggerState()', and only call
+        * 'dispatch()' if true is returned (example: "someEvent.setTriggerState(someState) && someEvent.dispatch(...);", where the call to 'dispatch()'
+        * only occurs if true is returned from the previous statement).
+        * Note: Call 'dispatchAsync()' to allow current script execution to complete before any handlers get called.
+        * @see dispatchAsync
+        */
+        dispatch(...args) { return void 0; }
+        /** Trigger this event by calling all the handlers.
+         * If a handler cancels the process, then the promise is rejected.
+         * This method allows scheduling events to fire after current script execution completes.
+         */
+        dispatchAsync(...args) { return void 0; }
+        /** If called within a handler, prevents the other handlers from being called. */
+        cancel() {
+            if (this.__dispatchInProgress)
+                if (this.canCancel)
+                    this.__cancelled = true;
+                else
+                    throw this.__exception("This even dispatcher does not support canceling events.");
+        }
+        __indexOf(object, handler) {
+            for (var i = this.__listeners.length - 1; i >= 0; --i) {
+                var d = this.__listeners[i];
+                if (d.object == object && d.func == handler)
+                    return i;
+            }
+            return -1;
+        }
+        __removeListener(i) {
+            if (i >= 0 && i < this.__listeners.length) {
+                var handlerInfo = (i == this.__listeners.length - 1 ? this.__listeners.pop() : this.__listeners.splice(i, 1)[0]);
+                if (this.__dispatchInProgress && this.__handlerCallInProgress === handlerInfo)
+                    throw this.__exception("Cannot remove a listener while it is executing.");
+                //    --this.__handlerCountBeforeDispatch; // (if the handler being removed is not the current one in progress, then it will never be called, and thus the original count needs to change)
+                //if (handlerInfo.addFunctionName == "addEventListener")
+                //    document.removeEventListener(this.__eventName, handlerInfo.__internalCallback, false);
+                //else if (handlerInfo.addFunctionName == "attachEvent")
+                //    (<any>document.documentElement).detachEvent("onpropertychange", handlerInfo.__internalCallback);
+                // (else this is most likely the server side, and removing it from the array is good enough)
+                //? this[handlerInfo.key] = void 0; // (faster than deleting it, and prevents having to create the property over and over)
+                return handlerInfo;
+            }
+            return void 0;
+        }
+        removeListener(handler, func) {
+            // ... check if a delegate is given, otherwise attempt to create one ...
+            if (typeof func == 'function') {
+                this.__removeListener(this.__indexOf(handler, func));
+            }
+            else {
+                this.__removeListener(this.__indexOf(handler.object, handler.func));
+            }
+        }
+        removeAllListeners() {
+            for (var i = this.__listeners.length - 1; i >= 0; --i)
+                this.__removeListener(i);
+        }
+        static [DS.constructor]() {
+            function getTriggerFunc(args) {
+                //x args.push(void 0, this); // (add 2 optional items on end)
+                //x var dataIndex = args.length - 2; // (set the index where the data should be set when each handler gets called)
+                return function _trigger() {
+                    //x for (var i = 0, n = this._handlers.length; i < n; ++i) {
+                    //    var h = <IEventDispatcherHandlerInfo<any, any>>this._handlers[i];
+                    //    args[dataIndex] = h.data;
+                    //    var result = this.eventCaller ? this.eventCaller.call(this._owner || this, h.handler, args) : h.handler.apply(this._owner || this, args);
+                    //    if (this.canCancel && result === false) return false;
+                    //    if (h.removeOnTrigger) { this._handlers.splice(i, 1); --i; --n; }
+                    //x }
+                    // 
+                    //return !this.onCompleted || this.onCompleted.apply(this._owner || this, args) !== false;
+                    return this.dispatchEvent.apply(this, (args.unshift(null), args));
+                };
+            }
+            ;
+            EventDispatcher.prototype.dispatch = function dispatch(...args) {
+                var _trigger = getTriggerFunc.call(this, args);
+                if (!this.synchronous && typeof setTimeout == 'function')
+                    setTimeout(() => { _trigger.call(this); }, 0);
+                else
+                    return _trigger.call(this);
+            };
+            EventDispatcher.prototype.dispatchAsync = function dispatchAsync(...args) {
+                var _trigger = getTriggerFunc.call(this, args);
+                return new Promise((resolve, reject) => {
+                    if (!this.synchronous && typeof setTimeout == 'function')
+                        setTimeout(() => { if (_trigger.call(this))
+                            resolve();
+                        else
+                            reject(); }, 0);
+                    else if (_trigger.call(this))
+                        resolve();
+                    else
+                        reject();
+                });
+            };
+        }
+    }
+    DS.EventDispatcher = EventDispatcher;
+    EventDispatcher[DS.constructor](); // ('any' is used because the static constructor is private)
+    class EventObject {
+        /** Call this if you wish to implement 'changing' events for supported properties.
+        * If any event handler cancels the event, then 'false' will be returned.
+        */
+        doPropertyChanging(name, newValue) {
+            if (this.onPropertyChanging)
+                return this.onPropertyChanging.dispatch(this, newValue);
+            else
+                return true;
+        }
+        /** Call this if you wish to implement 'changed' events for supported properties. */
+        doPropertyChanged(name, oldValue) {
+            if (this.onPropertyChanged)
+                this.onPropertyChanged.dispatch(this, oldValue);
+        }
+    }
+    DS.EventObject = EventObject;
+    // ========================================================================================================================
+})(DS || (DS = {}));
+// ############################################################################################################################
+var DS;
+(function (DS) {
+    /** Contains functions and types to manage events within the workflow system. */
+    let Events;
+    (function (Events) {
+        class EventHandler {
+            /**
+             * @param event The defined event for which the associated workflow will be triggered.
+             * @param workflow The workflow to start when the underlying event triggers.
+             */
+            constructor(event, workflow) {
+                this.event = event;
+                this.workflow = workflow;
+            }
+        }
+        Events.EventHandler = EventHandler;
+        var handlers = [];
+        var events = [];
+        function registerHandler(eventDef, workflow) {
+            handlers.push(new EventHandler(eventDef, workflow));
+        }
+    })(Events = DS.Events || (DS.Events = {}));
 })(DS || (DS = {}));
 var DS;
 (function (DS) {
@@ -5510,410 +5911,3 @@ var DS;
     }
     DS.Workflows = Workflows;
 })(DS || (DS = {}));
-var DS;
-(function (DS) {
-    /** Contains functions and types to manage events within the workflow system. */
-    let Events;
-    (function (Events) {
-        class EventHandler {
-            /**
-             * @param event The defined event for which the associated workflow will be triggered.
-             * @param workflow The workflow to start when the underlying event triggers.
-             */
-            constructor(event, workflow) {
-                this.event = event;
-                this.workflow = workflow;
-            }
-        }
-        Events.EventHandler = EventHandler;
-        var handlers = [];
-        var events = [];
-        function registerHandler(eventDef, workflow) {
-            handlers.push(new EventHandler(eventDef, workflow));
-        }
-    })(Events = DS.Events || (DS.Events = {}));
-})(DS || (DS = {}));
-// ############################################################################################################################
-// Types for INTERNAL event management.  This has nothing to do with the workflow events. See 'Events.ts' for that.
-// ############################################################################################################################
-var DS;
-(function (DS) {
-    // ====================================================================================================================
-    ;
-    ;
-    /** Controls how the event progression occurs. */
-    let EventModes;
-    (function (EventModes) {
-        /** Trigger event on the way up to the target. */
-        EventModes[EventModes["Capture"] = 0] = "Capture";
-        /** Trigger event on the way down from the target. */
-        EventModes[EventModes["Bubble"] = 1] = "Bubble";
-        /** Trigger event on both the way up to the target, then back down again. */
-        EventModes[EventModes["CaptureAndBubble"] = 2] = "CaptureAndBubble";
-    })(EventModes = DS.EventModes || (DS.EventModes = {}));
-    ;
-    /**
-      * The EventDispatcher wraps a specific event type, and manages the triggering of "handlers" (callbacks) when that event type
-      * must be dispatched. Events are usually registered as static properties first (to prevent having to create and initialize
-      * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
-      * instance level event handler registration on the class only when necessary.
-      */
-    class EventDispatcher extends DS.DependentObject {
-        /** Constructs a new instance of the even dispatcher.
-         * @param eventTriggerHandler A global handler per event type that is triggered before any other handlers. This is a hook which is called every time an event triggers.
-         * This exists mainly to support handlers called with special parameters, such as those that may need translation, or arguments that need to be injected.
-         */
-        constructor(owner, eventName, removeOnTrigger = false, canCancel = true, eventTriggerHandler = null) {
-            super();
-            this.__associations = new WeakMap(); // (a mapping between an external object and this event instance - typically used to associated this event with an external object OTHER than the owner)
-            this.__listeners = []; // (this is typed "any object type" to allow using delegate handler function objects later on)
-            /** If this is true, then any new handler added will automatically be triggered as well.
-            * This is handy in cases where an application state is persisted, and future handlers should always execute. */
-            this.autoTrigger = false;
-            /** If true, then handlers are called only once, then removed (default is false). */
-            this.removeOnTrigger = false;
-            /** This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters. */
-            this.eventTriggerHandler = null;
-            /** True if the event can be cancelled. */
-            this.canCancel = true;
-            if (typeof eventName !== 'string')
-                eventName = '' + eventName;
-            if (!eventName)
-                throw "An event name is required.";
-            this.__eventName = eventName;
-            this.__eventPropertyName = EventDispatcher.createEventPropertyNameFromEventName(eventName); // (fix to support the convention of {item}.on{Event}().
-            this.owner = owner;
-            this.associate(owner);
-            this.__eventTriggerHandler = eventTriggerHandler;
-            this.canCancel = canCancel;
-        }
-        /** Return the underlying event name for this event object. */
-        getEventName() { return this.__eventName; }
-        /** Returns true if handlers exist on this event object instance. */
-        hasHandlers() { return !!this.__listeners.length; }
-        /**
-           * Registers an event with a class type - typically as a static property.
-           * @param type A class reference where the static property will be registered.
-           * @param eventName The name of the event to register.
-           * @param eventMode Specifies the desired event traveling mode.
-           * @param removeOnTrigger If true, the event only fires one time, then clears all event handlers. Attaching handlers once an event fires in this state causes them to be called immediately.
-           * @param eventTriggerCallback This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters.
-           * @param customEventPropName The name of the property that will be associated with this event, and expected on parent objects
-           * for the capturing and bubbling phases.  If left undefined/null, then the default is assumed to be
-           * 'on[EventName]', where the first event character is made uppercase automatically.
-           * @param canCancel If true (default), this event can be cancelled (prevented from completing, so no other events will fire).
-           */
-        static registerEvent(type, eventName, eventMode = EventModes.Capture, removeOnTrigger = false, eventTriggerCallback, customEventPropName, canCancel = true) {
-            customEventPropName || (customEventPropName = EventDispatcher.createEventPropertyNameFromEventName(eventName)); // (the default supports the convention of {item}.on{Event}()).
-            var privateEventName = EventDispatcher.createPrivateEventName(eventName); // (this name is used to store the new event dispatcher instance, which is created on demand for every instance)
-            // ... create a "getter" in the prototype for 'type' so that, when accessed by specific instances, an event object will be created on demand - this greatly reduces memory
-            //    allocations when many events exist on a lot of objects) ...
-            var onEventProxy = function () {
-                var instance = this; // (instance is the object instance on which this event property reference was made)
-                if (typeof instance !== 'object') //?  || !(instance instanceof DomainObject.$type))
-                    throw DS.Exception.error("{Object}." + eventName, "Must be called on an object instance.", instance);
-                // ... check if the instance already created the event property for registering events specific to this instance ...
-                var eventProperty = instance[privateEventName];
-                if (typeof eventProperty !== 'object') // (undefined or not valid, so attempt to create one now)
-                    instance[privateEventName] = eventProperty = new EventDispatcher(instance, eventName, removeOnTrigger, canCancel, eventTriggerCallback);
-                eventProperty.__eventPropertyName = customEventPropName;
-                eventProperty.__eventPrivatePropertyName = privateEventName;
-                return eventProperty;
-            };
-            //x ... first, set the depreciating cross-browser compatible access method ...
-            //x type.prototype["$__" + customEventPropName] = onEventProxy; // (ex: '$__onClick')
-            // ... create the event getter property and set the "on event" getter proxy ...
-            if (DS.global.Object.defineProperty)
-                DS.global.Object.defineProperty(type.prototype, customEventPropName, {
-                    configurable: true,
-                    enumerable: true,
-                    writable: true,
-                    get: onEventProxy
-                });
-            else
-                throw DS.Exception.error("registerEvent: " + eventName, "This browser does not support 'Object.defineProperty()'. To support older browsers, call '_" + customEventPropName + "()' instead to get an instance specific reference to the EventDispatcher for that event (i.e. for 'click' event, do 'obj._onClick().attach(...)').", type);
-            return { _eventMode: eventMode, _eventName: eventName, _removeOnTrigger: removeOnTrigger }; // (the return doesn't matter at this time)
-        }
-        /**
-            * Creates an instance property name from a given event name by adding 'on' as a prefix.
-            * This is mainly used when registering events as static properties on types.
-            * @param {string} eventName The event name to create an event property from. If the given event name already starts with 'on', then the given name is used as is (i.e. 'click' becomes 'onClick').
-            */
-        static createEventPropertyNameFromEventName(eventName) {
-            return eventName.match(/^on[^a-z]/) ? eventName : "on" + eventName.charAt(0).toUpperCase() + eventName.substring(1);
-        }
-        /**
-           * Returns a formatted event name in the form of a private event name like '$__{eventName}Event' (eg. 'click' becomes '$__clickEvent').
-           * The private event names are used to store event instances on the owning instances so each instance has it's own handlers list to manage.
-           */
-        static createPrivateEventName(eventName) { return "$__" + eventName + "Event"; }
-        dispose() {
-            // ... remove all handlers ...
-            this.removeAllListeners();
-            // TODO: Detach from owner as well? //?
-        }
-        /**
-         * Associates this event instance with an object using a weak map. The owner of the instance is already associated by default.
-         * Use this function to associate other external objects other than the owner, such as DOM elements (there should only be one
-         * specific event instance per any object).
-         */
-        associate(obj) {
-            this.__associations.set(obj, this);
-            return this;
-        }
-        /** Disassociates this event instance from an object (an internal weak map is used for associations). */
-        disassociate(obj) {
-            this.__associations.delete(obj);
-            return this;
-        }
-        /** Returns true if this event instance is already associated with the specified object (a weak map is used). */
-        isAssociated(obj) {
-            return this.__associations.has(obj);
-        }
-        _getHandlerIndex(handler) {
-            if (handler instanceof DS.Delegate) {
-                var object = handler.object;
-                var func = handler.func;
-            }
-            else if (handler instanceof Function) {
-                object = null;
-                func = handler;
-            }
-            else
-                throw DS.Exception.error("_getHandlerIndex()", "The given handler is not valid.  A Delegate type or function was expected.", this);
-            for (var i = 0, n = this.__listeners.length; i < n; ++i) {
-                var h = this.__listeners[i];
-                if (h.object == object && h.func == func)
-                    return i;
-            }
-            return -1;
-        }
-        attach(handler, eventMode = EventModes.Capture) {
-            if (this._getHandlerIndex(handler) == -1) {
-                var delegate = handler instanceof DS.Delegate ? handler : new DS.Delegate(this, handler);
-                delegate.$__eventMode = eventMode;
-                this.__listeners.push(delegate);
-            }
-            return this;
-        }
-        /** Dispatch the underlying event. Typically 'dispatch()' is called instead of calling this directly. Returns 'true' if all events completed, and 'false' if any handler cancelled the event.
-          * @param {any} triggerState If supplied, the event will not trigger unless the current state is different from the last state.  This is useful in making
-          * sure events only trigger once per state.  Pass in null (the default) to always dispatch regardless.  Pass 'undefined' to used the event
-          * name as the trigger state (this can be used for a "trigger only once" scenario).
-          * @param {boolean} canBubble Set to true to allow the event to bubble (where supported).
-          * @param {boolean} canCancel Set to true if handlers can abort the event (false means it has or will occur regardless).
-          * @param {string[]} args Custom arguments that will be passed on to the event handlers.
-          */
-        dispatchEvent(triggerState = null, ...args) {
-            if (!this.setTriggerState(triggerState))
-                return; // (no change in state, so ignore this request)
-            // ... for capture phases, start at the bottom and work up; but need to build the chain first (http://stackoverflow.com/a/10654134/1236397) ...
-            // ('this.__parent' checks for event-instance-only chained events, whereas 'this.owner.parent' iterates events using the a parent-child dependency hierarchy from the owner)
-            var parent = this.__parent || this.owner && this.owner.parent || null;
-            // ... run capture/bubbling phases; first, build the event chain ...
-            var eventChain = new Array(this); // ('this' [the current instance] is the last for capture, and first for bubbling)
-            if (parent) {
-                var eventPropertyName = this.__eventPropertyName; // (if exists, this references the 'on{EventName}' property getter that returns an even dispatcher object)
-                while (parent) {
-                    var eventInstance = parent[eventPropertyName];
-                    if (eventInstance instanceof EventDispatcher)
-                        eventChain.push(eventInstance);
-                    parent = parent['__parent'];
-                }
-            }
-            var cancelled = false;
-            // ... do capture phase (root, towards target) ...
-            for (var n = eventChain.length, i = n - 1; i >= 0; --i) {
-                if (cancelled)
-                    break;
-                var dispatcher = eventChain[i];
-                if (dispatcher.__listeners.length)
-                    cancelled = dispatcher.onDispatchEvent(args, EventModes.Capture);
-            }
-            // ... do bubbling phase (target, towards root) ...
-            for (var i = 0, n = eventChain.length; i < n; ++i) {
-                if (cancelled)
-                    break;
-                var dispatcher = eventChain[i];
-                if (dispatcher.__listeners.length)
-                    cancelled = dispatcher.onDispatchEvent(args, EventModes.Bubble);
-            }
-            return !cancelled;
-        }
-        __exception(msg, error) {
-            if (error)
-                msg += "\r\nInner error: " + DS.getErrorMessage(error);
-            return DS.Exception.error("{EventDispatcher}.dispatchEvent():", "Error in event " + this.__eventName + " on object type '" + DS.getTypeName(this.owner) + "': " + msg, { exception: error, event: this, handler: this.__handlerCallInProgress });
-        }
-        /** Calls the event handlers that match the event mode on the current event instance. */
-        onDispatchEvent(args, mode) {
-            args.push(this); // (add this event instance to the end of the arguments list to allow an optional target parameters to get a reference to the calling event)
-            this.__cancelled = false;
-            this.__dispatchInProgress = true;
-            try {
-                for (var i = 0, n = this.__listeners.length; i < n; ++i) {
-                    var delegate = this.__listeners[i];
-                    var cancelled = false;
-                    if (delegate.$__eventMode == mode && delegate) {
-                        this.__handlerCallInProgress = delegate;
-                        if (this.__eventTriggerHandler)
-                            cancelled = this.__eventTriggerHandler(this, delegate, args, delegate.$__eventMode) === false; // (call any special trigger handler)
-                        else
-                            cancelled = delegate.apply(args) === false;
-                    }
-                    if (cancelled && this.canCancel) {
-                        this.__cancelled = true;
-                        break;
-                    }
-                }
-            }
-            catch (ex) {
-                throw this.__exception("Error executing handler #" + i + ".", ex);
-            }
-            finally {
-                this.__dispatchInProgress = false;
-                this.__handlerCallInProgress = null;
-            }
-            return this.__cancelled;
-        }
-        /** If the given state value is different from the last state value, the internal trigger state value will be updated, and true will be returned.
-            * If a state value of null is given, the request will be ignored, and true will always be returned.
-            * If you don't specify a value ('triggerState' is 'undefined') then the internal event name becomes the trigger state value (this can be used for a "trigger
-            * only once" scenario).  Use 'resetTriggerState()' to reset the internal trigger state when needed.
-            */
-        setTriggerState(triggerState) {
-            if (triggerState === void 0)
-                triggerState = this.__eventName;
-            if (triggerState !== null)
-                if (triggerState === this.__lastTriggerState)
-                    return false; // (no change in state, so ignore this request)
-                else
-                    this.__lastTriggerState = triggerState;
-            return true;
-        }
-        /** Resets the current internal trigger state to null. The next call to 'setTriggerState()' will always return true.
-            * This is usually called after a sequence of events have completed, in which it is possible for the cycle to repeat.
-            */
-        resetTriggerState() { this.__lastTriggerState = null; }
-        /** A simple way to pass arguments to event handlers using arguments with static typing (calls 'dispatchEvent(null, false, false, arguments)').
-        * If not cancelled, then 'true' is returned.
-        * TIP: To prevent triggering the same event multiple times, use a custom state value in a call to 'setTriggerState()', and only call
-        * 'dispatch()' if true is returned (example: "someEvent.setTriggerState(someState) && someEvent.dispatch(...);", where the call to 'dispatch()'
-        * only occurs if true is returned from the previous statement).
-        * Note: Call 'dispatchAsync()' to allow current script execution to complete before any handlers get called.
-        * @see dispatchAsync
-        */
-        dispatch(...args) { return void 0; }
-        /** Trigger this event by calling all the handlers.
-         * If a handler cancels the process, then the promise is rejected.
-         * This method allows scheduling events to fire after current script execution completes.
-         */
-        dispatchAsync(...args) { return void 0; }
-        /** If called within a handler, prevents the other handlers from being called. */
-        cancel() {
-            if (this.__dispatchInProgress)
-                if (this.canCancel)
-                    this.__cancelled = true;
-                else
-                    throw this.__exception("This even dispatcher does not support canceling events.");
-        }
-        __indexOf(object, handler) {
-            for (var i = this.__listeners.length - 1; i >= 0; --i) {
-                var d = this.__listeners[i];
-                if (d.object == object && d.func == handler)
-                    return i;
-            }
-            return -1;
-        }
-        __removeListener(i) {
-            if (i >= 0 && i < this.__listeners.length) {
-                var handlerInfo = (i == this.__listeners.length - 1 ? this.__listeners.pop() : this.__listeners.splice(i, 1)[0]);
-                if (this.__dispatchInProgress && this.__handlerCallInProgress === handlerInfo)
-                    throw this.__exception("Cannot remove a listener while it is executing.");
-                //    --this.__handlerCountBeforeDispatch; // (if the handler being removed is not the current one in progress, then it will never be called, and thus the original count needs to change)
-                //if (handlerInfo.addFunctionName == "addEventListener")
-                //    document.removeEventListener(this.__eventName, handlerInfo.__internalCallback, false);
-                //else if (handlerInfo.addFunctionName == "attachEvent")
-                //    (<any>document.documentElement).detachEvent("onpropertychange", handlerInfo.__internalCallback);
-                // (else this is most likely the server side, and removing it from the array is good enough)
-                //? this[handlerInfo.key] = void 0; // (faster than deleting it, and prevents having to create the property over and over)
-                return handlerInfo;
-            }
-            return void 0;
-        }
-        removeListener(handler, func) {
-            // ... check if a delegate is given, otherwise attempt to create one ...
-            if (typeof func == 'function') {
-                this.__removeListener(this.__indexOf(handler, func));
-            }
-            else {
-                this.__removeListener(this.__indexOf(handler.object, handler.func));
-            }
-        }
-        removeAllListeners() {
-            for (var i = this.__listeners.length - 1; i >= 0; --i)
-                this.__removeListener(i);
-        }
-        static [DS.constructor]() {
-            function getTriggerFunc(args) {
-                //x args.push(void 0, this); // (add 2 optional items on end)
-                //x var dataIndex = args.length - 2; // (set the index where the data should be set when each handler gets called)
-                return function _trigger() {
-                    //x for (var i = 0, n = this._handlers.length; i < n; ++i) {
-                    //    var h = <IEventDispatcherHandlerInfo<any, any>>this._handlers[i];
-                    //    args[dataIndex] = h.data;
-                    //    var result = this.eventCaller ? this.eventCaller.call(this._owner || this, h.handler, args) : h.handler.apply(this._owner || this, args);
-                    //    if (this.canCancel && result === false) return false;
-                    //    if (h.removeOnTrigger) { this._handlers.splice(i, 1); --i; --n; }
-                    //x }
-                    // 
-                    //return !this.onCompleted || this.onCompleted.apply(this._owner || this, args) !== false;
-                    return this.dispatchEvent.apply(this, (args.unshift(null), args));
-                };
-            }
-            ;
-            EventDispatcher.prototype.dispatch = function dispatch(...args) {
-                var _trigger = getTriggerFunc.call(this, args);
-                if (!this.synchronous && typeof setTimeout == 'function')
-                    setTimeout(() => { _trigger.call(this); }, 0);
-                else
-                    return _trigger.call(this);
-            };
-            EventDispatcher.prototype.dispatchAsync = function dispatchAsync(...args) {
-                var _trigger = getTriggerFunc.call(this, args);
-                return new Promise((resolve, reject) => {
-                    if (!this.synchronous && typeof setTimeout == 'function')
-                        setTimeout(() => { if (_trigger.call(this))
-                            resolve();
-                        else
-                            reject(); }, 0);
-                    else if (_trigger.call(this))
-                        resolve();
-                    else
-                        reject();
-                });
-            };
-        }
-    }
-    DS.EventDispatcher = EventDispatcher;
-    EventDispatcher[DS.constructor](); // ('any' is used because the static constructor is private)
-    class EventObject {
-        /** Call this if you wish to implement 'changing' events for supported properties.
-        * If any event handler cancels the event, then 'false' will be returned.
-        */
-        doPropertyChanging(name, newValue) {
-            if (this.onPropertyChanging)
-                return this.onPropertyChanging.dispatch(this, newValue);
-            else
-                return true;
-        }
-        /** Call this if you wish to implement 'changed' events for supported properties. */
-        doPropertyChanged(name, oldValue) {
-            if (this.onPropertyChanged)
-                this.onPropertyChanged.dispatch(this, oldValue);
-        }
-    }
-    DS.EventObject = EventObject;
-    // ========================================================================================================================
-})(DS || (DS = {}));
-// ############################################################################################################################

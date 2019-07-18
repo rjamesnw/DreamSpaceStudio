@@ -44,9 +44,9 @@ templateEngine.apply(app);
         // Parse JSON bodies (as sent by API clients)
         app.use(express.json());
 
-        // view engine setup
-        app.set('views', path.join(__dirname, 'views'));
-        app.set('view engine', 'html');
+        //// view engine setup
+        //x app.set('views', path.join(__dirname, 'views'));
+        //x app.set('view engine', 'html');
 
         app.use(express.static(path.join(__dirname, 'public')));
 
@@ -92,8 +92,7 @@ templateEngine.apply(app);
         app.set('port', port); // (just for reference using 'app.get('port')')
 
         var server = app.listen(port, () => {
-            console.log(`Test server running on port ${server.address().port}.`);
-            console.log("Note: this test server is NOT part of the lambda functionality and is for local development only.");
+            console.log(`DreamSpace server running on port ${server.address().port}.`);
             console.log("To exit, simply close this window, or press CTRL-C.");
         });
 

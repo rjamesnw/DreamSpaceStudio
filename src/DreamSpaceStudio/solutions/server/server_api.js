@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 // Simply loads the global API for the NodeJS server-side global scope.
 // This code MUST be FIRST in the final server .js.
-eval("var DS = require('../api');");
+eval("var DS = require('../api').DS;");
 global.DS = DS;
 // ... the server-specific global DS API should follow here ...
 // Contains DreamSpace API functions and types that user code can use to work with the system.

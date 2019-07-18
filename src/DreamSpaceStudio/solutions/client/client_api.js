@@ -882,7 +882,7 @@ var DS;
        * @param {boolean} bustCache If true, the current page query string is merged. The default is false,
        */
     function setLocation(url, includeExistingQuery = false, bustCache = false) {
-        var query = DS.Query.new(url);
+        var query = new DS.Query(url);
         if (bustCache)
             query.values[DS.ResourceRequest.cacheBustingVar] = Date.now().toString();
         if (includeExistingQuery)

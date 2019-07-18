@@ -41,14 +41,10 @@ declare var USER_GIVEN_GLOBAL_NS_NAME: string;
  * 'DEFAULT_ROOT_NS_NAME' by default.
  */
 declare namespace DS {
-    abstract class DSStaticProperties {
-        static readonly globalNamespaceName: string;
-        static readonly rootns: any;
-    }
     /** The global DreamSpace namespace name.  Call 'registerGlobal()' to specify a custom name, otherwise the default 'DEFAULT_GLOBAL_NS_NAME' is used. */
-    var globalNamespaceName: typeof DSStaticProperties.globalNamespaceName;
+    var globalNamespaceName: string;
     /** The root DreamSpace namespace, which is just DreamSpace.global[DreamSpace.globalNamespaceName] (which is just 'window[DreamSpace.globalNamespaceName]' on browser clients). */
-    var rootns: typeof DSStaticProperties.rootns;
+    var rootns: string;
     /** The current application version (user defined). */
     var appVersion: string;
     /**
@@ -266,6 +262,133 @@ interface IResultCallback<TSender> {
 }
 interface IErrorCallback<TSender> {
     (sender?: TSender, error?: any): any;
+}
+declare namespace DS {
+    /** Type-cast class/function references to this interface to access type specific information, where available. */
+    interface ITypeInfo {
+        /** Returns the name of this type.
+          * Note: This is the object type name taken from the constructor (if one exists), and is not the FULL type name (no namespace).
+          * Note: This value is only set on types registered using '{AppDomain}.registerType()'.
+          */
+        $__name?: string;
+        $__fullname?: string;
+    }
+    /**
+     * Contains some basic static values and calculations used by time related functions within the system.
+     */
+    namespace Time {
+        var __millisecondsPerSecond: number;
+        var __secondsPerMinute: number;
+        var __minsPerHour: number;
+        var __hoursPerDay: number;
+        var __daysPerYear: number;
+        var __actualDaysPerYear: number;
+        var __EpochYear: number;
+        var __millisecondsPerMinute: number;
+        var __millisecondsPerHour: number;
+        var __millisecondsPerDay: number;
+        var __millisecondsPerYear: number;
+        var __ISO8601RegEx: RegExp;
+        var __SQLDateTimeRegEx: RegExp;
+        var __SQLDateTimeStrictRegEx: RegExp;
+        /** The time zone offset in milliseconds ({Date}.getTimezoneOffset() returns it in minutes). */
+        var __localTimeZoneOffset: number;
+    }
+    /** One or more utility functions to ease development within DreamSpace environments. */
+    namespace Utilities {
+        /**
+         * Returns an array of all matches of 'regex' in 'text', grouped into sub-arrays (string[matches][groups], where
+         * 'groups' index 0 is the full matched text, and 1 onwards are any matched groups).
+         */
+        function matches(regex: RegExp, text: string): string[][];
+        /**
+         * Converts the given value to a string and returns it.  'undefined' (void 0) and null become empty, string types are
+         * returned as is, and everything else will be converted to a string by calling 'toString()', or simply '""+value' if
+         * 'value.toString' is not a function. If for some reason a call to 'toString()' does not return a string the cycle
+         * starts over with the new value until a string is returned.
+         * Note: If no arguments are passed in (i.e. 'Utilities.toString()'), then undefined is returned.
+         */
+        function toString(value?: any): string;
+        /** Escapes a RegEx string so it behaves like a normal string. This is useful for RexEx string based operations, such as 'replace()'. */
+        function escapeRegex(regExStr: string): string;
+        /** This locates names of properties where only a reference and the object context is known.
+        * If a reference match is found, the property name is returned, otherwise the result is 'undefined'.
+        */
+        function getReferenceName(obj: Object, reference: object): string;
+        /** Erases all properties on the object, instead of deleting them (which takes longer).
+        * @param {boolean} ignore An optional list of properties to ignore when erasing. The properties to ignore should equate to 'true'.
+        * This parameter expects an object type because that is faster for lookups than arrays, and developers can statically store these in most cases.
+        */
+        function erase(obj: Object, ignore?: {
+            [name: string]: boolean;
+        }): {};
+        /** Makes a deep copy of the specified value and returns it. If the value is not an object, it is returned immediately.
+        * For objects, the deep copy is made by */
+        function clone(value: any): any;
+        /** Dereferences a property path in the form "A.B.C[*].D..." and returns the right most property value, if exists, otherwise
+        * 'undefined' is returned.  If path is invalid, an exception will be thrown.
+        * @param {string} path The delimited property path to parse.
+        * @param {object} origin The object to begin dereferencing with.  If this is null or undefined then it defaults to the global scope.
+        * @param {boolean} unsafe If false (default) a fast algorithm is used to parse the path.  If true, then the expression is evaluated at the host global scope (faster).
+        *                         The reason for the option is that 'eval' is up to 4x faster, and is best used only if the path is guaranteed not to contain user entered
+        *                         values, or ANY text transmitted insecurely.
+        *                         Note: The 'eval' used is 'DreamSpace.eval()', which is closed over the global scope (and not the DreamSpace module's private scope).
+        *                         'window.eval()' is not called directly in this function.
+        */
+        function dereferencePropertyPath(path: string, origin?: Object, unsafe?: boolean): {};
+        /** Waits until a property of an object becomes available (i.e. is no longer 'undefined').
+          * @param {Object} obj The object for the property.
+          * @param {string} propertyName The object property.
+          * @param {number} timeout The general amount of timeout to wait before failing, or a negative value to wait indefinitely.
+          */
+        function waitReady(obj: Object, propertyName: string, callback: Function, timeout?: number, timeoutCallback?: Function): void;
+        /** Helps support cases where 'apply' is missing for a host function object (i.e. IE7 'setTimeout', etc.).  This function
+        * will attempt to call '.apply()' on the specified function, and fall back to a work around if missing.
+        * @param {Function} func The function to call '.apply()' on.
+        * @param {Object} _this The calling object, which is the 'this' reference in the called function (the 'func' argument).
+        * Note: This must be null for special host functions, such as 'setTimeout' in IE7.
+        * @param {any} args The arguments to apply to given function reference (the 'func' argument).
+        */
+        function apply(func: Function, _this: Object, args: any[]): any;
+        /**
+         * Creates and returns a new version-4 (randomized) GUID/UUID (unique identifier). The uniqueness of the result
+         * is enforced by locking the first part down to the current local date/time (not UTC) in milliseconds, along with
+         * a counter value in case of fast repetitive calls. The rest of the ID is also randomized with the current local
+         * time, along with a checksum of the browser's "agent" string and the current document URL.
+         * This function is also supported server side; however, the "agent" string and document location are fixed values.
+         * @param {boolean} hyphens If true (default) then hyphens (-) are inserted to separate the GUID parts.
+         */
+        function createGUID(hyphens?: boolean): string;
+    }
+    /** Returns the name of a namespace or variable reference at runtime. */
+    function nameof(selector: () => any, fullname?: boolean): string;
+    var FUNC_NAME_REGEX: RegExp;
+    /** Attempts to pull the function name from the function object, and returns an empty string if none could be determined. */
+    function getFunctionName(func: Function): string;
+    /** Returns the type name for an object instance registered with 'AppDomain.registerType()'.  If the object does not have
+    * type information, and the object is a function, then an attempt is made to pull the function name (if one exists).
+    * Note: This function returns the type name ONLY (not the FULL type name [no namespace path]).
+    * Note: The name will be undefined if a type name cannot be determined.
+    * @param {object} object The object to determine a type name for.  If the object type was not registered using 'AppDomain.registerType()',
+    * and the object is not a function, no type information will be available. Unregistered function objects simply
+    * return the function's name.
+    * @param {boolean} cacheTypeName (optional) If true (default), the name is cached using the 'ITypeInfo' interface via the '$__name' property.
+    * This helps to speed up future calls.
+    */
+    function getTypeName(object: object, cacheTypeName?: boolean): string;
+    /**
+     * Returns the full type name of the type or namespace, if available, or the name o the object itself if the full name (with namespaces) is not known.
+     * @see getTypeName()
+     */
+    function getFullTypeName(object: object, cacheTypeName?: boolean): string;
+    /** An utility to extend a TypeScript namespace, which returns a string to be executed using 'eval()'.
+     * When executed BEFORE the namespace to be added, it creates a pre-existing namespace reference that forces typescript to update.
+     * Example 1: extendNS(()=>Local.NS, "Imported.NS");
+     * Example 2: extendNS(()=>Local.NS, ()=>Imported.NS);
+     * @param selector The local namespace that will extend the target.
+     * @param name A selector or dotted identifier path to the target namespace name to extend from.
+     */
+    function extendNS(selector: () => any, name: string | (() => any)): string;
 }
 declare namespace DS {
     interface ISavedTrackableObject {
@@ -1181,12 +1304,7 @@ declare namespace DS {
         * @param {string|object} query A full URI string, a query string (such as 'location.search'), or an object to create query values from.
         * @param {boolean} makeNamesLowercase If true, then all query names are made lower case when parsing (the default is false).
         */
-        static 'new': (query?: string | object, makeNamesLowercase?: boolean) => IQuery;
-        /** Helps to build an object of 'name:value' pairs from a URI or 'location.search' string.
-        * @param {string|object} query A full URI string, a query string (such as 'location.search'), or an object to create query values from.
-        * @param {boolean} makeNamesLowercase If true, then all query names are made lower case when parsing (the default is false).
-        */
-        static init(o: IQuery, isnew: boolean, query?: string | object, makeNamesLowercase?: boolean): void;
+        constructor(query?: string | object, makeNamesLowercase?: boolean);
         values: {
             [index: string]: string;
         };
@@ -1248,7 +1366,7 @@ declare namespace DS {
     interface IQuery extends Query {
     }
     /** This is set automatically to the query for the current page. */
-    var pageQuery: IQuery;
+    var pageQuery: Query;
 }
 declare namespace DS {
     /**
@@ -1837,133 +1955,6 @@ declare namespace DS {
         static fromLocation(): Uri;
     }
 }
-declare namespace DS {
-    /** Type-cast class/function references to this interface to access type specific information, where available. */
-    interface ITypeInfo {
-        /** Returns the name of this type.
-          * Note: This is the object type name taken from the constructor (if one exists), and is not the FULL type name (no namespace).
-          * Note: This value is only set on types registered using '{AppDomain}.registerType()'.
-          */
-        $__name?: string;
-        $__fullname?: string;
-    }
-    /**
-     * Contains some basic static values and calculations used by time related functions within the system.
-     */
-    namespace Time {
-        var __millisecondsPerSecond: number;
-        var __secondsPerMinute: number;
-        var __minsPerHour: number;
-        var __hoursPerDay: number;
-        var __daysPerYear: number;
-        var __actualDaysPerYear: number;
-        var __EpochYear: number;
-        var __millisecondsPerMinute: number;
-        var __millisecondsPerHour: number;
-        var __millisecondsPerDay: number;
-        var __millisecondsPerYear: number;
-        var __ISO8601RegEx: RegExp;
-        var __SQLDateTimeRegEx: RegExp;
-        var __SQLDateTimeStrictRegEx: RegExp;
-        /** The time zone offset in milliseconds ({Date}.getTimezoneOffset() returns it in minutes). */
-        var __localTimeZoneOffset: number;
-    }
-    /** One or more utility functions to ease development within DreamSpace environments. */
-    namespace Utilities {
-        /**
-         * Returns an array of all matches of 'regex' in 'text', grouped into sub-arrays (string[matches][groups], where
-         * 'groups' index 0 is the full matched text, and 1 onwards are any matched groups).
-         */
-        function matches(regex: RegExp, text: string): string[][];
-        /**
-         * Converts the given value to a string and returns it.  'undefined' (void 0) and null become empty, string types are
-         * returned as is, and everything else will be converted to a string by calling 'toString()', or simply '""+value' if
-         * 'value.toString' is not a function. If for some reason a call to 'toString()' does not return a string the cycle
-         * starts over with the new value until a string is returned.
-         * Note: If no arguments are passed in (i.e. 'Utilities.toString()'), then undefined is returned.
-         */
-        function toString(value?: any): string;
-        /** Escapes a RegEx string so it behaves like a normal string. This is useful for RexEx string based operations, such as 'replace()'. */
-        function escapeRegex(regExStr: string): string;
-        /** This locates names of properties where only a reference and the object context is known.
-        * If a reference match is found, the property name is returned, otherwise the result is 'undefined'.
-        */
-        function getReferenceName(obj: Object, reference: object): string;
-        /** Erases all properties on the object, instead of deleting them (which takes longer).
-        * @param {boolean} ignore An optional list of properties to ignore when erasing. The properties to ignore should equate to 'true'.
-        * This parameter expects an object type because that is faster for lookups than arrays, and developers can statically store these in most cases.
-        */
-        function erase(obj: Object, ignore?: {
-            [name: string]: boolean;
-        }): {};
-        /** Makes a deep copy of the specified value and returns it. If the value is not an object, it is returned immediately.
-        * For objects, the deep copy is made by */
-        function clone(value: any): any;
-        /** Dereferences a property path in the form "A.B.C[*].D..." and returns the right most property value, if exists, otherwise
-        * 'undefined' is returned.  If path is invalid, an exception will be thrown.
-        * @param {string} path The delimited property path to parse.
-        * @param {object} origin The object to begin dereferencing with.  If this is null or undefined then it defaults to the global scope.
-        * @param {boolean} unsafe If false (default) a fast algorithm is used to parse the path.  If true, then the expression is evaluated at the host global scope (faster).
-        *                         The reason for the option is that 'eval' is up to 4x faster, and is best used only if the path is guaranteed not to contain user entered
-        *                         values, or ANY text transmitted insecurely.
-        *                         Note: The 'eval' used is 'DreamSpace.eval()', which is closed over the global scope (and not the DreamSpace module's private scope).
-        *                         'window.eval()' is not called directly in this function.
-        */
-        function dereferencePropertyPath(path: string, origin?: Object, unsafe?: boolean): {};
-        /** Waits until a property of an object becomes available (i.e. is no longer 'undefined').
-          * @param {Object} obj The object for the property.
-          * @param {string} propertyName The object property.
-          * @param {number} timeout The general amount of timeout to wait before failing, or a negative value to wait indefinitely.
-          */
-        function waitReady(obj: Object, propertyName: string, callback: Function, timeout?: number, timeoutCallback?: Function): void;
-        /** Helps support cases where 'apply' is missing for a host function object (i.e. IE7 'setTimeout', etc.).  This function
-        * will attempt to call '.apply()' on the specified function, and fall back to a work around if missing.
-        * @param {Function} func The function to call '.apply()' on.
-        * @param {Object} _this The calling object, which is the 'this' reference in the called function (the 'func' argument).
-        * Note: This must be null for special host functions, such as 'setTimeout' in IE7.
-        * @param {any} args The arguments to apply to given function reference (the 'func' argument).
-        */
-        function apply(func: Function, _this: Object, args: any[]): any;
-        /**
-         * Creates and returns a new version-4 (randomized) GUID/UUID (unique identifier). The uniqueness of the result
-         * is enforced by locking the first part down to the current local date/time (not UTC) in milliseconds, along with
-         * a counter value in case of fast repetitive calls. The rest of the ID is also randomized with the current local
-         * time, along with a checksum of the browser's "agent" string and the current document URL.
-         * This function is also supported server side; however, the "agent" string and document location are fixed values.
-         * @param {boolean} hyphens If true (default) then hyphens (-) are inserted to separate the GUID parts.
-         */
-        function createGUID(hyphens?: boolean): string;
-    }
-    /** Returns the name of a namespace or variable reference at runtime. */
-    function nameof(selector: () => any, fullname?: boolean): string;
-    var FUNC_NAME_REGEX: RegExp;
-    /** Attempts to pull the function name from the function object, and returns an empty string if none could be determined. */
-    function getFunctionName(func: Function): string;
-    /** Returns the type name for an object instance registered with 'AppDomain.registerType()'.  If the object does not have
-    * type information, and the object is a function, then an attempt is made to pull the function name (if one exists).
-    * Note: This function returns the type name ONLY (not the FULL type name [no namespace path]).
-    * Note: The name will be undefined if a type name cannot be determined.
-    * @param {object} object The object to determine a type name for.  If the object type was not registered using 'AppDomain.registerType()',
-    * and the object is not a function, no type information will be available. Unregistered function objects simply
-    * return the function's name.
-    * @param {boolean} cacheTypeName (optional) If true (default), the name is cached using the 'ITypeInfo' interface via the '$__name' property.
-    * This helps to speed up future calls.
-    */
-    function getTypeName(object: object, cacheTypeName?: boolean): string;
-    /**
-     * Returns the full type name of the type or namespace, if available, or the name o the object itself if the full name (with namespaces) is not known.
-     * @see getTypeName()
-     */
-    function getFullTypeName(object: object, cacheTypeName?: boolean): string;
-    /** An utility to extend a TypeScript namespace, which returns a string to be executed using 'eval()'.
-     * When executed BEFORE the namespace to be added, it creates a pre-existing namespace reference that forces typescript to update.
-     * Example 1: extendNS(()=>Local.NS, "Imported.NS");
-     * Example 2: extendNS(()=>Local.NS, ()=>Imported.NS);
-     * @param selector The local namespace that will extend the target.
-     * @param name A selector or dotted identifier path to the target namespace name to extend from.
-     */
-    function extendNS(selector: () => any, name: string | (() => any)): string;
-}
 declare type Methods = "GET" | "POST" | "PUT" | "DELETE";
 interface IResponse<TData = any> {
     statusCode: HttpStatus;
@@ -2165,6 +2156,210 @@ declare namespace DS {
         name: string;
         /** The parameters defined for this event.  Components are to supply arguments for this when triggering events. */
         readonly parameters: Property[];
+    }
+}
+declare namespace DS {
+    /** Represents an event callback function. Handlers should return false to cancel event dispatching if desired (anything else is ignored). */
+    interface EventHandler {
+        (this: object, ...args: any[]): void | boolean;
+    }
+    /**
+     * The event trigger handler is called to allow custom handling of event handlers when an event occurs.
+     * This handler should return false to cancel event dispatching if desired (anything else is ignored).
+     */
+    interface EventTriggerHandler<TOwner extends object, TCallback extends EventHandler> {
+        (event: IEventDispatcher<TOwner, TCallback>, handler: IDelegate<object, TCallback>, args: any[], mode?: EventModes): void | boolean;
+    }
+    /** Controls how the event progression occurs. */
+    enum EventModes {
+        /** Trigger event on the way up to the target. */
+        Capture = 0,
+        /** Trigger event on the way down from the target. */
+        Bubble = 1,
+        /** Trigger event on both the way up to the target, then back down again. */
+        CaptureAndBubble = 2
+    }
+    /**
+      * The EventDispatcher wraps a specific event type, and manages the triggering of "handlers" (callbacks) when that event type
+      * must be dispatched. Events are usually registered as static properties first (to prevent having to create and initialize
+      * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
+      * instance level event handler registration on the class only when necessary.
+      */
+    class EventDispatcher<TOwner extends object = object, TCallback extends EventHandler = EventHandler> extends DependentObject {
+        readonly owner: TOwner;
+        private __eventName;
+        private __associations;
+        private __listeners;
+        /** If a parent value is set, then the event chain will travel the parent hierarchy from this event dispatcher. If not set, the owner is assumed instead. */
+        protected __parent: IEventDispatcher<any, EventHandler>;
+        private __eventTriggerHandler;
+        private __eventPropertyName;
+        private __eventPrivatePropertyName;
+        private __lastTriggerState;
+        private __cancelled;
+        private __dispatchInProgress;
+        private __handlerCallInProgress;
+        /** Return the underlying event name for this event object. */
+        getEventName(): string;
+        /** If this is true, then any new handler added will automatically be triggered as well.
+        * This is handy in cases where an application state is persisted, and future handlers should always execute. */
+        autoTrigger: boolean;
+        /** Returns true if handlers exist on this event object instance. */
+        hasHandlers(): boolean;
+        /** If true, then handlers are called only once, then removed (default is false). */
+        removeOnTrigger: boolean;
+        /** This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters. */
+        eventTriggerHandler: EventTriggerHandler<TOwner, TCallback>;
+        /** True if the event can be cancelled. */
+        canCancel: boolean;
+        /**
+           * Registers an event with a class type - typically as a static property.
+           * @param type A class reference where the static property will be registered.
+           * @param eventName The name of the event to register.
+           * @param eventMode Specifies the desired event traveling mode.
+           * @param removeOnTrigger If true, the event only fires one time, then clears all event handlers. Attaching handlers once an event fires in this state causes them to be called immediately.
+           * @param eventTriggerCallback This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters.
+           * @param customEventPropName The name of the property that will be associated with this event, and expected on parent objects
+           * for the capturing and bubbling phases.  If left undefined/null, then the default is assumed to be
+           * 'on[EventName]', where the first event character is made uppercase automatically.
+           * @param canCancel If true (default), this event can be cancelled (prevented from completing, so no other events will fire).
+           */
+        static registerEvent<TOwner extends object, TCallback extends EventHandler>(type: {
+            new (...args: any[]): TOwner;
+        }, eventName: string, eventMode?: EventModes, removeOnTrigger?: boolean, eventTriggerCallback?: EventTriggerHandler<TOwner, TCallback>, customEventPropName?: string, canCancel?: boolean): {
+            _eventMode: EventModes;
+            _eventName: string;
+            _removeOnTrigger: boolean;
+            eventFuncType: () => IEventDispatcher<TOwner, TCallback>;
+            eventPropertyType: IEventDispatcher<TOwner, TCallback>;
+        };
+        /**
+            * Creates an instance property name from a given event name by adding 'on' as a prefix.
+            * This is mainly used when registering events as static properties on types.
+            * @param {string} eventName The event name to create an event property from. If the given event name already starts with 'on', then the given name is used as is (i.e. 'click' becomes 'onClick').
+            */
+        static createEventPropertyNameFromEventName(eventName: string): string;
+        /**
+           * Returns a formatted event name in the form of a private event name like '$__{eventName}Event' (eg. 'click' becomes '$__clickEvent').
+           * The private event names are used to store event instances on the owning instances so each instance has it's own handlers list to manage.
+           */
+        static createPrivateEventName(eventName: string): string;
+        dispose(): void;
+        /**
+         * Associates this event instance with an object using a weak map. The owner of the instance is already associated by default.
+         * Use this function to associate other external objects other than the owner, such as DOM elements (there should only be one
+         * specific event instance per any object).
+         */
+        associate(obj: object): this;
+        /** Disassociates this event instance from an object (an internal weak map is used for associations). */
+        disassociate(obj: object): this;
+        /** Returns true if this event instance is already associated with the specified object (a weak map is used). */
+        isAssociated(obj: object): boolean;
+        _getHandlerIndex(handler: TCallback): number;
+        _getHandlerIndex(handler: IDelegate<object, TCallback>): number;
+        /** Adds a handler (callback) to this event.
+        * Note: The registered owner of the underlying dispatch handler will be used as the context of all attached handlers.
+        */
+        attach(handler: TCallback, eventMode?: EventModes): this;
+        attach(handler: IDelegate<object, TCallback>, eventMode?: EventModes): this;
+        /** Dispatch the underlying event. Typically 'dispatch()' is called instead of calling this directly. Returns 'true' if all events completed, and 'false' if any handler cancelled the event.
+          * @param {any} triggerState If supplied, the event will not trigger unless the current state is different from the last state.  This is useful in making
+          * sure events only trigger once per state.  Pass in null (the default) to always dispatch regardless.  Pass 'undefined' to used the event
+          * name as the trigger state (this can be used for a "trigger only once" scenario).
+          * @param {boolean} canBubble Set to true to allow the event to bubble (where supported).
+          * @param {boolean} canCancel Set to true if handlers can abort the event (false means it has or will occur regardless).
+          * @param {string[]} args Custom arguments that will be passed on to the event handlers.
+          */
+        dispatchEvent(triggerState?: any, ...args: any[]): boolean;
+        protected __exception(msg: string, error?: any): Exception;
+        /** Calls the event handlers that match the event mode on the current event instance. */
+        protected onDispatchEvent(args: any[], mode: EventModes): boolean;
+        /** If the given state value is different from the last state value, the internal trigger state value will be updated, and true will be returned.
+            * If a state value of null is given, the request will be ignored, and true will always be returned.
+            * If you don't specify a value ('triggerState' is 'undefined') then the internal event name becomes the trigger state value (this can be used for a "trigger
+            * only once" scenario).  Use 'resetTriggerState()' to reset the internal trigger state when needed.
+            */
+        setTriggerState(triggerState?: any): boolean;
+        /** Resets the current internal trigger state to null. The next call to 'setTriggerState()' will always return true.
+            * This is usually called after a sequence of events have completed, in which it is possible for the cycle to repeat.
+            */
+        resetTriggerState(): void;
+        /** A simple way to pass arguments to event handlers using arguments with static typing (calls 'dispatchEvent(null, false, false, arguments)').
+        * If not cancelled, then 'true' is returned.
+        * TIP: To prevent triggering the same event multiple times, use a custom state value in a call to 'setTriggerState()', and only call
+        * 'dispatch()' if true is returned (example: "someEvent.setTriggerState(someState) && someEvent.dispatch(...);", where the call to 'dispatch()'
+        * only occurs if true is returned from the previous statement).
+        * Note: Call 'dispatchAsync()' to allow current script execution to complete before any handlers get called.
+        * @see dispatchAsync
+        */
+        dispatch(...args: Parameters<TCallback>): boolean;
+        /** Trigger this event by calling all the handlers.
+         * If a handler cancels the process, then the promise is rejected.
+         * This method allows scheduling events to fire after current script execution completes.
+         */
+        dispatchAsync(...args: Parameters<TCallback>): Promise<void>;
+        /** If called within a handler, prevents the other handlers from being called. */
+        cancel(): void;
+        private __indexOf;
+        private __removeListener;
+        removeListener(object: Object, func: TCallback): void;
+        removeListener(handler: IDelegate<TOwner, TCallback>): void;
+        removeAllListeners(): void;
+        /** Constructs a new instance of the even dispatcher.
+         * @param eventTriggerHandler A global handler per event type that is triggered before any other handlers. This is a hook which is called every time an event triggers.
+         * This exists mainly to support handlers called with special parameters, such as those that may need translation, or arguments that need to be injected.
+         */
+        constructor(owner: TOwner, eventName: string, removeOnTrigger?: boolean, canCancel?: boolean, eventTriggerHandler?: EventTriggerHandler<TOwner, TCallback>);
+    }
+    interface IEventDispatcher<TOwner extends object, TCallback extends EventHandler> extends EventDispatcher<TOwner, TCallback> {
+    }
+    interface IPropertyChangingHandler<TSender extends IEventObject> {
+        (sender: TSender, newValue: any): boolean;
+    }
+    interface IPropertyChangedHandler<TSender extends IEventObject> {
+        (sender: TSender, oldValue: any): void;
+    }
+    interface INotifyPropertyChanged<TSender extends IEventObject> {
+        /** Triggered when a supported property is about to change.  This does not work for all properties by default, but only those which call 'doPropertyChanging' in their implementation. */
+        onPropertyChanging: IEventDispatcher<TSender, IPropertyChangingHandler<TSender>>;
+        /** Triggered when a supported property changes.  This does not work for all properties by default, but only those which call 'doPropertyChanged' in their implementation. */
+        onPropertyChanged: IEventDispatcher<TSender, IPropertyChangedHandler<TSender>>;
+        /** Call this if you wish to implement change events for supported properties. */
+        doPropertyChanging(name: string, newValue: any): boolean;
+        /** Call this if you wish to implement change events for supported properties. */
+        doPropertyChanged(name: string, oldValue: any): void;
+    }
+    class EventObject implements INotifyPropertyChanged<IEventObject> {
+        /** Triggered when a supported property is about to change.  This does not work for all properties by default, but only those
+         * which call 'doPropertyChanging' in their implementation.
+         */
+        onPropertyChanging: IEventDispatcher<IEventObject, IPropertyChangingHandler<IEventObject>>;
+        /** Triggered when a supported property changes.  This does not work for all properties by default, but only those
+          * which call 'doPropertyChanged' in their implementation.
+          */
+        onPropertyChanged: IEventDispatcher<IEventObject, IPropertyChangedHandler<IEventObject>>;
+        /** Call this if you wish to implement 'changing' events for supported properties.
+        * If any event handler cancels the event, then 'false' will be returned.
+        */
+        doPropertyChanging(name: string, newValue: any): boolean;
+        /** Call this if you wish to implement 'changed' events for supported properties. */
+        doPropertyChanged(name: string, oldValue: any): void;
+    }
+    interface IEventObject extends EventObject {
+    }
+}
+declare namespace DS {
+    /** Contains functions and types to manage events within the workflow system. */
+    namespace Events {
+        class EventHandler {
+            event: EventDefinition;
+            workflow: Workflow;
+            /**
+             * @param event The defined event for which the associated workflow will be triggered.
+             * @param workflow The workflow to start when the underlying event triggers.
+             */
+            constructor(event: EventDefinition, workflow: Workflow);
+        }
     }
 }
 declare namespace DS {
@@ -2579,209 +2774,5 @@ declare namespace DS {
     /** One or more "swim-lanes", from top to bottom (in order of sequence), that contain a series of components to execute. */
     class Workflows extends TrackableObject {
         readonly workflows: Workflow[];
-    }
-}
-declare namespace DS {
-    /** Contains functions and types to manage events within the workflow system. */
-    namespace Events {
-        class EventHandler {
-            event: EventDefinition;
-            workflow: Workflow;
-            /**
-             * @param event The defined event for which the associated workflow will be triggered.
-             * @param workflow The workflow to start when the underlying event triggers.
-             */
-            constructor(event: EventDefinition, workflow: Workflow);
-        }
-    }
-}
-declare namespace DS {
-    /** Represents an event callback function. Handlers should return false to cancel event dispatching if desired (anything else is ignored). */
-    interface EventHandler {
-        (this: object, ...args: any[]): void | boolean;
-    }
-    /**
-     * The event trigger handler is called to allow custom handling of event handlers when an event occurs.
-     * This handler should return false to cancel event dispatching if desired (anything else is ignored).
-     */
-    interface EventTriggerHandler<TOwner extends object, TCallback extends EventHandler> {
-        (event: IEventDispatcher<TOwner, TCallback>, handler: IDelegate<object, TCallback>, args: any[], mode?: EventModes): void | boolean;
-    }
-    /** Controls how the event progression occurs. */
-    enum EventModes {
-        /** Trigger event on the way up to the target. */
-        Capture = 0,
-        /** Trigger event on the way down from the target. */
-        Bubble = 1,
-        /** Trigger event on both the way up to the target, then back down again. */
-        CaptureAndBubble = 2
-    }
-    /**
-      * The EventDispatcher wraps a specific event type, and manages the triggering of "handlers" (callbacks) when that event type
-      * must be dispatched. Events are usually registered as static properties first (to prevent having to create and initialize
-      * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
-      * instance level event handler registration on the class only when necessary.
-      */
-    class EventDispatcher<TOwner extends object = object, TCallback extends EventHandler = EventHandler> extends DependentObject {
-        readonly owner: TOwner;
-        private __eventName;
-        private __associations;
-        private __listeners;
-        /** If a parent value is set, then the event chain will travel the parent hierarchy from this event dispatcher. If not set, the owner is assumed instead. */
-        protected __parent: IEventDispatcher<any, EventHandler>;
-        private __eventTriggerHandler;
-        private __eventPropertyName;
-        private __eventPrivatePropertyName;
-        private __lastTriggerState;
-        private __cancelled;
-        private __dispatchInProgress;
-        private __handlerCallInProgress;
-        /** Return the underlying event name for this event object. */
-        getEventName(): string;
-        /** If this is true, then any new handler added will automatically be triggered as well.
-        * This is handy in cases where an application state is persisted, and future handlers should always execute. */
-        autoTrigger: boolean;
-        /** Returns true if handlers exist on this event object instance. */
-        hasHandlers(): boolean;
-        /** If true, then handlers are called only once, then removed (default is false). */
-        removeOnTrigger: boolean;
-        /** This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters. */
-        eventTriggerHandler: EventTriggerHandler<TOwner, TCallback>;
-        /** True if the event can be cancelled. */
-        canCancel: boolean;
-        /**
-           * Registers an event with a class type - typically as a static property.
-           * @param type A class reference where the static property will be registered.
-           * @param eventName The name of the event to register.
-           * @param eventMode Specifies the desired event traveling mode.
-           * @param removeOnTrigger If true, the event only fires one time, then clears all event handlers. Attaching handlers once an event fires in this state causes them to be called immediately.
-           * @param eventTriggerCallback This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters.
-           * @param customEventPropName The name of the property that will be associated with this event, and expected on parent objects
-           * for the capturing and bubbling phases.  If left undefined/null, then the default is assumed to be
-           * 'on[EventName]', where the first event character is made uppercase automatically.
-           * @param canCancel If true (default), this event can be cancelled (prevented from completing, so no other events will fire).
-           */
-        static registerEvent<TOwner extends object, TCallback extends EventHandler>(type: {
-            new (...args: any[]): TOwner;
-        }, eventName: string, eventMode?: EventModes, removeOnTrigger?: boolean, eventTriggerCallback?: EventTriggerHandler<TOwner, TCallback>, customEventPropName?: string, canCancel?: boolean): {
-            _eventMode: EventModes;
-            _eventName: string;
-            _removeOnTrigger: boolean;
-            eventFuncType: () => IEventDispatcher<TOwner, TCallback>;
-            eventPropertyType: IEventDispatcher<TOwner, TCallback>;
-        };
-        /**
-            * Creates an instance property name from a given event name by adding 'on' as a prefix.
-            * This is mainly used when registering events as static properties on types.
-            * @param {string} eventName The event name to create an event property from. If the given event name already starts with 'on', then the given name is used as is (i.e. 'click' becomes 'onClick').
-            */
-        static createEventPropertyNameFromEventName(eventName: string): string;
-        /**
-           * Returns a formatted event name in the form of a private event name like '$__{eventName}Event' (eg. 'click' becomes '$__clickEvent').
-           * The private event names are used to store event instances on the owning instances so each instance has it's own handlers list to manage.
-           */
-        static createPrivateEventName(eventName: string): string;
-        dispose(): void;
-        /**
-         * Associates this event instance with an object using a weak map. The owner of the instance is already associated by default.
-         * Use this function to associate other external objects other than the owner, such as DOM elements (there should only be one
-         * specific event instance per any object).
-         */
-        associate(obj: object): this;
-        /** Disassociates this event instance from an object (an internal weak map is used for associations). */
-        disassociate(obj: object): this;
-        /** Returns true if this event instance is already associated with the specified object (a weak map is used). */
-        isAssociated(obj: object): boolean;
-        _getHandlerIndex(handler: TCallback): number;
-        _getHandlerIndex(handler: IDelegate<object, TCallback>): number;
-        /** Adds a handler (callback) to this event.
-        * Note: The registered owner of the underlying dispatch handler will be used as the context of all attached handlers.
-        */
-        attach(handler: TCallback, eventMode?: EventModes): this;
-        attach(handler: IDelegate<object, TCallback>, eventMode?: EventModes): this;
-        /** Dispatch the underlying event. Typically 'dispatch()' is called instead of calling this directly. Returns 'true' if all events completed, and 'false' if any handler cancelled the event.
-          * @param {any} triggerState If supplied, the event will not trigger unless the current state is different from the last state.  This is useful in making
-          * sure events only trigger once per state.  Pass in null (the default) to always dispatch regardless.  Pass 'undefined' to used the event
-          * name as the trigger state (this can be used for a "trigger only once" scenario).
-          * @param {boolean} canBubble Set to true to allow the event to bubble (where supported).
-          * @param {boolean} canCancel Set to true if handlers can abort the event (false means it has or will occur regardless).
-          * @param {string[]} args Custom arguments that will be passed on to the event handlers.
-          */
-        dispatchEvent(triggerState?: any, ...args: any[]): boolean;
-        protected __exception(msg: string, error?: any): Exception;
-        /** Calls the event handlers that match the event mode on the current event instance. */
-        protected onDispatchEvent(args: any[], mode: EventModes): boolean;
-        /** If the given state value is different from the last state value, the internal trigger state value will be updated, and true will be returned.
-            * If a state value of null is given, the request will be ignored, and true will always be returned.
-            * If you don't specify a value ('triggerState' is 'undefined') then the internal event name becomes the trigger state value (this can be used for a "trigger
-            * only once" scenario).  Use 'resetTriggerState()' to reset the internal trigger state when needed.
-            */
-        setTriggerState(triggerState?: any): boolean;
-        /** Resets the current internal trigger state to null. The next call to 'setTriggerState()' will always return true.
-            * This is usually called after a sequence of events have completed, in which it is possible for the cycle to repeat.
-            */
-        resetTriggerState(): void;
-        /** A simple way to pass arguments to event handlers using arguments with static typing (calls 'dispatchEvent(null, false, false, arguments)').
-        * If not cancelled, then 'true' is returned.
-        * TIP: To prevent triggering the same event multiple times, use a custom state value in a call to 'setTriggerState()', and only call
-        * 'dispatch()' if true is returned (example: "someEvent.setTriggerState(someState) && someEvent.dispatch(...);", where the call to 'dispatch()'
-        * only occurs if true is returned from the previous statement).
-        * Note: Call 'dispatchAsync()' to allow current script execution to complete before any handlers get called.
-        * @see dispatchAsync
-        */
-        dispatch(...args: Parameters<TCallback>): boolean;
-        /** Trigger this event by calling all the handlers.
-         * If a handler cancels the process, then the promise is rejected.
-         * This method allows scheduling events to fire after current script execution completes.
-         */
-        dispatchAsync(...args: Parameters<TCallback>): Promise<void>;
-        /** If called within a handler, prevents the other handlers from being called. */
-        cancel(): void;
-        private __indexOf;
-        private __removeListener;
-        removeListener(object: Object, func: TCallback): void;
-        removeListener(handler: IDelegate<TOwner, TCallback>): void;
-        removeAllListeners(): void;
-        /** Constructs a new instance of the even dispatcher.
-         * @param eventTriggerHandler A global handler per event type that is triggered before any other handlers. This is a hook which is called every time an event triggers.
-         * This exists mainly to support handlers called with special parameters, such as those that may need translation, or arguments that need to be injected.
-         */
-        constructor(owner: TOwner, eventName: string, removeOnTrigger?: boolean, canCancel?: boolean, eventTriggerHandler?: EventTriggerHandler<TOwner, TCallback>);
-    }
-    interface IEventDispatcher<TOwner extends object, TCallback extends EventHandler> extends EventDispatcher<TOwner, TCallback> {
-    }
-    interface IPropertyChangingHandler<TSender extends IEventObject> {
-        (sender: TSender, newValue: any): boolean;
-    }
-    interface IPropertyChangedHandler<TSender extends IEventObject> {
-        (sender: TSender, oldValue: any): void;
-    }
-    interface INotifyPropertyChanged<TSender extends IEventObject> {
-        /** Triggered when a supported property is about to change.  This does not work for all properties by default, but only those which call 'doPropertyChanging' in their implementation. */
-        onPropertyChanging: IEventDispatcher<TSender, IPropertyChangingHandler<TSender>>;
-        /** Triggered when a supported property changes.  This does not work for all properties by default, but only those which call 'doPropertyChanged' in their implementation. */
-        onPropertyChanged: IEventDispatcher<TSender, IPropertyChangedHandler<TSender>>;
-        /** Call this if you wish to implement change events for supported properties. */
-        doPropertyChanging(name: string, newValue: any): boolean;
-        /** Call this if you wish to implement change events for supported properties. */
-        doPropertyChanged(name: string, oldValue: any): void;
-    }
-    class EventObject implements INotifyPropertyChanged<IEventObject> {
-        /** Triggered when a supported property is about to change.  This does not work for all properties by default, but only those
-         * which call 'doPropertyChanging' in their implementation.
-         */
-        onPropertyChanging: IEventDispatcher<IEventObject, IPropertyChangingHandler<IEventObject>>;
-        /** Triggered when a supported property changes.  This does not work for all properties by default, but only those
-          * which call 'doPropertyChanged' in their implementation.
-          */
-        onPropertyChanged: IEventDispatcher<IEventObject, IPropertyChangedHandler<IEventObject>>;
-        /** Call this if you wish to implement 'changing' events for supported properties.
-        * If any event handler cancels the event, then 'false' will be returned.
-        */
-        doPropertyChanging(name: string, newValue: any): boolean;
-        /** Call this if you wish to implement 'changed' events for supported properties. */
-        doPropertyChanged(name: string, oldValue: any): void;
-    }
-    interface IEventObject extends EventObject {
     }
 }

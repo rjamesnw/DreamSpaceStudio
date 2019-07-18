@@ -20,15 +20,13 @@ process.on('unhandledRejection', function (err) {
 });
 // ----------------------------------------------------------------------------------------------------------------------------
 require('../solutions/server/server_api'); // (adds the global.DS core system namespace API)
+DS.registerGlobal(); // (registers the system for managing global properties to prevent cluttering the JS global space)
 const express = require("express");
 const path = require("path");
 const templateEngine = require("./templateEngine");
 const index_1 = require("./routes/index");
 const ide_1 = require("./routes/ide");
 const user_1 = require("./routes/user");
-//? global.XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-//? import { registerGlobal } from '../Core/DreamSpace';
-//? var ds = registerGlobal();
 var app = express();
 templateEngine.apply(app);
 (() => __awaiter(this, void 0, void 0, function* () {
@@ -40,9 +38,9 @@ templateEngine.apply(app);
         }));
         // Parse JSON bodies (as sent by API clients)
         app.use(express.json());
-        // view engine setup
-        app.set('views', path.join(__dirname, 'views'));
-        app.set('view engine', 'html');
+        //// view engine setup
+        //x app.set('views', path.join(__dirname, 'views'));
+        //x app.set('view engine', 'html');
         app.use(express.static(path.join(__dirname, 'public')));
         app.use('/', index_1.default);
         app.use('/ide', ide_1.default);
@@ -80,8 +78,7 @@ templateEngine.apply(app);
         var port = process.env.PORT || 45000;
         app.set('port', port); // (just for reference using 'app.get('port')')
         var server = app.listen(port, () => {
-            console.log(`Test server running on port ${server.address().port}.`);
-            console.log("Note: this test server is NOT part of the lambda functionality and is for local development only.");
+            console.log(`DreamSpace server running on port ${server.address().port}.`);
             console.log("To exit, simply close this window, or press CTRL-C.");
         });
         let connections = []; // (this allows graceful shutdown)

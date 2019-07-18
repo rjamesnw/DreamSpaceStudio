@@ -417,7 +417,7 @@ namespace DS {
                 if (typeof payload == 'object' && payload.__proto__ == Object.prototype) {
                     // (can't send object literals! convert to something else ...)
                     if (_method == 'GET') {
-                        var q = Query.new(payload);
+                        var q = new Query(payload);
                         payload = q.toString(false);
                     } else {
                         if (this.type == ResourceTypes.Application_JSON) {

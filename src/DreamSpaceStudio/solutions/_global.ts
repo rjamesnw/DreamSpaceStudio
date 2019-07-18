@@ -53,17 +53,13 @@ var USER_GIVEN_GLOBAL_NS_NAME: string;
  * 'DEFAULT_ROOT_NS_NAME' by default.
  */
 namespace DS {
-    eval("var DSStaticProperties = DS;");
-    abstract class DSStaticProperties { // (abstract classes with namespaces allow for better extensions)
-        static get globalNamespaceName() { return USER_GIVEN_GLOBAL_NS_NAME || DEFAULT_GLOBAL_NS_NAME; }
-        static get rootns() { return global[globalNamespaceName]; }
-    }
+/** The global DreamSpace namespace name.  Call 'registerGlobal()' to specify a custom name, otherwise the default 'DEFAULT_GLOBAL_NS_NAME' is used. */
+    export var globalNamespaceName: string;
+    Object.defineProperty(DS, "globalNamespaceName", { configurable: false, enumerable: true, get: () => { return USER_GIVEN_GLOBAL_NS_NAME || DEFAULT_GLOBAL_NS_NAME; } });
 
-    /** The global DreamSpace namespace name.  Call 'registerGlobal()' to specify a custom name, otherwise the default 'DEFAULT_GLOBAL_NS_NAME' is used. */
-    export var globalNamespaceName: typeof DSStaticProperties.globalNamespaceName;
-
-    /** The root DreamSpace namespace, which is just DreamSpace.global[DreamSpace.globalNamespaceName] (which is just 'window[DreamSpace.globalNamespaceName]' on browser clients). */
-    export var rootns: typeof DSStaticProperties.rootns;
+/** The root DreamSpace namespace, which is just DreamSpace.global[DreamSpace.globalNamespaceName] (which is just 'window[DreamSpace.globalNamespaceName]' on browser clients). */
+    export var rootns: string;
+    Object.defineProperty(DS, "rootns", { configurable: false, enumerable: true, get: () => { return global[globalNamespaceName]; } });
 
     /** The current application version (user defined). */
     export var appVersion: string;

@@ -118,9 +118,9 @@
     <Content Include="public\stylesheets\main.css" />
     <Content Include="users\F7E1685E6F654C2A84EBF34A9FDE5DB4\user.json" />
     <Content Include="users\readme.txt" />
-    <Content Include="views\studio\error.tmpl.html" />
-    <Content Include="views\studio\layout.tmpl.html" />
-    <Content Include="views\studio\index.tmpl.html">
+    <Content Include="views\error.t.html" />
+    <Content Include="views\studio\layout.t.html" />
+    <Content Include="views\studio\index.t.html">
       <SubType>Code</SubType>
     </Content>
     <TypeScriptCompile Include="solutions\Globals.ts" />

@@ -11,6 +11,7 @@
   },
   "include": [
     "_global.ts", // (make sure this is always first)
+    "Utilities.ts",
     "TrackableObject.ts",
     "DependentObject.ts",
     "VDOM.ts",

@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var fs = require('fs'); // this engine requires the fs module
+const fs = require("fs"); // this engine requires the fs module
 function apply(app) {
-    app.engine('tmpl.html', function (filePath, options, callback) {
+    app.engine('t.html', function (filePath, options, callback) {
+        debugger;
         fs.readFile(filePath, function (err, content) {
             if (err)
                 return callback(err);
@@ -13,8 +14,9 @@ function apply(app) {
             return callback(null, rendered);
         });
     });
-    app.set('views', '../views'); // specify the views directory
-    app.set('view engine', 'tmpl.html'); // register the template engine
+    // view engine setup
+    app.set('views', DS.Path.combine(__dirname, '../views')); // specify the views directory
+    app.set('view engine', 't.html'); // register the template engine
 }
 exports.apply = apply;
 //# sourceMappingURL=templateEngine.js.map

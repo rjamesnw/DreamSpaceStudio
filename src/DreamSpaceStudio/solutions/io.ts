@@ -13,8 +13,6 @@ interface IResponse<TData = any> {
     notSerializable?: boolean;
 }
 
-var isNode = typeof global == 'object' && global.process && global.process.versions && global.process.versions.node;
-
 /** This is the root to all DreamSpaceJS utilities.
  * These utilities cover most common developer needs when buidling custom components. 
  */

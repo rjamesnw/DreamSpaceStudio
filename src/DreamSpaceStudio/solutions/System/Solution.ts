@@ -3,7 +3,10 @@
     // ========================================================================================================================
 
     function _defaultCreateProjectHandler(solution: Solution, project: ISavedProject) {
-        return new Project(solution, project.name, project.description);
+        var proj = new Project(solution, project.name, project.description);
+        if (project.uid)
+            (<Writeable<typeof proj>>proj)._uid = project.uid;
+        return proj;
     };
 
     export interface ISavedSolution extends ISavedTrackableObject {
@@ -21,7 +24,7 @@
     */
     export class Solution extends TrackableObject {
         /** The function used to create project instances when a project is created from saved project data.
-         * Host programs can hook into this to create and return derived types instead (such as ProjectUI.ts).
+         * Host programs can overwrite this event property with a handler to create and return derived types instead (such as ProjectUI.ts).
          */
         static get onCreateProject() { return this._onCreateProject || _defaultCreateProjectHandler; }
         static set onCreateProject(value) { if (typeof value != 'function') throw "Solution.onCreateProject: Set failed - value is not a function."; this._onCreateProject = value; }
@@ -57,7 +60,7 @@
          * @param description The project description.
          */
         createProject(name: string, description?: string): Project {
-            var info: ISavedProject = { name, description };
+            var info: ISavedProject = { uid: void 0, name, description };
             var project = Solution.onCreateProject(this, info);
             this._projects.push(project);
             return project;

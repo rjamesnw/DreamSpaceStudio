@@ -18,8 +18,11 @@ process.on('unhandledRejection', function (err) {
     console.error("Unhandled Rejection: " + err);
     //wait(); // not needed, since express keeps the message loop active
 });
+// ----------------------------------------------------------------------------------------------------------------------------
+require('../solutions/server/server_api'); // (adds the global.DS core system namespace API)
 const express = require("express");
 const path = require("path");
+const templateEngine = require("./templateEngine");
 const index_1 = require("./routes/index");
 const ide_1 = require("./routes/ide");
 const user_1 = require("./routes/user");
@@ -27,6 +30,7 @@ const user_1 = require("./routes/user");
 //? import { registerGlobal } from '../Core/DreamSpace';
 //? var ds = registerGlobal();
 var app = express();
+templateEngine.apply(app);
 (() => __awaiter(this, void 0, void 0, function* () {
     //await ds.init();
     try {

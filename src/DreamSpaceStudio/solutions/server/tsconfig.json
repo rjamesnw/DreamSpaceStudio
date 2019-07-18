@@ -10,9 +10,10 @@
     "lib": [ "es6", "dom" ],
     "types": [ "node" ] // (include only types we need; prevents node types from being included)
   },
-  "include": [
-    "./*.ts"
+  "files": [
+    "./ds.ts" // (make this first)
   ],
+  "include": [ "./*.ts" ],
   "exclude": [
     "node_modules",
     "projects",

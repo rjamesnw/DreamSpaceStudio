@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 // These are functions for bootstrapping the core system.  It helps to set up common types and functions that will be needed,
 // such as DS.init() to execute callbacks to finalize to loading process (must be called by the end user).
 // ###########################################################################################################################
+var isNode = typeof global == 'object' && global.process && global.process.versions && global.process.versions.node;
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
  * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.
  * Note: A symbol is not used, since callbacks placed into API URLs must be strings. Instead, a static pre-generated GUID is appended.
@@ -337,6 +338,8 @@ var DS;
     DS.types = modules;
     // =======================================================================================================================
 })(DS || (DS = {}));
+if (isNode && exports)
+    eval("exports.DS = DS;"); // (when require('api') is used we need to export the DS namespace, which will contain the whole DS global API)
 // ###########################################################################################################################
 var DS;
 (function (DS) {
@@ -4752,7 +4755,6 @@ var DS;
 //   * helper source: https://github.com/Microsoft/tslib/blob/master/tslib.js
 // Contains DreamSpace API functions and types that user code can use to work with the system.
 // This API will be a layer of abstraction that keeps things similar between server and client sides.
-var isNode = typeof global == 'object' && global.process && global.process.versions && global.process.versions.node;
 /** This is the root to all DreamSpaceJS utilities.
  * These utilities cover most common developer needs when buidling custom components.
  */
@@ -4803,6 +4805,343 @@ var DS;
 })(DS || (DS = {}));
 var DS;
 (function (DS) {
+    // ############################################################################################################################
+    // FileManager
+    let FileSystem;
+    (function (FileSystem) {
+        // ========================================================================================================================
+        let SyncStatus;
+        (function (SyncStatus) {
+            /** Not synchronizing. */
+            SyncStatus[SyncStatus["None"] = 0] = "None";
+            /** The content is being uploaded. */
+            SyncStatus[SyncStatus["Uploading"] = 1] = "Uploading";
+            /** Upload error. */
+            SyncStatus[SyncStatus["Error"] = 2] = "Error";
+            /** File now exists on the remote endpoint. */
+            SyncStatus[SyncStatus["Completed"] = 3] = "Completed";
+        })(SyncStatus = FileSystem.SyncStatus || (FileSystem.SyncStatus = {}));
+        var reviewTimerHandle;
+        function _syncFileSystem() {
+            reviewTimerHandle = void 0;
+        }
+        /** Returns slits and returns the path parts, validating each one and throwing an exception if any are invalid. */
+        function getPathParts(path) {
+            var parts = (typeof path !== 'string' ? '' + path : path).replace(/\\/g, '/').split('/');
+            for (var i = 0, n = parts.length; i < n; ++i)
+                if (!isValidFileName(parts[i]))
+                    throw "The path '" + path + "' contains invalid characters in '" + parts[i] + "'.";
+            return parts;
+        }
+        FileSystem.getPathParts = getPathParts;
+        class DirectoryItem {
+            // --------------------------------------------------------------------------------------------------------------------
+            constructor(fileManager, parent) {
+                /** The sync status of this item.
+                 * Note: Each directory item node syncs in sequence parent-to-child; thus, the child only syncs when the parent succeeds.  That said,
+                 * to be efficient, the parent will send itself AND all child directories (not files) as one JSON request.
+                 */
+                this.syncStatus = 0;
+                //get type(): string { return this._type; }
+                //private _type: string;
+                this._childItems = [];
+                this._childItemsByName = {};
+                this._fileManager = fileManager;
+                this.parent = parent;
+            }
+            /** The last time this*/
+            get lastAccessed() { return this._lastAccessed; }
+            /** Updates the 'lastAccessed' date+time value to the current value. Touching this directory item also refreshes the dates of all parent items.
+             * When the date of an item changes after a touch, it starts the process of reviewing and synchronizing with the back-end.
+             */
+            touch() {
+                this._lastAccessed = new Date();
+                if (this._parent)
+                    this._parent.touch();
+                else {
+                    if (typeof reviewTimerHandle == 'number')
+                        clearTimeout(reviewTimerHandle);
+                    reviewTimerHandle = setTimeout(_syncFileSystem, 500);
+                }
+            }
+            /** Returns a reference to the parent item.  If there is no parent, then 'null' is returned.
+             */
+            get parent() { return this._parent; }
+            /** Sets a new parent type for this.  The current item will be removed from its parent (if any), and added to the given parent. */
+            set parent(parent) {
+                if (this._parent)
+                    this._parent.remove(this);
+                if (parent)
+                    parent.add(this);
+            }
+            get name() { return this._name; }
+            get hasChildren() { return !!(this._childItems && this._childItems.length); }
+            /** The full path + item name. */
+            get absolutePath() { return this._parent && this._parent.absolutePath + '/' + this._name || this._name; }
+            toString() { return this.absolutePath; }
+            exists(nameOrItem, ignore) {
+                if (nameOrItem === void 0 || nameOrItem === null || !this.hasChildren)
+                    return false;
+                if (typeof nameOrItem === 'object' && nameOrItem instanceof DirectoryItem) {
+                    var item = this._childItemsByName[nameOrItem._name];
+                    return !!item && item != ignore;
+                }
+                var t = this.resolve(nameOrItem);
+                return !!t && t != ignore;
+            }
+            /** Resolves a namespace path under this item.  You can provide a nested path if desired.
+              * For example, if the current item is 'A/B' within the 'A/B/C/D' path, then you could pass in 'C/D'.
+              * If not found, then null is returned.
+              * @param {function} typeFilter The type that the returned item must be a derivative of.
+              */
+            resolve(itemPath, typeFilter) {
+                if (itemPath === void 0 || itemPath === null || !this.hasChildren)
+                    return null;
+                var parts = getPathParts(itemPath), t = this;
+                for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
+                    // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
+                    var item = t._childItemsByName[parts[i]];
+                    if (!item)
+                        return null;
+                    else
+                        t = item;
+                }
+                return (typeFilter ? (t instanceof typeFilter ? t : null) : t);
+            }
+            /** Adds the given item under this item.
+              */
+            add(item) {
+                if (item === void 0 || item === null)
+                    throw "Cannot add an empty item name/path to '" + this.absolutePath + "'.";
+                if (this.exists(item))
+                    throw "The item '" + item + "' already exists in the namespace '" + this.absolutePath + "'.";
+                if (typeof item !== 'object' || !(item instanceof DirectoryItem))
+                    throw "The item '" + item + "' is not a valid 'DirectoryItem' object.";
+                if (item.parent)
+                    if (item.parent == this)
+                        return item;
+                    else
+                        item.parent.remove(item);
+                item._parent = this;
+                if (!this._childItems)
+                    this._childItems = [];
+                if (!this._childItemsByName)
+                    this._childItemsByName = {};
+                this._childItems.push(item);
+                this._childItemsByName[item.name] = item;
+                return item;
+            }
+            remove(itemOrName) {
+                if (itemOrName === void 0 || itemOrName === null)
+                    throw "Cannot remove an empty name/path from directory '" + this.absolutePath + "'.";
+                if (!this.hasChildren)
+                    return null;
+                var parent; // (since types can be added as roots to other types [i.e. no parent references], need to remove item objects as immediate children, not via 'resolve()')
+                if (typeof itemOrName == 'object' && itemOrName instanceof DirectoryItem) {
+                    var t = itemOrName;
+                    if (!this._childItemsByName[t.name])
+                        throw "Cannot remove item: There is no child item '" + itemOrName + "' under '" + this.absolutePath + "'.";
+                    parent = this;
+                }
+                else {
+                    var t = this.resolve(itemOrName);
+                    if (t)
+                        parent = t.parent;
+                }
+                if (t && parent) {
+                    delete parent._childItemsByName[t.name];
+                    var i = parent._childItems.indexOf(t);
+                    if (i >= 0)
+                        parent._childItems.splice(i, 1);
+                    t._parent = null;
+                }
+                return t;
+            }
+            getJSONStructure(typeFilter) {
+                JSON.stringify(this, (k, v) => {
+                    if (!k || k == '_childItems' || k == 'name') // ('k' is empty for the root object)
+                        if (!typeFilter || !v || v instanceof typeFilter)
+                            return v;
+                }, 2);
+                //var body = this._getJSONStructure(typeFilter, "  ");
+                //return "{" + (body ? "\r\n" + body : "") + "}\r\n";
+            }
+        }
+        FileSystem.DirectoryItem = DirectoryItem;
+        function _defaultCreateDirHandler(fileManager, parent) {
+            return new Directory(fileManager, parent);
+        }
+        ;
+        class Directory extends DirectoryItem {
+            constructor(fileManager, parent) { super(fileManager, parent); }
+            /** The function used to create directory instances.
+             * Host programs can overwrite this event property with a handler to create and return derived types instead.
+             */
+            static get onCreateDirectory() { return this._onCreateDirectory || _defaultCreateDirHandler; }
+            static set onCreateDirectory(value) { if (typeof value != 'function')
+                throw "Directory.onCreateDirectory: Set failed - value is not a function."; this._onCreateDirectory = value; }
+            /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,).
+             * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
+             * Examples:
+             * - "/A/B/C/" => "/A/B/C"
+             * - "A/B/C" => "A/B"
+             * - "//A/B/C//" => "/A/B/C"
+             * - "/" => "/"
+             * - "" => ""
+             */
+            static getPath(filepath) {
+                if (!filepath)
+                    return "";
+                var parts = filepath.replace(/\\/g, '/').split('/'), i1 = 0, i2 = parts.length - 2;
+                while (i1 < parts.length && !parts[i1])
+                    i1++;
+                while (i2 > i1 && !parts[i2])
+                    i2--;
+                return (i1 > 0 ? "/" : "") + parts.slice(i1, i2 + 1).join('/');
+            }
+            getFile(filePath) {
+                var item = this.resolve(filePath);
+                if (!(item instanceof File))
+                    return null;
+                return item;
+            }
+            getDirectory(path) {
+                var item = this.resolve(path);
+                if (!(item instanceof Directory))
+                    return null;
+                return item;
+            }
+            /** Creates a directory under the user root endpoint. */
+            createDirectory(path) {
+                if (path === void 0 || path === null || !this.hasChildren)
+                    return null;
+                var parts = getPathParts(path), item = this; // (if path is empty it should default to this directory)
+                for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
+                    // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
+                    var childItem = item._childItemsByName[parts[i]];
+                    if (!childItem)
+                        item = Directory.onCreateDirectory(this._fileManager, this); // (create new directory names along the route)
+                    else if (childItem instanceof Directory)
+                        item = childItem; // (directory found, go in and continue)
+                    else
+                        throw "Cannot create path '" + path + "' under '" + this + "': '" + item + "' is not a directory.";
+                }
+                return item;
+            }
+            createFile(filePath, contents) {
+                var filename = File.getName(filePath);
+                var directoryPath = Directory.getPath(filePath);
+                if (!filename)
+                    throw "A file name is required.";
+                var dir = this.createDirectory(directoryPath);
+                return File.onCreateFile(this._fileManager, dir, contents);
+            }
+            getJSONStructure() {
+            }
+        }
+        Directory._onCreateDirectory = _defaultCreateDirHandler;
+        FileSystem.Directory = Directory;
+        function _defaultCreateFileHandler(fileManager, parent, content) {
+            return new File(fileManager, parent, content);
+        }
+        ;
+        class File extends DirectoryItem {
+            constructor(fileManager, parent, content) {
+                super(fileManager, parent);
+                if (content !== void 0)
+                    this._contents = content;
+            }
+            /** The function used to create file instances.
+             * Host programs can overwrite this event property with a handler to create and return derived types instead.
+             */
+            static get onCreateFile() { return this._onCreateFile || _defaultCreateFileHandler; }
+            static set onCreateFile(value) { if (typeof value != 'function')
+                throw "File.onCreateFile: Set failed - value is not a function."; this._onCreateFile = value; }
+            get contents() { return this._contents; }
+            set contents(value) { this._contents = value; this.touch(); }
+            /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,).
+            * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
+            * Examples:
+            * - "/A/B/C/" => ""
+            * - "A/B/C" => "C"
+            * - "/" => ""
+            * - "" => ""
+            */
+            static getName(filepath) {
+                if (!filepath)
+                    return "";
+                var parts = filepath.replace(/\\/g, '/').split('/');
+                return parts[parts.length - 1] || "";
+            }
+            toBase64() { return DS.Encoding.base64Encode(this.contents); }
+            fromBase64(contentsB64) { this.contents = DS.Encoding.base64Decode(contentsB64); }
+        }
+        File._onCreateFile = _defaultCreateFileHandler;
+        FileSystem.File = File;
+        /** Manages files in a virtual file system. This allows project files to be stored locally and synchronized with the server when a connection is available.
+         * For off-line storage to work, the browser must support local storage.
+         * Note: The 'FlowScript.currentUser' object determines the user-specific root directory for projects.
+         */
+        class FileManager {
+            // --------------------------------------------------------------------------------------------------------------------
+            constructor(
+            /** The URL endpoint for the FlowScript project files API. Defaults to 'FileManager.apiEndpoint'. */
+            apiEndpoint = FileManager.apiEndpoint) {
+                this.apiEndpoint = apiEndpoint;
+                this.root = Directory.onCreateDirectory(this);
+            }
+            /** Just a local property that checks for and returns 'FlowScript.currentUser'. */
+            static get currentUser() { if (DS.User.current)
+                return DS.User.current; throw "'There is no current user! User.changeCurrentUser()' must be called first."; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
+            /** The API endpoint to the directory for the current user. */
+            static get currentUserEndpoint() { return combine(this.apiEndpoint, FileManager.currentUser._uid); }
+            /** Gets a directory under the current user root endpoint.
+             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+             */
+            getDirectory(path, userId) {
+                return this.root.getDirectory(combine(userId || FileManager.currentUser._uid, path));
+            }
+            /** Creates a directory under the current user root endpoint.
+             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+             */
+            createDirectory(path, userId) {
+                return this.root.createDirectory(combine(userId || FileManager.currentUser._uid, path));
+            }
+            /** Gets a file under the current user root endpoint.
+             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+             */
+            getFile(filePath, userId) {
+                return this.root.getFile(combine(userId || FileManager.currentUser._uid, filePath));
+            }
+            /** Creates a file under the current user root endpoint.
+             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+             */
+            createFile(filePath, contents, userId) {
+                return this.root.createFile(combine(userId || FileManager.currentUser._uid, filePath), contents);
+            }
+        }
+        // --------------------------------------------------------------------------------------------------------------------
+        /** The URL endpoint for the FlowScript project files API. */
+        FileManager.apiEndpoint = "/api/files";
+        FileSystem.FileManager = FileManager;
+        // ========================================================================================================================
+        FileSystem.restrictedFilenameRegex = /\/\\\?%\*:\|"<>/g;
+        /** Returns true if a given filename contains invalid characters. */
+        function isValidFileName(name) {
+            return name && FileSystem.restrictedFilenameRegex.test(name);
+        }
+        FileSystem.isValidFileName = isValidFileName;
+        /** Combine two paths into one. */
+        function combine(path1, path2) {
+            return DS.Path.combine(path1 instanceof Directory ? path1.absolutePath : path1, path2 instanceof Directory ? path2.absolutePath : path2);
+        }
+        FileSystem.combine = combine;
+        // ========================================================================================================================
+    })(FileSystem = DS.FileSystem || (DS.FileSystem = {}));
+    // ############################################################################################################################
+})(DS || (DS = {}));
+var DS;
+(function (DS) {
     /** A page holds the UI design, which is basically just a single HTML page template. */
     class Page {
     }
@@ -4842,7 +5181,7 @@ var DS;
           */
         get expressionBin() { return this._expressionBin; }
         /** Returns the expression that was picked by the user for some operation. In the future this may also be used during drag-n-drop operations. */
-        get pickedExpression() { return this._pickedItem; }
+        get pickedItem() { return this._pickedItem; }
         // --------------------------------------------------------------------------------------------------------------------
         /** Saves the project and related items to a specified object.
          * If no object is specified, then a new empty object is created and returned.
@@ -4854,7 +5193,7 @@ var DS;
             target.description = this.description;
             for (var p in this.files)
                 (target.files || (target.files = [])).push(this.files[p].absolutePath);
-            target.scripts = [this.script.save()];
+            target.workflows = [this.script.save()];
             return target;
         }
         /** Saves the project to a persisted storage, such as the local browser storage, or a remote store, if possible.
@@ -4865,18 +5204,18 @@ var DS;
         saveToStorage(source = this.save()) {
             if (!source)
                 return; // (nothing to do)
-            if (Array.isArray(source.scripts))
-                for (var i = 0, n = source.scripts.length; i < n; ++i) {
-                    var script = source.scripts[i];
-                    if (typeof script == 'object' && script.id) {
-                        source.scripts[i] = script.id; // (replaced the object entry with the ID before saving the project graph later; these will be files instead)
-                        var scriptJSON = script && JSON.stringify(script) || null;
-                        var file = this.directory.createFile((script.name || script.id) + ".fs", scriptJSON); // (fs: FlowScript source file)
+            if (Array.isArray(source.workflows))
+                for (var i = 0, n = source.workflows.length; i < n; ++i) {
+                    var workflow = source.workflows[i];
+                    if (typeof workflow == 'object' && workflow.uid) {
+                        source.workflows[i] = workflow.uid; // (replaced the object entry with the ID before saving the project graph later; these will be files instead)
+                        var wfJSON = workflow && JSON.stringify(workflow) || null;
+                        var file = this.directory.createFile((workflow.name || workflow.uid) + ".wf.json", wfJSON); // (wf: Workflow file)
                         this.files[file.absolutePath.toLocaleLowerCase()] = file;
                     }
                 }
             var projectJSON = this.serialize(source);
-            file = this.directory.createFile(this._uid + ".fsp", projectJSON); // (fsp: FlowScript Project file)
+            file = this.directory.createFile(this._uid + ".dsp.json", projectJSON); // (dsp: DreamSpace Project file)
             this.files[file.absolutePath.toLocaleLowerCase()] = file;
         }
         load(target) {
@@ -5038,7 +5377,10 @@ var DS;
 (function (DS) {
     // ========================================================================================================================
     function _defaultCreateProjectHandler(solution, project) {
-        return new DS.Project(solution, project.name, project.description);
+        var proj = new DS.Project(solution, project.name, project.description);
+        if (project.uid)
+            proj._uid = project.uid;
+        return proj;
     }
     ;
     /**
@@ -5055,7 +5397,7 @@ var DS;
             this.directory = DS.FileSystem.fileManager.createDirectory(DS.FileSystem.combine("solutions", this._uid));
         }
         /** The function used to create project instances when a project is created from saved project data.
-         * Host programs can hook into this to create and return derived types instead (such as ProjectUI.ts).
+         * Host programs can overwrite this event property with a handler to create and return derived types instead (such as ProjectUI.ts).
          */
         static get onCreateProject() { return this._onCreateProject || _defaultCreateProjectHandler; }
         static set onCreateProject(value) { if (typeof value != 'function')
@@ -5071,7 +5413,7 @@ var DS;
          * @param description The project description.
          */
         createProject(name, description) {
-            var info = { name, description };
+            var info = { uid: void 0, name, description };
             var project = Solution.onCreateProject(this, info);
             this._projects.push(project);
             return project;
@@ -5170,321 +5512,29 @@ var DS;
 })(DS || (DS = {}));
 var DS;
 (function (DS) {
-    // ############################################################################################################################
-    // FileManager
-    let FileSystem;
-    (function (FileSystem) {
-        // ========================================================================================================================
-        let SyncStatus;
-        (function (SyncStatus) {
-            /** Not synchronizing. */
-            SyncStatus[SyncStatus["None"] = 0] = "None";
-            /** The content is being uploaded. */
-            SyncStatus[SyncStatus["Uploading"] = 1] = "Uploading";
-            /** Upload error. */
-            SyncStatus[SyncStatus["Error"] = 2] = "Error";
-            /** File now exists on the remote endpoint. */
-            SyncStatus[SyncStatus["Completed"] = 3] = "Completed";
-        })(SyncStatus = FileSystem.SyncStatus || (FileSystem.SyncStatus = {}));
-        var reviewTimerHandle;
-        function _syncFileSystem() {
-            reviewTimerHandle = void 0;
-        }
-        /** Returns slits and returns the path parts, validating each one and throwing an exception if any are invalid. */
-        function getPathParts(path) {
-            var parts = (typeof path !== 'string' ? '' + path : path).replace(/\\/g, '/').split('/');
-            for (var i = 0, n = parts.length; i < n; ++i)
-                if (!isValidFileName(parts[i]))
-                    throw "The path '" + path + "' contains invalid characters in '" + parts[i] + "'.";
-            return parts;
-        }
-        FileSystem.getPathParts = getPathParts;
-        class DirectoryItem {
-            // --------------------------------------------------------------------------------------------------------------------
-            constructor(fileManager, parent) {
-                /** The sync status of this item.
-                 * Note: Each directory item node syncs in sequence parent-to-child; thus, the child only syncs when the parent succeeds.  That said,
-                 * to be efficient, the parent will send itself AND all child directories (not files) as one JSON request.
-                 */
-                this.syncStatus = 0;
-                //get type(): string { return this._type; }
-                //private _type: string;
-                this._childItems = [];
-                this._childItemsByName = {};
-                this._fileManager = fileManager;
-                this.parent = parent;
-            }
-            /** The last time this*/
-            get lastAccessed() { return this._lastAccessed; }
-            /** Updates the 'lastAccessed' date+time value to the current value. Touching this directory item also refreshes the dates of all parent items.
-             * When the date of an item changes after a touch, it starts the process of reviewing and synchronizing with the backend.
+    /** Contains functions and types to manage events within the workflow system. */
+    let Events;
+    (function (Events) {
+        class EventHandler {
+            /**
+             * @param event The defined event for which the associated workflow will be triggered.
+             * @param workflow The workflow to start when the underlying event triggers.
              */
-            touch() {
-                this._lastAccessed = new Date();
-                if (this._parent)
-                    this._parent.touch();
-                else {
-                    if (typeof reviewTimerHandle == 'number')
-                        clearTimeout(reviewTimerHandle);
-                    reviewTimerHandle = setTimeout(_syncFileSystem, 500);
-                }
-            }
-            /** Returns a reference to the parent item.  If there is no parent, then 'null' is returned.
-             */
-            get parent() { return this._parent; }
-            /** Sets a new parent type for this.  The current item will be removed from its parent (if any), and added to the given parent. */
-            set parent(parent) {
-                if (this._parent)
-                    this._parent.remove(this);
-                if (parent)
-                    parent.add(this);
-            }
-            get name() { return this._name; }
-            get hasChildren() { return !!(this._childItems && this._childItems.length); }
-            /** The full path + item name. */
-            get absolutePath() { return this._parent && this._parent.absolutePath + '/' + this._name || this._name; }
-            toString() { return this.absolutePath; }
-            exists(nameOrItem, ignore) {
-                if (nameOrItem === void 0 || nameOrItem === null || !this.hasChildren)
-                    return false;
-                if (typeof nameOrItem === 'object' && nameOrItem instanceof DirectoryItem) {
-                    var item = this._childItemsByName[nameOrItem._name];
-                    return !!item && item != ignore;
-                }
-                var t = this.resolve(nameOrItem);
-                return !!t && t != ignore;
-            }
-            /** Resolves a namespace path under this item.  You can provide a nested path if desired.
-              * For example, if the current item is 'A/B' within the 'A/B/C/D' path, then you could pass in 'C/D'.
-              * If not found, then null is returned.
-              * @param {function} typeFilter The type that the returned item must be a derivative of.
-              */
-            resolve(itemPath, typeFilter) {
-                if (itemPath === void 0 || itemPath === null || !this.hasChildren)
-                    return null;
-                var parts = getPathParts(itemPath), t = this;
-                for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
-                    // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
-                    var item = t._childItemsByName[parts[i]];
-                    if (!item)
-                        return null;
-                    else
-                        t = item;
-                }
-                return (typeFilter ? (t instanceof typeFilter ? t : null) : t);
-            }
-            /** Adds the given item under this item.
-              */
-            add(item) {
-                if (item === void 0 || item === null)
-                    throw "Cannot add an empty item name/path to '" + this.absolutePath + "'.";
-                if (this.exists(item))
-                    throw "The item '" + item + "' already exists in the namespace '" + this.absolutePath + "'.";
-                if (typeof item !== 'object' || !(item instanceof DirectoryItem))
-                    throw "The item '" + item + "' is not a valid 'DirectoryItem' object.";
-                if (item.parent)
-                    if (item.parent == this)
-                        return item;
-                    else
-                        item.parent.remove(item);
-                item._parent = this;
-                if (!this._childItems)
-                    this._childItems = [];
-                if (!this._childItemsByName)
-                    this._childItemsByName = {};
-                this._childItems.push(item);
-                this._childItemsByName[item.name] = item;
-                return item;
-            }
-            remove(itemOrName) {
-                if (itemOrName === void 0 || itemOrName === null)
-                    throw "Cannot remove an empty name/path from directory '" + this.absolutePath + "'.";
-                if (!this.hasChildren)
-                    return null;
-                var parent; // (since types can be added as roots to other types [i.e. no parent references], need to remove item objects as immediate children, not via 'resolve()')
-                if (typeof itemOrName == 'object' && itemOrName instanceof DirectoryItem) {
-                    var t = itemOrName;
-                    if (!this._childItemsByName[t.name])
-                        throw "Cannot remove item: There is no child item '" + itemOrName + "' under '" + this.absolutePath + "'.";
-                    parent = this;
-                }
-                else {
-                    var t = this.resolve(itemOrName);
-                    if (t)
-                        parent = t.parent;
-                }
-                if (t && parent) {
-                    delete parent._childItemsByName[t.name];
-                    var i = parent._childItems.indexOf(t);
-                    if (i >= 0)
-                        parent._childItems.splice(i, 1);
-                    t._parent = null;
-                }
-                return t;
-            }
-            getJSONStructure(typeFilter) {
-                JSON.stringify(this, (k, v) => {
-                    if (!k || k == '_childItems' || k == 'name') // ('k' is empty for the root object)
-                        if (!typeFilter || !v || v instanceof typeFilter)
-                            return v;
-                }, 2);
-                //var body = this._getJSONStructure(typeFilter, "  ");
-                //return "{" + (body ? "\r\n" + body : "") + "}\r\n";
+            constructor(event, workflow) {
+                this.event = event;
+                this.workflow = workflow;
             }
         }
-        FileSystem.DirectoryItem = DirectoryItem;
-        class Directory extends DirectoryItem {
-            constructor(fileManager, parent) { super(fileManager, parent); }
-            /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,).
-             * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
-             * Examples:
-             * - "/A/B/C/" => "/A/B/C"
-             * - "A/B/C" => "A/B"
-             * - "//A/B/C//" => "/A/B/C"
-             * - "/" => "/"
-             * - "" => ""
-             */
-            static getPath(filepath) {
-                if (!filepath)
-                    return "";
-                var parts = filepath.replace(/\\/g, '/').split('/'), i1 = 0, i2 = parts.length - 2;
-                while (i1 < parts.length && !parts[i1])
-                    i1++;
-                while (i2 > i1 && !parts[i2])
-                    i2--;
-                return (i1 > 0 ? "/" : "") + parts.slice(i1, i2 + 1).join('/');
-            }
-            getFile(filePath) {
-                var item = this.resolve(filePath);
-                if (!(item instanceof File))
-                    return null;
-                return item;
-            }
-            getDirectory(path) {
-                var item = this.resolve(path);
-                if (!(item instanceof Directory))
-                    return null;
-                return item;
-            }
-            /** Creates a directory under the user root endpoint. */
-            createDirectory(path) {
-                if (path === void 0 || path === null || !this.hasChildren)
-                    return null;
-                var parts = getPathParts(path), item = this; // (if path is empty it should default to this directory)
-                for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
-                    // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
-                    var childItem = item._childItemsByName[parts[i]];
-                    if (!childItem)
-                        item = new Directory(this._fileManager, this); // (create new directory names along the route)
-                    else if (childItem instanceof Directory)
-                        item = childItem; // (directory found, go in and continue)
-                    else
-                        throw "Cannot create path '" + path + "' under '" + this + "': '" + item + "' is not a directory.";
-                }
-                return item;
-            }
-            createFile(filePath, contents) {
-                var filename = File.getName(filePath);
-                var directoryPath = Directory.getPath(filePath);
-                if (!filename)
-                    throw "A file name is required.";
-                var dir = this.createDirectory(directoryPath);
-                return new File(this._fileManager, dir, contents);
-            }
-            getJSONStructure() {
-            }
+        Events.EventHandler = EventHandler;
+        var handlers = [];
+        var events = [];
+        function registerHandler(eventDef, workflow) {
+            handlers.push(new EventHandler(eventDef, workflow));
         }
-        FileSystem.Directory = Directory;
-        class File extends DirectoryItem {
-            constructor(fileManager, parent, content) {
-                super(fileManager, parent);
-                if (content !== void 0)
-                    this._contents = content;
-            }
-            get contents() { return this._contents; }
-            set contents(value) { this._contents = value; this.touch(); }
-            /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,).
-            * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
-            * Examples:
-            * - "/A/B/C/" => ""
-            * - "A/B/C" => "C"
-            * - "/" => ""
-            * - "" => ""
-            */
-            static getName(filepath) {
-                if (!filepath)
-                    return "";
-                var parts = filepath.replace(/\\/g, '/').split('/');
-                return parts[parts.length - 1] || "";
-            }
-            toBase64() { return DS.Encoding.base64Encode(this.contents); }
-            fromBase64(contentsB64) { this.contents = DS.Encoding.base64Decode(contentsB64); }
-        }
-        FileSystem.File = File;
-        /** Manages files in a virtual file system. This allows project files to be stored locally and synchronized with the server when a connection is available.
-         * For off-line storage to work, the browser must support local storage.
-         * Note: The 'FlowScript.currentUser' object determines the user-specific root directory for projects.
-         */
-        class FileManager {
-            // --------------------------------------------------------------------------------------------------------------------
-            constructor(
-            /** The URL endpoint for the FlowScript project files API. Defaults to 'FileManager.apiEndpoint'. */
-            apiEndpoint = FileManager.apiEndpoint) {
-                this.apiEndpoint = apiEndpoint;
-                this.root = new Directory(this);
-            }
-            /** Just a local property that checks for and returns 'FlowScript.currentUser'. */
-            static get currentUser() { if (DS.User.current)
-                return DS.User.current; throw "'There is no current user! User.changeCurrentUser()' must be called first."; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
-            /** The API endpoint to the directory for the current user. */
-            static get currentUserEndpoint() { return combine(this.apiEndpoint, FileManager.currentUser._uid); }
-            /** Gets a directory under the current user root endpoint.
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            getDirectory(path, userId) {
-                return this.root.getDirectory(combine(userId || FileManager.currentUser._uid, path));
-            }
-            /** Creates a directory under the current user root endpoint.
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            createDirectory(path, userId) {
-                return this.root.createDirectory(combine(userId || FileManager.currentUser._uid, path));
-            }
-            /** Gets a file under the current user root endpoint.
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            getFile(filePath, userId) {
-                return this.root.getFile(combine(userId || FileManager.currentUser._uid, filePath));
-            }
-            /** Creates a file under the current user root endpoint.
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            createFile(filePath, contents, userId) {
-                return this.root.createFile(combine(userId || FileManager.currentUser._uid, filePath), contents);
-            }
-        }
-        // --------------------------------------------------------------------------------------------------------------------
-        /** The URL endpoint for the FlowScript project files API. */
-        FileManager.apiEndpoint = "/api/files";
-        FileSystem.FileManager = FileManager;
-        // ========================================================================================================================
-        FileSystem.restrictedFilenameRegex = /\/\\\?%\*:\|"<>/g;
-        /** Returns true if a given filename contains invalid characters. */
-        function isValidFileName(name) {
-            return name && FileSystem.restrictedFilenameRegex.test(name);
-        }
-        FileSystem.isValidFileName = isValidFileName;
-        /** Combine two paths into one. */
-        function combine(path1, path2) {
-            return DS.Path.combine(path1 instanceof Directory ? path1.absolutePath : path1, path2 instanceof Directory ? path2.absolutePath : path2);
-        }
-        FileSystem.combine = combine;
-        // ========================================================================================================================
-    })(FileSystem = DS.FileSystem || (DS.FileSystem = {}));
-    // ############################################################################################################################
+    })(Events = DS.Events || (DS.Events = {}));
 })(DS || (DS = {}));
 // ############################################################################################################################
-// Types for event management.
+// Types for INTERNAL event management.  This has nothing to do with the workflow events. See 'Events.ts' for that.
 // ############################################################################################################################
 var DS;
 (function (DS) {

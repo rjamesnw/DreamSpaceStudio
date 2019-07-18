@@ -13,21 +13,23 @@ process.on('unhandledRejection', function (err) {
 
 // ----------------------------------------------------------------------------------------------------------------------------
 
+require('../solutions/server/server_api'); // (adds the global.DS core system namespace API)
+
+DS.registerGlobal(); // (registers the system for managing global properties to prevent cluttering the JS global space)
+
 import debug = require('debug');
 import express = require('express');
 import path = require('path');
 import { Socket } from "net";
+import * as templateEngine from "./templateEngine";
 
 import indexRoutes from './routes/index';
 import ideRoutes from './routes/ide';
 import userRoutes from './routes/user';
 
-//? global.XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-
-//? import { registerGlobal } from '../Core/DreamSpace';
-
-//? var ds = registerGlobal();
 var app = express();
+
+templateEngine.apply(app);
 
 (async () => {
     //await ds.init();

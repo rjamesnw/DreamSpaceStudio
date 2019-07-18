@@ -8,6 +8,7 @@
         /** File paths related to this project. */
         files?: string[];
         //comments: string[];
+        workflows?: (ISavedWorkflow | string)[]; // (references either 1. a saved workflow object, or 2. a UID that references the workflow object)
     }
 
     export class Project extends TrackableObject {
@@ -42,7 +43,7 @@
         onExpressionBinItemRemoved = new EventDispatcher<Project, { (item: SelectedItem, project: Project): void }>(this, "onExpressionBinItemRemoved");
 
         /** Returns the expression that was picked by the user for some operation. In the future this may also be used during drag-n-drop operations. */
-        get pickedExpression() { return this._pickedItem; }
+        get pickedItem() { return this._pickedItem; }
         private _pickedItem: SelectedItem;
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -74,7 +75,7 @@
             for (var p in this.files)
                 (target.files || (target.files = [])).push(this.files[p].absolutePath);
 
-            target.scripts = [this.script.save()];
+            target.workflows = [this.script.save()];
 
             return target;
         }
@@ -87,23 +88,23 @@
         saveToStorage(source = this.save()) {
             if (!source) return; // (nothing to do)
 
-            if (Array.isArray(source.scripts))
-                for (var i = 0, n = source.scripts.length; i < n; ++i) {
-                    var script = source.scripts[i];
+            if (Array.isArray(source.workflows))
+                for (var i = 0, n = source.workflows.length; i < n; ++i) {
+                    var workflow = source.workflows[i];
 
-                    if (typeof script == 'object' && script.id) {
-                        source.scripts[i] = script.id; // (replaced the object entry with the ID before saving the project graph later; these will be files instead)
+                    if (typeof workflow == 'object' && workflow.uid) {
+                        source.workflows[i] = workflow.uid; // (replaced the object entry with the ID before saving the project graph later; these will be files instead)
 
-                        var scriptJSON = script && JSON.stringify(script) || null;
+                        var wfJSON = workflow && JSON.stringify(workflow) || null;
 
-                        var file = this.directory.createFile((script.name || script.id) + ".fs", scriptJSON); // (fs: FlowScript source file)
+                        var file = this.directory.createFile((workflow.name || workflow.uid) + ".wf.json", wfJSON); // (wf: Workflow file)
                         this.files[file.absolutePath.toLocaleLowerCase()] = file;
                     }
                 }
 
             var projectJSON = this.serialize(source);
 
-            file = this.directory.createFile(this._uid + ".fsp", projectJSON); // (fsp: FlowScript Project file)
+            file = this.directory.createFile(this._uid + ".dsp.json", projectJSON); // (dsp: DreamSpace Project file)
             this.files[file.absolutePath.toLocaleLowerCase()] = file;
         }
 

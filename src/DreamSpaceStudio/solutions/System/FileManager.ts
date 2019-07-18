@@ -41,7 +41,7 @@
             /** The last time this*/
             get lastAccessed() { return this._lastAccessed; }
             /** Updates the 'lastAccessed' date+time value to the current value. Touching this directory item also refreshes the dates of all parent items. 
-             * When the date of an item changes after a touch, it starts the process of reviewing and synchronizing with the backend.
+             * When the date of an item changes after a touch, it starts the process of reviewing and synchronizing with the back-end.
              */
             touch() {
                 this._lastAccessed = new Date();
@@ -212,7 +212,18 @@
             //}
         }
 
+        function _defaultCreateDirHandler(fileManager: FileManager, parent?: DirectoryItem) {
+            return new Directory(fileManager, parent);
+        };
+
         export class Directory extends DirectoryItem {
+            /** The function used to create directory instances.
+             * Host programs can overwrite this event property with a handler to create and return derived types instead.
+             */
+            static get onCreateDirectory() { return this._onCreateDirectory || _defaultCreateDirHandler; }
+            static set onCreateDirectory(value) { if (typeof value != 'function') throw "Directory.onCreateDirectory: Set failed - value is not a function."; this._onCreateDirectory = value; }
+            private static _onCreateDirectory = _defaultCreateDirHandler;
+
             constructor(fileManager: FileManager, parent?: DirectoryItem) { super(fileManager, parent); }
 
             /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,). 
@@ -252,7 +263,7 @@
                     // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
                     var childItem = item._childItemsByName[parts[i]];
                     if (!childItem)
-                        item = new Directory(this._fileManager, this); // (create new directory names along the route)
+                        item = Directory.onCreateDirectory(this._fileManager, this); // (create new directory names along the route)
                     else if (childItem instanceof Directory)
                         item = childItem; // (directory found, go in and continue)
                     else
@@ -266,14 +277,25 @@
                 var directoryPath = Directory.getPath(filePath);
                 if (!filename) throw "A file name is required.";
                 var dir = this.createDirectory(directoryPath);
-                return new File(this._fileManager, dir, contents);
+                return File.onCreateFile(this._fileManager, dir, contents);
             }
 
             getJSONStructure() {
             }
         }
 
+        function _defaultCreateFileHandler(fileManager: FileManager, parent?: DirectoryItem, content?: string) {
+            return new File(fileManager, parent, content);
+        };
+
         export class File extends DirectoryItem {
+            /** The function used to create file instances.
+             * Host programs can overwrite this event property with a handler to create and return derived types instead.
+             */
+            static get onCreateFile() { return this._onCreateFile || _defaultCreateFileHandler; }
+            static set onCreateFile(value) { if (typeof value != 'function') throw "File.onCreateFile: Set failed - value is not a function."; this._onCreateFile = value; }
+            private static _onCreateFile = _defaultCreateFileHandler;
+
             get contents() { return this._contents; }
             set contents(value: string) { this._contents = value; this.touch(); }
             private _contents: string; // (a binary string with the file contents)
@@ -326,7 +348,7 @@
             constructor(
                 /** The URL endpoint for the FlowScript project files API. Defaults to 'FileManager.apiEndpoint'. */
                 public apiEndpoint = FileManager.apiEndpoint) {
-                this.root = new Directory(this);
+                this.root = Directory.onCreateDirectory(this);
             }
 
             /** Gets a directory under the current user root endpoint. 

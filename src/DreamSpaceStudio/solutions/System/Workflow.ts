@@ -25,6 +25,12 @@ namespace DS {
         readonly branches: Branch[] = [];
     }
 
+    export interface ISavedWorkflow extends ISavedTrackableObject {
+        name: string;
+        description?: string;
+        steps?: any[];
+    }
+
     /** A series of steps that will execute associated components in order. */
     export class Workflow extends TrackableObject {
         readonly steps: Step[] = [];

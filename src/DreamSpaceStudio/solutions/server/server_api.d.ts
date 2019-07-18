@@ -1,3 +1,8 @@
+declare namespace NodeJS {
+    interface Global {
+        DS: typeof DS;
+    }
+}
 declare namespace DS {
     /** Loads a file and returns the contents as text. */
     function load(path: string): Promise<string>;

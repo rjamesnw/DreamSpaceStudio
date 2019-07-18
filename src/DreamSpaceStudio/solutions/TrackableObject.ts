@@ -7,7 +7,7 @@ namespace DS {
     export class TrackableObject {
         [name: string]: any;
         /** A globally unique ID for this object. */
-        _uid: string;
+        readonly _uid: string;
 
         constructor() {
             this._uid = Utilities.createGUID(false);

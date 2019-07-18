@@ -39,6 +39,8 @@ interface IStaticGlobals {
     cssBaseURL: string;
 }
 
+var isNode = typeof global == 'object' && global.process && global.process.versions && global.process.versions.node;
+
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
  * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.
  * Note: A symbol is not used, since callbacks placed into API URLs must be strings. Instead, a static pre-generated GUID is appended.
@@ -432,6 +434,9 @@ namespace DS {
 
     // =======================================================================================================================
 }
+
+if (isNode && exports)
+    eval("exports.DS = DS;"); // (when require('api') is used we need to export the DS namespace, which will contain the whole DS global API)
 
 // ########################################################################################################################
 // Some core basic interfaces to begin with (interfaces don't contribute to the resulting JS size).

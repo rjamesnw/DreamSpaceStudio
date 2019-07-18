@@ -20,6 +20,7 @@
   ],
   //"include": [ "Core/Polyfills.ts", "Core/System/Delegate.ts" ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "decl"
   ]
 }

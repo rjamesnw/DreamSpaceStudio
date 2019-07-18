@@ -17,7 +17,6 @@ var nameOf_Templating_Header_headerLevel = DS.nameof(() => modules_1.Templating.
 function parse(html = null, strictMode) {
     return __awaiter(this, void 0, void 0, function* () {
         var response;
-        // ### USER CODE START ###
         var log = DS.Diagnostics.log("Parse HTML", "Parsing HTML template ...").beginCapture();
         log.write("Template: " + html);
         if (!html)
@@ -277,7 +276,6 @@ function parse(html = null, strictMode) {
             notSerializable: true,
             data: { rootElements: rootElements, templates: globalTemplatesReference }
         };
-        // ### USER CODE END ###
         return response;
     });
 }

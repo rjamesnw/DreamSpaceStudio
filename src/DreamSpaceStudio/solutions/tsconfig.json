@@ -13,7 +13,11 @@
     "_global.ts", // (make sure this is always first)
     "TrackableObject.ts",
     "DependentObject.ts",
-    "./*.ts"
+    "VDOM.ts",
+    "Templating.ts",
+    "Templating.parse.ts",
+    "./*.ts",
+    "./System/*.ts"
   ],
   "exclude": [
     "node_modules",

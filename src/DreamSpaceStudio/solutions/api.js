@@ -358,6 +358,503 @@ var DS;
     DS.DependentObject = DependentObject;
     // =======================================================================================================================
 })(DS || (DS = {}));
+var DS;
+(function (DS) {
+    /** Contains virtual DOM objects used when parsing HTML. */
+    let VDOM;
+    (function (VDOM) {
+        class NodeIteratorBase {
+            constructor(node) { this._node = this.root = node; }
+        }
+        VDOM.NodeIteratorBase = NodeIteratorBase;
+        ;
+        class NodeIterator extends NodeIteratorBase {
+            constructor(node) { super(node); }
+            next() {
+                if (this._node) {
+                    var result = { value: this._node, done: false };
+                    this._node = this._node.nextSibling;
+                    return result;
+                }
+                else
+                    return { done: true };
+            }
+        }
+        VDOM.NodeIterator = NodeIterator;
+        ;
+        class NodeKeyIterator extends NodeIteratorBase {
+            constructor(node) {
+                super(node);
+                this._index = 0;
+            }
+            next() {
+                if (this._node) {
+                    var result = { value: this._index++, done: false };
+                    this._node = this._node.nextSibling;
+                    return result;
+                }
+                else
+                    return { done: true };
+            }
+        }
+        VDOM.NodeKeyIterator = NodeKeyIterator;
+        ;
+        class NodeKeyValueIterator extends NodeIteratorBase {
+            constructor(node) {
+                super(node);
+                this._index = 0;
+            }
+            next() {
+                if (this._node) {
+                    var result = { value: [this._index++, this._node], done: false };
+                    this._node = this._node.nextSibling;
+                    return result;
+                }
+                else
+                    return { done: true };
+            }
+        }
+        VDOM.NodeKeyValueIterator = NodeKeyValueIterator;
+        ;
+        class NodeList {
+            constructor(owner, firstNode) { this._owner = owner; this._owner.firstChild = firstNode; }
+            //private _firstNode: Node;
+            //private _lastNode: Node;
+            get length() { var count = 0, node = this._owner.firstChild; while (node) {
+                node = node.nextSibling;
+                ++count;
+            } return count; }
+            forEach(callback, thisArg) {
+                var index = 0;
+                if (callback) {
+                    var node = this._owner.firstChild;
+                    if (typeof thisArg != 'object')
+                        while (node) {
+                            callback(node, index++, this);
+                            node = node.nextSibling;
+                        }
+                    else
+                        while (node) {
+                            callback.call(thisArg, node, index++, this);
+                            node = node.nextSibling;
+                        }
+                }
+            }
+            /** Returns a node at the given index, or null if the index is out of bounds. */
+            item(index) {
+                var node = this._owner.firstChild, i = 0;
+                while (node) {
+                    if (i++ == index)
+                        return node;
+                    node = node.nextSibling;
+                }
+                return null;
+            }
+            entries() { return new NodeKeyValueIterator(this._owner.firstChild); }
+            keys() { return new NodeKeyIterator(this._owner.firstChild); }
+            values() { return this[Symbol.iterator](); }
+            [Symbol.iterator]() { return new NodeIterator(this._owner.firstChild); }
+        }
+        VDOM.NodeList = NodeList;
+        let NodeTypes;
+        (function (NodeTypes) {
+            NodeTypes[NodeTypes["ELEMENT_NODE"] = 1] = "ELEMENT_NODE";
+            NodeTypes[NodeTypes["ATTRIBUTE_NODE"] = 2] = "ATTRIBUTE_NODE";
+            NodeTypes[NodeTypes["TEXT_NODE"] = 3] = "TEXT_NODE";
+            NodeTypes[NodeTypes["CDATA_SECTION_NODE"] = 4] = "CDATA_SECTION_NODE";
+            NodeTypes[NodeTypes["ENTITY_REFERENCE_NODE"] = 5] = "ENTITY_REFERENCE_NODE";
+            NodeTypes[NodeTypes["ENTITY_NODE"] = 6] = "ENTITY_NODE";
+            NodeTypes[NodeTypes["PROCESSING_INSTRUCTION_NODE"] = 7] = "PROCESSING_INSTRUCTION_NODE";
+            NodeTypes[NodeTypes["COMMENT_NODE"] = 8] = "COMMENT_NODE";
+            NodeTypes[NodeTypes["DOCUMENT_NODE"] = 9] = "DOCUMENT_NODE";
+            NodeTypes[NodeTypes["DOCUMENT_TYPE_NODE"] = 10] = "DOCUMENT_TYPE_NODE";
+            NodeTypes[NodeTypes["DOCUMENT_FRAGMENT_NODE"] = 11] = "DOCUMENT_FRAGMENT_NODE";
+            NodeTypes[NodeTypes["NOTATION_NODE"] = 12] = "NOTATION_NODE";
+        })(NodeTypes = VDOM.NodeTypes || (VDOM.NodeTypes = {}));
+        /** Performs a deep-copy on a given object.
+         * This deep-copy assumes constructor parameters are not required, and just copies over primitive property values while cloning nested object references.
+         * References are properly preserved by using a WeakMap to maintain a list of the new instances.
+         */
+        function deepClone(v, cloneWeakMap) {
+            cloneWeakMap = cloneWeakMap || new WeakMap();
+            if (typeof v == 'string' || typeof v == 'number' || typeof v == 'boolean')
+                return v;
+            var o = v;
+            var clone = cloneWeakMap.get(v);
+            if (clone)
+                return clone; // (the object to be cloned was already cloned, so we will use the cloned instance)
+            try {
+                clone = new o.constructor();
+            }
+            catch (err) {
+                throw new Error(`deepClone(): Could not create instance for constructor '${DS.getFunctionName(o.constructor)}' (parameters may be required).\r\n${err}`);
+            }
+            cloneWeakMap.set(v, clone);
+            for (var p in o)
+                if (Object.prototype.hasOwnProperty.call(o, p))
+                    clone[p] = deepClone(o[p], cloneWeakMap);
+            return clone;
+        }
+        /** Represents a single parsed DOM node (this is the base type to all other element types, since server-side processing does not handle events). */
+        class Node {
+            /** Constructs a new node for the Virtual DOM.
+             */
+            constructor(
+            /** The node name.*/
+            nodeName, 
+            /** The node type.*/
+            nodeType) {
+                this.childNodes = new NodeList(this, null);
+                nodeName = ('' + nodeName).trim();
+                if (!nodeName)
+                    throw "A node name is required.";
+                if (typeof nodeType != 'number' || nodeType < 0)
+                    throw "'nodeType' is not valid.";
+                this.nodeName = nodeName.charAt(0) != '#' ? nodeName.toUpperCase() : nodeName;
+                this.nodeType = nodeType;
+            }
+            /** A convenient function that simply allows using call-chaining to set properties without having to write multiple lines of code within a code block.
+             * It also helps to prevent the need for constructors, since deep-cloning requires "default" constructors.
+             */
+            $__set(name, value) { this[name] = value; return this; }
+            get nodeValue() {
+                switch (this.nodeType) {
+                    case NodeTypes.CDATA_SECTION_NODE: /* Content of the CDATA section */ return null; // TODO: ...
+                    case NodeTypes.COMMENT_NODE: /* Content of the comment */ return null; // TODO: ...
+                    case NodeTypes.PROCESSING_INSTRUCTION_NODE: /* Entire content excluding the target */ return null; // TODO: ...
+                    case NodeTypes.TEXT_NODE: /* Content of the text node */ return null; // TODO: ...
+                }
+                return null; // (all other types return null)
+            }
+            set nodeValue(value) {
+                switch (this.nodeType) {
+                    case NodeTypes.CDATA_SECTION_NODE: /* Content of the CDATA section */ break; // TODO: ...
+                    case NodeTypes.COMMENT_NODE: /* Content of the comment */ break; // TODO: ...
+                    case NodeTypes.PROCESSING_INSTRUCTION_NODE: /* Entire content excluding the target */ break; // TODO: ...
+                    case NodeTypes.TEXT_NODE: /* Content of the text node */ break; // TODO: ...
+                }
+            }
+            appendChild(child) {
+                if (child.parentElement)
+                    child.parentElement.removeChild(child);
+                var lastNode = this.lastChild || this.firstChild;
+                if (lastNode) {
+                    lastNode.nextSibling = child;
+                    child.previousSibling = lastNode;
+                    this.lastChild = child;
+                }
+                if (!this.firstChild)
+                    this.firstChild = child;
+            }
+            removeChild(child) {
+                if (!child || !(child instanceof Node))
+                    throw new Error("Failed to execute 'removeChild' on 'Node': parameter 1 is not of type 'Node'.");
+                if (child.parentElement != this)
+                    throw new Error("Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.");
+                if (child.previousSibling)
+                    child.previousSibling.nextSibling = child.nextSibling;
+                if (child.nextSibling)
+                    child.nextSibling.previousSibling = child.previousSibling;
+                child.parentElement = null;
+                if (this.lastChild == child)
+                    this.lastChild = null;
+                if (this.firstChild == child)
+                    this.firstChild = null;
+            }
+            contains(node) {
+                var n = this.firstChild;
+                do {
+                    if (n == node)
+                        return true;
+                } while (n = n.nextSibling);
+                return false;
+            }
+            cloneNode() { return deepClone(this); }
+            getRootNode() { return this.parentElement; /* Returning a shadow root is not supported at this time. */ }
+            hasChildNodes() { return !!this.firstChild; }
+            insertBefore(sibling, child) {
+                if (!sibling || !(sibling instanceof Node))
+                    throw new Error("Failed to execute 'insertBefore' on 'Node': parameter 1 is not of type 'Node'.");
+                if (sibling.parentElement != this)
+                    throw new Error("Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.");
+                if (child.parentElement)
+                    child.parentElement.removeChild(child);
+                var firstNode = sibling || this.firstChild || this.lastChild;
+                if (firstNode) {
+                    firstNode.previousSibling = child;
+                    child.nextSibling = firstNode;
+                    this.firstChild = child;
+                }
+                if (!this.lastChild)
+                    this.lastChild = child;
+            }
+            replaceChild(childToReplace, childToAdd) {
+                if (!childToReplace || !(childToReplace instanceof Node))
+                    throw new Error("Failed to execute 'replaceChild' on 'Node': parameter 1 is not of type 'Node'.");
+                if (childToReplace.parentElement != this)
+                    throw new Error("Failed to execute 'replaceChild' on 'Node': The node to be replaced is not a child of this node.");
+                if (!childToAdd || !(childToAdd instanceof Node))
+                    throw new Error("Failed to execute 'replaceChild' on 'Node': parameter 2 is not of type 'Node'.");
+                this.insertBefore(childToReplace, childToAdd);
+                this.removeChild(childToReplace);
+            }
+        }
+        VDOM.Node = Node;
+        /** Represents a single parsed element. */
+        class Element extends Node {
+            constructor(
+            /** The node name.*/
+            nodeName, 
+            /** The node type.*/
+            nodeType, 
+            /** The element attributes.*/
+            attributes = {}, 
+            /** The element CSS classes.*/
+            className, 
+            /** The element namespace prefix.*/
+            prefix) {
+                super(nodeName, nodeType);
+                this.attributes = attributes;
+                this.className = className;
+                this.prefix = prefix;
+            }
+            /** Gets or sets the child objects based on a string.  When setting a string, the current children are replaced by the parsed result.
+             * Please be mindful that this is done on every read, so if the node hierarchy is large this could slow things down.
+             */
+            get innerHTML() {
+                return this.toString();
+            }
+            set innerHTML(value) {
+            }
+            get outerHTML() { return `<${this.nodeName}>${this.innerHTML}</${this.nodeName}>`; }
+            // TODO: Support setting the outer HTML - just parse it as normal.
+            toString() { return this.outerHTML; }
+        }
+        VDOM.Element = Element;
+        /** Represents a single parsed HTML element. */
+        class HTMLElement extends Element {
+            constructor(
+            /** The node name.*/
+            nodeName = HTMLElement.defaultHTMLTagName, 
+            /** The node type.*/
+            nodeType = NodeTypes.ELEMENT_NODE, 
+            /** The element attributes.*/
+            attributes, 
+            /** The element CSS classes.*/
+            className, 
+            /** The element namespace prefix.*/
+            prefix) {
+                super(nodeName, nodeType, attributes);
+                this.className = className;
+                this.prefix = prefix;
+            }
+        }
+        /** Each new instance will initially set its '__htmlTag' property to this value. */
+        HTMLElement.defaultHTMLTagName = "div";
+        VDOM.HTMLElement = HTMLElement;
+        class CharacterData extends Node {
+            constructor(
+            /** The node name.*/
+            nodeName, 
+            /** The node type.*/
+            nodeType, data) {
+                super(nodeName, nodeType);
+                this.data = data;
+            }
+            get length() { return this.data && this.data.length || 0; }
+        }
+        VDOM.CharacterData = CharacterData;
+        class Text extends CharacterData {
+            constructor(text) { super("#text", NodeTypes.TEXT_NODE, text); }
+        }
+        VDOM.Text = Text;
+        class Body extends HTMLElement {
+            constructor() { super("BODY", NodeTypes.ELEMENT_NODE); }
+        }
+        VDOM.Body = Body;
+        class Head extends HTMLElement {
+            constructor() { super("HEAD", NodeTypes.ELEMENT_NODE); }
+        }
+        VDOM.Head = Head;
+        class Form extends HTMLElement {
+            constructor() { super("FORM", NodeTypes.ELEMENT_NODE); }
+        }
+        VDOM.Form = Form;
+        class Image extends HTMLElement {
+            constructor() { super("IMAGE", NodeTypes.ELEMENT_NODE); }
+        }
+        VDOM.Image = Image;
+        class Document extends HTMLElement {
+            constructor() { super("#document", NodeTypes.DOCUMENT_NODE); }
+        }
+        VDOM.Document = Document;
+    })(VDOM = DS.VDOM || (DS.VDOM = {}));
+})(DS || (DS = {}));
+var DS;
+(function (DS) {
+    let VDOM;
+    (function (VDOM) {
+        /** Holds special types used with parsing HTML templates. */
+        let Templating;
+        (function (Templating) {
+            /** A list of text mark-up flags for use with phrase based elements. */
+            let PhraseTypes;
+            (function (PhraseTypes) {
+                /** Indicates emphasis. */
+                PhraseTypes[PhraseTypes["Emphasis"] = 1] = "Emphasis";
+                /** Indicates stronger emphasis. */
+                PhraseTypes[PhraseTypes["Strong"] = 2] = "Strong";
+                /** Contains a citation or a reference to other sources. */
+                PhraseTypes[PhraseTypes["Cite"] = 4] = "Cite";
+                /** Indicates that this is the defining instance of the enclosed term. */
+                PhraseTypes[PhraseTypes["Defining"] = 8] = "Defining";
+                /** Designates a fragment of computer code. */
+                PhraseTypes[PhraseTypes["Code"] = 16] = "Code";
+                /** Designates sample output from programs, scripts, etc. */
+                PhraseTypes[PhraseTypes["Sample"] = 32] = "Sample";
+                /** Indicates text to be entered by the user. */
+                PhraseTypes[PhraseTypes["Keyboard"] = 64] = "Keyboard";
+                /** Indicates an instance of a variable or program argument. */
+                PhraseTypes[PhraseTypes["Variable"] = 128] = "Variable";
+                /** Indicates an abbreviated form (Example: WWW, HTTP, URI, AI, e.g., ex., etc., ...). */
+                PhraseTypes[PhraseTypes["Abbreviation"] = 256] = "Abbreviation";
+                /** Indicates an acronym (Example: WAC, radar, NASA, laser, sonar, ...). */
+                PhraseTypes[PhraseTypes["Acronym"] = 512] = "Acronym";
+            })(PhraseTypes = Templating.PhraseTypes || (Templating.PhraseTypes = {}));
+            class TemplateElement extends VDOM.HTMLElement {
+                constructor(
+                /** The node name.*/
+                nodeName = VDOM.HTMLElement.defaultHTMLTagName, 
+                /** The node type.*/
+                nodeType = VDOM.NodeTypes.ELEMENT_NODE, 
+                /** The element attributes.*/
+                attributes, 
+                /** The element CSS classes.*/
+                className, 
+                /** The element namespace prefix.*/
+                prefix) {
+                    super(nodeName, nodeType, attributes);
+                    this.className = className;
+                    this.prefix = prefix;
+                }
+                get outerHTML() {
+                    this.validate();
+                    return super.outerHTML;
+                }
+                /** Call this to validate supported element types. */
+                assertSupportedNodeTypes(...args) {
+                    if (this.__disableNodeTypeValidation)
+                        return;
+                    this.tagName = (this.tagName || "").toLowerCase();
+                    //??args = <string[]><any>arguments;
+                    if (args.length == 1 && typeof args[0] != 'undefined' && typeof args[0] != 'string' && args[0].length)
+                        args = args[0]; // (first parameter is an array of supported type names)
+                    for (var i = 0; i < args.length; i++)
+                        if (this.tagName == args[i])
+                            return true;
+                    throw DS.Exception.from("The node type name '" + this.tagName + "' is not supported for this template type.");
+                }
+                /** Call this to validate unsupported element types. */
+                assertUnsupportedNodeTypes(...args) {
+                    if (this.__disableNodeTypeValidation)
+                        return;
+                    this.tagName = (this.tagName || "").toLowerCase();
+                    //??args = <string[]><any>arguments;
+                    if (args.length == 1 && typeof args[0] != 'undefined' && typeof args[0] != 'string' && args[0].length)
+                        args = args[0]; // (first parameter is an array of unsupported type names)
+                    for (var i = 0; i < args.length; i++)
+                        if (this.tagName == args[i])
+                            throw DS.Exception.from("The node type name '" + this.tagName + "' is not supported for this template type.");
+                }
+            }
+            Templating.TemplateElement = TemplateElement;
+            class Phrase extends TemplateElement {
+                constructor(nodeName) { super(nodeName); }
+                validate() {
+                    this.assertSupportedNodeTypes("em", "strong", "cite", "dfn", "code", "samp", "kbd", "var", "abr", "acronym");
+                }
+                get outerHTML() {
+                    this.validate();
+                    var leftTags = "", rightTags = "", phraseType = this.phraseType;
+                    if ((phraseType & PhraseTypes.Emphasis) > 0) {
+                        leftTags = "<em>" + leftTags;
+                        rightTags += "</em>";
+                    }
+                    if ((phraseType & PhraseTypes.Strong) > 0) {
+                        leftTags = "<strong>" + leftTags;
+                        rightTags += "</strong>";
+                    }
+                    if ((phraseType & PhraseTypes.Cite) > 0) {
+                        leftTags = "<cite>" + leftTags;
+                        rightTags += "</cite>";
+                    }
+                    if ((phraseType & PhraseTypes.Defining) > 0) {
+                        leftTags = "<dfn>" + leftTags;
+                        rightTags += "</dfn>";
+                    }
+                    if ((phraseType & PhraseTypes.Code) > 0) {
+                        leftTags = "<code>" + leftTags;
+                        rightTags += "</code>";
+                    }
+                    if ((phraseType & PhraseTypes.Sample) > 0) {
+                        leftTags = "<samp>" + leftTags;
+                        rightTags += "</samp>";
+                    }
+                    if ((phraseType & PhraseTypes.Keyboard) > 0) {
+                        leftTags = "<kbd>" + leftTags;
+                        rightTags += "</kbd>";
+                    }
+                    if ((phraseType & PhraseTypes.Variable) > 0) {
+                        leftTags = "<var>" + leftTags;
+                        rightTags += "</var>";
+                    }
+                    if ((phraseType & PhraseTypes.Abbreviation) > 0) {
+                        leftTags = "<abbr>" + leftTags;
+                        rightTags += "</abbr>";
+                    }
+                    if ((phraseType & PhraseTypes.Acronym) > 0) {
+                        leftTags = "<acronym>" + leftTags;
+                        rightTags += "</acronym>";
+                    }
+                    return leftTags + this.innerHTML + rightTags;
+                }
+            }
+            Templating.Phrase = Phrase;
+            class HTMLText extends TemplateElement {
+                constructor() { super("span"); }
+                validate() { this.assertUnsupportedNodeTypes("html", "head", "body", "script", "audio", "canvas", "object"); }
+                // ----------------------------------------------------------------------------------------------------------------
+                onRedraw(recursive = true) {
+                    super.onRedraw(recursive);
+                }
+            }
+            Templating.HTMLText = HTMLText;
+            class Header extends TemplateElement {
+                constructor(/**A value from 1-6.*/ headerLevel = 1) {
+                    super('h' + headerLevel);
+                    this.headerLevel = headerLevel;
+                    if (headerLevel < 1 || headerLevel > 6)
+                        throw DS.Exception.from("HTML only supports header levels 1 through 6.");
+                }
+                validate() {
+                    if (this.headerLevel < 1 || this.headerLevel > 6)
+                        throw DS.Exception.from("HTML only supports header levels 1 through 6.");
+                    this.assertSupportedElementTypes("h1", "h2", "h3", "h4", "h5", "h6");
+                }
+                get outerHTML() {
+                    this.validate();
+                    this.tagName = "h" + this.headerLevel;
+                    return super.outerHTML;
+                }
+                // ----------------------------------------------------------------------------------------------------------------
+                onRedraw(recursive = true) {
+                    super.onRedraw(recursive);
+                }
+            }
+            Templating.Header = Header;
+        })(Templating = VDOM.Templating || (VDOM.Templating = {}));
+    })(VDOM = DS.VDOM || (DS.VDOM = {}));
+})(DS || (DS = {}));
 // ############################################################################################################################################
 // Browser detection (for special cases).
 // ############################################################################################################################################
@@ -909,6 +1406,7 @@ var DS;
                 && value.object === this.object && value.func === this.func;
         }
     }
+    DS.Delegate = Delegate;
     // ============================================================================================================================
 })(DS || (DS = {}));
 // ############################################################################################################################
@@ -1550,6 +2048,251 @@ var DS;
     })(Globals = DS.Globals || (DS.Globals = {}));
 })(DS || (DS = {}));
 // ###########################################################################################################################
+var DS;
+(function (DS) {
+    // ############################################################################################################################
+    // Globals type for working with HTML/XML.
+    // ############################################################################################################################
+    let HTMLReaderModes;
+    (function (HTMLReaderModes) {
+        /** There's no more to read (end of HTML). */
+        HTMLReaderModes[HTMLReaderModes["End"] = -1] = "End";
+        /** Reading hasn't yet started. */
+        HTMLReaderModes[HTMLReaderModes["NotStarted"] = 0] = "NotStarted";
+        /** A tag was just read. The 'runningText' property holds the text prior to the tag, and the tag name is in 'tagName'. */
+        HTMLReaderModes[HTMLReaderModes["Tag"] = 1] = "Tag";
+        /** An attribute was just read from the last tag. The name will be placed in 'attributeName' and the value (if value) in 'attributeValue'.*/
+        HTMLReaderModes[HTMLReaderModes["Attribute"] = 2] = "Attribute";
+        /** An ending tag bracket was just read (no more attributes). */
+        HTMLReaderModes[HTMLReaderModes["EndOfTag"] = 3] = "EndOfTag";
+        /** A template token in the form '{{...}}' was just read. */
+        HTMLReaderModes[HTMLReaderModes["TemplateToken"] = 4] = "TemplateToken";
+    })(HTMLReaderModes = DS.HTMLReaderModes || (DS.HTMLReaderModes = {}));
+    // ============================================================================================================================
+    /** Used to parse HTML text.
+      * Performance note: Since HTML can be large, it's not efficient to scan the HTML character by character. Instead, the HTML
+      * reader uses the native RegEx engine to split up the HTML into chunks of delimiter text, which makes reading it much faster.
+      */
+    class HTMLReader {
+        constructor(html) {
+            // (The RegEx above will identify areas that MAY need to delimited for parsing [not a guarantee].  The area outside of the delimiters is usually
+            // defined by the delimiter types, so the delimiters are moved out into their own array for quick parsing [this also allows the host browser's native
+            // environment to do much of the parsing instead of JavaScript].)
+            this.partIndex = 0;
+            /** The start index of the running text. */
+            this.textStartIndex = 0;
+            /** The end index of the running text. This is also the start index of the next tag, if any (since text runs between tags). */
+            this.textEndIndex = 0; // (this advances with every read so text can be quickly extracted from the source HTML instead of adding array items [just faster]).
+            this.__lastTextEndIndex = 0; // (for backing up from a read [see '__readNext()' && '__goBack()'])
+            /** A list of text parts that correspond to each delimiter (i.e. TDTDT [T=Text, D=Delimiter]). */
+            this.nonDelimiters = null;
+            /** A list of the delimiters that correspond to each of the text parts (i.e. TDTDT [T=Text, D=Delimiter]). */
+            this.delimiters = null;
+            /** The text that was read. */
+            this.text = "";
+            /** The delimiter that was read. */
+            this.delimiter = "";
+            /** The text that runs between indexes 'textStartIndex' and 'textEndIndex-1' (inclusive). */
+            this.runningText = "";
+            /** The bracket sequence before the tag name, such as '<' or '</'. */
+            this.tagBracket = "";
+            /** The tag name, if a tag was read. */
+            this.tagName = "";
+            /** The attribute name, if attribute was read. */
+            this.attributeName = "";
+            /** The attribute value, if attribute was read. */
+            this.attributeValue = "";
+            this.readMode = HTMLReaderModes.NotStarted;
+            /** If true, then the parser will produce errors on ill-formed HTML (eg. 'attribute=' with no value).
+            * This can greatly help identify possible areas of page errors.
+            */
+            this.strictMode = true;
+            // ... using RegEx allows the native browser system to split up the HTML text into parts that can be consumed more quickly ...
+            this.html = html;
+            this.delimiters = html.match(HTMLReader.__splitRegEx); // (get delimiters [inverse of 'split()'])
+            this.nonDelimiters = this.html.split(HTMLReader.__splitRegEx, void 0, this.delimiters); // (get text parts [inverse of 'match()']; last argument is ignored on newer systems [see related polyfill in DreamSpace.Browser])
+        }
+        /** Returns true if tag current tag block is a mark-up declaration in the form "<!...>", where '...' is any text EXCEPT the start of a comment ('--'). */
+        isMarkupDeclaration() {
+            return this.readMode == HTMLReaderModes.Tag
+                && this.tagName.length >= 4 && this.tagName.charAt(0) == '!' && this.tagName.charAt(1) != '-';
+            //(spec reference and info on dashes: http://weblog.200ok.com.au/2008/01/dashing-into-trouble-why-html-comments.html)
+        }
+        /** Returns true if tag current tag block is a mark-up declaration representing a comment block in the form "<!--...-->", where '...' is any text. */
+        isCommentBlock() {
+            return this.readMode == HTMLReaderModes.Tag
+                && this.tagName.length >= 7 && this.tagName.charAt(0) == '!' && this.tagName.charAt(1) == '-';
+            ///^!--.*-->$/.test(...) (see http://jsperf.com/test-regex-vs-charat)
+            //(spec reference and info on dashes: http://weblog.200ok.com.au/2008/01/dashing-into-trouble-why-html-comments.html)
+        }
+        /** Return true if the current tag block represents a script. */
+        isScriptBlock() {
+            return this.readMode == HTMLReaderModes.Tag
+                && this.tagName.length >= 6 && this.tagName.charAt(0) == 's' && this.tagName.charAt(1) == 'c' && this.tagName.charAt(this.tagName.length - 1) == '>';
+            // (tag is taken from pre - matched names, so no need to match the whole name)
+        }
+        /** Return true if the current tag block represents a style. */
+        isStyleBlock() {
+            return this.readMode == HTMLReaderModes.Tag
+                && this.tagName.length >= 5 && this.tagName.charAt(0) == 's' && this.tagName.charAt(1) == 't' && this.tagName.charAt(this.tagName.length - 1) == '>';
+            // (tag is taken from pre-matched names, so no need to match the whole name)
+        }
+        /** Returns true if the current position is a tag closure (i.e. '</', or '/>' [self-closing allowed for non-nestable tags]). */
+        isClosingTag() {
+            return this.readMode == HTMLReaderModes.Tag && this.tagBracket == '</' || this.readMode == HTMLReaderModes.EndOfTag && this.delimiter == '/>';
+            // (match "<tag/>" [no inner html/text] and "</tag> [end of inner html/text])
+        }
+        /** Returns true if the current delimiter represents a template token in the form '{{....}}'. */
+        isTempalteToken() {
+            return this.delimiter.length > 2 && this.delimiter.charAt(0) == '{' && this.delimiter.charAt(1) == '{';
+        }
+        // ----------------------------------------------------------------------------------------------------------------
+        getHTML() { return this.html; }
+        __readNext() {
+            if (this.partIndex >= this.nonDelimiters.length) {
+                if (this.readMode != HTMLReaderModes.End) {
+                    this.__lastTextEndIndex = this.textEndIndex;
+                    this.textEndIndex += this.delimiter.length;
+                    this.text = "";
+                    this.delimiter = "";
+                    this.readMode = HTMLReaderModes.End;
+                }
+            }
+            else {
+                this.text = this.nonDelimiters[this.partIndex];
+                this.__lastTextEndIndex = this.textEndIndex;
+                this.textEndIndex += this.delimiter.length + this.text.length; // (add last delimiter length and the current text length)
+                this.delimiter = this.partIndex < this.delimiters.length ? this.delimiters[this.partIndex] : "";
+                this.partIndex++;
+            }
+        }
+        __goBack() {
+            this.partIndex--;
+            this.textEndIndex = this.__lastTextEndIndex;
+            this.text = this.nonDelimiters[this.partIndex];
+            this.delimiter = this.partIndex < this.delimiters.length ? this.delimiters[this.partIndex] : "";
+        }
+        __reQueueDelimiter() {
+            this.partIndex--;
+            this.textEndIndex -= this.delimiter.length;
+            this.nonDelimiters[this.partIndex] = ""; // (need to make sure not to read the text next time around on this same index point [may be an attribute, which would cause a cyclical read case])
+        }
+        /** If the current delimiter is whitespace, then this advances the reading (note: all whitespace will be grouped into one delimiter).
+            * True is returned if whitespace (or an empty string) was found and skipped, otherwise false is returned, and no action was taken.
+            * @param {boolean} onlyIfTextIsEmpty If true, advances past the whitespace delimiter ONLY if the preceding text read was also empty.  This can happen
+            * if whitespace immediately follows another delimiter (such as space after a tag name).
+            */
+        __skipWhiteSpace(onlyIfTextIsEmpty = false) {
+            if (this.readMode != HTMLReaderModes.End
+                && (this.delimiter.length == 0 || this.delimiter.charCodeAt(0) <= 32)
+                && (!onlyIfTextIsEmpty || !this.text)) {
+                this.__readNext();
+                return true;
+            }
+            else
+                return false;
+        }
+        throwError(msg) {
+            this.__readNext(); // (includes the delimiter and next text in the running text)
+            throw DS.Exception.from(msg + " on line " + this.getCurrentLineNumber() + ": <br/>\r\n" + this.getCurrentRunningText());
+        }
+        // -------------------------------------------------------------------------------------------------------------------
+        /** Reads the next tag or attribute in the underlying html. */
+        readNext() {
+            this.textStartIndex = this.textEndIndex + this.delimiter.length;
+            this.__readNext();
+            if (this.readMode == HTMLReaderModes.Tag
+                && this.tagBracket != '</' && this.tagName.charAt(this.tagName.length - 1) != ">" // (skip entire tag block delimiters, such as "<script></script>", "<style></style>", and "<!-- -->")
+                || this.readMode == HTMLReaderModes.Attribute) {
+                this.__skipWhiteSpace(true);
+                // Valid formats supported: <TAG A 'B' C=D E='F' 'G'=H 'I'='J' K.L = MNO P.Q="RS" />
+                // (note: user will be notified of invalid formatting)
+                this.attributeName = this.text.toLocaleLowerCase();
+                var isAttributeValueQuoted = false;
+                if (this.attributeName) {
+                    // (and attribute exists, so '=', '/>', '>', or whitespace should follow)
+                    if (this.delimiter == '=') {
+                        // ('=' exists, so a valid value should exist)
+                        this.__readNext(); // (advance to the next part)
+                        this.__skipWhiteSpace(true); // (skip ahead one more if on whitespace AND empty text ['a= b', where the space delimiter has empty text, vs 'a=b ', where the space delimiter as text 'b'])
+                        isAttributeValueQuoted = this.delimiter.charAt(0) == '"' || this.delimiter.charAt(0) == "'";
+                        this.attributeValue = isAttributeValueQuoted ? this.delimiter : this.text;
+                        // (if quotes are used, the delimiter will contain the value, otherwise the value is the text)
+                        if (this.strictMode && this.attributeValue == "")
+                            this.throwError("Attribute '" + this.attributeName + "' is missing a value (use =\"\" to denote empty attribute values).");
+                        // .. strip any quotes to get the value ...
+                        if (this.attributeValue.length >= 2 && (this.attributeValue.charAt(0) == "'" || this.attributeValue.charAt(0) == '"'))
+                            this.attributeValue = this.attributeValue.substring(1, this.attributeValue.length - 1);
+                    }
+                    // ... only an end bracket sequence ('>' or '/>') or whitespace should exist next at this point (white space if there's more attributes to follow)...
+                    // (note: quoted attribute values are delimiters, so there's no need to check the delimiter if so at this point)
+                    if (!isAttributeValueQuoted) {
+                        if (this.delimiter != '/>' && this.delimiter != '>' && this.delimiter.charCodeAt(0) > 32)
+                            this.throwError("A closing tag bracket or whitespace is missing after the attribute '" + this.attributeName + (this.attributeValue ? "=" + this.attributeValue : "") + "'");
+                        this.__reQueueDelimiter(); // (clears the text part and backs up the parts index for another read to properly close off the tag on the next read)
+                    }
+                    this.readMode = HTMLReaderModes.Attribute;
+                    return;
+                }
+                // ... no attribute found, so expect '/>', '>', or grouped whitespace ...
+                this.__skipWhiteSpace(); // (skip any whitespace so end brackets can be verified)
+                if (this.delimiter != '/>' && this.delimiter != '>')
+                    this.throwError("A closing tag bracket is missing for tag '" + this.tagBracket + this.tagName + "'."); //??A valid attribute format (i.e. a, a=b, or a='b c', etc.) was expected
+                this.readMode = HTMLReaderModes.EndOfTag;
+                return;
+            }
+            this.__skipWhiteSpace(); // (will be ignored if no whitespace exists, otherwise the next non-whitespace delimiter will become available)
+            // ... locate a valid tag or token ...
+            // (note: 'this.arrayIndex == 0' after reading from the delimiter side)
+            while (this.readMode != HTMLReaderModes.End) {
+                if (this.delimiter.charAt(0) == '<') {
+                    if (this.delimiter.charAt(1) == '/') {
+                        this.tagBracket = this.delimiter.substring(0, 2);
+                        this.tagName = this.delimiter.substring(2).toLocaleLowerCase();
+                        break;
+                    }
+                    else {
+                        this.tagBracket = this.delimiter.substring(0, 1);
+                        this.tagName = this.delimiter.substring(1).toLocaleLowerCase();
+                        break;
+                    }
+                }
+                //else if (this.delimiter.length > 2 && this.delimiter.charAt(0) == '{' && this.delimiter.charAt(1) == '{') {
+                //    this.readMode = Markup.HTMLReaderModes.TemplateToken;
+                //    break;
+                //}
+                this.__readNext();
+            }
+            ;
+            if (this.readMode != HTMLReaderModes.End) {
+                this.runningText = this.getCurrentRunningText();
+                this.readMode = HTMLReaderModes.Tag;
+                // ... do a quick look ahead if on an end tag to verify closure ...
+                if (this.tagBracket == '</') {
+                    this.__readNext();
+                    this.__skipWhiteSpace();
+                    if (this.delimiter != '>')
+                        this.throwError("Invalid end for tag '" + this.tagBracket + this.tagName + "' ('>' was expected).");
+                }
+            }
+            else
+                this.tagName = "";
+        }
+        // -------------------------------------------------------------------------------------------------------------------
+        getCurrentRunningText() {
+            return this.html.substring(this.textStartIndex, this.textEndIndex);
+        }
+        getCurrentLineNumber() {
+            for (var ln = 1, i = this.textEndIndex - 1; i >= 0; --i)
+                if (this.html.charCodeAt(i) == 10) // (LF at the very least; see https://en.wikipedia.org/wiki/Newline#Representations)
+                    ++ln;
+            return ln;
+        }
+    }
+    // -------------------------------------------------------------------------------------------------------------------
+    HTMLReader.__splitRegEx = /<!(?:--[\S\s]*?--)?[\S\s]*?>|<script\b[\S\s]*?<\/script[\S\s]*?>|<style\b[\S\s]*?<\/style[\S\s]*?>|<\![A-Z0-9]+|<\/[A-Z0-9]+|<[A-Z0-9]+|\/?>|&[A-Z]+;?|&#[0-9]+;?|&#x[A-F0-9]+;?|(?:'[^<>]*?'|"[^<>]*?")|=|\s+|\{\{[^\{\}]*?\}\}/gi;
+    DS.HTMLReader = HTMLReader;
+})(DS || (DS = {}));
 // ============================================================================================================================
 var DS;
 (function (DS) {
@@ -3014,6 +3757,283 @@ var DS;
     })(HTML = DS.HTML || (DS.HTML = {}));
 })(DS || (DS = {}));
 // ############################################################################################################################
+var DS;
+(function (DS) {
+    let VDOM;
+    (function (VDOM) {
+        let Templating;
+        (function (Templating) {
+            var nameOf_Templating_Phrase_phraseType = DS.nameof(() => VDOM.Templating.Phrase.prototype.phraseType);
+            var nameOf_Templating_Header_headerLevel = DS.nameof(() => VDOM.Templating.Header.prototype.headerLevel);
+            /** Parses HTML to create a graph object tree, and also returns any templates found.
+            * This concept is similar to using XAML to load objects in WPF. As such, you have the option to use an HTML template, or dynamically build your
+            * graph items directly in code.
+            *
+            * Warning about inline scripts: Script tags may be executed client side (naturally by the DOM), but you cannot rely on them server side.  Try to use
+            * HTML for UI DESIGN ONLY.  Expect that any code you place in the HTML will not execute server side (or client side for that matter) unless you
+            * handle/execute the script code yourself.
+            * @param {string} html The HTML to parse.
+            * @param {boolean} strictMode If true, then the parser will produce errors on ill-formed HTML (eg. 'attribute=' with no value).
+            * This can greatly help keep your html clean, AND identify possible areas of page errors.  If strict formatting is not important, pass in false.
+            */
+            function parse(html = null, strictMode) {
+                var log = DS.Diagnostics.log("Parse HTML", "Parsing HTML template ...").beginCapture();
+                log.write("Template: " + html);
+                if (!html)
+                    return null;
+                // ... parsing is done by passing each new graph item the current scan position in a recursive pattern, until the end of the HTML text is found ...
+                var htmlReader = new DS.HTMLReader(html);
+                if (strictMode !== void 0)
+                    htmlReader.strictMode = !!strictMode;
+                var approotID;
+                var mode = 0; // (0 = app scope not found yet, 1 = app root found, begin parsing application scope elements, 2 = creating objects)
+                var classMatch = /^[$.][A-Za-z0-9_$]*(\.[A-Za-z0-9_$]*)*(\s+|$)/;
+                var attribName;
+                //type Node = typeof import("../../2677A76EE8A34818873FB0587B8C3108/shared/VDOM");
+                var storeRunningText = (parent) => {
+                    if (htmlReader.runningText) { // (if there is running text, then create a text node for it under the given parent node)
+                        //?if (!host.isClient())
+                        //?    HTMLElement.new(parent).setValue((htmlReader.runningText.indexOf('&') < 0 ? "text" : "html"), htmlReader.runningText); // (not for the UI, so doesn't matter)
+                        //?else
+                        if (htmlReader.runningText.indexOf('&') < 0)
+                            parent.appendChild(new VDOM.Text(htmlReader.runningText));
+                        else
+                            parent.appendChild(new VDOM.HTMLElement('span').$__set("innerHTML", htmlReader.runningText));
+                    }
+                };
+                var rootElements = [];
+                var globalTemplatesReference = {};
+                var processTags = (parent) => {
+                    var vnodeItemType, graphItemTypePrefix;
+                    var nodeType;
+                    var nodeItem;
+                    var properties;
+                    var currentTagName;
+                    var isDataTemplate = false, dataTemplateID, dataTemplateHTML;
+                    var tagStartIndex, lastTemplateIndex;
+                    var templateInfo;
+                    var templates = null;
+                    var immediateChildTemplates = null;
+                    while (htmlReader.readMode != DS.HTMLReaderModes.End) {
+                        currentTagName = htmlReader.tagName;
+                        if (!htmlReader.isMarkupDeclaration() && !htmlReader.isCommentBlock() && !htmlReader.isScriptBlock() && !htmlReader.isStyleBlock()) {
+                            if (currentTagName == "html") {
+                                // (The application root is a specification for the root of the WHOLE application, which is typically the body.  The developer should
+                                // specify the element ID for the root element in the 'data--approot' attribute of the <html> tag. [eg: <html data--approot='main'> ... <body id='main'>...]\
+                                // By default the app root will assume the body tag if not specified.)
+                                if (approotID === void 0)
+                                    approotID = null; // (null flags that an HTML tag was found)
+                                if (htmlReader.attributeName == "data-approot" || htmlReader.attributeName == "data--approot") {
+                                    approotID = htmlReader.attributeValue;
+                                }
+                            }
+                            else {
+                                // (note: app root starts at the body by default, unless a root element ID is given in the HTML tag before hand)
+                                if (htmlReader.readMode == DS.HTMLReaderModes.Attribute) {
+                                    // ... templates are stripped out for usage later ...
+                                    if (!isDataTemplate && htmlReader.attributeName == "data--template") {
+                                        isDataTemplate = true; // (will add to the template list instead of the final result)
+                                        dataTemplateID = htmlReader.attributeValue;
+                                    }
+                                    attribName = (htmlReader.attributeName.substring(0, 6) != "data--") ? htmlReader.attributeName : htmlReader.attributeName.substring(6);
+                                    properties[attribName] = htmlReader.attributeValue;
+                                    if (htmlReader.attributeName == "id" && htmlReader.attributeValue == approotID && mode == 0)
+                                        mode = 1;
+                                }
+                                else {
+                                    if (mode == 2 && htmlReader.readMode == DS.HTMLReaderModes.Tag && htmlReader.isClosingTag()) { // (this an ending tag (i.e. "</...>"))
+                                        // (this end tag should be the "closure" to the recently created graph item sibling, which then sets 'graphiItem' to null, but if
+                                        // it's already null, the end tag should be handled by the parent level (so if the parent tag finds it's own end tag, then we know
+                                        // there's a problem); also, if the closing tag name is different (usually due to ill-formatted HTML [allowed only on parser override],
+                                        // or auto-closing tags, like '<img>'), assume closure of the previous tag and let the parent handle it)
+                                        if (nodeItem) {
+                                            storeRunningText(nodeItem);
+                                            if (isDataTemplate) {
+                                                dataTemplateHTML = htmlReader.getHTML().substring(tagStartIndex, htmlReader.textEndIndex) + ">";
+                                                templateInfo = { id: dataTemplateID, originalHTML: dataTemplateHTML, templateHTML: undefined, templateItem: nodeItem, childTemplates: immediateChildTemplates };
+                                                // (note: if there are immediate child templates, remove them from the current template text)
+                                                if (immediateChildTemplates)
+                                                    for (var i = 0, n = immediateChildTemplates.length; i < n; i++) // TODO: The following can be optimized better (use start/end indexes).
+                                                        dataTemplateHTML = dataTemplateHTML.replace(immediateChildTemplates[i].originalHTML, "<!--{{" + immediateChildTemplates[i].id + "Items}}-->");
+                                                templateInfo.templateHTML = dataTemplateHTML;
+                                                globalTemplatesReference[dataTemplateID] = templateInfo; // (all templates are recorded in application scope, so IDs must be unique, otherwise they will override previous ones)
+                                                if (!templates)
+                                                    templates = [];
+                                                templates.push(templateInfo);
+                                                isDataTemplate = false;
+                                            }
+                                            if (htmlReader.tagName != nodeItem.tagName)
+                                                return templates; // (note: in ill-formatted html [optional feature of the parser], make sure the closing tag name is correct, else perform an "auto close and return")
+                                            nodeType = null;
+                                            nodeItem = null;
+                                            immediateChildTemplates = null;
+                                        }
+                                        else
+                                            return templates; // (return if this closing tag doesn't match the last opening tag read, so let the parent level handle it)
+                                    }
+                                    else if (mode == 2 && htmlReader.readMode == DS.HTMLReaderModes.EndOfTag) { // (end of attributes, so create the tag graph item)
+                                        // ... this is either the end of the tag with inner html/text, or a self ending tag (XML style) ...
+                                        vnodeItemType = properties['class']; // (this may hold an explicit object type to create [note expected format: module.full.name.classname])
+                                        nodeItem = null;
+                                        nodeType = null;
+                                        if (vnodeItemType && classMatch.test(vnodeItemType)) {
+                                            graphItemTypePrefix = RegExp.lastMatch.substring(0, 1); // ('$' [DS full type name prefix], or '.' [default UI type name])
+                                            if (graphItemTypePrefix == '$') {
+                                                vnodeItemType = RegExp.lastMatch.substring(1);
+                                                if (vnodeItemType.charAt(0) == '.') // (just in case there's a '.' after '$', allow this as well)
+                                                    graphItemTypePrefix = '.';
+                                            }
+                                            else
+                                                vnodeItemType = RegExp.lastMatch; // (type is either a full type, or starts with '.' [relative])
+                                            if (graphItemTypePrefix == '.')
+                                                vnodeItemType = "DreamSpace.System.UI" + vnodeItemType;
+                                            nodeType = DS.Utilities.dereferencePropertyPath(vnodeItemType, VDOM);
+                                            if (nodeType === void 0)
+                                                throw DS.Exception.from("The node item type '" + vnodeItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " was not found.");
+                                            if (typeof nodeType !== 'function' || typeof VDOM.HTMLElement.defaultHTMLTagName === void 0)
+                                                throw DS.Exception.from("The node item type '" + vnodeItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " does not resolve to a valid VDOM class type.");
+                                        }
+                                        if (nodeType == null) {
+                                            // ... auto detect the node types based on the tag name (all valid HTML4/5 tags: http://www.w3schools.com/tags/) ...
+                                            switch (currentTagName) {
+                                                // (phrases)
+                                                case 'abbr':
+                                                    nodeType = VDOM.Templating.Phrase;
+                                                    properties[nameOf_Templating_Phrase_phraseType] = VDOM.Templating.PhraseTypes.Abbreviation;
+                                                    break;
+                                                case 'acronym':
+                                                    nodeType = VDOM.Templating.Phrase;
+                                                    properties[nameOf_Templating_Phrase_phraseType] = VDOM.Templating.PhraseTypes.Acronym;
+                                                    break;
+                                                case 'em':
+                                                    nodeType = VDOM.Templating.Phrase;
+                                                    properties[nameOf_Templating_Phrase_phraseType] = VDOM.Templating.PhraseTypes.Emphasis;
+                                                    break;
+                                                case 'strong':
+                                                    nodeType = VDOM.Templating.Phrase;
+                                                    properties[nameOf_Templating_Phrase_phraseType] = VDOM.Templating.PhraseTypes.Strong;
+                                                    break;
+                                                case 'cite':
+                                                    nodeType = VDOM.Templating.Phrase;
+                                                    properties[nameOf_Templating_Phrase_phraseType] = VDOM.Templating.PhraseTypes.Cite;
+                                                    break;
+                                                case 'dfn':
+                                                    nodeType = VDOM.Templating.Phrase;
+                                                    properties[nameOf_Templating_Phrase_phraseType] = VDOM.Templating.PhraseTypes.Defining;
+                                                    break;
+                                                case 'code':
+                                                    nodeType = VDOM.Templating.Phrase;
+                                                    properties[nameOf_Templating_Phrase_phraseType] = VDOM.Templating.PhraseTypes.Code;
+                                                    break;
+                                                case 'samp':
+                                                    nodeType = VDOM.Templating.Phrase;
+                                                    properties[nameOf_Templating_Phrase_phraseType] = VDOM.Templating.PhraseTypes.Sample;
+                                                    break;
+                                                case 'kbd':
+                                                    nodeType = VDOM.Templating.Phrase;
+                                                    properties[nameOf_Templating_Phrase_phraseType] = VDOM.Templating.PhraseTypes.Keyboard;
+                                                    break;
+                                                case 'var':
+                                                    nodeType = VDOM.Templating.Phrase;
+                                                    properties[nameOf_Templating_Phrase_phraseType] = VDOM.Templating.PhraseTypes.Variable;
+                                                    break;
+                                                // (headers)
+                                                case 'h1':
+                                                    nodeType = VDOM.HTMLElement;
+                                                    properties[nameOf_Templating_Header_headerLevel] = 1;
+                                                    break;
+                                                case 'h2':
+                                                    nodeType = VDOM.HTMLElement;
+                                                    properties[nameOf_Templating_Header_headerLevel] = 2;
+                                                    break;
+                                                case 'h3':
+                                                    nodeType = VDOM.HTMLElement;
+                                                    properties[nameOf_Templating_Header_headerLevel] = 3;
+                                                    break;
+                                                case 'h4':
+                                                    nodeType = VDOM.HTMLElement;
+                                                    properties[nameOf_Templating_Header_headerLevel] = 4;
+                                                    break;
+                                                case 'h5':
+                                                    nodeType = VDOM.HTMLElement;
+                                                    properties[nameOf_Templating_Header_headerLevel] = 5;
+                                                    break;
+                                                case 'h6':
+                                                    nodeType = VDOM.HTMLElement;
+                                                    properties[nameOf_Templating_Header_headerLevel] = 6;
+                                                    break;
+                                                default: nodeType = VDOM.HTMLElement; // (just create a basic object to use with htmlReader.tagName)
+                                            }
+                                        }
+                                        if (!nodeItem) { // (only create if not explicitly created)
+                                            nodeItem = new nodeType();
+                                            if (!isDataTemplate)
+                                                parent.appendChild(nodeItem);
+                                        }
+                                        for (var pname in properties)
+                                            nodeItem[pname] = properties[pname];
+                                        nodeItem.tagName = currentTagName;
+                                        // ... some tags are not allowed to have children (and don't have to have closing tags, so null the graph item and type now)...
+                                        switch (currentTagName) {
+                                            case "area":
+                                            case "base":
+                                            case "br":
+                                            case "col":
+                                            case "command":
+                                            case "embed":
+                                            case "hr":
+                                            case "img":
+                                            case "input":
+                                            case "keygen":
+                                            case "link":
+                                            case "meta":
+                                            case "param":
+                                            case "source":
+                                            case "track":
+                                            case "wbr":
+                                                nodeItem = null;
+                                                nodeType = null;
+                                        }
+                                        if (parent === null)
+                                            rootElements.push(nodeItem);
+                                    }
+                                    else if (htmlReader.readMode == DS.HTMLReaderModes.Tag) {
+                                        if (mode == 1)
+                                            mode = 2; // (begin creating on this tag that is AFTER the root app tag [i.e. since root is the "application" object itself])
+                                        if (!nodeItem) {
+                                            // ... no current 'graphItem' being worked on, so assume start of a new sibling tag (to be placed under the current parent) ...
+                                            properties = {};
+                                            tagStartIndex = htmlReader.textEndIndex; // (the text end index is the start of the next tag [html text sits between tags])
+                                            if (mode == 2)
+                                                storeRunningText(parent);
+                                        }
+                                        else if (mode == 2) {
+                                            // (note: each function call deals with a single nested level, and if a tag is not closed upon reading another, 'processTag' is called again because there may be many other nested tags before it can be closed)
+                                            immediateChildTemplates = processTags(nodeItem); // ('graphItem' was just created for the last tag read, but the end tag is still yet to be read)
+                                            // (the previous call will continue until an end tag is found, in which case it returns that tag to be handled by this parent level)
+                                            if (htmlReader.tagName != nodeItem.tagName) // (the previous level should be parsed now, and the current tag should be an end tag that doesn't match anything in the immediate nested level, which should be the end tag for this parent tag)
+                                                throw DS.Exception.from("The closing tag '</" + htmlReader.tagName + ">' was unexpected for current tag '<" + nodeItem.tagName + ">' on line " + htmlReader.getCurrentLineNumber() + ".");
+                                            continue; // (need to continue on the last item read before returning)
+                                        }
+                                        if (currentTagName == "body" && !approotID)
+                                            mode = 1; // (body was found, and the 'approotid' attribute was not specified, so assume body as the application's root element)
+                                    }
+                                }
+                            }
+                        }
+                        htmlReader.readNext();
+                    }
+                    return templates;
+                };
+                htmlReader.readNext(); // (move to the first item)
+                processTags(null);
+                log.write("HTML template parsing complete.").endCapture();
+                return { rootElements: rootElements, templates: globalTemplatesReference };
+            }
+            Templating.parse = parse;
+        })(Templating = VDOM.Templating || (VDOM.Templating = {}));
+    })(VDOM = DS.VDOM || (DS.VDOM = {}));
+})(DS || (DS = {}));
 // ###########################################################################################################################
 // Types for time management.
 // ###########################################################################################################################
@@ -3751,3 +4771,1099 @@ var DS;
         IO.get = get;
     })(IO = DS.IO || (DS.IO = {}));
 })(DS || (DS = {}));
+var DS;
+(function (DS) {
+    /** A component. */
+    class Component extends DS.TrackableObject {
+        constructor() {
+            super(...arguments);
+            /** Inputs are generated as parameters at the top of the function that wraps the script. */
+            this.inputs = [];
+            /** Outputs are */
+            this.outputs = [];
+            this.events = [];
+        }
+        execute() {
+            return __awaiter(this, void 0, void 0, function* () { });
+        }
+    }
+    DS.Component = Component;
+})(DS || (DS = {}));
+var DS;
+(function (DS) {
+    /** Defines an event that can trigger a workflow. */
+    class EventDefinition extends DS.TrackableObject {
+        constructor() {
+            super(...arguments);
+            /** The parameters defined for this event.  Components are to supply arguments for this when triggering events. */
+            this.parameters = [];
+        }
+    }
+    DS.EventDefinition = EventDefinition;
+})(DS || (DS = {}));
+var DS;
+(function (DS) {
+    /** A page holds the UI design, which is basically just a single HTML page template. */
+    class Page {
+    }
+    DS.Page = Page;
+})(DS || (DS = {}));
+var DS;
+(function (DS) {
+    // ========================================================================================================================
+    class Project extends DS.TrackableObject {
+        // --------------------------------------------------------------------------------------------------------------------
+        constructor(
+        /** The solution this project belongs to. */ solution, 
+        /** The title of the project. */ name, 
+        /** The project's description. */ description) {
+            super();
+            this.solution = solution;
+            this.name = name;
+            this.description = description;
+            /** A list of all files associated with this project, indexed by the absolute lowercase file path. */
+            this.files = {};
+            /** A list of user IDs and assigned roles for this project. */
+            this.userSecurity = new DS.UserAccess();
+            /** The site for this project.  Every project contains a site object, even for API-only projects. For API-only projects there are no pages. */
+            this.site = new DS.Site();
+            this._expressionBin = [];
+            this.onExpressionBinItemAdded = new DS.EventDispatcher(this, "onExpressionBinItemAdded");
+            this.onExpressionBinItemRemoved = new DS.EventDispatcher(this, "onExpressionBinItemRemoved");
+            if (!DS.FileSystem.isValidFileName(name))
+                throw "The project title '" + name + "' must also be a valid file name. Don't include special directory characters, such as: \\ / ? % * ";
+            this.directory = this.solution.directory.createDirectory(DS.FileSystem.combine("projects", this._uid)); // (the path is "User ID"/"project's unique ID"/ )
+        }
+        // --------------------------------------------------------------------------------------------------------------------
+        // Create a type of trash-bin to hold expressions so the user can restore them, or delete permanently.
+        /** Holds a list of expressions the developer has removed from scripts. This renders to a global space, which allows
+          * developers to move expressions easily between scripts.
+          * Use 'addExpressionToBin()' and 'removeExpressionFromBin()' to modify this list, which also triggers the UI to update.
+          */
+        get expressionBin() { return this._expressionBin; }
+        /** Returns the expression that was picked by the user for some operation. In the future this may also be used during drag-n-drop operations. */
+        get pickedExpression() { return this._pickedItem; }
+        // --------------------------------------------------------------------------------------------------------------------
+        /** Saves the project and related items to a specified object.
+         * If no object is specified, then a new empty object is created and returned.
+         */
+        save(target) {
+            target = target || {};
+            super.save(target);
+            target.name = this.name;
+            target.description = this.description;
+            for (var p in this.files)
+                (target.files || (target.files = [])).push(this.files[p].absolutePath);
+            target.scripts = [this.script.save()];
+            return target;
+        }
+        /** Saves the project to a persisted storage, such as the local browser storage, or a remote store, if possible.
+         * Usually the local storage is attempted first, then the system will try to sync with a remote store.  If there
+         * is no free space in the local store, the system will try to sync with a remote store.  If that fails, the
+         * data will only be in memory and a UI warning will display.
+         */
+        saveToStorage(source = this.save()) {
+            if (!source)
+                return; // (nothing to do)
+            if (Array.isArray(source.scripts))
+                for (var i = 0, n = source.scripts.length; i < n; ++i) {
+                    var script = source.scripts[i];
+                    if (typeof script == 'object' && script.id) {
+                        source.scripts[i] = script.id; // (replaced the object entry with the ID before saving the project graph later; these will be files instead)
+                        var scriptJSON = script && JSON.stringify(script) || null;
+                        var file = this.directory.createFile((script.name || script.id) + ".fs", scriptJSON); // (fs: FlowScript source file)
+                        this.files[file.absolutePath.toLocaleLowerCase()] = file;
+                    }
+                }
+            var projectJSON = this.serialize(source);
+            file = this.directory.createFile(this._uid + ".fsp", projectJSON); // (fsp: FlowScript Project file)
+            this.files[file.absolutePath.toLocaleLowerCase()] = file;
+        }
+        load(target) {
+            if (target) {
+                var _this = this;
+                super.load(target);
+                _this.name = target.name;
+                _this.description = target.description;
+                // TODO: associated files and scripts.
+            }
+            return this;
+        }
+        // --------------------------------------------------------------------------------------------------------------------
+        /** Saves the project to data objects (calls this.save() when 'source' is undefined) and uses the JSON object to serialize the result into a string. */
+        serialize(source = this.save()) {
+            var json = JSON.stringify(source);
+            return json;
+        }
+        // --------------------------------------------------------------------------------------------------------------------
+        addToBin(expr, triggerEvent = true) {
+            if (this._expressionBin.indexOf(expr) < 0) {
+                this._expressionBin.push(expr);
+                if (triggerEvent)
+                    this.onExpressionBinItemAdded.trigger(expr, this);
+            }
+        }
+        removeFromBin(expr, triggerEvent = true) {
+            var i = this._expressionBin.indexOf(expr);
+            if (i >= 0) {
+                var expr = this._expressionBin.splice(i, 1)[0];
+                if (triggerEvent)
+                    this.onExpressionBinItemRemoved.trigger(expr, this);
+            }
+        }
+        isInBin(expr) { return this._expressionBin.indexOf(expr) >= 0; }
+        // --------------------------------------------------------------------------------------------------------------------
+        pick(expr) {
+            this._pickedItem = expr;
+        }
+    }
+    DS.Project = Project;
+    // ========================================================================================================================
+})(DS || (DS = {}));
+var DS;
+(function (DS) {
+    class Property extends DS.TrackableObject {
+    }
+    DS.Property = Property;
+})(DS || (DS = {}));
+// ############################################################################################################################
+// User Access Security
+// ############################################################################################################################
+var DS;
+(function (DS) {
+    let UserRoles;
+    (function (UserRoles) {
+        /** The user has no access. */
+        UserRoles[UserRoles["None"] = 0] = "None";
+        /** The user has full access as administrator. */
+        UserRoles[UserRoles["Admin"] = 1] = "Admin";
+        /** The user has read access. */
+        UserRoles[UserRoles["Viewer"] = 2] = "Viewer";
+        /** The user is allowed to make modifications. Implies read access, but does not include creation access. */
+        UserRoles[UserRoles["Editor"] = 3] = "Editor";
+        /** The user can create and modify. */
+        UserRoles[UserRoles["Creator"] = 4] = "Creator";
+        /** The user can delete/remove. */
+        UserRoles[UserRoles["Purger"] = 5] = "Purger";
+    })(UserRoles = DS.UserRoles || (DS.UserRoles = {}));
+    class UserAccessEntry {
+        constructor(userID, roles) {
+            this.userID = userID;
+            this.roles = roles;
+        }
+        /** Returns true if the specified role exists in this access entry. */
+        hasRole(role) {
+            if (this.roles)
+                for (var i = 0, n = this.roles.length; i < n; ++i)
+                    if (this.roles[i] == role)
+                        return true;
+            return false;
+        }
+    }
+    DS.UserAccessEntry = UserAccessEntry;
+    class UserAccess {
+        constructor() {
+            this._userIDs = [];
+        }
+        get length() { return this._userIDs.length; }
+        /** Assigns a user ID and one or more roles. If roles already exist, the given roles are merged (existing roles are note replaced). */
+        add(userID, ...roles) {
+            var entry = this.getItem(userID);
+            if (!entry) {
+                entry = new UserAccessEntry(userID, roles);
+                this._userIDs.push(entry);
+            }
+            else {
+                if (!entry.roles)
+                    entry.roles = roles;
+                else
+                    entry.roles.push(...roles);
+            }
+            return entry;
+        }
+        revoke(indexOrID) {
+            var i = typeof indexOrID == 'number' ? indexOrID : this.indexOf(indexOrID);
+            return i >= 0 ? (this._userIDs.splice(i, 1), true) : false;
+        }
+        /** Finds the index of the entry with the specific user ID. */
+        indexOf(userID) {
+            for (var i = 0, n = this.length; i < n; ++i)
+                if (this._userIDs[i].userID == userID)
+                    return i;
+            return -1;
+        }
+        getItem(indexOrID) {
+            return this._userIDs[typeof indexOrID == 'number' ? indexOrID : this.indexOf(indexOrID)];
+        }
+    }
+    DS.UserAccess = UserAccess;
+})(DS || (DS = {}));
+// ############################################################################################################################
+var DS;
+(function (DS) {
+    /** Represents a single selected item. */
+    class SelectedItem {
+    }
+    DS.SelectedItem = SelectedItem;
+    /** Represents one or more selected items. */
+    class Selection {
+        constructor() {
+            /** One or more selected items. */
+            this.selections = [];
+        }
+    }
+    DS.Selection = Selection;
+})(DS || (DS = {}));
+var DS;
+(function (DS) {
+    let DeploymentEnvironments;
+    (function (DeploymentEnvironments) {
+        DeploymentEnvironments[DeploymentEnvironments["Sandbox"] = 0] = "Sandbox";
+        DeploymentEnvironments[DeploymentEnvironments["Development"] = 1] = "Development";
+        DeploymentEnvironments[DeploymentEnvironments["QA"] = 2] = "QA";
+        DeploymentEnvironments[DeploymentEnvironments["Staging"] = 3] = "Staging";
+        DeploymentEnvironments[DeploymentEnvironments["Production"] = 4] = "Production";
+    })(DeploymentEnvironments = DS.DeploymentEnvironments || (DS.DeploymentEnvironments = {}));
+    /** A page holds the UI design, which is basically just a single HTML page template. */
+    class Site {
+        constructor() {
+            this.url = [];
+            /** One or more page templates that belong to the site. This is empty for API-only sites. */
+            this.pages = [];
+        }
+    }
+    DS.Site = Site;
+})(DS || (DS = {}));
+var DS;
+(function (DS) {
+    // ========================================================================================================================
+    function _defaultCreateProjectHandler(solution, project) {
+        return new DS.Project(solution, project.name, project.description);
+    }
+    ;
+    /**
+    * Holds a collection of projects.
+    * When a project instance is created, the default 'Solution.onCreateProject' handler is used, which can be overridden for derived project types.
+    */
+    class Solution extends DS.TrackableObject {
+        constructor() {
+            super();
+            this._projects = []; // (the loaded projects that are currently active)
+            this._userIDs = []; // (the loaded projects that are currently active)
+            /** A list of user IDs and assigned roles for this project. */
+            this.userSecurity = new DS.UserAccess();
+            this.directory = DS.FileSystem.fileManager.createDirectory(DS.FileSystem.combine("solutions", this._uid));
+        }
+        /** The function used to create project instances when a project is created from saved project data.
+         * Host programs can hook into this to create and return derived types instead (such as ProjectUI.ts).
+         */
+        static get onCreateProject() { return this._onCreateProject || _defaultCreateProjectHandler; }
+        static set onCreateProject(value) { if (typeof value != 'function')
+            throw "Solution.onCreateProject: Set failed - value is not a function."; this._onCreateProject = value; }
+        get count() { return this._projects.length; }
+        /* All projects for the current user. */
+        get projects() { return this._projects; }
+        /* A list of users, by ID, that are allowed . */
+        get userIDs() { return this._userIDs; }
+        /**
+         * Creates a new project with the given title and description.
+         * @param name The project title.
+         * @param description The project description.
+         */
+        createProject(name, description) {
+            var info = { name, description };
+            var project = Solution.onCreateProject(this, info);
+            this._projects.push(project);
+            return project;
+        }
+        /** Compiles a list of all projects, both locally and remotely. */
+        refreshProjects() {
+            return __awaiter(this, void 0, void 0, function* () {
+                return new Promise((ok, err) => {
+                    var unloadedProjects = this._unloadedProjects;
+                });
+            });
+        }
+    }
+    Solution._onCreateProject = _defaultCreateProjectHandler;
+    DS.Solution = Solution;
+    // ========================================================================================================================
+})(DS || (DS = {}));
+var DS;
+(function (DS) {
+    // ############################################################################################################################
+    // Data Tables
+    // ############################################################################################################################
+    /** The current user of the FlowScript system.
+     * The user 'id' (a GUID) is used as the root directory for projects.
+     */
+    class User extends DS.TrackableObject {
+        constructor(email, firstname, lastname) {
+            super();
+            this.email = email;
+            this.firstname = firstname;
+            this.lastname = lastname;
+            /** Holds a mapping of this user ID to global roles associated with the user. */
+            this._security = new DS.UserAccess();
+        }
+        /** Returns the current user object. */
+        static get current() { return _currentUser; }
+        /** Starts the process of changing the current user. */
+        static changeCurrentUser(user) {
+            return __awaiter(this, void 0, void 0, function* () {
+                return new Promise((resolve, reject) => {
+                    this.onCurrentUserChanging.triggerAsync(_currentUser, user)
+                        .then(() => this.onCurrentUserChanged.triggerAsync(_currentUser, user), reject) // (any exception in the previous promise will trigger 'reject')
+                        .then(resolve, reject); // (any exception in the previous 'then' will trigger 'reject')
+                });
+            });
+        }
+    }
+    /** Triggered when the current user is about to change.  If any handler returns false then the request is cancelled (such as if the current project is not saved yet). */
+    User.onCurrentUserChanging = new DS.EventDispatcher(User, "onCurrentUserChanging");
+    /** Triggered when the current user has changed. This event cannot be cancelled - use the 'onCurrentUserChanging' event for that. */
+    User.onCurrentUserChanged = new DS.EventDispatcher(User, "onCurrentUserChanged", false, false);
+    DS.User = User;
+    // ############################################################################################################################
+    var _currentUser = new User("");
+    // ############################################################################################################################
+})(DS || (DS = {}));
+var DS;
+(function (DS) {
+    class ValueMap {
+    }
+    DS.ValueMap = ValueMap;
+    /** Defines a branch by name, which determines the next step to execute. */
+    class Branch extends DS.TrackableObject {
+    }
+    DS.Branch = Branch;
+    /** References a component and defines translations between previous step's outputs and the next step. */
+    class Step extends DS.TrackableObject {
+        constructor() {
+            super(...arguments);
+            /** Maps the outputs of the previous step component's outputs to the inputs of the current component. */
+            this.inputMapping = [];
+            /** Defines named branches. */
+            this.branches = [];
+        }
+    }
+    DS.Step = Step;
+    /** A series of steps that will execute associated components in order. */
+    class Workflow extends DS.TrackableObject {
+        constructor() {
+            super(...arguments);
+            this.steps = [];
+        }
+        execute() {
+            return __awaiter(this, void 0, void 0, function* () { });
+        }
+    }
+    DS.Workflow = Workflow;
+    /** One or more "swim-lanes", from top to bottom (in order of sequence), that contain a series of components to execute. */
+    class Workflows extends DS.TrackableObject {
+        constructor() {
+            super(...arguments);
+            this.workflows = [];
+        }
+    }
+    DS.Workflows = Workflows;
+})(DS || (DS = {}));
+var DS;
+(function (DS) {
+    // ############################################################################################################################
+    // FileManager
+    let FileSystem;
+    (function (FileSystem) {
+        // ========================================================================================================================
+        let SyncStatus;
+        (function (SyncStatus) {
+            /** Not synchronizing. */
+            SyncStatus[SyncStatus["None"] = 0] = "None";
+            /** The content is being uploaded. */
+            SyncStatus[SyncStatus["Uploading"] = 1] = "Uploading";
+            /** Upload error. */
+            SyncStatus[SyncStatus["Error"] = 2] = "Error";
+            /** File now exists on the remote endpoint. */
+            SyncStatus[SyncStatus["Completed"] = 3] = "Completed";
+        })(SyncStatus = FileSystem.SyncStatus || (FileSystem.SyncStatus = {}));
+        var reviewTimerHandle;
+        function _syncFileSystem() {
+            reviewTimerHandle = void 0;
+        }
+        /** Returns slits and returns the path parts, validating each one and throwing an exception if any are invalid. */
+        function getPathParts(path) {
+            var parts = (typeof path !== 'string' ? '' + path : path).replace(/\\/g, '/').split('/');
+            for (var i = 0, n = parts.length; i < n; ++i)
+                if (!isValidFileName(parts[i]))
+                    throw "The path '" + path + "' contains invalid characters in '" + parts[i] + "'.";
+            return parts;
+        }
+        FileSystem.getPathParts = getPathParts;
+        class DirectoryItem {
+            // --------------------------------------------------------------------------------------------------------------------
+            constructor(fileManager, parent) {
+                /** The sync status of this item.
+                 * Note: Each directory item node syncs in sequence parent-to-child; thus, the child only syncs when the parent succeeds.  That said,
+                 * to be efficient, the parent will send itself AND all child directories (not files) as one JSON request.
+                 */
+                this.syncStatus = 0;
+                //get type(): string { return this._type; }
+                //private _type: string;
+                this._childItems = [];
+                this._childItemsByName = {};
+                this._fileManager = fileManager;
+                this.parent = parent;
+            }
+            /** The last time this*/
+            get lastAccessed() { return this._lastAccessed; }
+            /** Updates the 'lastAccessed' date+time value to the current value. Touching this directory item also refreshes the dates of all parent items.
+             * When the date of an item changes after a touch, it starts the process of reviewing and synchronizing with the backend.
+             */
+            touch() {
+                this._lastAccessed = new Date();
+                if (this._parent)
+                    this._parent.touch();
+                else {
+                    if (typeof reviewTimerHandle == 'number')
+                        clearTimeout(reviewTimerHandle);
+                    reviewTimerHandle = setTimeout(_syncFileSystem, 500);
+                }
+            }
+            /** Returns a reference to the parent item.  If there is no parent, then 'null' is returned.
+             */
+            get parent() { return this._parent; }
+            /** Sets a new parent type for this.  The current item will be removed from its parent (if any), and added to the given parent. */
+            set parent(parent) {
+                if (this._parent)
+                    this._parent.remove(this);
+                if (parent)
+                    parent.add(this);
+            }
+            get name() { return this._name; }
+            get hasChildren() { return !!(this._childItems && this._childItems.length); }
+            /** The full path + item name. */
+            get absolutePath() { return this._parent && this._parent.absolutePath + '/' + this._name || this._name; }
+            toString() { return this.absolutePath; }
+            exists(nameOrItem, ignore) {
+                if (nameOrItem === void 0 || nameOrItem === null || !this.hasChildren)
+                    return false;
+                if (typeof nameOrItem === 'object' && nameOrItem instanceof DirectoryItem) {
+                    var item = this._childItemsByName[nameOrItem._name];
+                    return !!item && item != ignore;
+                }
+                var t = this.resolve(nameOrItem);
+                return !!t && t != ignore;
+            }
+            /** Resolves a namespace path under this item.  You can provide a nested path if desired.
+              * For example, if the current item is 'A/B' within the 'A/B/C/D' path, then you could pass in 'C/D'.
+              * If not found, then null is returned.
+              * @param {function} typeFilter The type that the returned item must be a derivative of.
+              */
+            resolve(itemPath, typeFilter) {
+                if (itemPath === void 0 || itemPath === null || !this.hasChildren)
+                    return null;
+                var parts = getPathParts(itemPath), t = this;
+                for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
+                    // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
+                    var item = t._childItemsByName[parts[i]];
+                    if (!item)
+                        return null;
+                    else
+                        t = item;
+                }
+                return (typeFilter ? (t instanceof typeFilter ? t : null) : t);
+            }
+            /** Adds the given item under this item.
+              */
+            add(item) {
+                if (item === void 0 || item === null)
+                    throw "Cannot add an empty item name/path to '" + this.absolutePath + "'.";
+                if (this.exists(item))
+                    throw "The item '" + item + "' already exists in the namespace '" + this.absolutePath + "'.";
+                if (typeof item !== 'object' || !(item instanceof DirectoryItem))
+                    throw "The item '" + item + "' is not a valid 'DirectoryItem' object.";
+                if (item.parent)
+                    if (item.parent == this)
+                        return item;
+                    else
+                        item.parent.remove(item);
+                item._parent = this;
+                if (!this._childItems)
+                    this._childItems = [];
+                if (!this._childItemsByName)
+                    this._childItemsByName = {};
+                this._childItems.push(item);
+                this._childItemsByName[item.name] = item;
+                return item;
+            }
+            remove(itemOrName) {
+                if (itemOrName === void 0 || itemOrName === null)
+                    throw "Cannot remove an empty name/path from directory '" + this.absolutePath + "'.";
+                if (!this.hasChildren)
+                    return null;
+                var parent; // (since types can be added as roots to other types [i.e. no parent references], need to remove item objects as immediate children, not via 'resolve()')
+                if (typeof itemOrName == 'object' && itemOrName instanceof DirectoryItem) {
+                    var t = itemOrName;
+                    if (!this._childItemsByName[t.name])
+                        throw "Cannot remove item: There is no child item '" + itemOrName + "' under '" + this.absolutePath + "'.";
+                    parent = this;
+                }
+                else {
+                    var t = this.resolve(itemOrName);
+                    if (t)
+                        parent = t.parent;
+                }
+                if (t && parent) {
+                    delete parent._childItemsByName[t.name];
+                    var i = parent._childItems.indexOf(t);
+                    if (i >= 0)
+                        parent._childItems.splice(i, 1);
+                    t._parent = null;
+                }
+                return t;
+            }
+            getJSONStructure(typeFilter) {
+                JSON.stringify(this, (k, v) => {
+                    if (!k || k == '_childItems' || k == 'name') // ('k' is empty for the root object)
+                        if (!typeFilter || !v || v instanceof typeFilter)
+                            return v;
+                }, 2);
+                //var body = this._getJSONStructure(typeFilter, "  ");
+                //return "{" + (body ? "\r\n" + body : "") + "}\r\n";
+            }
+        }
+        FileSystem.DirectoryItem = DirectoryItem;
+        class Directory extends DirectoryItem {
+            constructor(fileManager, parent) { super(fileManager, parent); }
+            /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,).
+             * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
+             * Examples:
+             * - "/A/B/C/" => "/A/B/C"
+             * - "A/B/C" => "A/B"
+             * - "//A/B/C//" => "/A/B/C"
+             * - "/" => "/"
+             * - "" => ""
+             */
+            static getPath(filepath) {
+                if (!filepath)
+                    return "";
+                var parts = filepath.replace(/\\/g, '/').split('/'), i1 = 0, i2 = parts.length - 2;
+                while (i1 < parts.length && !parts[i1])
+                    i1++;
+                while (i2 > i1 && !parts[i2])
+                    i2--;
+                return (i1 > 0 ? "/" : "") + parts.slice(i1, i2 + 1).join('/');
+            }
+            getFile(filePath) {
+                var item = this.resolve(filePath);
+                if (!(item instanceof File))
+                    return null;
+                return item;
+            }
+            getDirectory(path) {
+                var item = this.resolve(path);
+                if (!(item instanceof Directory))
+                    return null;
+                return item;
+            }
+            /** Creates a directory under the user root endpoint. */
+            createDirectory(path) {
+                if (path === void 0 || path === null || !this.hasChildren)
+                    return null;
+                var parts = getPathParts(path), item = this; // (if path is empty it should default to this directory)
+                for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
+                    // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
+                    var childItem = item._childItemsByName[parts[i]];
+                    if (!childItem)
+                        item = new Directory(this._fileManager, this); // (create new directory names along the route)
+                    else if (childItem instanceof Directory)
+                        item = childItem; // (directory found, go in and continue)
+                    else
+                        throw "Cannot create path '" + path + "' under '" + this + "': '" + item + "' is not a directory.";
+                }
+                return item;
+            }
+            createFile(filePath, contents) {
+                var filename = File.getName(filePath);
+                var directoryPath = Directory.getPath(filePath);
+                if (!filename)
+                    throw "A file name is required.";
+                var dir = this.createDirectory(directoryPath);
+                return new File(this._fileManager, dir, contents);
+            }
+            getJSONStructure() {
+            }
+        }
+        FileSystem.Directory = Directory;
+        class File extends DirectoryItem {
+            constructor(fileManager, parent, content) {
+                super(fileManager, parent);
+                if (content !== void 0)
+                    this._contents = content;
+            }
+            get contents() { return this._contents; }
+            set contents(value) { this._contents = value; this.touch(); }
+            /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,).
+            * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
+            * Examples:
+            * - "/A/B/C/" => ""
+            * - "A/B/C" => "C"
+            * - "/" => ""
+            * - "" => ""
+            */
+            static getName(filepath) {
+                if (!filepath)
+                    return "";
+                var parts = filepath.replace(/\\/g, '/').split('/');
+                return parts[parts.length - 1] || "";
+            }
+            toBase64() { return DS.Encoding.base64Encode(this.contents); }
+            fromBase64(contentsB64) { this.contents = DS.Encoding.base64Decode(contentsB64); }
+        }
+        FileSystem.File = File;
+        /** Manages files in a virtual file system. This allows project files to be stored locally and synchronized with the server when a connection is available.
+         * For off-line storage to work, the browser must support local storage.
+         * Note: The 'FlowScript.currentUser' object determines the user-specific root directory for projects.
+         */
+        class FileManager {
+            // --------------------------------------------------------------------------------------------------------------------
+            constructor(
+            /** The URL endpoint for the FlowScript project files API. Defaults to 'FileManager.apiEndpoint'. */
+            apiEndpoint = FileManager.apiEndpoint) {
+                this.apiEndpoint = apiEndpoint;
+                this.root = new Directory(this);
+            }
+            /** Just a local property that checks for and returns 'FlowScript.currentUser'. */
+            static get currentUser() { if (DS.User.current)
+                return DS.User.current; throw "'There is no current user! User.changeCurrentUser()' must be called first."; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
+            /** The API endpoint to the directory for the current user. */
+            static get currentUserEndpoint() { return combine(this.apiEndpoint, FileManager.currentUser._uid); }
+            /** Gets a directory under the current user root endpoint.
+             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+             */
+            getDirectory(path, userId) {
+                return this.root.getDirectory(combine(userId || FileManager.currentUser._uid, path));
+            }
+            /** Creates a directory under the current user root endpoint.
+             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+             */
+            createDirectory(path, userId) {
+                return this.root.createDirectory(combine(userId || FileManager.currentUser._uid, path));
+            }
+            /** Gets a file under the current user root endpoint.
+             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+             */
+            getFile(filePath, userId) {
+                return this.root.getFile(combine(userId || FileManager.currentUser._uid, filePath));
+            }
+            /** Creates a file under the current user root endpoint.
+             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+             */
+            createFile(filePath, contents, userId) {
+                return this.root.createFile(combine(userId || FileManager.currentUser._uid, filePath), contents);
+            }
+        }
+        // --------------------------------------------------------------------------------------------------------------------
+        /** The URL endpoint for the FlowScript project files API. */
+        FileManager.apiEndpoint = "/api/files";
+        FileSystem.FileManager = FileManager;
+        // ========================================================================================================================
+        FileSystem.restrictedFilenameRegex = /\/\\\?%\*:\|"<>/g;
+        /** Returns true if a given filename contains invalid characters. */
+        function isValidFileName(name) {
+            return name && FileSystem.restrictedFilenameRegex.test(name);
+        }
+        FileSystem.isValidFileName = isValidFileName;
+        /** Combine two paths into one. */
+        function combine(path1, path2) {
+            return DS.Path.combine(path1 instanceof Directory ? path1.absolutePath : path1, path2 instanceof Directory ? path2.absolutePath : path2);
+        }
+        FileSystem.combine = combine;
+        // ========================================================================================================================
+    })(FileSystem = DS.FileSystem || (DS.FileSystem = {}));
+    // ############################################################################################################################
+})(DS || (DS = {}));
+// ############################################################################################################################
+// Types for event management.
+// ############################################################################################################################
+var DS;
+(function (DS) {
+    // ====================================================================================================================
+    ;
+    ;
+    /** Controls how the event progression occurs. */
+    let EventModes;
+    (function (EventModes) {
+        /** Trigger event on the way up to the target. */
+        EventModes[EventModes["Capture"] = 0] = "Capture";
+        /** Trigger event on the way down from the target. */
+        EventModes[EventModes["Bubble"] = 1] = "Bubble";
+        /** Trigger event on both the way up to the target, then back down again. */
+        EventModes[EventModes["CaptureAndBubble"] = 2] = "CaptureAndBubble";
+    })(EventModes = DS.EventModes || (DS.EventModes = {}));
+    ;
+    /**
+      * The EventDispatcher wraps a specific event type, and manages the triggering of "handlers" (callbacks) when that event type
+      * must be dispatched. Events are usually registered as static properties first (to prevent having to create and initialize
+      * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
+      * instance level event handler registration on the class only when necessary.
+      */
+    class EventDispatcher extends DS.DependentObject {
+        /** Constructs a new instance of the even dispatcher.
+         * @param eventTriggerHandler A global handler per event type that is triggered before any other handlers. This is a hook which is called every time an event triggers.
+         * This exists mainly to support handlers called with special parameters, such as those that may need translation, or arguments that need to be injected.
+         */
+        constructor(owner, eventName, removeOnTrigger = false, canCancel = true, eventTriggerHandler = null) {
+            super();
+            this.__associations = new WeakMap(); // (a mapping between an external object and this event instance - typically used to associated this event with an external object OTHER than the owner)
+            this.__listeners = []; // (this is typed "any object type" to allow using delegate handler function objects later on)
+            /** If this is true, then any new handler added will automatically be triggered as well.
+            * This is handy in cases where an application state is persisted, and future handlers should always execute. */
+            this.autoTrigger = false;
+            /** If true, then handlers are called only once, then removed (default is false). */
+            this.removeOnTrigger = false;
+            /** This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters. */
+            this.eventTriggerHandler = null;
+            /** True if the event can be cancelled. */
+            this.canCancel = true;
+            if (typeof eventName !== 'string')
+                eventName = '' + eventName;
+            if (!eventName)
+                throw "An event name is required.";
+            this.__eventName = eventName;
+            this.__eventPropertyName = EventDispatcher.createEventPropertyNameFromEventName(eventName); // (fix to support the convention of {item}.on{Event}().
+            this.owner = owner;
+            this.associate(owner);
+            this.__eventTriggerHandler = eventTriggerHandler;
+            this.canCancel = canCancel;
+        }
+        /** Return the underlying event name for this event object. */
+        getEventName() { return this.__eventName; }
+        /** Returns true if handlers exist on this event object instance. */
+        hasHandlers() { return !!this.__listeners.length; }
+        /**
+           * Registers an event with a class type - typically as a static property.
+           * @param type A class reference where the static property will be registered.
+           * @param eventName The name of the event to register.
+           * @param eventMode Specifies the desired event traveling mode.
+           * @param removeOnTrigger If true, the event only fires one time, then clears all event handlers. Attaching handlers once an event fires in this state causes them to be called immediately.
+           * @param eventTriggerCallback This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters.
+           * @param customEventPropName The name of the property that will be associated with this event, and expected on parent objects
+           * for the capturing and bubbling phases.  If left undefined/null, then the default is assumed to be
+           * 'on[EventName]', where the first event character is made uppercase automatically.
+           * @param canCancel If true (default), this event can be cancelled (prevented from completing, so no other events will fire).
+           */
+        static registerEvent(type, eventName, eventMode = EventModes.Capture, removeOnTrigger = false, eventTriggerCallback, customEventPropName, canCancel = true) {
+            customEventPropName || (customEventPropName = EventDispatcher.createEventPropertyNameFromEventName(eventName)); // (the default supports the convention of {item}.on{Event}()).
+            var privateEventName = EventDispatcher.createPrivateEventName(eventName); // (this name is used to store the new event dispatcher instance, which is created on demand for every instance)
+            // ... create a "getter" in the prototype for 'type' so that, when accessed by specific instances, an event object will be created on demand - this greatly reduces memory
+            //    allocations when many events exist on a lot of objects) ...
+            var onEventProxy = function () {
+                var instance = this; // (instance is the object instance on which this event property reference was made)
+                if (typeof instance !== 'object') //?  || !(instance instanceof DomainObject.$type))
+                    throw DS.Exception.error("{Object}." + eventName, "Must be called on an object instance.", instance);
+                // ... check if the instance already created the event property for registering events specific to this instance ...
+                var eventProperty = instance[privateEventName];
+                if (typeof eventProperty !== 'object') // (undefined or not valid, so attempt to create one now)
+                    instance[privateEventName] = eventProperty = new EventDispatcher(instance, eventName, removeOnTrigger, canCancel, eventTriggerCallback);
+                eventProperty.__eventPropertyName = customEventPropName;
+                eventProperty.__eventPrivatePropertyName = privateEventName;
+                return eventProperty;
+            };
+            //x ... first, set the depreciating cross-browser compatible access method ...
+            //x type.prototype["$__" + customEventPropName] = onEventProxy; // (ex: '$__onClick')
+            // ... create the event getter property and set the "on event" getter proxy ...
+            if (DS.global.Object.defineProperty)
+                DS.global.Object.defineProperty(type.prototype, customEventPropName, {
+                    configurable: true,
+                    enumerable: true,
+                    writable: true,
+                    get: onEventProxy
+                });
+            else
+                throw DS.Exception.error("registerEvent: " + eventName, "This browser does not support 'Object.defineProperty()'. To support older browsers, call '_" + customEventPropName + "()' instead to get an instance specific reference to the EventDispatcher for that event (i.e. for 'click' event, do 'obj._onClick().attach(...)').", type);
+            return { _eventMode: eventMode, _eventName: eventName, _removeOnTrigger: removeOnTrigger }; // (the return doesn't matter at this time)
+        }
+        /**
+            * Creates an instance property name from a given event name by adding 'on' as a prefix.
+            * This is mainly used when registering events as static properties on types.
+            * @param {string} eventName The event name to create an event property from. If the given event name already starts with 'on', then the given name is used as is (i.e. 'click' becomes 'onClick').
+            */
+        static createEventPropertyNameFromEventName(eventName) {
+            return eventName.match(/^on[^a-z]/) ? eventName : "on" + eventName.charAt(0).toUpperCase() + eventName.substring(1);
+        }
+        /**
+           * Returns a formatted event name in the form of a private event name like '$__{eventName}Event' (eg. 'click' becomes '$__clickEvent').
+           * The private event names are used to store event instances on the owning instances so each instance has it's own handlers list to manage.
+           */
+        static createPrivateEventName(eventName) { return "$__" + eventName + "Event"; }
+        dispose() {
+            // ... remove all handlers ...
+            this.removeAllListeners();
+            // TODO: Detach from owner as well? //?
+        }
+        /**
+         * Associates this event instance with an object using a weak map. The owner of the instance is already associated by default.
+         * Use this function to associate other external objects other than the owner, such as DOM elements (there should only be one
+         * specific event instance per any object).
+         */
+        associate(obj) {
+            this.__associations.set(obj, this);
+            return this;
+        }
+        /** Disassociates this event instance from an object (an internal weak map is used for associations). */
+        disassociate(obj) {
+            this.__associations.delete(obj);
+            return this;
+        }
+        /** Returns true if this event instance is already associated with the specified object (a weak map is used). */
+        isAssociated(obj) {
+            return this.__associations.has(obj);
+        }
+        _getHandlerIndex(handler) {
+            if (handler instanceof DS.Delegate) {
+                var object = handler.object;
+                var func = handler.func;
+            }
+            else if (handler instanceof Function) {
+                object = null;
+                func = handler;
+            }
+            else
+                throw DS.Exception.error("_getHandlerIndex()", "The given handler is not valid.  A Delegate type or function was expected.", this);
+            for (var i = 0, n = this.__listeners.length; i < n; ++i) {
+                var h = this.__listeners[i];
+                if (h.object == object && h.func == func)
+                    return i;
+            }
+            return -1;
+        }
+        attach(handler, eventMode = EventModes.Capture) {
+            if (this._getHandlerIndex(handler) == -1) {
+                var delegate = handler instanceof DS.Delegate ? handler : new DS.Delegate(this, handler);
+                delegate.$__eventMode = eventMode;
+                this.__listeners.push(delegate);
+            }
+            return this;
+        }
+        /** Dispatch the underlying event. Typically 'dispatch()' is called instead of calling this directly. Returns 'true' if all events completed, and 'false' if any handler cancelled the event.
+          * @param {any} triggerState If supplied, the event will not trigger unless the current state is different from the last state.  This is useful in making
+          * sure events only trigger once per state.  Pass in null (the default) to always dispatch regardless.  Pass 'undefined' to used the event
+          * name as the trigger state (this can be used for a "trigger only once" scenario).
+          * @param {boolean} canBubble Set to true to allow the event to bubble (where supported).
+          * @param {boolean} canCancel Set to true if handlers can abort the event (false means it has or will occur regardless).
+          * @param {string[]} args Custom arguments that will be passed on to the event handlers.
+          */
+        dispatchEvent(triggerState = null, ...args) {
+            if (!this.setTriggerState(triggerState))
+                return; // (no change in state, so ignore this request)
+            // ... for capture phases, start at the bottom and work up; but need to build the chain first (http://stackoverflow.com/a/10654134/1236397) ...
+            // ('this.__parent' checks for event-instance-only chained events, whereas 'this.owner.parent' iterates events using the a parent-child dependency hierarchy from the owner)
+            var parent = this.__parent || this.owner && this.owner.parent || null;
+            // ... run capture/bubbling phases; first, build the event chain ...
+            var eventChain = new Array(this); // ('this' [the current instance] is the last for capture, and first for bubbling)
+            if (parent) {
+                var eventPropertyName = this.__eventPropertyName; // (if exists, this references the 'on{EventName}' property getter that returns an even dispatcher object)
+                while (parent) {
+                    var eventInstance = parent[eventPropertyName];
+                    if (eventInstance instanceof EventDispatcher)
+                        eventChain.push(eventInstance);
+                    parent = parent['__parent'];
+                }
+            }
+            var cancelled = false;
+            // ... do capture phase (root, towards target) ...
+            for (var n = eventChain.length, i = n - 1; i >= 0; --i) {
+                if (cancelled)
+                    break;
+                var dispatcher = eventChain[i];
+                if (dispatcher.__listeners.length)
+                    cancelled = dispatcher.onDispatchEvent(args, EventModes.Capture);
+            }
+            // ... do bubbling phase (target, towards root) ...
+            for (var i = 0, n = eventChain.length; i < n; ++i) {
+                if (cancelled)
+                    break;
+                var dispatcher = eventChain[i];
+                if (dispatcher.__listeners.length)
+                    cancelled = dispatcher.onDispatchEvent(args, EventModes.Bubble);
+            }
+            return !cancelled;
+        }
+        __exception(msg, error) {
+            if (error)
+                msg += "\r\nInner error: " + DS.getErrorMessage(error);
+            return DS.Exception.error("{EventDispatcher}.dispatchEvent():", "Error in event " + this.__eventName + " on object type '" + DS.getTypeName(this.owner) + "': " + msg, { exception: error, event: this, handler: this.__handlerCallInProgress });
+        }
+        /** Calls the event handlers that match the event mode on the current event instance. */
+        onDispatchEvent(args, mode) {
+            args.push(this); // (add this event instance to the end of the arguments list to allow an optional target parameters to get a reference to the calling event)
+            this.__cancelled = false;
+            this.__dispatchInProgress = true;
+            try {
+                for (var i = 0, n = this.__listeners.length; i < n; ++i) {
+                    var delegate = this.__listeners[i];
+                    var cancelled = false;
+                    if (delegate.$__eventMode == mode && delegate) {
+                        this.__handlerCallInProgress = delegate;
+                        if (this.__eventTriggerHandler)
+                            cancelled = this.__eventTriggerHandler(this, delegate, args, delegate.$__eventMode) === false; // (call any special trigger handler)
+                        else
+                            cancelled = delegate.apply(args) === false;
+                    }
+                    if (cancelled && this.canCancel) {
+                        this.__cancelled = true;
+                        break;
+                    }
+                }
+            }
+            catch (ex) {
+                throw this.__exception("Error executing handler #" + i + ".", ex);
+            }
+            finally {
+                this.__dispatchInProgress = false;
+                this.__handlerCallInProgress = null;
+            }
+            return this.__cancelled;
+        }
+        /** If the given state value is different from the last state value, the internal trigger state value will be updated, and true will be returned.
+            * If a state value of null is given, the request will be ignored, and true will always be returned.
+            * If you don't specify a value ('triggerState' is 'undefined') then the internal event name becomes the trigger state value (this can be used for a "trigger
+            * only once" scenario).  Use 'resetTriggerState()' to reset the internal trigger state when needed.
+            */
+        setTriggerState(triggerState) {
+            if (triggerState === void 0)
+                triggerState = this.__eventName;
+            if (triggerState !== null)
+                if (triggerState === this.__lastTriggerState)
+                    return false; // (no change in state, so ignore this request)
+                else
+                    this.__lastTriggerState = triggerState;
+            return true;
+        }
+        /** Resets the current internal trigger state to null. The next call to 'setTriggerState()' will always return true.
+            * This is usually called after a sequence of events have completed, in which it is possible for the cycle to repeat.
+            */
+        resetTriggerState() { this.__lastTriggerState = null; }
+        /** A simple way to pass arguments to event handlers using arguments with static typing (calls 'dispatchEvent(null, false, false, arguments)').
+        * If not cancelled, then 'true' is returned.
+        * TIP: To prevent triggering the same event multiple times, use a custom state value in a call to 'setTriggerState()', and only call
+        * 'dispatch()' if true is returned (example: "someEvent.setTriggerState(someState) && someEvent.dispatch(...);", where the call to 'dispatch()'
+        * only occurs if true is returned from the previous statement).
+        * Note: Call 'dispatchAsync()' to allow current script execution to complete before any handlers get called.
+        * @see dispatchAsync
+        */
+        dispatch(...args) { return void 0; }
+        /** Trigger this event by calling all the handlers.
+         * If a handler cancels the process, then the promise is rejected.
+         * This method allows scheduling events to fire after current script execution completes.
+         */
+        dispatchAsync(...args) { return void 0; }
+        /** If called within a handler, prevents the other handlers from being called. */
+        cancel() {
+            if (this.__dispatchInProgress)
+                if (this.canCancel)
+                    this.__cancelled = true;
+                else
+                    throw this.__exception("This even dispatcher does not support canceling events.");
+        }
+        __indexOf(object, handler) {
+            for (var i = this.__listeners.length - 1; i >= 0; --i) {
+                var d = this.__listeners[i];
+                if (d.object == object && d.func == handler)
+                    return i;
+            }
+            return -1;
+        }
+        __removeListener(i) {
+            if (i >= 0 && i < this.__listeners.length) {
+                var handlerInfo = (i == this.__listeners.length - 1 ? this.__listeners.pop() : this.__listeners.splice(i, 1)[0]);
+                if (this.__dispatchInProgress && this.__handlerCallInProgress === handlerInfo)
+                    throw this.__exception("Cannot remove a listener while it is executing.");
+                //    --this.__handlerCountBeforeDispatch; // (if the handler being removed is not the current one in progress, then it will never be called, and thus the original count needs to change)
+                //if (handlerInfo.addFunctionName == "addEventListener")
+                //    document.removeEventListener(this.__eventName, handlerInfo.__internalCallback, false);
+                //else if (handlerInfo.addFunctionName == "attachEvent")
+                //    (<any>document.documentElement).detachEvent("onpropertychange", handlerInfo.__internalCallback);
+                // (else this is most likely the server side, and removing it from the array is good enough)
+                //? this[handlerInfo.key] = void 0; // (faster than deleting it, and prevents having to create the property over and over)
+                return handlerInfo;
+            }
+            return void 0;
+        }
+        removeListener(handler, func) {
+            // ... check if a delegate is given, otherwise attempt to create one ...
+            if (typeof func == 'function') {
+                this.__removeListener(this.__indexOf(handler, func));
+            }
+            else {
+                this.__removeListener(this.__indexOf(handler.object, handler.func));
+            }
+        }
+        removeAllListeners() {
+            for (var i = this.__listeners.length - 1; i >= 0; --i)
+                this.__removeListener(i);
+        }
+        static [DS.constructor]() {
+            function getTriggerFunc(args) {
+                //x args.push(void 0, this); // (add 2 optional items on end)
+                //x var dataIndex = args.length - 2; // (set the index where the data should be set when each handler gets called)
+                return function _trigger() {
+                    //x for (var i = 0, n = this._handlers.length; i < n; ++i) {
+                    //    var h = <IEventDispatcherHandlerInfo<any, any>>this._handlers[i];
+                    //    args[dataIndex] = h.data;
+                    //    var result = this.eventCaller ? this.eventCaller.call(this._owner || this, h.handler, args) : h.handler.apply(this._owner || this, args);
+                    //    if (this.canCancel && result === false) return false;
+                    //    if (h.removeOnTrigger) { this._handlers.splice(i, 1); --i; --n; }
+                    //x }
+                    // 
+                    //return !this.onCompleted || this.onCompleted.apply(this._owner || this, args) !== false;
+                    return this.dispatchEvent.apply(this, (args.unshift(null), args));
+                };
+            }
+            ;
+            EventDispatcher.prototype.dispatch = function dispatch(...args) {
+                var _trigger = getTriggerFunc.call(this, args);
+                if (!this.synchronous && typeof setTimeout == 'function')
+                    setTimeout(() => { _trigger.call(this); }, 0);
+                else
+                    return _trigger.call(this);
+            };
+            EventDispatcher.prototype.dispatchAsync = function dispatchAsync(...args) {
+                var _trigger = getTriggerFunc.call(this, args);
+                return new Promise((resolve, reject) => {
+                    if (!this.synchronous && typeof setTimeout == 'function')
+                        setTimeout(() => { if (_trigger.call(this))
+                            resolve();
+                        else
+                            reject(); }, 0);
+                    else if (_trigger.call(this))
+                        resolve();
+                    else
+                        reject();
+                });
+            };
+        }
+    }
+    DS.EventDispatcher = EventDispatcher;
+    EventDispatcher[DS.constructor](); // ('any' is used because the static constructor is private)
+    class EventObject {
+        /** Call this if you wish to implement 'changing' events for supported properties.
+        * If any event handler cancels the event, then 'false' will be returned.
+        */
+        doPropertyChanging(name, newValue) {
+            if (this.onPropertyChanging)
+                return this.onPropertyChanging.dispatch(this, newValue);
+            else
+                return true;
+        }
+        /** Call this if you wish to implement 'changed' events for supported properties. */
+        doPropertyChanged(name, oldValue) {
+            if (this.onPropertyChanged)
+                this.onPropertyChanged.dispatch(this, oldValue);
+        }
+    }
+    DS.EventObject = EventObject;
+    // ========================================================================================================================
+})(DS || (DS = {}));
+// ############################################################################################################################

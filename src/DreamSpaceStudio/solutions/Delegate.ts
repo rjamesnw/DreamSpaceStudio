@@ -17,7 +17,7 @@ namespace DS {
      * serialized.
      * Note: If the target object is undefined, then 'null' is assumed and passed in as 'this'.
      */
-    class Delegate<TObj extends object, TFunc extends DelegateFunction> {
+    export class Delegate<TObj extends object, TFunc extends DelegateFunction> {
         /**
         * Reinitializes a disposed Delegate instance.
         * @param o The Delegate instance to initialize, or re-initialize.

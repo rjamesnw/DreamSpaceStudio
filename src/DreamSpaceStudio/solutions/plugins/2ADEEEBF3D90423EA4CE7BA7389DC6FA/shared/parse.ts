@@ -1,5 +1,15 @@
 import { VDOM, Templating } from "./modules";
-import { IHTMLParseResult, IDataTemplate } from "./interfaces";
+
+/** Data template information as extracted from HTML template text. */
+export interface IDataTemplate {
+    id: string;
+    originalHTML: string;
+    templateHTML: string;
+    templateItem: VDOM.Node;
+    childTemplates: IDataTemplate[];
+}
+
+export interface IHTMLParseResult { rootElements: VDOM.Node[]; templates: { [id: string]: IDataTemplate; } }
 
 var nameOf_Templating_Phrase_phraseType = DS.nameof(() => Templating.Phrase.prototype.phraseType)
 var nameOf_Templating_Header_headerLevel = DS.nameof(() => Templating.Header.prototype.headerLevel)
@@ -17,7 +27,6 @@ var nameOf_Templating_Header_headerLevel = DS.nameof(() => Templating.Header.pro
 */
 export async function parse(html: string = null, strictMode?: boolean): Promise<IResponse<IHTMLParseResult>> {
     var response: IResponse<IHTMLParseResult>;
-    // ### USER CODE START ###
 
     var log = DS.Diagnostics.log("Parse HTML", "Parsing HTML template ...").beginCapture();
     log.write("Template: " + html);
@@ -32,7 +41,7 @@ export async function parse(html: string = null, strictMode?: boolean): Promise<
         htmlReader.strictMode = !!strictMode;
 
     var approotID: string;
-    var mode: number = 0; // (0 = app scope not found yet, 1 = app root found, begin parsing application scope elements, 2 = creating objects)
+    var mode = 0; // (0 = app scope not found yet, 1 = app root found, begin parsing application scope elements, 2 = creating objects)
     var classMatch = /^[$.][A-Za-z0-9_$]*(\.[A-Za-z0-9_$]*)*(\s+|$)/;
     var attribName: string;
     //type Node = typeof import("../../2677A76EE8A34818873FB0587B8C3108/shared/VDOM");
@@ -258,6 +267,5 @@ export async function parse(html: string = null, strictMode?: boolean): Promise<
         data: { rootElements: rootElements, templates: globalTemplatesReference }
     };
 
-    // ### USER CODE END ###
     return response;
 }

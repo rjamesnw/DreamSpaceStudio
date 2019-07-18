@@ -1,4 +1,18 @@
-import { IHTMLParseResult } from "./interfaces";
+import { VDOM } from "./modules";
+/** Data template information as extracted from HTML template text. */
+export interface IDataTemplate {
+    id: string;
+    originalHTML: string;
+    templateHTML: string;
+    templateItem: VDOM.Node;
+    childTemplates: IDataTemplate[];
+}
+export interface IHTMLParseResult {
+    rootElements: VDOM.Node[];
+    templates: {
+        [id: string]: IDataTemplate;
+    };
+}
 /** Parses HTML to create a graph object tree, and also returns any templates found.
 * This concept is similar to using XAML to load objects in WPF. As such, you have the option to use an HTML template, or dynamically build your
 * graph items directly in code.

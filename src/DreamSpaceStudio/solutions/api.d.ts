@@ -267,6 +267,9 @@ interface IErrorCallback<TSender> {
     (sender?: TSender, error?: any): any;
 }
 declare namespace DS {
+    interface ISavedTrackableObject {
+        uid: string;
+    }
     /** A common base type for all object that can be tracked by a globally unique ID. */
     class TrackableObject {
         [name: string]: any;
@@ -284,6 +287,276 @@ declare namespace DS {
         protected __parent: DependentObject;
     }
     interface IDependencyObject extends DependentObject {
+    }
+}
+declare namespace DS {
+    /** Contains virtual DOM objects used when parsing HTML. */
+    namespace VDOM {
+        abstract class NodeIteratorBase<T> {
+            readonly root: Node;
+            protected _node: Node;
+            abstract next(): {
+                value?: T;
+                done: boolean;
+            };
+            constructor(node: Node);
+        }
+        class NodeIterator extends NodeIteratorBase<Node> {
+            readonly root: Node;
+            protected _node: Node;
+            next(): {
+                value: Node;
+                done: boolean;
+            } | {
+                done: boolean;
+            };
+            constructor(node: Node);
+        }
+        class NodeKeyIterator extends NodeIteratorBase<number> {
+            private _index;
+            next(): {
+                value: number;
+                done: boolean;
+            } | {
+                done: boolean;
+            };
+            constructor(node: Node);
+        }
+        class NodeKeyValueIterator extends NodeIteratorBase<[number, Node]> {
+            private _index;
+            next(): {
+                value: [number, Node];
+                done: boolean;
+            } | {
+                done: boolean;
+            };
+            constructor(node: Node);
+        }
+        class NodeList {
+            private _owner;
+            readonly length: number;
+            constructor(owner: Node, firstNode: Node);
+            forEach(callback: (currentValue: Node, currentIndex: number, listObj: this) => void, thisArg?: {}): void;
+            /** Returns a node at the given index, or null if the index is out of bounds. */
+            item(index: number): Node;
+            entries(): NodeKeyValueIterator;
+            keys(): NodeKeyIterator;
+            values(): NodeIterator;
+            [Symbol.iterator](): NodeIterator;
+        }
+        enum NodeTypes {
+            ELEMENT_NODE = 1,
+            ATTRIBUTE_NODE = 2,
+            TEXT_NODE = 3,
+            CDATA_SECTION_NODE = 4,
+            ENTITY_REFERENCE_NODE = 5,
+            ENTITY_NODE = 6,
+            PROCESSING_INSTRUCTION_NODE = 7,
+            COMMENT_NODE = 8,
+            DOCUMENT_NODE = 9,
+            DOCUMENT_TYPE_NODE = 10,
+            DOCUMENT_FRAGMENT_NODE = 11,
+            NOTATION_NODE = 12
+        }
+        /** Represents a single parsed DOM node (this is the base type to all other element types, since server-side processing does not handle events). */
+        class Node {
+            [index: string]: any;
+            /** A convenient function that simply allows using call-chaining to set properties without having to write multiple lines of code within a code block.
+             * It also helps to prevent the need for constructors, since deep-cloning requires "default" constructors.
+             */
+            $__set<T extends keyof this>(name: T, value: this[T]): this;
+            /** The node name.*/
+            readonly nodeName: string;
+            /** The node type.*/
+            readonly nodeType: NodeTypes;
+            readonly childNodes: NodeList;
+            readonly firstChild: Node;
+            readonly lastChild: Node;
+            readonly nextSibling: Node;
+            readonly previousSibling: Node;
+            readonly parentElement: Node;
+            outerText: any;
+            textContent: any;
+            nodeValue: string;
+            /** Constructs a new node for the Virtual DOM.
+             */
+            constructor(
+            /** The node name.*/
+            nodeName: string, 
+            /** The node type.*/
+            nodeType: NodeTypes);
+            appendChild(child: Node): void;
+            removeChild(child: Node): void;
+            contains(node: Node): boolean;
+            cloneNode(): string | number | boolean | IndexedObject;
+            getRootNode(): Node;
+            hasChildNodes(): boolean;
+            insertBefore(sibling: Node, child: Node): void;
+            replaceChild(childToReplace: Node, childToAdd: Node): void;
+        }
+        /** Represents a single parsed element. */
+        class Element extends Node {
+            /** The element attributes.*/
+            attributes: {
+                [index: string]: string;
+            };
+            /** The element CSS classes.*/
+            className?: string;
+            /** The element namespace prefix.*/
+            prefix?: string;
+            /** Gets or sets the child objects based on a string.  When setting a string, the current children are replaced by the parsed result.
+             * Please be mindful that this is done on every read, so if the node hierarchy is large this could slow things down.
+             */
+            innerHTML: string;
+            readonly outerHTML: string;
+            toString(): string;
+            constructor(
+            /** The node name.*/
+            nodeName: string, 
+            /** The node type.*/
+            nodeType: NodeTypes, 
+            /** The element attributes.*/
+            attributes?: {
+                [index: string]: string;
+            }, 
+            /** The element CSS classes.*/
+            className?: string, 
+            /** The element namespace prefix.*/
+            prefix?: string);
+        }
+        /** Represents a single parsed HTML element. */
+        class HTMLElement extends Element {
+            /** The element CSS classes.*/
+            className?: string;
+            /** The element namespace prefix.*/
+            prefix?: string;
+            /** Each new instance will initially set its '__htmlTag' property to this value. */
+            static defaultHTMLTagName: string;
+            constructor(
+            /** The node name.*/
+            nodeName?: string, 
+            /** The node type.*/
+            nodeType?: NodeTypes, 
+            /** The element attributes.*/
+            attributes?: {
+                [index: string]: string;
+            }, 
+            /** The element CSS classes.*/
+            className?: string, 
+            /** The element namespace prefix.*/
+            prefix?: string);
+        }
+        abstract class CharacterData extends Node {
+            data?: string;
+            readonly length: number;
+            constructor(
+            /** The node name.*/
+            nodeName: string, 
+            /** The node type.*/
+            nodeType: NodeTypes, data?: string);
+        }
+        class Text extends CharacterData {
+            constructor(text: string);
+        }
+        class Body extends HTMLElement {
+            constructor();
+        }
+        class Head extends HTMLElement {
+            constructor();
+        }
+        class Form extends HTMLElement {
+            constructor();
+        }
+        class Image extends HTMLElement {
+            constructor();
+        }
+        class Document extends HTMLElement {
+            body: Body;
+            head: Head;
+            forms: Form;
+            images: Form;
+            constructor();
+        }
+    }
+}
+declare namespace DS {
+    namespace VDOM {
+        /** Holds special types used with parsing HTML templates. */
+        namespace Templating {
+            /** A list of text mark-up flags for use with phrase based elements. */
+            enum PhraseTypes {
+                /** Indicates emphasis. */
+                Emphasis = 1,
+                /** Indicates stronger emphasis. */
+                Strong = 2,
+                /** Contains a citation or a reference to other sources. */
+                Cite = 4,
+                /** Indicates that this is the defining instance of the enclosed term. */
+                Defining = 8,
+                /** Designates a fragment of computer code. */
+                Code = 16,
+                /** Designates sample output from programs, scripts, etc. */
+                Sample = 32,
+                /** Indicates text to be entered by the user. */
+                Keyboard = 64,
+                /** Indicates an instance of a variable or program argument. */
+                Variable = 128,
+                /** Indicates an abbreviated form (Example: WWW, HTTP, URI, AI, e.g., ex., etc., ...). */
+                Abbreviation = 256,
+                /** Indicates an acronym (Example: WAC, radar, NASA, laser, sonar, ...). */
+                Acronym = 512
+            }
+            abstract class TemplateElement extends HTMLElement {
+                /** The element CSS classes.*/
+                className?: string;
+                /** The element namespace prefix.*/
+                prefix?: string;
+                constructor(
+                /** The node name.*/
+                nodeName?: string, 
+                /** The node type.*/
+                nodeType?: NodeTypes, 
+                /** The element attributes.*/
+                attributes?: {
+                    [index: string]: string;
+                }, 
+                /** The element CSS classes.*/
+                className?: string, 
+                /** The element namespace prefix.*/
+                prefix?: string);
+                /** Validates that the settings for the template object are correct. If not correct, an exception is thrown.
+                 * When validating tag names use either 'assertSupportedElementTypes()' or 'assertUnsupportedElementTypes()'.
+                 * The correct process is to validate tags names, including any other necessary properties, by overriding and
+                 * calling 'validate()' prior to rendering output when overriding 'get outerHTML()'.
+                 */
+                abstract validate(): void;
+                readonly outerHTML: string;
+                /** If this is true, then 'assertSupportedNodeTypes()' and 'assertUnsupportedNodeTypes()' always succeeds. */
+                __disableNodeTypeValidation: boolean;
+                /** Call this to validate supported element types. */
+                assertSupportedNodeTypes(...args: string[]): boolean;
+                /** Call this to validate unsupported element types. */
+                assertUnsupportedNodeTypes(...args: string[]): void;
+            }
+            class Phrase extends TemplateElement {
+                phraseType: PhraseTypes;
+                constructor(nodeName?: string);
+                validate(): void;
+                readonly outerHTML: string;
+            }
+            class HTMLText extends TemplateElement {
+                constructor();
+                validate(): void;
+                onRedraw(recursive?: boolean): void;
+            }
+            class Header extends TemplateElement {
+                headerLevel: number;
+                constructor(/**A value from 1-6.*/ headerLevel?: number);
+                validate(): void;
+                readonly outerHTML: string;
+                onRedraw(recursive?: boolean): void;
+            }
+        }
     }
 }
 declare namespace DS {
@@ -733,6 +1006,89 @@ declare namespace DS {
         * Gets a global property value.
         */
         function getValue<T>(namespace: string, name: string): T;
+    }
+}
+declare namespace DS {
+    enum HTMLReaderModes {
+        /** There's no more to read (end of HTML). */
+        End = -1,
+        /** Reading hasn't yet started. */
+        NotStarted = 0,
+        /** A tag was just read. The 'runningText' property holds the text prior to the tag, and the tag name is in 'tagName'. */
+        Tag = 1,
+        /** An attribute was just read from the last tag. The name will be placed in 'attributeName' and the value (if value) in 'attributeValue'.*/
+        Attribute = 2,
+        /** An ending tag bracket was just read (no more attributes). */
+        EndOfTag = 3,
+        /** A template token in the form '{{...}}' was just read. */
+        TemplateToken = 4
+    }
+    /** Used to parse HTML text.
+      * Performance note: Since HTML can be large, it's not efficient to scan the HTML character by character. Instead, the HTML
+      * reader uses the native RegEx engine to split up the HTML into chunks of delimiter text, which makes reading it much faster.
+      */
+    class HTMLReader {
+        constructor(html: string);
+        private static __splitRegEx;
+        partIndex: number;
+        /** The start index of the running text. */
+        textStartIndex: number;
+        /** The end index of the running text. This is also the start index of the next tag, if any (since text runs between tags). */
+        textEndIndex: number;
+        __lastTextEndIndex: number;
+        /** A list of text parts that correspond to each delimiter (i.e. TDTDT [T=Text, D=Delimiter]). */
+        nonDelimiters: string[];
+        /** A list of the delimiters that correspond to each of the text parts (i.e. TDTDT [T=Text, D=Delimiter]). */
+        delimiters: string[];
+        /** The text that was read. */
+        text: string;
+        /** The delimiter that was read. */
+        delimiter: string;
+        /** The text that runs between indexes 'textStartIndex' and 'textEndIndex-1' (inclusive). */
+        runningText: string;
+        /** The bracket sequence before the tag name, such as '<' or '</'. */
+        tagBracket: string;
+        /** The tag name, if a tag was read. */
+        tagName: string;
+        /** The attribute name, if attribute was read. */
+        attributeName: string;
+        /** The attribute value, if attribute was read. */
+        attributeValue: string;
+        readMode: HTMLReaderModes;
+        /** If true, then the parser will produce errors on ill-formed HTML (eg. 'attribute=' with no value).
+        * This can greatly help identify possible areas of page errors.
+        */
+        strictMode: boolean;
+        /** Returns true if tag current tag block is a mark-up declaration in the form "<!...>", where '...' is any text EXCEPT the start of a comment ('--'). */
+        isMarkupDeclaration(): boolean;
+        /** Returns true if tag current tag block is a mark-up declaration representing a comment block in the form "<!--...-->", where '...' is any text. */
+        isCommentBlock(): boolean;
+        /** Return true if the current tag block represents a script. */
+        isScriptBlock(): boolean;
+        /** Return true if the current tag block represents a style. */
+        isStyleBlock(): boolean;
+        /** Returns true if the current position is a tag closure (i.e. '</', or '/>' [self-closing allowed for non-nestable tags]). */
+        isClosingTag(): boolean;
+        /** Returns true if the current delimiter represents a template token in the form '{{....}}'. */
+        isTempalteToken(): boolean;
+        private html;
+        getHTML(): string;
+        private __readNext;
+        private __goBack;
+        private __reQueueDelimiter;
+        /** If the current delimiter is whitespace, then this advances the reading (note: all whitespace will be grouped into one delimiter).
+            * True is returned if whitespace (or an empty string) was found and skipped, otherwise false is returned, and no action was taken.
+            * @param {boolean} onlyIfTextIsEmpty If true, advances past the whitespace delimiter ONLY if the preceding text read was also empty.  This can happen
+            * if whitespace immediately follows another delimiter (such as space after a tag name).
+            */
+        private __skipWhiteSpace;
+        throwError(msg: string): void;
+        /** Reads the next tag or attribute in the underlying html. */
+        readNext(): void;
+        getCurrentRunningText(): string;
+        getCurrentLineNumber(): number;
+    }
+    interface IHTMLReader extends HTMLReader {
     }
 }
 declare namespace DS {
@@ -1248,6 +1604,38 @@ declare namespace DS {
     }
 }
 declare namespace DS {
+    namespace VDOM {
+        namespace Templating {
+            /** Data template information as extracted from HTML template text. */
+            interface IDataTemplate {
+                id: string;
+                originalHTML: string;
+                templateHTML: string;
+                templateItem: VDOM.Node;
+                childTemplates: IDataTemplate[];
+            }
+            interface IHTMLParseResult {
+                rootElements: VDOM.Node[];
+                templates: {
+                    [id: string]: IDataTemplate;
+                };
+            }
+            /** Parses HTML to create a graph object tree, and also returns any templates found.
+            * This concept is similar to using XAML to load objects in WPF. As such, you have the option to use an HTML template, or dynamically build your
+            * graph items directly in code.
+            *
+            * Warning about inline scripts: Script tags may be executed client side (naturally by the DOM), but you cannot rely on them server side.  Try to use
+            * HTML for UI DESIGN ONLY.  Expect that any code you place in the HTML will not execute server side (or client side for that matter) unless you
+            * handle/execute the script code yourself.
+            * @param {string} html The HTML to parse.
+            * @param {boolean} strictMode If true, then the parser will produce errors on ill-formed HTML (eg. 'attribute=' with no value).
+            * This can greatly help keep your html clean, AND identify possible areas of page errors.  If strict formatting is not important, pass in false.
+            */
+            function parse(html?: string, strictMode?: boolean): IHTMLParseResult;
+        }
+    }
+}
+declare namespace DS {
     /**
      * Represents a span of time (not a date). Calculation of dates usually relies on calendar rules.  A time-span object
      * doesn't care about months and day of the month - JavaScript already has a date object for that.
@@ -1756,4 +2144,611 @@ declare const enum HttpStatus {
     NetworkReadTimeoutError = 598,
     /** (Unknown) This status code is not specified in any RFCs, but is used by Microsoft HTTP proxies to signal a network connect timeout behind the proxy to a client in front of the proxy.[citation needed] */
     NetworkConnectTimeoutError = 599
+}
+declare namespace DS {
+    /** A component. */
+    class Component extends TrackableObject {
+        script: string;
+        compiledScript: string;
+        /** Inputs are generated as parameters at the top of the function that wraps the script. */
+        readonly inputs: Property[];
+        /** Outputs are */
+        readonly outputs: Property[];
+        readonly events: EventDefinition[];
+        execute(): Promise<void>;
+    }
+}
+declare namespace DS {
+    /** Defines an event that can trigger a workflow. */
+    class EventDefinition extends TrackableObject {
+        name: string;
+        /** The parameters defined for this event.  Components are to supply arguments for this when triggering events. */
+        readonly parameters: Property[];
+    }
+}
+declare namespace DS {
+    /** A page holds the UI design, which is basically just a single HTML page template. */
+    class Page {
+        /** On the client-side, this is the iframe or pop-up window that contains the page elements. */
+        window: Window;
+    }
+}
+declare namespace DS {
+    interface ISavedProject extends ISavedTrackableObject {
+        name: string;
+        description?: string;
+        directory?: string;
+        /** File paths related to this project. */
+        files?: string[];
+    }
+    class Project extends TrackableObject {
+        /** The solution this project belongs to. */ readonly solution: Solution;
+        /** The title of the project. */ name: string;
+        /** The project's description. */ description?: string;
+        /** The file storage directory for this project. */
+        readonly directory: FileSystem.Directory;
+        /** A list of all files associated with this project, indexed by the absolute lowercase file path. */
+        readonly files: {
+            [index: string]: FileSystem.File;
+        };
+        /** A list of user IDs and assigned roles for this project. */
+        readonly userSecurity: UserAccess;
+        /** The site for this project.  Every project contains a site object, even for API-only projects. For API-only projects there are no pages. */
+        readonly site: Site;
+        /** Holds a list of expressions the developer has removed from scripts. This renders to a global space, which allows
+          * developers to move expressions easily between scripts.
+          * Use 'addExpressionToBin()' and 'removeExpressionFromBin()' to modify this list, which also triggers the UI to update.
+          */
+        readonly expressionBin: SelectedItem[];
+        private _expressionBin;
+        onExpressionBinItemAdded: EventDispatcher<Project, (item: SelectedItem, project: Project) => void>;
+        onExpressionBinItemRemoved: EventDispatcher<Project, (item: SelectedItem, project: Project) => void>;
+        /** Returns the expression that was picked by the user for some operation. In the future this may also be used during drag-n-drop operations. */
+        readonly pickedExpression: SelectedItem;
+        private _pickedItem;
+        constructor(
+        /** The solution this project belongs to. */ solution: Solution, 
+        /** The title of the project. */ name: string, 
+        /** The project's description. */ description?: string);
+        /** Saves the project and related items to a specified object.
+         * If no object is specified, then a new empty object is created and returned.
+         */
+        save(target?: ISavedProject): ISavedProject;
+        /** Saves the project to a persisted storage, such as the local browser storage, or a remote store, if possible.
+         * Usually the local storage is attempted first, then the system will try to sync with a remote store.  If there
+         * is no free space in the local store, the system will try to sync with a remote store.  If that fails, the
+         * data will only be in memory and a UI warning will display.
+         */
+        saveToStorage(source?: ISavedProject): void;
+        load(target?: ISavedProject): this;
+        /** Saves the project to data objects (calls this.save() when 'source' is undefined) and uses the JSON object to serialize the result into a string. */
+        serialize(source?: ISavedProject): string;
+        addToBin(expr: SelectedItem, triggerEvent?: boolean): void;
+        removeFromBin(expr: SelectedItem, triggerEvent?: boolean): void;
+        isInBin(expr: SelectedItem): boolean;
+        pick(expr: SelectedItem): void;
+    }
+}
+declare namespace DS {
+    class Property extends TrackableObject {
+        name: string;
+        type: string;
+    }
+}
+declare namespace DS {
+    enum UserRoles {
+        /** The user has no access. */
+        None = 0,
+        /** The user has full access as administrator. */
+        Admin = 1,
+        /** The user has read access. */
+        Viewer = 2,
+        /** The user is allowed to make modifications. Implies read access, but does not include creation access. */
+        Editor = 3,
+        /** The user can create and modify. */
+        Creator = 4,
+        /** The user can delete/remove. */
+        Purger = 5
+    }
+    class UserAccessEntry {
+        userID: string;
+        roles: UserRoles[];
+        constructor(userID: string, roles: UserRoles[]);
+        /** Returns true if the specified role exists in this access entry. */
+        hasRole(role: UserRoles): boolean;
+    }
+    class UserAccess {
+        private _userIDs;
+        readonly length: number;
+        /** Assigns a user ID and one or more roles. If roles already exist, the given roles are merged (existing roles are note replaced). */
+        add(userID: string, ...roles: UserRoles[]): UserAccessEntry;
+        /** Removes a user's access. */
+        revoke(index: number): boolean;
+        /** Removes a user's access. */
+        revoke(id: string): boolean;
+        /** Finds the index of the entry with the specific user ID. */
+        indexOf(userID: string): number;
+        /** Gets a user access entry using an index. */
+        getItem(index: number): UserAccessEntry;
+        /** Gets a user access entry using the user ID. */
+        getItem(userID: string): UserAccessEntry;
+    }
+}
+declare namespace DS {
+    /** Represents a single selected item. */
+    class SelectedItem {
+        /** The item that was selected. */
+        item: any;
+        /** The type of item selected. */
+        type: string;
+    }
+    /** Represents one or more selected items. */
+    class Selection {
+        /** One or more selected items. */
+        readonly selections: SelectedItem[];
+    }
+}
+declare namespace DS {
+    enum DeploymentEnvironments {
+        Sandbox = 0,
+        Development = 1,
+        QA = 2,
+        Staging = 3,
+        Production = 4
+    }
+    type DeploymentEnvironmentsType = {
+        [P in DeploymentEnvironments]: string;
+    };
+    /** A page holds the UI design, which is basically just a single HTML page template. */
+    class Site {
+        /** A title for the website. */
+        title: string;
+        url: DeploymentEnvironmentsType;
+        /** One or more page templates that belong to the site. This is empty for API-only sites. */
+        readonly pages: Page[];
+    }
+}
+declare namespace DS {
+    function _defaultCreateProjectHandler(solution: Solution, project: ISavedProject): Project;
+    interface ISavedSolution extends ISavedTrackableObject {
+        name: string;
+        description?: string;
+        directory?: string;
+        /** If this is a string, then it represents a GUID that references a project instead. */
+        projects?: (ISavedProject | string)[];
+    }
+    /**
+    * Holds a collection of projects.
+    * When a project instance is created, the default 'Solution.onCreateProject' handler is used, which can be overridden for derived project types.
+    */
+    class Solution extends TrackableObject {
+        /** The function used to create project instances when a project is created from saved project data.
+         * Host programs can hook into this to create and return derived types instead (such as ProjectUI.ts).
+         */
+        static onCreateProject: typeof _defaultCreateProjectHandler;
+        private static _onCreateProject;
+        readonly count: number;
+        readonly projects: Project[];
+        private _projects;
+        readonly userIDs: string[];
+        private _userIDs;
+        /** The file storage directory for all projects. */
+        readonly directory: FileSystem.Directory;
+        /** A list of user IDs and assigned roles for this project. */
+        readonly userSecurity: UserAccess;
+        constructor();
+        /**
+         * Creates a new project with the given title and description.
+         * @param name The project title.
+         * @param description The project description.
+         */
+        createProject(name: string, description?: string): Project;
+        /** Compiles a list of all projects, both locally and remotely. */
+        refreshProjects(): Promise<Solution[]>;
+    }
+}
+declare namespace DS {
+    /** The current user of the FlowScript system.
+     * The user 'id' (a GUID) is used as the root directory for projects.
+     */
+    class User extends TrackableObject {
+        email: string;
+        firstname?: string;
+        lastname?: string;
+        /** Returns the current user object. */
+        static readonly current: User;
+        /** Triggered when the current user is about to change.  If any handler returns false then the request is cancelled (such as if the current project is not saved yet). */
+        static readonly onCurrentUserChanging: EventDispatcher<typeof User, (oldUser: User, newUser: User) => boolean>;
+        /** Triggered when the current user has changed. This event cannot be cancelled - use the 'onCurrentUserChanging' event for that. */
+        static readonly onCurrentUserChanged: EventDispatcher<typeof User, (oldUser: User, newUser: User) => void>;
+        /** Starts the process of changing the current user. */
+        static changeCurrentUser(user: User): Promise<void>;
+        /** Holds a mapping of this user ID to global roles associated with the user. */
+        readonly _security: UserAccess;
+        /** A solution with ALL projects owned by this user.
+         * Note: A solution defines what projects a user has access to, but does not automatically load all projects.
+         */
+        solution: Solution;
+        constructor(email: string, firstname?: string, lastname?: string);
+    }
+}
+declare namespace DS {
+    class ValueMap {
+        sourcePath: string;
+        inputName: string;
+    }
+    /** Defines a branch by name, which determines the next step to execute. */
+    class Branch extends TrackableObject {
+        name: string;
+        step: Step;
+    }
+    /** References a component and defines translations between previous step's outputs and the next step. */
+    class Step extends TrackableObject {
+        /** A name for this step. This is also used to resolve property references from other steps. */
+        name: string;
+        /** The component for this step. */
+        component: Component;
+        /** If true, the step is executed server-side. The default is client-side. */
+        serverSide: boolean;
+        /** Maps the outputs of the previous step component's outputs to the inputs of the current component. */
+        readonly inputMapping: ValueMap[];
+        /** Defines named branches. */
+        readonly branches: Branch[];
+    }
+    /** A series of steps that will execute associated components in order. */
+    class Workflow extends TrackableObject {
+        readonly steps: Step[];
+        execute(): Promise<void>;
+    }
+    /** One or more "swim-lanes", from top to bottom (in order of sequence), that contain a series of components to execute. */
+    class Workflows extends TrackableObject {
+        readonly workflows: Workflow[];
+    }
+}
+declare namespace DS {
+    namespace FileSystem {
+        enum SyncStatus {
+            /** Not synchronizing. */
+            None = 0,
+            /** The content is being uploaded. */
+            Uploading = 1,
+            /** Upload error. */
+            Error = 2,
+            /** File now exists on the remote endpoint. */
+            Completed = 3
+        }
+        /** Returns slits and returns the path parts, validating each one and throwing an exception if any are invalid. */
+        function getPathParts(path: string): string[];
+        class DirectoryItem {
+            protected _fileManager: FileManager;
+            /** Holds the UTC time the item was stored locally. If this is undefined then the item is in memory only, which might result in data loss if not stored on the server. */
+            storedLocally: Date;
+            /** Holds the UTC time the item was stored remotely. If this is undefined and the item is not stored locally then the item is only in memory and that could lead to data loss. */
+            storedRemotely: Date;
+            /** The last time this*/
+            readonly lastAccessed: Date;
+            /** Updates the 'lastAccessed' date+time value to the current value. Touching this directory item also refreshes the dates of all parent items.
+             * When the date of an item changes after a touch, it starts the process of reviewing and synchronizing with the backend.
+             */
+            touch(): void;
+            private _lastAccessed;
+            /** The sync status of this item.
+             * Note: Each directory item node syncs in sequence parent-to-child; thus, the child only syncs when the parent succeeds.  That said,
+             * to be efficient, the parent will send itself AND all child directories (not files) as one JSON request.
+             */
+            syncStatus: SyncStatus;
+            lastSynced: Date;
+            syncError: string;
+            /** Returns a reference to the parent item.  If there is no parent, then 'null' is returned.
+             */
+            /** Sets a new parent type for this.  The current item will be removed from its parent (if any), and added to the given parent. */
+            parent: DirectoryItem;
+            private _parent;
+            readonly name: string;
+            private _name;
+            protected _childItems: DirectoryItem[];
+            protected _childItemsByName: {
+                [index: string]: DirectoryItem;
+            };
+            readonly hasChildren: boolean;
+            /** The full path + item name. */
+            readonly absolutePath: string;
+            constructor(fileManager: FileManager, parent?: DirectoryItem);
+            toString(): string;
+            /** Checks if a namespace item exists.  You can also provide a nested item path.
+              * For example, if the current item is 'A.B' within the 'A.B.C.D' namespace, then you could pass in 'C.D'.
+              */
+            exists(name: string, ignore?: DirectoryItem): boolean;
+            /** Checks if the given namespace item exists under this item.
+              */
+            exists(item: DirectoryItem, ignore?: DirectoryItem): boolean;
+            /** Resolves a namespace path under this item.  You can provide a nested path if desired.
+              * For example, if the current item is 'A/B' within the 'A/B/C/D' path, then you could pass in 'C/D'.
+              * If not found, then null is returned.
+              * @param {function} typeFilter The type that the returned item must be a derivative of.
+              */
+            resolve<T extends DirectoryItem>(itemPath: string, typeFilter?: new (...args: any[]) => T): T;
+            /** Adds the given item under this item.
+              */
+            add<T extends DirectoryItem>(item: T): T;
+            /** Removes an item under this item. If nothing was removed, then null is returned, otherwise the removed item is returned (not the item passed in). */
+            remove<T extends DirectoryItem>(item: T): T;
+            /** Removes an item under this item.  If nothing was removed, then null is returned, otherwise the removed item is returned.
+             *  You can provide a nested item path if desired. For example, if the current item is 'A/B' within the 'A/B/C/D' namespace,
+             *  then you could pass in 'C/D'.
+              */
+            remove(name: string): DirectoryItem;
+            getJSONStructure<T extends typeof DirectoryItem>(typeFilter?: T): void;
+        }
+        class Directory extends DirectoryItem {
+            constructor(fileManager: FileManager, parent?: DirectoryItem);
+            /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,).
+             * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
+             * Examples:
+             * - "/A/B/C/" => "/A/B/C"
+             * - "A/B/C" => "A/B"
+             * - "//A/B/C//" => "/A/B/C"
+             * - "/" => "/"
+             * - "" => ""
+             */
+            static getPath(filepath: string): string;
+            getFile(filePath: string): File;
+            getDirectory(path: string): Directory;
+            /** Creates a directory under the user root endpoint. */
+            createDirectory(path: string): Directory;
+            createFile(filePath: string, contents?: string): File;
+            getJSONStructure(): void;
+        }
+        class File extends DirectoryItem {
+            contents: string;
+            private _contents;
+            constructor(fileManager: FileManager, parent?: DirectoryItem, content?: string);
+            /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,).
+            * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
+            * Examples:
+            * - "/A/B/C/" => ""
+            * - "A/B/C" => "C"
+            * - "/" => ""
+            * - "" => ""
+            */
+            static getName(filepath: string): string;
+            toBase64(): string;
+            fromBase64(contentsB64: string): void;
+        }
+        /** Manages files in a virtual file system. This allows project files to be stored locally and synchronized with the server when a connection is available.
+         * For off-line storage to work, the browser must support local storage.
+         * Note: The 'FlowScript.currentUser' object determines the user-specific root directory for projects.
+         */
+        class FileManager {
+            /** The URL endpoint for the FlowScript project files API. Defaults to 'FileManager.apiEndpoint'. */
+            apiEndpoint: string;
+            /** The URL endpoint for the FlowScript project files API. */
+            static apiEndpoint: string;
+            /** Just a local property that checks for and returns 'FlowScript.currentUser'. */
+            static readonly currentUser: User;
+            /** The API endpoint to the directory for the current user. */
+            static readonly currentUserEndpoint: string;
+            /** The root directory represents the API endpoint at 'FileManager.apiEndpoint'. */
+            readonly root: Directory;
+            constructor(
+            /** The URL endpoint for the FlowScript project files API. Defaults to 'FileManager.apiEndpoint'. */
+            apiEndpoint?: string);
+            /** Gets a directory under the current user root endpoint.
+             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+             */
+            getDirectory(path?: string, userId?: string): Directory;
+            /** Creates a directory under the current user root endpoint.
+             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+             */
+            createDirectory(path: string, userId?: string): Directory;
+            /** Gets a file under the current user root endpoint.
+             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+             */
+            getFile(filePath: string, userId?: string): File;
+            /** Creates a file under the current user root endpoint.
+             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+             */
+            createFile(filePath: string, contents?: string, userId?: string): File;
+        }
+        var restrictedFilenameRegex: RegExp;
+        /** Returns true if a given filename contains invalid characters. */
+        function isValidFileName(name: string): boolean;
+        /** Combine two paths into one. */
+        function combine(path1: string | Directory, path2: string | Directory): string;
+        /** Manages the global file system for FlowScript by utilizing local storage space and remote server space.
+         * The file manager tries to keep recently accessed files local (while backed up to remove), and off-loads
+         * less-accessed files to save space.
+         */
+        var fileManager: FileManager;
+    }
+}
+declare namespace DS {
+    /** Represents an event callback function. Handlers should return false to cancel event dispatching if desired (anything else is ignored). */
+    interface EventHandler {
+        (this: object, ...args: any[]): void | boolean;
+    }
+    /**
+     * The event trigger handler is called to allow custom handling of event handlers when an event occurs.
+     * This handler should return false to cancel event dispatching if desired (anything else is ignored).
+     */
+    interface EventTriggerHandler<TOwner extends object, TCallback extends EventHandler> {
+        (event: IEventDispatcher<TOwner, TCallback>, handler: IDelegate<object, TCallback>, args: any[], mode?: EventModes): void | boolean;
+    }
+    /** Controls how the event progression occurs. */
+    enum EventModes {
+        /** Trigger event on the way up to the target. */
+        Capture = 0,
+        /** Trigger event on the way down from the target. */
+        Bubble = 1,
+        /** Trigger event on both the way up to the target, then back down again. */
+        CaptureAndBubble = 2
+    }
+    /**
+      * The EventDispatcher wraps a specific event type, and manages the triggering of "handlers" (callbacks) when that event type
+      * must be dispatched. Events are usually registered as static properties first (to prevent having to create and initialize
+      * many event objects for every owning object instance. Class implementations contain linked event properties to allow creating
+      * instance level event handler registration on the class only when necessary.
+      */
+    class EventDispatcher<TOwner extends object = object, TCallback extends EventHandler = EventHandler> extends DependentObject {
+        readonly owner: TOwner;
+        private __eventName;
+        private __associations;
+        private __listeners;
+        /** If a parent value is set, then the event chain will travel the parent hierarchy from this event dispatcher. If not set, the owner is assumed instead. */
+        protected __parent: IEventDispatcher<any, EventHandler>;
+        private __eventTriggerHandler;
+        private __eventPropertyName;
+        private __eventPrivatePropertyName;
+        private __lastTriggerState;
+        private __cancelled;
+        private __dispatchInProgress;
+        private __handlerCallInProgress;
+        /** Return the underlying event name for this event object. */
+        getEventName(): string;
+        /** If this is true, then any new handler added will automatically be triggered as well.
+        * This is handy in cases where an application state is persisted, and future handlers should always execute. */
+        autoTrigger: boolean;
+        /** Returns true if handlers exist on this event object instance. */
+        hasHandlers(): boolean;
+        /** If true, then handlers are called only once, then removed (default is false). */
+        removeOnTrigger: boolean;
+        /** This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters. */
+        eventTriggerHandler: EventTriggerHandler<TOwner, TCallback>;
+        /** True if the event can be cancelled. */
+        canCancel: boolean;
+        /**
+           * Registers an event with a class type - typically as a static property.
+           * @param type A class reference where the static property will be registered.
+           * @param eventName The name of the event to register.
+           * @param eventMode Specifies the desired event traveling mode.
+           * @param removeOnTrigger If true, the event only fires one time, then clears all event handlers. Attaching handlers once an event fires in this state causes them to be called immediately.
+           * @param eventTriggerCallback This is a hook which is called every time a handler needs to be called.  This exists mainly to support handlers called with special parameters.
+           * @param customEventPropName The name of the property that will be associated with this event, and expected on parent objects
+           * for the capturing and bubbling phases.  If left undefined/null, then the default is assumed to be
+           * 'on[EventName]', where the first event character is made uppercase automatically.
+           * @param canCancel If true (default), this event can be cancelled (prevented from completing, so no other events will fire).
+           */
+        static registerEvent<TOwner extends object, TCallback extends EventHandler>(type: {
+            new (...args: any[]): TOwner;
+        }, eventName: string, eventMode?: EventModes, removeOnTrigger?: boolean, eventTriggerCallback?: EventTriggerHandler<TOwner, TCallback>, customEventPropName?: string, canCancel?: boolean): {
+            _eventMode: EventModes;
+            _eventName: string;
+            _removeOnTrigger: boolean;
+            eventFuncType: () => IEventDispatcher<TOwner, TCallback>;
+            eventPropertyType: IEventDispatcher<TOwner, TCallback>;
+        };
+        /**
+            * Creates an instance property name from a given event name by adding 'on' as a prefix.
+            * This is mainly used when registering events as static properties on types.
+            * @param {string} eventName The event name to create an event property from. If the given event name already starts with 'on', then the given name is used as is (i.e. 'click' becomes 'onClick').
+            */
+        static createEventPropertyNameFromEventName(eventName: string): string;
+        /**
+           * Returns a formatted event name in the form of a private event name like '$__{eventName}Event' (eg. 'click' becomes '$__clickEvent').
+           * The private event names are used to store event instances on the owning instances so each instance has it's own handlers list to manage.
+           */
+        static createPrivateEventName(eventName: string): string;
+        dispose(): void;
+        /**
+         * Associates this event instance with an object using a weak map. The owner of the instance is already associated by default.
+         * Use this function to associate other external objects other than the owner, such as DOM elements (there should only be one
+         * specific event instance per any object).
+         */
+        associate(obj: object): this;
+        /** Disassociates this event instance from an object (an internal weak map is used for associations). */
+        disassociate(obj: object): this;
+        /** Returns true if this event instance is already associated with the specified object (a weak map is used). */
+        isAssociated(obj: object): boolean;
+        _getHandlerIndex(handler: TCallback): number;
+        _getHandlerIndex(handler: IDelegate<object, TCallback>): number;
+        /** Adds a handler (callback) to this event.
+        * Note: The registered owner of the underlying dispatch handler will be used as the context of all attached handlers.
+        */
+        attach(handler: TCallback, eventMode?: EventModes): this;
+        attach(handler: IDelegate<object, TCallback>, eventMode?: EventModes): this;
+        /** Dispatch the underlying event. Typically 'dispatch()' is called instead of calling this directly. Returns 'true' if all events completed, and 'false' if any handler cancelled the event.
+          * @param {any} triggerState If supplied, the event will not trigger unless the current state is different from the last state.  This is useful in making
+          * sure events only trigger once per state.  Pass in null (the default) to always dispatch regardless.  Pass 'undefined' to used the event
+          * name as the trigger state (this can be used for a "trigger only once" scenario).
+          * @param {boolean} canBubble Set to true to allow the event to bubble (where supported).
+          * @param {boolean} canCancel Set to true if handlers can abort the event (false means it has or will occur regardless).
+          * @param {string[]} args Custom arguments that will be passed on to the event handlers.
+          */
+        dispatchEvent(triggerState?: any, ...args: any[]): boolean;
+        protected __exception(msg: string, error?: any): Exception;
+        /** Calls the event handlers that match the event mode on the current event instance. */
+        protected onDispatchEvent(args: any[], mode: EventModes): boolean;
+        /** If the given state value is different from the last state value, the internal trigger state value will be updated, and true will be returned.
+            * If a state value of null is given, the request will be ignored, and true will always be returned.
+            * If you don't specify a value ('triggerState' is 'undefined') then the internal event name becomes the trigger state value (this can be used for a "trigger
+            * only once" scenario).  Use 'resetTriggerState()' to reset the internal trigger state when needed.
+            */
+        setTriggerState(triggerState?: any): boolean;
+        /** Resets the current internal trigger state to null. The next call to 'setTriggerState()' will always return true.
+            * This is usually called after a sequence of events have completed, in which it is possible for the cycle to repeat.
+            */
+        resetTriggerState(): void;
+        /** A simple way to pass arguments to event handlers using arguments with static typing (calls 'dispatchEvent(null, false, false, arguments)').
+        * If not cancelled, then 'true' is returned.
+        * TIP: To prevent triggering the same event multiple times, use a custom state value in a call to 'setTriggerState()', and only call
+        * 'dispatch()' if true is returned (example: "someEvent.setTriggerState(someState) && someEvent.dispatch(...);", where the call to 'dispatch()'
+        * only occurs if true is returned from the previous statement).
+        * Note: Call 'dispatchAsync()' to allow current script execution to complete before any handlers get called.
+        * @see dispatchAsync
+        */
+        dispatch(...args: Parameters<TCallback>): boolean;
+        /** Trigger this event by calling all the handlers.
+         * If a handler cancels the process, then the promise is rejected.
+         * This method allows scheduling events to fire after current script execution completes.
+         */
+        dispatchAsync(...args: Parameters<TCallback>): Promise<void>;
+        /** If called within a handler, prevents the other handlers from being called. */
+        cancel(): void;
+        private __indexOf;
+        private __removeListener;
+        removeListener(object: Object, func: TCallback): void;
+        removeListener(handler: IDelegate<TOwner, TCallback>): void;
+        removeAllListeners(): void;
+        /** Constructs a new instance of the even dispatcher.
+         * @param eventTriggerHandler A global handler per event type that is triggered before any other handlers. This is a hook which is called every time an event triggers.
+         * This exists mainly to support handlers called with special parameters, such as those that may need translation, or arguments that need to be injected.
+         */
+        constructor(owner: TOwner, eventName: string, removeOnTrigger?: boolean, canCancel?: boolean, eventTriggerHandler?: EventTriggerHandler<TOwner, TCallback>);
+    }
+    interface IEventDispatcher<TOwner extends object, TCallback extends EventHandler> extends EventDispatcher<TOwner, TCallback> {
+    }
+    interface IPropertyChangingHandler<TSender extends IEventObject> {
+        (sender: TSender, newValue: any): boolean;
+    }
+    interface IPropertyChangedHandler<TSender extends IEventObject> {
+        (sender: TSender, oldValue: any): void;
+    }
+    interface INotifyPropertyChanged<TSender extends IEventObject> {
+        /** Triggered when a supported property is about to change.  This does not work for all properties by default, but only those which call 'doPropertyChanging' in their implementation. */
+        onPropertyChanging: IEventDispatcher<TSender, IPropertyChangingHandler<TSender>>;
+        /** Triggered when a supported property changes.  This does not work for all properties by default, but only those which call 'doPropertyChanged' in their implementation. */
+        onPropertyChanged: IEventDispatcher<TSender, IPropertyChangedHandler<TSender>>;
+        /** Call this if you wish to implement change events for supported properties. */
+        doPropertyChanging(name: string, newValue: any): boolean;
+        /** Call this if you wish to implement change events for supported properties. */
+        doPropertyChanged(name: string, oldValue: any): void;
+    }
+    class EventObject implements INotifyPropertyChanged<IEventObject> {
+        /** Triggered when a supported property is about to change.  This does not work for all properties by default, but only those
+         * which call 'doPropertyChanging' in their implementation.
+         */
+        onPropertyChanging: IEventDispatcher<IEventObject, IPropertyChangingHandler<IEventObject>>;
+        /** Triggered when a supported property changes.  This does not work for all properties by default, but only those
+          * which call 'doPropertyChanged' in their implementation.
+          */
+        onPropertyChanged: IEventDispatcher<IEventObject, IPropertyChangedHandler<IEventObject>>;
+        /** Call this if you wish to implement 'changing' events for supported properties.
+        * If any event handler cancels the event, then 'false' will be returned.
+        */
+        doPropertyChanging(name: string, newValue: any): boolean;
+        /** Call this if you wish to implement 'changed' events for supported properties. */
+        doPropertyChanged(name: string, oldValue: any): void;
+    }
+    interface IEventObject extends EventObject {
+    }
 }

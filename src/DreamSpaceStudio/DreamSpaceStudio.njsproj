@@ -119,8 +119,8 @@
     <Content Include="users\F7E1685E6F654C2A84EBF34A9FDE5DB4\user.json" />
     <Content Include="users\readme.txt" />
     <Content Include="views\error.t.html" />
-    <Content Include="views\studio\layout.t.html" />
-    <Content Include="views\studio\index.t.html">
+    <Content Include="views\ide\layout.t.html" />
+    <Content Include="views\ide\index.t.html">
       <SubType>Code</SubType>
     </Content>
     <TypeScriptCompile Include="solutions\Globals.ts" />
@@ -149,7 +149,7 @@
     <Folder Include="server\" />
     <Folder Include="users\F7E1685E6F654C2A84EBF34A9FDE5DB4\" />
     <Folder Include="views\" />
-    <Folder Include="views\studio\" />
+    <Folder Include="views\ide\" />
   </ItemGroup>
   <!-- Do not delete the following Import Project.  While this appears to do nothing it is a marker for setting TypeScript properties before our import that depends on them. -->
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="False" />

@@ -329,13 +329,13 @@ declare namespace DS {
         * 'undefined' is returned.  If path is invalid, an exception will be thrown.
         * @param {string} path The delimited property path to parse.
         * @param {object} origin The object to begin dereferencing with.  If this is null or undefined then it defaults to the global scope.
-        * @param {boolean} unsafe If false (default) a fast algorithm is used to parse the path.  If true, then the expression is evaluated at the host global scope (faster).
+        * @param {boolean} unsafe If false (default) then a highly optimized routine is used to parse the path.  If true, then 'eval()' is used as an even faster approach.
         *                         The reason for the option is that 'eval' is up to 4x faster, and is best used only if the path is guaranteed not to contain user entered
         *                         values, or ANY text transmitted insecurely.
-        *                         Note: The 'eval' used is 'DreamSpace.eval()', which is closed over the global scope (and not the DreamSpace module's private scope).
+        *                         Note: The 'eval' that is used is 'DS.eval()', which is closed over the global scope (and not the DS module's private scope).
         *                         'window.eval()' is not called directly in this function.
         */
-        function dereferencePropertyPath(path: string, origin?: Object, unsafe?: boolean): {};
+        function dereferencePropertyPath(path: string, origin?: Object, unsafe?: boolean): any;
         /** Waits until a property of an object becomes available (i.e. is no longer 'undefined').
           * @param {Object} obj The object for the property.
           * @param {string} propertyName The object property.

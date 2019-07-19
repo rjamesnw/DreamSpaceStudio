@@ -131,27 +131,34 @@
         * 'undefined' is returned.  If path is invalid, an exception will be thrown.
         * @param {string} path The delimited property path to parse.
         * @param {object} origin The object to begin dereferencing with.  If this is null or undefined then it defaults to the global scope.
-        * @param {boolean} unsafe If false (default) a fast algorithm is used to parse the path.  If true, then the expression is evaluated at the host global scope (faster).
+        * @param {boolean} unsafe If false (default) then a highly optimized routine is used to parse the path.  If true, then 'eval()' is used as an even faster approach.
         *                         The reason for the option is that 'eval' is up to 4x faster, and is best used only if the path is guaranteed not to contain user entered
         *                         values, or ANY text transmitted insecurely.
-        *                         Note: The 'eval' used is 'DreamSpace.eval()', which is closed over the global scope (and not the DreamSpace module's private scope).
+        *                         Note: The 'eval' that is used is 'DS.eval()', which is closed over the global scope (and not the DS module's private scope).
         *                         'window.eval()' is not called directly in this function.
         */
-        export function dereferencePropertyPath(path: string, origin?: Object, unsafe = false): {} {
+        export function dereferencePropertyPath(path: string, origin?: Object, unsafe = false): any {
             if (unsafe) return safeEval('p0.' + path, origin); // (note: this is 'DreamSpace.eval()', not a direct call to the global 'eval()')
             if (origin === void 0 || origin === null) origin = this !== global ? this : global;
             if (typeof path !== 'string') path = '' + path;
-            var o = origin, c = '', pc: string, i = 0, n = path.length, name = '';
-            if (n)
-                ((c = path[i++]) == '.' || c == '[' || c == ']' || c == void 0)
-                    ? (name ? <any>(o = o[name], name = '') : <any>(pc == '.' || pc == '[' || pc == ']' && c == ']' ? i = n + 2 : void 0), pc = c)
+
+            var c: string, pc: string, i = 0, n = path.length, name = '', q: string;
+
+            while (i <= n)
+                ((c = path[i++]) == '.' || c == '[' || c == ']' || c == "'" || c == '"' || c == void 0) ?
+                    (c == q && path[i] == ']' ? q = '' : q ?
+                        name += c : name ? (origin ? origin = origin[name] : i = n + 2, name = '')
+                            : (pc == '[' && (c == '"' || c == "'") ? q = c : pc == '.' || pc == '[' || pc == ']' && c == ']' || pc == '"' || pc == "'" ? i = n + 2 : void 0), pc = c)
                     : name += c;
+
             if (i == n + 2) {
                 var msg = new Error("Invalid path: " + path);
                 (<any>msg).__dereference_origin = origin;
                 (console.error || console.log)(msg, origin)
                 throw msg;
             }
+
+            return origin;
         } // (performance: http://jsperf.com/ways-to-dereference-a-delimited-property-string)
 
         // ------------------------------------------------------------------------------------------------------------------------

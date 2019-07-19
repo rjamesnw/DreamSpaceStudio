@@ -8,16 +8,28 @@ function apply(app, viewsRootPath = exports.viewsRoot) {
         fs.readFile(filePath, function (err, content) {
             if (err)
                 return callback(err);
-            var rendered = content.toString();
-            // ... replaced all tokens with the view data ...
-            var tokens = rendered.match(/{{.*?}}/g);
-            if (tokens)
-                for (var i = 0, n = tokens.length; i < n; ++i) {
-                    var token = tokens[i];
-                    var path = token.substring(2, token.length - 2);
-                    var value = '' + DS.Utilities.dereferencePropertyPath(path, viewData, true);
-                    rendered = DS.StringUtils.replace(rendered, tokens[i], value);
-                }
+            try {
+                var rendered = content.toString();
+                // ... replaced all tokens with the view data ...
+                var tokens = rendered.match(/`[^`]*?`|\${.*?}/g);
+                if (tokens)
+                    for (var i = 0, n = tokens.length; i < n; ++i) {
+                        var token = tokens[i];
+                        if (token[0] == '$') {
+                            var expr = token.substring(2, token.length - 1);
+                            var value = DS.safeEval(expr.replace(/(^|[^a-z0-9_$.])\./gmi, '$1p0.'), viewData); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
+                            if (value === null || value === void 0)
+                                value = "";
+                            else
+                                value = '' + value;
+                            rendered = DS.StringUtils.replace(rendered, token, value);
+                        }
+                    }
+            }
+            catch (ex) {
+                ex['status'] = 200;
+                return callback(ex);
+            }
             return callback(null, rendered);
         });
     });

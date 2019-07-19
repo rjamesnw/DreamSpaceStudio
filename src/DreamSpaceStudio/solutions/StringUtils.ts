@@ -15,7 +15,8 @@ namespace DS {
             if (typeof source !== 'string') source = "" + source;
             if (typeof replaceWhat !== 'string') replaceWhat = "" + replaceWhat;
             if (typeof replaceWith !== 'string') replaceWith = "" + replaceWith;
-            return source.replace(new RegExp(Utilities.escapeRegex(replaceWhat), ignoreCase ? 'gi' : 'g'), replaceWith);
+            var regex = new RegExp(Utilities.escapeRegex(replaceWhat), ignoreCase ? 'gi' : 'g');
+            return source.replace(regex, replaceWith);
         }
 
         /** Replaces all tags in the given 'HTML' string with 'tagReplacement' (an empty string by default) and returns the result. */

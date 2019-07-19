@@ -403,7 +403,7 @@ var DS;
         // -------------------------------------------------------------------------------------------------------------------
         /** Escapes a RegEx string so it behaves like a normal string. This is useful for RexEx string based operations, such as 'replace()'. */
         function escapeRegex(regExStr) {
-            return regExStr.replace(/([.?*+^$[\]\\(){}-])/g, "\\$1"); // TODO: Verify completeness.
+            return regExStr.replace(/([-[\]{}()*+?.,\\/^$|#])/g, "\\$1"); // TODO: Verify completeness.
         }
         Utilities.escapeRegex = escapeRegex;
         // ------------------------------------------------------------------------------------------------------------------------
@@ -3769,7 +3769,8 @@ var DS;
                 replaceWhat = "" + replaceWhat;
             if (typeof replaceWith !== 'string')
                 replaceWith = "" + replaceWith;
-            return source.replace(new RegExp(DS.Utilities.escapeRegex(replaceWhat), ignoreCase ? 'gi' : 'g'), replaceWith);
+            var regex = new RegExp(DS.Utilities.escapeRegex(replaceWhat), ignoreCase ? 'gi' : 'g');
+            return source.replace(regex, replaceWith);
         }
         StringUtils.replace = replace;
         /** Replaces all tags in the given 'HTML' string with 'tagReplacement' (an empty string by default) and returns the result. */

@@ -74,9 +74,8 @@
 
         /** Escapes a RegEx string so it behaves like a normal string. This is useful for RexEx string based operations, such as 'replace()'. */
         export function escapeRegex(regExStr: string): string {
-            return regExStr.replace(/([.?*+^$[\]\\(){}-])/g, "\\$1"); // TODO: Verify completeness.
+            return regExStr.replace(/([-[\]{}()*+?.,\\/^$|#])/g, "\\$1"); // TODO: Verify completeness.
         }
-
 
         // ------------------------------------------------------------------------------------------------------------------------
 

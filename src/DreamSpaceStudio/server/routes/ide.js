@@ -13,7 +13,7 @@ router.get('/', (req, res) => {
     fs.exists(dirTest, (exists) => {
         if (exists)
             viewPath = DS.Path.combine(viewPath, 'index'); // (if a directory was found, assume index as default)
-        res.render(viewPath, { title: 'DreamSpace Studio' });
+        res.render(viewPath, new templateEngine_1.HttpContext(req, res, { title: 'DreamSpace Studio' }, viewPath));
     });
 });
 exports.default = router;

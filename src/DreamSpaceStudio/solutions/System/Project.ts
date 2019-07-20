@@ -19,10 +19,10 @@
         //x protected _script: IFlowScript;
 
         /** The file storage directory for this project. */
-        readonly directory: FileSystem.Directory;
+        readonly directory: VirtualFileSystem.Directory;
 
         /** A list of all files associated with this project, indexed by the absolute lowercase file path. */
-        readonly files: { [index: string]: FileSystem.File } = {};
+        readonly files: { [index: string]: VirtualFileSystem.File } = {};
 
         /** A list of user IDs and assigned roles for this project. */
         readonly userSecurity = new UserAccess();
@@ -54,9 +54,9 @@
             /** The project's description. */ public description?: string
         ) {
             super();
-            if (!FileSystem.isValidFileName(name))
+            if (!Path.isValidFileName(name))
                 throw "The project title '" + name + "' must also be a valid file name. Don't include special directory characters, such as: \\ / ? % * ";
-            this.directory = this.solution.directory.createDirectory(FileSystem.combine("projects", this._uid)); // (the path is "User ID"/"project's unique ID"/ )
+            this.directory = this.solution.directory.createDirectory(VirtualFileSystem.combine("projects", this._uid)); // (the path is "User ID"/"project's unique ID"/ )
         }
 
         // --------------------------------------------------------------------------------------------------------------------

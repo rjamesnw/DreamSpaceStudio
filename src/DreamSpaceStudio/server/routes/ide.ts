@@ -3,7 +3,7 @@
  */
 import express = require('express');
 import fs = require('fs');
-import { viewsRootFolder } from '../templateEngine';
+import { viewsRootFolder, HttpContext } from '../templateEngine';
 const router = express.Router();
 
 router.get('/', (req: express.Request, res: express.Response) => {
@@ -12,7 +12,7 @@ router.get('/', (req: express.Request, res: express.Response) => {
     fs.exists(dirTest, (exists) => {
         if (exists)
             viewPath = DS.Path.combine(viewPath, 'index'); // (if a directory was found, assume index as default)
-        res.render(viewPath, { title: 'DreamSpace Studio' });
+        res.render(viewPath, new HttpContext(req, res, { title: 'DreamSpace Studio' }, viewPath));
     });
 });
 

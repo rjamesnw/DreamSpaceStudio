@@ -64,7 +64,7 @@
     <TypeScriptCompile Include="solutions\client\FileManager.ts" />
     <TypeScriptCompile Include="solutions\System\EventDispatcher.ts" />
     <TypeScriptCompile Include="solutions\System\Events.ts" />
-    <TypeScriptCompile Include="solutions\System\FileManager.ts" />
+    <TypeScriptCompile Include="solutions\System\VirtualFileSystem.ts" />
     <TypeScriptCompile Include="solutions\System\Page.ts" />
     <TypeScriptCompile Include="solutions\System\Project.ts" />
     <TypeScriptCompile Include="solutions\System\Property.ts" />

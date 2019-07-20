@@ -23,10 +23,56 @@ namespace DS {
                 new Uri(void 0, void 0, void 0, url); // (returns the url as is if this is not a proper absolute path)
         }
 
+        export var restrictedFilenameRegex = /\/\\\?%\*:\|"<>/g;
+
+        /** Returns true if a given filename contains invalid characters. */
+        export function isValidFileName(name: string) {
+            return name && restrictedFilenameRegex.test(name);
+        }
+
+        /** Splits and returns the path parts, validating each one and throwing an exception if any are invalid. */
+        export function getPathParts(path: string) {
+            var parts = (typeof path !== 'string' ? '' + path : path).replace(/\\/g, '/').split('/');
+            for (var i = 0, n = parts.length; i < n; ++i)
+                if (!isValidFileName(parts[i])) throw "The path '" + path + "' contains invalid characters in '" + parts[i] + "'.";
+            return parts;
+        }
+
+        /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,). 
+         * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
+         * Examples:
+         * - "/A/B/C/" => "/A/B/C"
+         * - "A/B/C" => "A/B"
+         * - "//A/B/C//" => "/A/B/C"
+         * - "/" => "/"
+         * - "" => ""
+         */
+        export function getPath(filepath: string) {
+            if (!filepath) return "";
+            var parts = filepath.replace(/\\/g, '/').split('/'), i1 = 0, i2 = parts.length - 2;
+            while (i1 < parts.length && !parts[i1]) i1++;
+            while (i2 > i1 && !parts[i2]) i2--;
+            return (i1 > 0 ? "/" : "") + parts.slice(i1, i2 + 1).join('/');
+        }
+
+        /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,). 
+        * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
+        * Examples:
+        * - "/A/B/C/" => ""
+        * - "A/B/C" => "C"
+        * - "/" => ""
+        * - "" => ""
+        */
+        export function getName(filepath: string) {
+            if (!filepath) return "";
+            var parts = filepath.replace(/\\/g, '/').split('/');
+            return parts[parts.length - 1] || "";
+        }
+
         /**
-           * Appends 'path2' to 'path1', inserting a path separator character (/) if required.
-           * Set 'normalizePathSeparators' to true to normalize any '\' path characters to '/' instead.
-           */
+        * Appends 'path2' to 'path1', inserting a path separator character (/) if required.
+        * Set 'normalizePathSeparators' to true to normalize any '\' path characters to '/' instead.
+        */
         export function combine(path1: string, path2: string, normalizePathSeparators = false): string {
             if (typeof path1 != 'string') path1 = Utilities.toString(path1);
             if (typeof path2 != 'string') path2 = Utilities.toString(path2);

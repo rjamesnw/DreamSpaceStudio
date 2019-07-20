@@ -1,24 +1,48 @@
-// Contains DreamSpace API functions and types that user code can use to work with the system.
-// This API will be a layer of abstraction that keeps things similar between server and client sides.
-
-type Methods = "GET" | "POST" | "PUT" | "DELETE";
-
-interface IResponse<TData = any> {
-    statusCode: HttpStatus;
-    message?: string;
-    data?: TData;
-    /** If true then the data can be serialized. The default is false (undefined), which then allows transferring data using 'JSON.stringify()'
-     * This prevents server-side-only or client-side-only data from being able to transfer between platforms.
-     */
-    notSerializable?: boolean;
-}
-
 /** This is the root to all DreamSpaceJS utilities.
- * These utilities cover most common developer needs when buidling custom components. 
+ * These utilities cover most common developer needs when building custom components. 
  */
 namespace DS {
 
     export namespace IO {
+        // Contains DreamSpace API functions and types that user code can use to work with the system.
+        // This API will be a layer of abstraction that keeps things similar between server and client sides.
+        export type Methods = "GET" | "POST" | "PUT" | "DELETE";
+
+        //interface IResponse<TData = any> {
+        //    status: HttpStatus;
+        //    message?: string;
+        //    data?: TData;
+        //    /** If true then the data can be serialized. The default is false (undefined), which then allows transferring data using 'JSON.stringify()'
+        //     * This prevents server-side-only or client-side-only data from being able to transfer between platforms.
+        //     */
+        //    notSerializable?: boolean;
+        //}
+        export class Response<TData = any> {
+            /** The HTTP status code for the response. */
+            status: HttpStatus;
+            /** A message for the response. */
+            message?: string;
+            /** Optional data for this response. */
+            data?: TData;
+            /** If true then the data can be serialized. The default is false (undefined), which then allows transferring data using 'JSON.stringify()'
+             * This prevents server-side-only or client-side-only data from being able to transfer between platforms.
+             */
+            notSerializable?: boolean;
+
+            constructor(message?: string, data?: any, httpStatusCode = HttpStatus.OK, notSerializable?: boolean) {
+                this.status = +httpStatusCode || 0;
+                this.message = '' + message;
+                this.data = data;
+                this.notSerializable = !!notSerializable;
+            }
+
+            static fromError(message: string, error: any, httpStatusCode = HttpStatus.OK, data?: any) {
+                return new Response((message || "") + getErrorMessage(error), data, httpStatusCode);
+            }
+        }
+
+        export interface IResponse<TData = any> extends Response<TData> { }
+
         /** Contains the results of a component's operation. */
         export function get<T = object>(url: string, type?: ResourceTypes.Application_JSON, method?: Methods, data?: any): Promise<T>;
         export function get<T = string>(url: string, type?: ResourceTypes.Text_XML, method?: Methods, data?: any): Promise<T>;

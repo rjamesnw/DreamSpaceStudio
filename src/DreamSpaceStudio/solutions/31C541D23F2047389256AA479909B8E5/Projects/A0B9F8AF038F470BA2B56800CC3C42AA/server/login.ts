@@ -1,5 +1,5 @@
-export async function login(username: string, password: string): Promise<IResponse<boolean>> {
-    var response: IResponse<boolean>;
+export async function login(username: string, password: string): Promise<DS.IO.IResponse<boolean>> {
+    var response: DS.IO.IResponse<boolean>;
     // ### USER CODE START ###
 
     // ... takes the username and password given from the *client* side and attempts to login the user ...
@@ -8,7 +8,7 @@ export async function login(username: string, password: string): Promise<IRespon
 
     var dirs = await DS.getDirectories("users");
 
-    response = { statusCode: HttpStatus.OK, message: "OK", data: true };
+    response = new DS.IO.Response("OK", true);
 
     // ### USER CODE end ###
     return response;

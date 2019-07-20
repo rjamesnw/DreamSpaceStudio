@@ -193,10 +193,10 @@ var DS;
 (function (DS) {
     // ############################################################################################################################
     // FileManager
-    let FileSystem;
-    (function (FileSystem) {
+    let VirtualFileSystem;
+    (function (VirtualFileSystem) {
         // ========================================================================================================================
-        class ClientFile extends FileSystem.File {
+        class ClientFile extends VirtualFileSystem.File {
             constructor(fileManager, parent, content) {
                 super(fileManager, parent, content);
             }
@@ -209,9 +209,9 @@ var DS;
                 this.contents = store.getItem(this.absolutePath);
             }
         }
-        FileSystem.ClientFile = ClientFile;
+        VirtualFileSystem.ClientFile = ClientFile;
         // ========================================================================================================================
-    })(FileSystem = DS.FileSystem || (DS.FileSystem = {}));
+    })(VirtualFileSystem = DS.VirtualFileSystem || (DS.VirtualFileSystem = {}));
     // ############################################################################################################################
 })(DS || (DS = {}));
 // ###########################################################################################################################

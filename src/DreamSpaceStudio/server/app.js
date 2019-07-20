@@ -58,10 +58,10 @@ templateEngine.apply(app);
             // will print stacktrace
             app.use(((err, req, res, next) => {
                 res.status(err['status'] || 500);
-                res.render('error', {
+                res.render('error', new templateEngine.HttpContext(req, res, {
                     message: err.message,
                     error: err
-                });
+                }));
             }));
         }
         else {
@@ -69,10 +69,10 @@ templateEngine.apply(app);
             // no stack traces leaked to user
             app.use(((err, req, res, next) => {
                 res.status(err.status || 500);
-                res.render('error', {
+                res.render('error', new templateEngine.HttpContext(req, res, {
                     message: err.message,
                     error: {}
-                });
+                }));
             }));
         }
         var port = process.env.PORT || 45000;

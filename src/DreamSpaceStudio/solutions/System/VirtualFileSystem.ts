@@ -3,7 +3,7 @@
     // ############################################################################################################################
     // FileManager
 
-    export namespace FileSystem {
+    export namespace VirtualFileSystem {
         // ========================================================================================================================
 
         export enum SyncStatus {
@@ -20,14 +20,6 @@
         var reviewTimerHandle: any;
         function _syncFileSystem() {
             reviewTimerHandle = void 0;
-        }
-
-        /** Returns slits and returns the path parts, validating each one and throwing an exception if any are invalid. */
-        export function getPathParts(path: string) {
-            var parts = (typeof path !== 'string' ? '' + path : path).replace(/\\/g, '/').split('/');
-            for (var i = 0, n = parts.length; i < n; ++i)
-                if (!isValidFileName(parts[i])) throw "The path '" + path + "' contains invalid characters in '" + parts[i] + "'.";
-            return parts;
         }
 
         export class DirectoryItem {
@@ -120,7 +112,7 @@
               */
             resolve<T extends DirectoryItem>(itemPath: string, typeFilter?: new (...args: any[]) => T): T {
                 if (itemPath === void 0 || itemPath === null || !this.hasChildren) return null;
-                var parts = getPathParts(itemPath), t: DirectoryItem = this;
+                var parts = Path.getPathParts(itemPath), t: DirectoryItem = this;
                 for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
                     // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
                     var item = t._childItemsByName[parts[i]];
@@ -226,23 +218,6 @@
 
             constructor(fileManager: FileManager, parent?: DirectoryItem) { super(fileManager, parent); }
 
-            /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,). 
-             * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
-             * Examples:
-             * - "/A/B/C/" => "/A/B/C"
-             * - "A/B/C" => "A/B"
-             * - "//A/B/C//" => "/A/B/C"
-             * - "/" => "/"
-             * - "" => ""
-             */
-            static getPath(filepath: string) {
-                if (!filepath) return "";
-                var parts = filepath.replace(/\\/g, '/').split('/'), i1 = 0, i2 = parts.length - 2;
-                while (i1 < parts.length && !parts[i1]) i1++;
-                while (i2 > i1 && !parts[i2]) i2--;
-                return (i1 > 0 ? "/" : "") + parts.slice(i1, i2 + 1).join('/');
-            }
-
             getFile(filePath: string): File {
                 var item = this.resolve(filePath);
                 if (!(item instanceof File)) return null;
@@ -258,7 +233,7 @@
             /** Creates a directory under the user root endpoint. */
             createDirectory(path: string): Directory {
                 if (path === void 0 || path === null || !this.hasChildren) return null;
-                var parts = getPathParts(path), item: Directory = this; // (if path is empty it should default to this directory)
+                var parts = Path.getPathParts(path), item: Directory = this; // (if path is empty it should default to this directory)
                 for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
                     // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
                     var childItem = item._childItemsByName[parts[i]];
@@ -273,8 +248,8 @@
             }
 
             createFile(filePath: string, contents?: string): File {
-                var filename = File.getName(filePath);
-                var directoryPath = Directory.getPath(filePath);
+                var filename = Path.getName(filePath);
+                var directoryPath = Path.getPath(filePath);
                 if (!filename) throw "A file name is required.";
                 var dir = this.createDirectory(directoryPath);
                 return File.onCreateFile(this._fileManager, dir, contents);
@@ -304,20 +279,6 @@
                 super(fileManager, parent);
                 if (content !== void 0)
                     this._contents = content;
-            }
-
-            /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,). 
-            * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
-            * Examples:
-            * - "/A/B/C/" => ""
-            * - "A/B/C" => "C"
-            * - "/" => ""
-            * - "" => ""
-            */
-            static getName(filepath: string) {
-                if (!filepath) return "";
-                var parts = filepath.replace(/\\/g, '/').split('/');
-                return parts[parts.length - 1] || "";
             }
 
             toBase64() { return Encoding.base64Encode(this.contents); }
@@ -383,13 +344,6 @@
         }
 
         // ========================================================================================================================
-
-        export var restrictedFilenameRegex = /\/\\\?%\*:\|"<>/g;
-
-        /** Returns true if a given filename contains invalid characters. */
-        export function isValidFileName(name: string) {
-            return name && restrictedFilenameRegex.test(name);
-        }
 
         /** Combine two paths into one. */
         export function combine(path1: string | Directory, path2: string | Directory) {

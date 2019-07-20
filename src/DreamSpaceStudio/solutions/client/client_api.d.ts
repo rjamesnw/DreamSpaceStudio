@@ -31,7 +31,7 @@ declare namespace DS {
     }
 }
 declare namespace DS {
-    namespace FileSystem {
+    namespace VirtualFileSystem {
         class ClientFile extends File {
             constructor(fileManager: FileManager, parent?: DirectoryItem, content?: string);
             saveToLocal(): void;

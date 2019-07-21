@@ -39,13 +39,18 @@ export class HttpContext {
 
 export interface IHttpContext extends HttpContext { }
 
+export interface Renderer { (): Promise<string> }
+
 export function apply(app: ReturnType<typeof import("express")>, viewsRootPath = viewsRoot) {
     app.engine('t.html', function (filePath: string, httpContext: IHttpContext, callback: { (err: any, response?: any): void }) { // define the template engine
         fs.readFile(filePath, function (err, content) {
             if (err) return callback(err);
 
-            var sections: { [name: string]: string } = {}; // (keeps track of any sections defined)
-            var sectionNameStack = ['content'];
+            //var renders: { sectionName: string; renderer: Promise<string> | string }[] = []; // (this will hold an array of strings or async operations use to render the view asynchronously - text parts are set directly as strings)
+            var sections: { [name: string]: (Renderer | string)[] } = {}; // (keeps track of any sections defined)
+            const defaultSectionName = 'content';
+            function addToSection(name: string, value: Renderer | string) { name = name || defaultSectionName; sections[name] ? sections[name].push(value) : sections[name] = [value]; }
+            var sectionName;
 
             try {
                 var html = content.toString();
@@ -55,18 +60,27 @@ export function apply(app: ReturnType<typeof import("express")>, viewsRootPath =
                 //  It was determined that the fastest option is to use native match()/split() using regex instead to maintain consistent
                 //  speed across the most popular browsers. The template parser does this as well.)
 
-                var tokenRegex = /`[^`]*?`|\${.*?}/g;
+                var tokenRegex = /`([^`]|\\`)*?`|\${.*?}/g;
                 var textParts = html.split(tokenRegex);
                 var tokens = html.match(tokenRegex);
                 tokens.push(""); // (each iteration will store text+token, and there will always be one less token compared to text parts)
-                var lastIndex = 0;
+                var removeEOL = false; // (this is true once after some tokens to remove the next character if EOL, then set to false again)
+                var layoutViewName: string;
 
                 // ... if we found some tokens to process, iterate over and process them ...
 
                 for (var i = 0, n = textParts.length; i < n; ++i) {
 
-                    var sectionName = sectionNameStack[sectionNameStack.length - 1];
-                    sections[sectionName] += textParts[i];
+                    var textpart = textParts[i];
+                    if (removeEOL) {
+                        if (textpart.substr(0, 2) == '\r\n')
+                            textpart = textpart.substr(2);
+                        else if (textpart[0] == '\n' || textpart[0] == '\r')
+                            textpart = textpart.substr(1);
+                        removeEOL = false;
+                    }
+
+                    addToSection(sectionName, textpart);
 
                     var token = tokens[i];
 
@@ -74,52 +88,93 @@ export function apply(app: ReturnType<typeof import("express")>, viewsRootPath =
 
                     if (token[0] == '$') {
                         var expr = token.substring(2, token.length - 1);
+                        var processExpr = true, outputExpr = true;
+                        var value: string | Renderer = "";
 
                         if (expr[0] == '#') {
+                            processExpr = false;
+
                             // ... this is a special command ...
                             var cmd = expr.split(/\s+/g);
                             var argStr = cmd[1] || "";
-                            var args = argStr.split(':');
+                            //var args = argStr.split(':');
                             switch (cmd[0]) {
+                                case "#": expr = cmd[1]; processExpr = true; outputExpr = false; break;
                                 case "#layout": {
-                                    // ... get arguments: view:section
-                                    if (args.length < 2) throw `Invalid token command '${cmd}': 2 arguments were expected (view_name:section_name).`;
-                                    var viewName = args[0];
-                                    var viewPath = DS.Path.combine(DS.Path.getPath(httpContext.viewPath), viewName);
-                                    httpContext.response.render(viewPath, httpContext, (err, html) => {
-                                        if (err) return callback(err);
-                                        // ... this HTML is the parent template to this view that is resolved by now and must be returned ...
-                                        callback(null, html);
-                                    });
+                                    if (layoutViewName)
+                                        throw `Invalid token command '${cmd}': A layout was already specified.`;
+                                    layoutViewName = cmd[1];
+                                    removeEOL = true;
                                 }
                                 case "#section": {
-                                    // ... get arguments: view:section
-                                    if (args.length < 2) throw `Invalid token command '${cmd}': 2 arguments were expected (view_name:section_name).`;
-                                    sectionNameStack.push(args[0]);
+                                    // ... start creating renderers for a specified section ...
+                                    sectionName = cmd[1];
+                                    removeEOL = true;
+                                }
+                                case "#render": {
+                                    // ... request to load and render a view in the token's position ...
+                                    let sectionNameToRender = cmd[1] || defaultSectionName;
+                                    if (!httpContext.sections)
+                                        throw `Invalid token command '${cmd}': there are no sections defined.`;
+                                    if (!(sectionNameToRender in httpContext.sections))
+                                        throw `Invalid token command '${cmd}': there is no section defined with the name '${sectionNameToRender}'.`;
+                                    value = httpContext.sections[sectionNameToRender] || "";
                                 }
                                 case "#view": {
+                                    value = async () => {
+                                        return new Promise<string>((res, rej) => {
+                                            // ... request to load and render a view in the token's position ...
+                                            // ... get arguments: view:section
+                                            var viewPath = DS.Path.combine(DS.Path.getPath(httpContext.viewPath), layoutViewName);
+                                            httpContext.response.render(viewPath, httpContext, (err, html) => {
+                                                if (err) return rej(err);
+                                                // ... this HTML is the parent template to this view that is resolved by now and must be returned ...
+                                                res(html);
+                                            }); res
+                                        });
+                                    };
+
                                 }
-                                default: throw `Unknown token command '${args[0]}' in token '${expr}'.`
+                                default: throw `Unknown token command '${cmd[0]}' in token '${token}'.`
                             }
                         }
-                        else {
-                            var value = DS.safeEval(expr.replace(/(^|[^a-z0-9_$.])\./gmi, '$1p0.'), httpContext.viewData || {}); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
-                            if (value === null || value === void 0)
-                                value = "";
-                            else
-                                value = '' + value;
 
-                            sections[sectionName] += value;
+                        if (processExpr) {
+                            value = DS.safeEval(expr.replace(/(^|[^a-z0-9_$.])\./gmi, '$1p0.'), httpContext.viewData || {}); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
+
+                            if (!outputExpr)
+                                value = void 0;
+                            else if (value !== null && value !== void 0 && typeof value != 'string')
+                                value = '' + value;
                         }
+
+                        if (value !== void 0 && value !== null)
+                            addToSection(sectionName, value);
                     }
-                    else sections[sectionName] += token; // (not a valid server token, so include this in the rendered output)
+                    else addToSection(sectionName, token); // (not a valid server token, so include this in the rendered output)
                 }
+
+                // TODO:
+                // 1. sections should be stored as async functions that can be rendered as a later time if and when needed.
+                // 2. Iterate over the render items and combine sections.
+
+                async function render() {
+                }
+
+                if (layoutViewName) {
+                    // ... get arguments: view:section
+                    var viewPath = DS.Path.combine(DS.Path.getPath(httpContext.viewPath), layoutViewName);
+                    httpContext.response.render(viewPath, httpContext, (err, html) => {
+                        if (err) return callback(err);
+                        // ... this HTML is the parent template to this view that is resolved by now and must be returned ...
+                        callback(null, html);
+                    });
+                }
+                else callback(null, sections[sectionNameStack[0]]);
             }
             catch (ex) {
                 return callback(DS.IO.Response.fromError(`Error processing view '${filePath}': `, ex));
             }
-
-            return callback(null, sections[sectionNameStack[0]]);
         })
     })
 

@@ -70,6 +70,13 @@ class SectionManager {
             section = this.sections[name];
         section.add(value);
     }
+    /** Remove and return a section by name. If not found then the request is ignored. */
+    remove(name) {
+        var section = null;
+        if (this.sections)
+            (section = this.sections[name], this.sections[name] = void 0);
+        return section;
+    }
     /** Returns true if the named section exist. */
     hasSection(name) { return this.sections && name in this.sections; }
 }
@@ -82,6 +89,9 @@ function apply(app, viewsRootPath = exports.viewsRoot) {
                 return callback(err);
             // ... get any existing section manager, or create a new one ...
             var sectionManager = httpContext.sectionManager || (httpContext.sectionManager = new SectionManager());
+            sectionManager.activeSection = void 0;
+            // ... get the content from a previous processed view and remove it; the current view will generate new content ...
+            var childContent = sectionManager.remove(SectionManager.defaultSectionName); // (if and when requested, the child content will be available for this view only)
             try {
                 var html = content.toString();
                 // ... replaced all tokens with the view data ...
@@ -111,7 +121,7 @@ function apply(app, viewsRootPath = exports.viewsRoot) {
                     if (token[0] == '$') {
                         var expr = token.substring(2, token.length - 1);
                         var processExpr = false, outputExpr = true;
-                        var value = "";
+                        var value = void 0;
                         if (expr[0] == '#') {
                             // ... this is a special command ...
                             let cmdSplitIndex = expr.indexOf(' ');
@@ -140,9 +150,18 @@ function apply(app, viewsRootPath = exports.viewsRoot) {
                                     if (!httpContext.sectionManager)
                                         throw `Invalid token command '${cmd}': there are no sections defined.`;
                                     let sectionNameToRender = argStr || SectionManager.defaultSectionName; // ("let" is important here, since it will be locked only to the next async function expression and not shared across all of them, like 'var' would)
-                                    if (!sectionManager.hasSection(sectionNameToRender))
-                                        throw `Invalid token command '${cmd}': there is no section defined with the name '${sectionNameToRender}'.`;
-                                    value = () => __awaiter(this, void 0, void 0, function* () { return yield httpContext.sectionManager.sections[sectionNameToRender].render(); });
+                                    if (sectionNameToRender == SectionManager.defaultSectionName) {
+                                        if (!childContent)
+                                            throw `Invalid token command '${cmd}': the section ''${sectionNameToRender} does not exist or was already rendered.`;
+                                        value = childContent.render.bind(childContent);
+                                        childContent = null; // (make sure the content is only output once)
+                                    }
+                                    else {
+                                        if (!sectionManager.hasSection(sectionNameToRender))
+                                            throw `Invalid token command '${cmd}': there is no section defined with the name '${sectionNameToRender}'.`;
+                                        let section = httpContext.sectionManager.sections[sectionNameToRender];
+                                        value = section.render.bind(section);
+                                    }
                                     break;
                                 }
                                 case "#view": {
@@ -179,13 +198,6 @@ function apply(app, viewsRootPath = exports.viewsRoot) {
                     else
                         sectionManager.add(token); // (not a valid server token, so include this in the rendered output)
                 }
-                // TODO:
-                // 1. sections should be stored as async functions that can be rendered as a later time if and when needed.
-                // 2. Iterate over the render items and combine sections.
-                function render() {
-                    return __awaiter(this, void 0, void 0, function* () {
-                    });
-                }
                 if (layoutViewName) {
                     // ... get arguments: view:section
                     var viewPath = DS.Path.combine(DS.Path.getPath(httpContext.viewPath), layoutViewName);
@@ -199,7 +211,11 @@ function apply(app, viewsRootPath = exports.viewsRoot) {
                 else {
                     let contentSection = sectionManager.sections[SectionManager.defaultSectionName];
                     if (contentSection)
-                        contentSection.render().then(val => { callback(null, val); }, err => { callback(err); });
+                        contentSection.render().then(val => {
+                            callback(null, val);
+                        }, err => {
+                            callback(err);
+                        });
                     else
                         callback(null, "");
                 }

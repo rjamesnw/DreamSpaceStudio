@@ -49,6 +49,8 @@ export declare class SectionManager {
      * If a section does not exist then it is created first.
      */
     add(value: Renderer | string, name?: string): void;
+    /** Remove and return a section by name. If not found then the request is ignored. */
+    remove(name: string): Section;
     /** Returns true if the named section exist. */
     hasSection(name: string): boolean;
 }

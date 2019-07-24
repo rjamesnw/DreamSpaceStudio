@@ -9,6 +9,13 @@
     <SaveNodeJsSettingsInProjectFile>True</SaveNodeJsSettingsInProjectFile>
     <TypeScriptBuildMode>true</TypeScriptBuildMode>
     <LaunchUrl>http://localhost:45000/ide</LaunchUrl>
+    <NodeExePath>
+    </NodeExePath>
+    <NodeExeArguments>
+    </NodeExeArguments>
+    <DebuggerPort>
+    </DebuggerPort>
+    <Environment>nodemon=node_modules\nodemon\bin\nodemon.js--just_a_note</Environment>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -59,6 +66,7 @@
     <TypeScriptCompile Include="solutions\client\navigation.ts" />
     <TypeScriptCompile Include="solutions\HTMLReader.ts" />
     <TypeScriptCompile Include="solutions\server\ds.ts" />
+    <TypeScriptCompile Include="solutions\server\_global.ts" />
     <TypeScriptCompile Include="solutions\System\Component.ts" />
     <TypeScriptCompile Include="solutions\System\EventDefinition.ts" />
     <TypeScriptCompile Include="solutions\client\FileManager.ts" />
@@ -100,7 +108,7 @@
     <Content Include="..\..\README.md">
       <Link>README.md</Link>
     </Content>
-    <Content Include="server\templateEngine.ts" />
+    <Content Include="server\t.html.ts" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\tsconfig.json" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\tsconfig.json" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\project.json" />

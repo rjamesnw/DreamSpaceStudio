@@ -17,6 +17,7 @@
     "express": "^4.14.0",
     "monaco-editor": "^0.16.2",
     "node-xhrstub": "^1.1.1",
+    "nodemon": "^1.19.1",
     "request": "^2.88.0",
     "xhr2": "^0.2.0"
   },

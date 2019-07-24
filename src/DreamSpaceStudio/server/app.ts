@@ -17,11 +17,16 @@ require('../solutions/server/server_api'); // (adds the global.DS core system na
 
 DS.registerGlobal(); // (registers the system for managing global properties to prevent cluttering the JS global space)
 
-import debug = require('debug');
+process.chdir(DS.Path.combine(__dirname, '..')); // (guarantee that we are in the correct working directory)
+var cwd = global.process.cwd(); // (current working directory, which should be the project folder)
+
+DS.webRoot = cwd;
+
+//x import debug = require('debug');
+//x import path = require('path');
 import express = require('express');
-import path = require('path');
 import { Socket } from "net";
-import * as templateEngine from "./templateEngine";
+import * as templateEngine from "./t.html";
 
 import indexRoutes from './routes/index';
 import ideRoutes from './routes/ide';
@@ -48,7 +53,7 @@ templateEngine.apply(app);
         //x app.set('views', path.join(__dirname, 'views'));
         //x app.set('view engine', 'html');
 
-        app.use(express.static(path.join(__dirname, 'public')));
+        app.use(express.static(DS.Path.combine(cwd, 'public')));
 
         app.use('/', indexRoutes);
         app.use('/ide', ideRoutes);
@@ -147,3 +152,7 @@ function wait() {
 }
 
 //? wait();
+
+// Notes:
+// * https://github.com/microsoft/nodejstools/issues/2192
+//

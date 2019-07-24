@@ -272,7 +272,7 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
 export function apply(app: ReturnType<typeof import("express")>, viewsRootPath = viewsRoot) {
     // ... view engine setup ...
     app.engine('t.html', __express);
-    var isAbsolutePath = /^(?:.*:|[\\\/])/.test(viewsRootPath[0]);
+    var isAbsolutePath = /^(?:.*:|[\\\/])/.test(viewsRootPath[0]); // TODO: Move into the Path or URL ns! ***************
     viewsRoot = isAbsolutePath ? viewsRootPath : DS.Path.combine(DS.webRoot, viewsRootPath);
     app.set('views', viewsRoot); // specify the views directory
     app.set('view engine', 't.html') // register the template engine

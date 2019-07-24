@@ -3,12 +3,12 @@
  */
 import express = require('express');
 import fs = require('fs');
-import { viewsRootFolder, HttpContext } from '../t.html';
+import { viewsRoot, HttpContext } from '../t.html';
 const router = express.Router();
 
 router.get('/', (req: express.Request, res: express.Response) => {
     var viewPath = DS.Path.combine('ide', req.path);
-    var dirTest = DS.Path.combine(viewsRootFolder, viewPath);
+    var dirTest = DS.Path.combine(viewsRoot, viewPath);
     fs.exists(dirTest, (exists) => {
         if (exists) {
             viewPath = DS.Path.combine(viewPath, 'index'); // (if a directory was found, assume index as default)

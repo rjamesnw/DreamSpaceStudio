@@ -1,8 +1,8 @@
 import fs = require('fs') // this engine requires the fs module
 import { Request, Response } from 'express-serve-static-core';
 
-export var viewsRootFolder = "views";
-export var viewsRoot = "../" + viewsRootFolder;
+/** The root of the views folder. By default this is 'views' (relative from 'DS.webRoot'). */
+export var viewsRoot = "views";
 
 export class HttpContext {
     /** The request object for the current request. */
@@ -270,9 +270,10 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
 }
 
 export function apply(app: ReturnType<typeof import("express")>, viewsRootPath = viewsRoot) {
-    app.engine('t.html', __express);
     // ... view engine setup ...
-    viewsRoot = viewsRootPath; // (keep track of any changes)
-    app.set('views', DS.Path.combine(__dirname, viewsRoot)); // specify the views directory
+    app.engine('t.html', __express);
+    var isAbsolutePath = /^(?:.*:|[\\\/])/.test(viewsRootPath[0]);
+    viewsRoot = isAbsolutePath ? viewsRootPath : DS.Path.combine(DS.webRoot, viewsRootPath);
+    app.set('views', viewsRoot); // specify the views directory
     app.set('view engine', 't.html') // register the template engine
 }

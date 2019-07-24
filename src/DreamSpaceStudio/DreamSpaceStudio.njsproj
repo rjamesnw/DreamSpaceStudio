@@ -98,7 +98,6 @@
     <TypeScriptCompile Include="solutions\StringUtils.ts" />
     <TypeScriptCompile Include="solutions\Uri.ts" />
     <TypeScriptCompile Include="solutions\Utilities.ts" />
-    <TypeScriptCompile Include="server\globals.d.ts" />
     <TypeScriptCompile Include="server\app.ts" />
     <TypeScriptCompile Include="server\routes\index.ts" />
     <TypeScriptCompile Include="server\routes\user.ts" />

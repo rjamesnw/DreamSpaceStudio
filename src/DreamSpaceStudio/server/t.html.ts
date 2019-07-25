@@ -41,6 +41,8 @@ export interface IHttpContext extends HttpContext { }
 
 export interface Renderer { (): string | Promise<string> }
 
+var evalExpr = new Function("$", "expr", "return eval(expr);");
+
 export class Section {
     renderers: (Renderer | string)[];
 
@@ -112,9 +114,9 @@ export class SectionManager {
 export var __express = function (filePath: string, httpContext: IHttpContext, callback: { (err: any, response?: any): void }) { // define the template engine
     try {
         if (!httpContext.request)
-            throw "'httpContext.request' (of module type 'express-serve-static-core'.request) is required.";
+            throw DS.Exception.from("'httpContext.request' (of module type 'express-serve-static-core'.request) is required.");
         if (!httpContext.response)
-            throw "'httpContext.response' (of module type 'express-serve-static-core'.response) is required.";
+            throw DS.Exception.from("'httpContext.response' (of module type 'express-serve-static-core'.response) is required.");
 
         fs.readFile(filePath, function (err, fileContent) {
             if (err) return callback(err);
@@ -133,7 +135,7 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                 //  It was determined that the fastest option is to use native match()/split() using regex instead to maintain consistent
                 //  speed across the most popular browsers. The template parser does this as well.)
 
-                var tokenRegex = /`(?:[^`]|\\`)*?`|\${.*?}/g;
+                var tokenRegex = /`(?:[^`]|\\`)*?`|\${(?:{{|}}|[^}])*}/g;
                 var textParts = html.split(tokenRegex);
                 var tokens = html.match(tokenRegex);
                 tokens.push(""); // (each iteration will store text+token, and there will always be one less token compared to text parts)
@@ -172,75 +174,90 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                             let argStr = cmdSplitIndex >= 0 ? expr.substr(cmdSplitIndex).trim() : "";
                             //let args = argStr.split(':');
 
-                            switch (cmd) {
-                                case "#": expr = argStr; processExpr = true; outputExpr = false; removeEOL = true; break;
-                                case "#layout":
-                                    if (layoutViewName)
-                                        throw `Invalid token command '${cmd}': A layout was already specified.`;
-                                    layoutViewName = argStr || "layout"; // (default to the "layout" view when nothing else is specified)
-                                    removeEOL = true;
-                                    break;
-                                case "#section":
-                                    // ... start creating renderers for a specified section ...
-                                    sectionManager.activeSection = argStr;
-                                    removeEOL = true;
-                                    break;
-                                case "#render": {
-                                    // ... request to load and render a view in the token's position ...
-                                    if (!httpContext.sectionManager)
-                                        throw `Invalid token command '${cmd}': there are no sections defined.`;
-                                    let sectionNameToRender = argStr || SectionManager.defaultSectionName; // ("let" is important here, since it will be locked only to the next async function expression and not shared across all of them, like 'var' would)
-                                    if (sectionNameToRender == SectionManager.defaultSectionName) {
-                                        if (!childContent)
-                                            throw `Invalid token command '${cmd}': the section ''${sectionNameToRender} does not exist or was already rendered.`;
-                                        value = childContent.render.bind(childContent);
-                                        childContent = null; // (make sure the content is only output once)
-                                    } else {
-                                        if (!sectionManager.hasSection(sectionNameToRender))
-                                            throw `Invalid token command '${cmd}': there is no section defined with the name '${sectionNameToRender}'.`;
-                                        let section = httpContext.sectionManager.sections[sectionNameToRender];
-                                        value = section.render.bind(section);
+                            try {
+                                switch (cmd) {
+                                    case "#": expr = argStr; processExpr = true; outputExpr = false; removeEOL = true; break;
+                                    case "#layout":
+                                        if (layoutViewName)
+                                            throw DS.Exception.from(`A layout was already specified.`);
+                                        layoutViewName = argStr || "/layout"; // (default to the "layout" view when nothing else is specified)
+                                        removeEOL = true;
+                                        break;
+                                    case "#section":
+                                        // ... start creating renderers for a specified section ...
+                                        sectionManager.activeSection = argStr;
+                                        removeEOL = true;
+                                        break;
+                                    case "#render": {
+                                        // ... request to load and render a view in the token's position ...
+                                        let sectionNameToRender = argStr || SectionManager.defaultSectionName; // ("let" is important here, since it will be locked only to the next async function expression and not shared across all of them, like 'var' would)
+                                        var optional = sectionNameToRender[sectionNameToRender.length - 1] == '?' ?
+                                            (sectionNameToRender = sectionNameToRender.substr(0, sectionNameToRender.length - 1), true)
+                                            : false;
+                                        if (!httpContext.sectionManager)
+                                            if (optional) break;
+                                            else throw DS.Exception.from(`There are no sections defined.`);
+                                        if (sectionNameToRender == SectionManager.defaultSectionName) {
+                                            if (!childContent)
+                                                throw DS.Exception.from(`The section ''${sectionNameToRender} does not exist or was already rendered.`);
+                                            value = childContent.render.bind(childContent);
+                                            childContent = null; // (make sure the content is only output once)
+                                        } else {
+                                            if (!sectionManager.hasSection(sectionNameToRender))
+                                                if (optional) break;
+                                                else throw DS.Exception.from(`There is no section defined with the name '${sectionNameToRender}'.`);
+                                            let section = httpContext.sectionManager.sections[sectionNameToRender];
+                                            value = section.render.bind(section);
+                                        }
+                                        removeEOL = true;
+                                        break;
                                     }
-                                    removeEOL = true;
-                                    break;
-                                }
-                                case "#view": {
-                                    let viewPath = argStr;
-                                    value = () => {
-                                        return new Promise<string>((res, rej) => {
-                                            // ... request to load and render a view in the token's position ...
-                                            var _viewPath = DS.Path.combine(DS.Path.getPath(httpContext.viewPath), viewPath);
-                                            httpContext.response.render(_viewPath, httpContext, (err, html) => {
-                                                if (err) return rej(err);
-                                                // ... this HTML is the parent template to this view that is resolved by now and must be returned ...
-                                                res(html);
+                                    case "#view": {
+                                        let viewPath = argStr;
+                                        value = () => {
+                                            return new Promise<string>((res, rej) => {
+                                                // ... request to load and render a view in the token's position ...
+                                                var _viewPath = DS.Path.combine(DS.Path.getPath(httpContext.viewPath), viewPath);
+                                                httpContext.response.render(_viewPath, httpContext, (err, html) => {
+                                                    if (err) return rej(err);
+                                                    // ... this HTML is the parent template to this view that is resolved by now and must be returned ...
+                                                    res(html);
+                                                });
                                             });
-                                        });
-                                    };
-                                    break;
+                                        };
+                                        break;
+                                    }
+                                    default: throw DS.Exception.from(`The command invalid. Please check for typos. Also note that commands are case-sensitive, and usually all lowercase.`);
                                 }
-                                default: throw `Unknown token command '${cmd[0]}' in token '${token}'.`
+                            }
+                            catch (ex) {
+                                throw new DS.Exception(`Invalid token command '${cmd}' in token '${token}': ` + DS.getErrorMessage(ex), this, ex);
                             }
                         } else processExpr = true;
 
-                        if (processExpr) {
-                            value = DS.safeEval(expr.replace(/(^|[^a-z0-9_$.])\./gmi, '$1p0.'), httpContext.viewData || {}); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
+                        if (processExpr) try {
+                            var compiledExpression = expr.replace(/({){|(})}/g, "$1$2").replace(/(^|[^a-z0-9_$.])\./gmi, '$1$.');
+                            value = evalExpr(httpContext.viewData || {}, compiledExpression); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
 
                             if (!outputExpr)
                                 value = void 0;
                             else if (value !== null && value !== void 0 && typeof value != 'string')
                                 value = '' + value;
+                        } catch (ex) {
+
+                            throw new DS.Exception(`Failed to evaluate expression '${expr}' rendered as '${compiledExpression}'`, this, ex);
                         }
 
                         if (value !== void 0 && value !== null)
                             sectionManager.add(value);
                     }
-                    else sectionManager.add(token); // (not a valid server token, so include this in the rendered output)
+                    else
+                        sectionManager.add(token); // (not a valid server token, so include this in the rendered output)
                 }
 
                 if (layoutViewName) {
                     // ... get arguments: view:section
-                    var viewPath = DS.Path.combine(DS.Path.getPath(httpContext.viewPath), layoutViewName);
+                    var viewPath = layoutViewName[0] == '/' ? layoutViewName.substr(1) : DS.Path.combine(DS.Path.getPath(httpContext.viewPath), layoutViewName);
                     httpContext.response.render(viewPath, httpContext, (err, html) => {
                         if (err) return callback(err);
                         // ... this HTML is the parent template to this view that is resolved by now and must be returned ...
@@ -260,20 +277,19 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                 }
             }
             catch (ex) {
-                throw `There was a problem processing the file content: ` + DS.getErrorMessage(ex);
+                callback(DS.IO.Response.fromError(`Error processing view '${filePath}' file contents: `, ex, void 0, httpContext).setViewInfo(filePath));
             }
         })
     }
     catch (ex) {
-        callback(DS.IO.Response.fromError(`Error processing view '${filePath}': `, ex));
+        callback(DS.IO.Response.fromError(`Error processing view '${filePath}': `, ex, void 0, httpContext).setViewInfo(filePath));
     }
 }
 
 export function apply(app: ReturnType<typeof import("express")>, viewsRootPath = viewsRoot) {
     // ... view engine setup ...
     app.engine('t.html', __express);
-    var isAbsolutePath = /^(?:.*:|[\\\/])/.test(viewsRootPath[0]); // TODO: Move into the Path or URL ns! ***************
-    viewsRoot = isAbsolutePath ? viewsRootPath : DS.Path.combine(DS.webRoot, viewsRootPath);
+    viewsRoot = DS.Path.isAbsolute(viewsRootPath[0]) ? viewsRootPath : DS.Path.combine(DS.webRoot, viewsRootPath);
     app.set('views', viewsRoot); // specify the views directory
     app.set('view engine', 't.html') // register the template engine
 }

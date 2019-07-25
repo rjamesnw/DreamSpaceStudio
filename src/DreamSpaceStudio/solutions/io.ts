@@ -22,8 +22,12 @@ namespace DS {
             status: HttpStatus;
             /** A message for the response. */
             message?: string;
+            /** A stack trace, if available. */
+            stack?: string | string[];
             /** Optional data for this response. */
             data?: TData;
+            /** If the response is an issue with a view the path is set here. */
+            viewPath?: string;
             /** If true then the data can be serialized. The default is false (undefined), which then allows transferring data using 'JSON.stringify()'
              * This prevents server-side-only or client-side-only data from being able to transfer between platforms.
              */
@@ -36,8 +40,18 @@ namespace DS {
                 this.notSerializable = !!notSerializable;
             }
 
+            toString() { return `(${this.status}): ${this.message}`; }
+            toValue() { return this.toString(); }
+
+            toJSON() { return JSON.stringify(this); }
+
+            setViewInfo(viewPath?: string): this { this.viewPath = viewPath; return this; }
+
             static fromError(message: string, error: any, httpStatusCode = HttpStatus.OK, data?: any) {
-                return new Response((message || "") + getErrorMessage(error), data, httpStatusCode);
+                if (!(error instanceof Error)) error = new Exception(error);
+                var r = new Response((message || "") + getErrorMessage(error, false), data, httpStatusCode);
+                r.stack = getErrorCallStack(error);
+                return r;
             }
         }
 

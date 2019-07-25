@@ -1,1 +1,13 @@
-﻿Error: ${.error.message}
+﻿<!--$ {#layout errorLayout}-->
+<h1>There was a problem rendering the page:</h1><br />
+<br />
+Status Code: ${.status||""}<br />
+Error: ${.message || .toString && .toString() || "Uknown error: " + $}<br />
+Stack:<pre>
+${.stack&&(Array.isArray(.stack)&&.stack.join('<br/>\r\n')||.stack)}
+</pre><br />
+View Path: ${DS.Data.JSON.stringify(.viewPath, 10, null, 4, ()=>{{return"#DUP_REF"}})}
+Data: <pre>
+${DS.Data.JSON.stringify(.data, 10, null, 4, ()=>{{return"#DUP_REF"}})}
+</pre><br />
+

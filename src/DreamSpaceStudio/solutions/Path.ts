@@ -149,6 +149,13 @@ namespace DS {
             }
             else return parse(url).toString(DS.global.serverWebRoot); // (the origin is not the same, so just assume everything after the URL's origin is the path)
         }
+
+        const absRegex = /^(?:.*:[\\/]|[\\\/])/;
+
+        /** Returns true if the given path is an absolute path. If false, the path is relative.
+         * When a path is absolute it should not have any other path prefixed before it.
+         */
+        export function isAbsolute(path: string) { return absRegex.test(path); }
     }
 
 }

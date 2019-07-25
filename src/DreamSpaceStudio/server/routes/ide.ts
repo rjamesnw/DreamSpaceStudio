@@ -13,9 +13,12 @@ router.get('/', (req: express.Request, res: express.Response) => {
         if (exists) {
             viewPath = DS.Path.combine(viewPath, 'index'); // (if a directory was found, assume index as default)
             res.render(viewPath, new HttpContext(req, res, { title: 'DreamSpace Studio' }, viewPath), (err, html) => {
-                if (err) throw err;
-                res.type("html");
-                res.write(html.split('\ufeff').join('')); // (the BOM character has no business in any HTML text at this point)
+                if (err)
+                    req.next(err);
+                else {
+                    res.type("html");
+                    res.write(html.split('\ufeff').join('')); // (the BOM character has no business in any HTML text at this point)
+                }
             });
         }
         else throw "View not found: " + viewPath;

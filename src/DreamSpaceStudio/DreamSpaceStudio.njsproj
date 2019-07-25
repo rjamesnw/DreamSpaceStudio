@@ -126,7 +126,7 @@
     <Content Include="users\F7E1685E6F654C2A84EBF34A9FDE5DB4\user.json" />
     <Content Include="users\readme.txt" />
     <Content Include="views\error.t.html" />
-    <Content Include="views\ide\layout.t.html" />
+    <Content Include="views\layout.t.html" />
     <Content Include="views\ide\index.t.html">
       <SubType>Code</SubType>
     </Content>

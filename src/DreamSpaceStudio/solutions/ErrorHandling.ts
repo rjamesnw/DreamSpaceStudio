@@ -57,7 +57,7 @@ namespace DS {
     /** Returns the message of the specified error source by returning either 'errorSource' if it's a string, a formatted LogItem object,
       * a formatted Exception or Error object, or 'errorSource.message' if the source is an object with a 'message' property.
       */
-    export function getErrorMessage(errorSource: any): string { // TODO: Test how this works with the logging system items.
+    export function getErrorMessage(errorSource: any, includeStack = true): string { // TODO: Test how this works with the logging system items.
         if (typeof errorSource == 'string')
             return errorSource;
         else if (typeof errorSource == 'object') {
@@ -78,9 +78,11 @@ namespace DS {
                         msg += ", of file '" + sourceLocation + "'";
                 } else if (sourceLocation !== void 0)
                     msg += "\r\nin file '" + sourceLocation + "'";
-                var stack = getErrorCallStack(error);
-                if (stack && stack.length)
-                    msg += "\r\nStack trace:\r\n" + stack.join("\r\n") + "\r\n";
+                if (includeStack) {
+                    var stack = getErrorCallStack(error);
+                    if (stack && stack.length)
+                        msg += "\r\nStack trace:\r\n" + stack.join("\r\n") + "\r\n";
+                }
                 return msg;
             }
             else

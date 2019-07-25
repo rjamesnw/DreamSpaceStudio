@@ -23,6 +23,7 @@ interface IStaticGlobals {
     Date: DateConstructor;
     Math: Math;
     Error: ErrorConstructor;
+    JSON: JSON;
 
     /**
     * This is set by default when '@RenderDreamSpaceJSConfigurations()' is called at the top of the layout page and a debugger is attached. It is

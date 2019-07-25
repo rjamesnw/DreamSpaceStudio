@@ -8,18 +8,26 @@ namespace DS {
      * Note: Creating an exception object automatically creates a corresponding log entry, unless the 'log' parameter is set to false.
      */
     export class Exception extends Error {
+        /** Stores nested exceptions in cases where multiple exceptions are thrown. */
+        innerException: Exception;
+
+        /** An optional user defined value related to the error. */
+        source: any;
+
         /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
         /** Records information about errors that occur in the application.
         * Note: Creating an exception object automatically creates a corresponding log entry, unless the 'log' parameter is set to false.
-        * @param {string} message The error message.
-        * @param {object} source An object that is associated with the message, or null.
+        * @param {string | Error | Exception} message The error message.
+        * @param {any} source An object that is associated with the message, or null.
+        * @param {Exception} innerException An optional exception that is the cause of the current new exception.
         * @param {boolean} log True to automatically create a corresponding log entry (default), or false to skip.
         */
-        constructor(message: string, source: object, log?: boolean) {
+        constructor(message: string | Error | Exception, source?: any, innerException?: Exception, log?: boolean) {
             super();
-            this.message = message;
-            this.source = source;
-            this.stack = (new Error()).stack;
+            this.message = typeof message == 'string' ? message : message.message;
+            this.source = source || (message instanceof Exception ? message.source : void 0);
+            this.innerException = innerException || (innerException instanceof Exception ? innerException : new Exception(innerException));
+            this.stack = message instanceof Error ? message.stack : (new Error()).stack;
             if (log || log === void 0) Diagnostics.log("Exception", message, LogTypes.Error);
         }
 
@@ -154,7 +162,6 @@ namespace DS {
             else return Exception.from(error(functionNameOrTitle, msg, source, false, false), source);
         }
 
-        source: object;
         /** Returns the error message for this exception instance. */
         toString() { return this.message; }
         valueOf() { return this.message; }

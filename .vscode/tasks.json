@@ -1,0 +1,115 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "DreamSpace Build",
+            "type": "typescript",
+            "tsconfig": "src\\DreamSpaceStudio\\solutions\\tsconfig.json",
+            "problemMatcher": [
+                "$tsc"
+            ]
+        },
+        {
+            "label": "Server Build",
+            "type": "typescript",
+            "tsconfig": "src\\DreamSpaceStudio\\server\\tsconfig.json",
+            "problemMatcher": [
+                "$tsc"
+            ]
+        },
+        {
+            "label": "Server Globals Build",
+            "type": "typescript",
+            "tsconfig": "src\\DreamSpaceStudio\\solutions\\server\\tsconfig.json",
+            "problemMatcher": [
+                "$tsc"
+            ]
+        },
+        {
+            "label": "Client Build",
+            "type": "typescript",
+            "tsconfig": "src\\DreamSpaceStudio\\solutions\\client\\tsconfig.json",
+            "problemMatcher": [
+                "$tsc"
+            ]
+        },
+        {
+            "label": "Build All",
+            "dependsOn": [
+                "DreamSpace Build",
+                "Server Globals Build",
+                "Client Build",
+                "Server Build"
+            ]
+        },
+        {
+            "label": "Build Server",
+            "dependsOn": [
+                "Server Build"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Build Client",
+            "dependsOn": [
+                "DreamSpace Build",
+                "Client Build"
+            ],
+            "problemMatcher": [
+                "$tsc"
+            ]
+        },
+        {
+            "label": "Build All",
+            "dependsOn": [
+                "DreamSpace Build",
+                "Server Build",
+                "Client Build"
+            ]
+        },
+        {
+            "label": "DreamSpace Watch",
+            "type": "typescript",
+            "tsconfig": "src\\DreamSpaceStudio\\solutions\\tsconfig.json",
+            "option": "watch",
+            "problemMatcher": [
+                "$tsc-watch"
+            ]
+        },
+        {
+            "label": "Server Watch",
+            "type": "typescript",
+            "tsconfig": "src\\DreamSpaceStudio\\server\\tsconfig.json",
+            "option": "watch",
+            "problemMatcher": [
+                "$tsc-watch"
+            ]
+        },
+        {
+            "label": "Client Watch",
+            "type": "typescript",
+            "tsconfig": "src\\DreamSpaceStudio\\solutions\\client\\tsconfig.json",
+            "option": "watch",
+            "problemMatcher": [
+                "$tsc-watch"
+            ]
+        },
+        {
+            "label": "Watch All",
+            "dependsOn": [
+                "DreamSpace Watch",
+                "Server Watch",
+                "Client Watch"
+            ],
+            "problemMatcher": [
+                "$tsc-watch"
+            ],
+            "isBackground": true
+        }
+    ]
+}

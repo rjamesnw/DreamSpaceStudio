@@ -32,7 +32,7 @@ namespace DS {
                     return window && (<any>window).JSON && (<any>window).JSON.parse ?
                         (<any>window).JSON.parse(jsonText) : (new Function("return " + jsonText))();
                 } else {
-                    throw Exception.from('Invalid JSON: "' + jsonText + '"');
+                    throw new Exception('Invalid JSON: "' + jsonText + '"');
                 }
             }
 
@@ -174,7 +174,7 @@ namespace DS {
                 var i = 0, endpoint = existingEndpoint || new PropertyPathEndpoint();
 
                 if (typeof endpoint.getValue != 'function')
-                    throw Exception.from("The existing endpoint object is not a valid 'PropertyPathEndpoint' instance.", this);
+                    throw new Exception("The existing endpoint object is not a valid 'PropertyPathEndpoint' instance.", this);
 
                 endpoint.object = origin;
                 endpoint.propertyName = this.namePath[0];
@@ -184,7 +184,7 @@ namespace DS {
                 while (i < this.namePath.length) {
                     endpoint.object = endpoint.getValue();
                     if (endpoint.object === void 0)
-                        throw Exception.from("Invalid property path: " + this.__getPathString(i), this);
+                        throw new Exception("Invalid property path: " + this.__getPathString(i), this);
                     i++;
                     endpoint.propertyName = this.namePath[i];
                     endpoint.propertyIndex = this.indexes[i];

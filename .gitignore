@@ -4,13 +4,17 @@
 **/TypeScript/**/*.d.ts
 **/TypeScript/**/*.js
 **/TypeScript/**/*.js.map
+**/TypeScript/**/*.ts.map
 **/solutions/**/*.d.ts
 **/solutions/**/*.js
 **/solutions/**/*.js.map
+**/solutions/**/*.ts.map
 **/server/**/*.d.ts
 **/server/**/*.js
 **/server/**/*.js.map
+**/server/**/*.ts.map
 **/public/js/**/*.js.map
+**/public/js/**/*.ts.map
 **/public/js/**/*.d.ts
 decl/
 node-modules/

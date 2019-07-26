@@ -91,7 +91,7 @@ namespace DS {
             //    allocations when many events exist on a lot of objects) ...
 
             var onEventProxy = function (): IEventDispatcher<object, EventHandler> {
-                var instance = <Object>this; // (instance is the object instance on which this event property reference was made)
+                var instance = <IndexedObject>this; // (instance is the object instance on which this event property reference was made)
                 if (typeof instance !== 'object') //?  || !(instance instanceof DomainObject.$type))
                     throw Exception.error("{Object}." + eventName, "Must be called on an object instance.", instance);
                 // ... check if the instance already created the event property for registering events specific to this instance ...

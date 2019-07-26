@@ -1,13 +1,28 @@
 ﻿<!--$ {#layout errorLayout}-->
-<h1>There was a problem rendering the page:</h1><br />
+<style>
+    .label {
+        font-weight: bold;
+        font-size: 16px;
+    }
+</style>
+<h1>There was a problem rendering the page:</h1>
+<span class="label">Status Code:</span> ${.status||""}<br />
 <br />
-Status Code: ${.status||""}<br />
-Error: ${.message || .toString && .toString() || "Uknown error: " + $}<br />
-Stack:<pre>
-${.stack&&(Array.isArray(.stack)&&.stack.join('<br/>\r\n')||.stack)}
+<span class="label">Message:</span><pre>
+${.message || .toString && .toString() || "Uknown error: " + $}
+</pre>
+<span class="label">Stack:</span><pre>
+${.error&&.error.stack&&(Array.isArray(.error.stack)&&.error.stack.join('<br />\r\n')||.error.stack)}
+</pre>
+<span class="label">Call Trace:</span><pre>
+${.error&&.error.callTrace}
+</pre>
+<span class="label">View Path:</span><br /><br />
+${DS.Data.JSON.stringify(.viewPath, 10, null, 4, ()=>{{return "..."}})}<br />
+<br />
+<span class="label">Data:</span><pre>
+${DS.Data.JSON.stringify(.data, 10, null, 4, ()=>{{return "..."}})}
 </pre><br />
-View Path: ${DS.Data.JSON.stringify(.viewPath, 10, null, 4, ()=>{{return"#DUP_REF"}})}
-Data: <pre>
-${DS.Data.JSON.stringify(.data, 10, null, 4, ()=>{{return"#DUP_REF"}})}
-</pre><br />
+
+
 

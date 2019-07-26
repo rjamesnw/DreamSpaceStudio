@@ -9,7 +9,7 @@ namespace DS {
      * If not specified this defaults to 'DS.Path.combine(DS.webRoot, "public")'
      */
     export var contentRoot: string;
-    var _contentbRoot;
+    var _contentbRoot: string;
     Object.defineProperty(DS, "contentbRoot", {
         configurable: false, enumerable: true,
         get: () => { return _contentbRoot || Path.combine(webRoot, "public"); },

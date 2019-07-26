@@ -167,10 +167,10 @@ namespace DS {
                                             nodeType = <TNodeFactoryType>DS.Utilities.dereferencePropertyPath(vnodeItemType, VDOM);
 
                                             if (nodeType === void 0)
-                                                throw DS.Exception.from("The node item type '" + vnodeItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " was not found.");
+                                                throw new DS.Exception("The node item type '" + vnodeItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " was not found.");
 
                                             if (typeof nodeType !== 'function' || typeof VDOM.HTMLElement.defaultHTMLTagName === void 0)
-                                                throw DS.Exception.from("The node item type '" + vnodeItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " does not resolve to a valid VDOM class type.");
+                                                throw new DS.Exception("The node item type '" + vnodeItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " does not resolve to a valid VDOM class type.");
                                         }
 
                                         if (nodeType == null) {
@@ -236,7 +236,7 @@ namespace DS {
                                             immediateChildTemplates = processTags(nodeItem); // ('graphItem' was just created for the last tag read, but the end tag is still yet to be read)
                                             // (the previous call will continue until an end tag is found, in which case it returns that tag to be handled by this parent level)
                                             if (htmlReader.tagName != nodeItem.tagName) // (the previous level should be parsed now, and the current tag should be an end tag that doesn't match anything in the immediate nested level, which should be the end tag for this parent tag)
-                                                throw DS.Exception.from("The closing tag '</" + htmlReader.tagName + ">' was unexpected for current tag '<" + nodeItem.tagName + ">' on line " + htmlReader.getCurrentLineNumber() + ".");
+                                                throw new DS.Exception("The closing tag '</" + htmlReader.tagName + ">' was unexpected for current tag '<" + nodeItem.tagName + ">' on line " + htmlReader.getCurrentLineNumber() + ".");
                                             continue; // (need to continue on the last item read before returning)
                                         }
 

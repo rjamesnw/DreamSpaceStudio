@@ -144,7 +144,7 @@ namespace DS {
 
         /** Calculates the number of leap days since Epoch up to a given year (note: cannot be less than the Epoch year [1970]). */
         static daysSinceEpoch(year: number): number {
-            if (year < DS.Time.__EpochYear) throw Exception.from("Invalid year: Must be <= " + DS.Time.__EpochYear);
+            if (year < DS.Time.__EpochYear) throw new Exception("Invalid year: Must be <= " + DS.Time.__EpochYear);
             year = Math.floor(year - DS.Time.__EpochYear); // (NOTE: 'year' is a DIFFERENCE after this, NOT the actual year)
             return 365 * year
                 + Math.floor((year + 1) / 4)

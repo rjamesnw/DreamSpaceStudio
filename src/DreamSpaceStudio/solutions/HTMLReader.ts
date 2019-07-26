@@ -172,7 +172,7 @@ namespace DS {
 
         throwError(msg: string) {
             this.__readNext(); // (includes the delimiter and next text in the running text)
-            throw DS.Exception.from(msg + " on line " + this.getCurrentLineNumber() + ": <br/>\r\n" + this.getCurrentRunningText());
+            throw new DS.Exception(msg + " on line " + this.getCurrentLineNumber() + ": <br/>\r\n" + this.getCurrentRunningText());
         }
 
         // -------------------------------------------------------------------------------------------------------------------

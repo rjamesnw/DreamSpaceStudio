@@ -133,11 +133,11 @@ namespace DS {
         // (Note: There must be exactly 65 characters [64 + 1 for padding])
         // (Note: 'String' objects MUST be used in order for the encoding functions to populate the reverse lookup indexes)
 
-        function __CreateCharIndex(str: String & Object) {
+        function __CreateCharIndex(str: string & IndexedObject) {
             if (str.length < 65)
-                throw Exception.from("65 characters expected for base64 encoding characters (last character is for padding), but only " + str.length + " were specified.", <any>str);
+                throw new Exception("65 characters expected for base64 encoding characters (last character is for padding), but only " + str.length + " were specified.", <any>str);
             if (typeof str !== "object" && !(<any>str instanceof String))
-                throw Exception.from("The encoding characters must be set in a valid 'String' OBJECT (not as a string VALUE).");
+                throw new Exception("The encoding characters must be set in a valid 'String' OBJECT (not as a string VALUE).");
             if (!str['charIndex']) {
                 var index: { [index: string]: number } = {};
                 for (var i = 0, n = str.length; i < n; ++i)
@@ -160,7 +160,7 @@ namespace DS {
             if (usePadding === void 0)
                 usePadding = (mode != Base64Modes.URI);
 
-            var encodingChars: String & Object = <any>(mode == Base64Modes.Standard ? __64BASE_ENCODING_CHARS_STANDARD : (mode == Base64Modes.URI ? __64BASE_ENCODING_CHARS_URI : __64BASE_ENCODING_CHARS_CUSTOM));
+            var encodingChars: string & IndexedObject = <any>(mode == Base64Modes.Standard ? __64BASE_ENCODING_CHARS_STANDARD : (mode == Base64Modes.URI ? __64BASE_ENCODING_CHARS_URI : __64BASE_ENCODING_CHARS_CUSTOM));
 
             // ... make sure the reverse lookup exists, and populate if missing  (which also serves to validate the encoding chars) ...
 
@@ -230,7 +230,7 @@ namespace DS {
             if (value === void 0 || value === null) value = ""; else value = "" + value;
             if (value.length == 0) return "";
 
-            var encodingChars: String & Object = <any>(mode == Base64Modes.Standard ? __64BASE_ENCODING_CHARS_STANDARD : (mode == Base64Modes.URI ? __64BASE_ENCODING_CHARS_URI : __64BASE_ENCODING_CHARS_CUSTOM));
+            var encodingChars: string & IndexedObject = <any>(mode == Base64Modes.Standard ? __64BASE_ENCODING_CHARS_STANDARD : (mode == Base64Modes.URI ? __64BASE_ENCODING_CHARS_URI : __64BASE_ENCODING_CHARS_CUSTOM));
 
             // ... make sure the reverse lookup exists, and populate if missing  (which also serves to validate the encoding chars) ...
 
@@ -266,7 +266,7 @@ namespace DS {
                     readBitIndex = 0;
                     code = readIndex < value.length ? encodingChars['charIndex'][value.charAt(readIndex++)] : 0;
                     if (code === void 0)
-                        throw Exception.from("The value '" + value + "' has one or more invalid characters.  Valid characters for the specified encoding mode '" + Base64Modes[mode] + "' are: '" + encodingChars + "'");
+                        throw new Exception("The value '" + value + "' has one or more invalid characters.  Valid characters for the specified encoding mode '" + Base64Modes[mode] + "' are: '" + encodingChars + "'");
                 }
 
                 bit = code >> 5; // (read left most bit; base64 values are always 6 bit)

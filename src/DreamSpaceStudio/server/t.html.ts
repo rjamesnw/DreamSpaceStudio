@@ -114,9 +114,9 @@ export class SectionManager {
 export var __express = function (filePath: string, httpContext: IHttpContext, callback: { (err: any, response?: any): void }) { // define the template engine
     try {
         if (!httpContext.request)
-            throw DS.Exception.from("'httpContext.request' (of module type 'express-serve-static-core'.request) is required.");
+            throw new DS.Exception("'httpContext.request' (of module type 'express-serve-static-core'.request) is required.");
         if (!httpContext.response)
-            throw DS.Exception.from("'httpContext.response' (of module type 'express-serve-static-core'.response) is required.");
+            throw new DS.Exception("'httpContext.response' (of module type 'express-serve-static-core'.response) is required.");
 
         fs.readFile(filePath, function (err, fileContent) {
             if (err) return callback(err);
@@ -179,7 +179,7 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                                     case "#": expr = argStr; processExpr = true; outputExpr = false; removeEOL = true; break;
                                     case "#layout":
                                         if (layoutViewName)
-                                            throw DS.Exception.from(`A layout was already specified.`);
+                                            throw new DS.Exception(`A layout was already specified.`);
                                         layoutViewName = argStr || "/layout"; // (default to the "layout" view when nothing else is specified)
                                         removeEOL = true;
                                         break;
@@ -195,17 +195,17 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                                             (sectionNameToRender = sectionNameToRender.substr(0, sectionNameToRender.length - 1), true)
                                             : false;
                                         if (!httpContext.sectionManager)
-                                            if (optional) break;
-                                            else throw DS.Exception.from(`There are no sections defined.`);
+                                            if (optional) { removeEOL = true; break; }
+                                            else throw new DS.Exception(`There are no sections defined.`);
                                         if (sectionNameToRender == SectionManager.defaultSectionName) {
                                             if (!childContent)
-                                                throw DS.Exception.from(`The section ''${sectionNameToRender} does not exist or was already rendered.`);
+                                                throw new DS.Exception(`The section ''${sectionNameToRender} does not exist or was already rendered.`);
                                             value = childContent.render.bind(childContent);
                                             childContent = null; // (make sure the content is only output once)
                                         } else {
                                             if (!sectionManager.hasSection(sectionNameToRender))
-                                                if (optional) break;
-                                                else throw DS.Exception.from(`There is no section defined with the name '${sectionNameToRender}'.`);
+                                                if (optional) { removeEOL = true; break; }
+                                                else throw new DS.Exception(`There is no section defined with the name '${sectionNameToRender}'. You can append the '?' character to the name if the section is optional.`);
                                             let section = httpContext.sectionManager.sections[sectionNameToRender];
                                             value = section.render.bind(section);
                                         }
@@ -227,11 +227,11 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                                         };
                                         break;
                                     }
-                                    default: throw DS.Exception.from(`The command invalid. Please check for typos. Also note that commands are case-sensitive, and usually all lowercase.`);
+                                    default: throw new DS.Exception(`The command invalid. Please check for typos. Also note that commands are case-sensitive, and usually all lowercase.`);
                                 }
                             }
                             catch (ex) {
-                                throw new DS.Exception(`Invalid token command '${cmd}' in token '${token}': ` + DS.getErrorMessage(ex), this, ex);
+                                throw new DS.Exception(`Invalid token command '${cmd}' in token '${token}'.`, this, ex);
                             }
                         } else processExpr = true;
 
@@ -245,7 +245,7 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                                 value = '' + value;
                         } catch (ex) {
 
-                            throw new DS.Exception(`Failed to evaluate expression '${expr}' rendered as '${compiledExpression}'`, this, ex);
+                            throw new DS.Exception(`Failed to evaluate expression '${expr}' rendered as '${compiledExpression}'.`, this, ex);
                         }
 
                         if (value !== void 0 && value !== null)

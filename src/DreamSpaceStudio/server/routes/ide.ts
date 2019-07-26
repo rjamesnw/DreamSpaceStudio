@@ -18,6 +18,7 @@ router.get('/', (req: express.Request, res: express.Response) => {
                 else {
                     res.type("html");
                     res.write(html.split('\ufeff').join('')); // (the BOM character has no business in any HTML text at this point)
+                    res.end();
                 }
             });
         }

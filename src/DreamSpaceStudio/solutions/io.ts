@@ -22,8 +22,8 @@ namespace DS {
             status: HttpStatus;
             /** A message for the response. */
             message?: string;
-            /** A stack trace, if available. */
-            stack?: string | string[];
+            /** An optional exception object details that may be included if the response is an error. */
+            error?: Exception;
             /** Optional data for this response. */
             data?: TData;
             /** If the response is an issue with a view the path is set here. */
@@ -33,11 +33,12 @@ namespace DS {
              */
             notSerializable?: boolean;
 
-            constructor(message?: string, data?: any, httpStatusCode = HttpStatus.OK, notSerializable?: boolean) {
+            constructor(message?: string, data?: any, httpStatusCode = HttpStatus.OK, notSerializable?: boolean, error?: Exception) {
                 this.status = +httpStatusCode || 0;
                 this.message = '' + message;
                 this.data = data;
                 this.notSerializable = !!notSerializable;
+                this.error = error;
             }
 
             toString() { return `(${this.status}): ${this.message}`; }
@@ -47,11 +48,10 @@ namespace DS {
 
             setViewInfo(viewPath?: string): this { this.viewPath = viewPath; return this; }
 
-            static fromError(message: string, error: any, httpStatusCode = HttpStatus.OK, data?: any) {
-                if (!(error instanceof Error)) error = new Exception(error);
-                var r = new Response((message || "") + getErrorMessage(error, false), data, httpStatusCode);
-                r.stack = getErrorCallStack(error);
-                return r;
+            static fromError(message: string, error: string | Error | Exception, httpStatusCode = HttpStatus.OK, data?: any) {
+                if (!(error instanceof Exception))
+                    error = new Exception(error);
+                return new Response(getErrorMessage(error, false), data, httpStatusCode, void 0, <Exception>error);
             }
         }
 

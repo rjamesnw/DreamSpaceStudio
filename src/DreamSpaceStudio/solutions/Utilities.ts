@@ -82,7 +82,7 @@
         /** This locates names of properties where only a reference and the object context is known.
         * If a reference match is found, the property name is returned, otherwise the result is 'undefined'.
         */
-        export function getReferenceName(obj: Object, reference: object): string {
+        export function getReferenceName(obj: IndexedObject, reference: object): string {
             for (var p in obj)
                 if (obj[p] === reference) return p;
             return void 0;
@@ -94,9 +94,9 @@
         * @param {boolean} ignore An optional list of properties to ignore when erasing. The properties to ignore should equate to 'true'.
         * This parameter expects an object type because that is faster for lookups than arrays, and developers can statically store these in most cases.
         */
-        export function erase(obj: Object, ignore?: { [name: string]: boolean }): {} {
+        export function erase(obj: IndexedObject, ignore?: { [name: string]: boolean }): {} {
             for (var p in obj)
-                if ((p != "__proto__" && p != 'constructor' && <Object>obj).hasOwnProperty(p))
+                if ((p != "__proto__" && p != 'constructor' && obj).hasOwnProperty(p))
                     if (!ignore || !ignore[p])
                         obj[p] = void 0;
             return obj;
@@ -106,7 +106,7 @@
         * For objects, the deep copy is made by */
         export function clone(value: any) {
             if (typeof value !== 'object') return value;
-            var newObject: Object, p: string, rcCount: number, v: any;
+            var newObject: IndexedObject, p: string, rcCount: number, v: any;
             if (clone.arguments.length > 1) {
                 rcCount = clone.arguments[clone.arguments.length - 1];
                 if (value['@__recursiveCheck'] === rcCount) return value; // (this object has already been cloned for this request, which makes it a cyclical reference, so skip)
@@ -136,7 +136,7 @@
         *                         Note: The 'eval' that is used is 'DS.eval()', which is closed over the global scope (and not the DS module's private scope).
         *                         'window.eval()' is not called directly in this function.
         */
-        export function dereferencePropertyPath(path: string, origin?: Object, unsafe = false): any {
+        export function dereferencePropertyPath(path: string, origin?: IndexedObject, unsafe = false): any {
             if (unsafe) return safeEval('p0.' + path, origin); // (note: this is 'DreamSpace.eval()', not a direct call to the global 'eval()')
             if (origin === void 0 || origin === null) origin = this !== global ? this : global;
             if (typeof path !== 'string') path = '' + path;
@@ -167,7 +167,7 @@
           * @param {string} propertyName The object property.
           * @param {number} timeout The general amount of timeout to wait before failing, or a negative value to wait indefinitely.
           */
-        export function waitReady(obj: Object, propertyName: string, callback: Function, timeout: number = 60000, timeoutCallback?: Function) {
+        export function waitReady(obj: IndexedObject, propertyName: string, callback: Function, timeout: number = 60000, timeoutCallback?: Function) {
             if (!callback) throw "'callback' is required.";
             if (!obj) throw "'obj' is required.";
             if (obj[propertyName] !== void 0)

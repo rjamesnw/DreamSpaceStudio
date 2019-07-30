@@ -59,6 +59,10 @@ templateEngine.apply(app);
         app.use('/ide', ideRoutes);
         app.use('/users', userRoutes);
 
+        // ... allow exiting the server when in dev mode ...
+        if (app.get('env') === 'development')
+            app.get("/exit", async (req, res, next) => { shutDown(); });
+
         // catch 404 and forward to error handler
         app.use(function (req, res, next) {
             var err = new Error('Not Found');
@@ -67,8 +71,6 @@ templateEngine.apply(app);
         });
 
         if (app.get('env') === 'development') {
-            // ... allow exiting the server when in dev mode ...
-            app.get("/exit", async (req, res, next) => { shutDown(); });
 
             // development error handler
             // will print stacktrace

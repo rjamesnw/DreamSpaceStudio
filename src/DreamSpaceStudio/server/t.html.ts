@@ -105,6 +105,20 @@ export class SectionManager {
     hasSection(name: string) { return this.sections && name in this.sections }
 }
 
+function _processExpression(expr: string, dataContext?: object): any {
+    try {
+        var compiledExpression = expr.replace(/({){|(})}/g, "$1$2").replace(/(^|[^a-z0-9_$.])\./gmi, '$1$.');
+        var value = evalExpr(dataContext || {}, compiledExpression); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
+
+        if (value !== null && value !== void 0 && typeof value != 'string')
+            value = '' + value;
+
+        return value;
+    } catch (ex) {
+        throw new DS.Exception(`Failed to evaluate expression '${expr}' rendered as '${compiledExpression}'.`, this, ex);
+    }
+}
+
 /** Used by express when auto-requiring middleware when rendering templates.
  * By default, Express will 'require()' the engine based on the file extension; for example, "app.engine('ext', require('ext').__express)"
  * for "name.ext".
@@ -189,7 +203,7 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                                         removeEOL = true;
                                         break;
                                     case "#render": {
-                                        // ... request to load and render a view in the token's position ...
+                                        // ... request to load and render a section in the token's position ...
                                         let sectionNameToRender = argStr || SectionManager.defaultSectionName; // ("let" is important here, since it will be locked only to the next async function expression and not shared across all of them, like 'var' would)
                                         var optional = sectionNameToRender[sectionNameToRender.length - 1] == '?' ?
                                             (sectionNameToRender = sectionNameToRender.substr(0, sectionNameToRender.length - 1), true)
@@ -199,7 +213,8 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                                             else throw new DS.Exception(`There are no sections defined.`);
                                         if (sectionNameToRender == SectionManager.defaultSectionName) {
                                             if (!childContent)
-                                                throw new DS.Exception(`The section ''${sectionNameToRender} does not exist or was already rendered.`);
+                                                if (optional) { removeEOL = true; break; }
+                                                else throw new DS.Exception(`The section ''${sectionNameToRender} does not exist or was already rendered.`);
                                             value = childContent.render.bind(childContent);
                                             childContent = null; // (make sure the content is only output once)
                                         } else {
@@ -213,12 +228,23 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                                         break;
                                     }
                                     case "#view": {
-                                        let viewPath = argStr;
+                                        // ... the first '|' character will split the view path from any expression ...
+
+                                        let viewPath: string, viewHttpContext = new HttpContext(httpContext);
+                                        cmdSplitIndex = argStr.indexOf('|');
+
+                                        if (cmdSplitIndex >= 0) {
+                                            viewPath = argStr.substr(0, cmdSplitIndex);
+                                            expr = argStr.substr(cmdSplitIndex + 1);
+                                            viewHttpContext.viewData = {};
+                                            _processExpression(expr, viewHttpContext.viewData);
+                                        } else viewPath = argStr;
+
                                         value = () => {
                                             return new Promise<string>((res, rej) => {
                                                 // ... request to load and render a view in the token's position ...
-                                                var _viewPath = DS.Path.combine(DS.Path.getPath(httpContext.viewPath), viewPath);
-                                                httpContext.response.render(_viewPath, httpContext, (err, html) => {
+                                                viewHttpContext.viewPath = DS.Path.combine(DS.Path.getPath(httpContext.viewPath), viewPath);
+                                                httpContext.response.render(viewHttpContext.viewPath, viewHttpContext, (err, html) => {
                                                     if (err) return rej(err);
                                                     // ... this HTML is the parent template to this view that is resolved by now and must be returned ...
                                                     res(html);
@@ -235,17 +261,11 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                             }
                         } else processExpr = true;
 
-                        if (processExpr) try {
-                            var compiledExpression = expr.replace(/({){|(})}/g, "$1$2").replace(/(^|[^a-z0-9_$.])\./gmi, '$1$.');
-                            value = evalExpr(httpContext.viewData || {}, compiledExpression); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
+                        if (processExpr) {
+                            value = _processExpression(expr, httpContext.viewData || {}); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
 
                             if (!outputExpr)
                                 value = void 0;
-                            else if (value !== null && value !== void 0 && typeof value != 'string')
-                                value = '' + value;
-                        } catch (ex) {
-
-                            throw new DS.Exception(`Failed to evaluate expression '${expr}' rendered as '${compiledExpression}'.`, this, ex);
                         }
 
                         if (value !== void 0 && value !== null)

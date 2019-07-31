@@ -11,8 +11,10 @@
   },
   "main": "app.js",
   "dependencies": {
+    "@types/bootstrap": "^4.3.1",
     "@types/jquery": "^3.3.29",
     "@types/request": "^2.48.1",
+    "bootstrap": "^4.3.1",
     "debug": "^2.2.0",
     "express": "^4.14.0",
     "monaco-editor": "^0.16.2",

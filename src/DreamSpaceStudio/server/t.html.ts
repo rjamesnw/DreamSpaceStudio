@@ -34,6 +34,8 @@ export class HttpContext {
         this.response = isHttpCtx ? requestOrCtx.response : responseOrVewData;
         this.viewData = isHttpCtx ? responseOrVewData || requestOrCtx.viewData : viewDataOrPath;
         this.viewPath = isHttpCtx ? viewDataOrPath || requestOrCtx.viewPath : viewPath;
+        if (isHttpCtx && requestOrCtx.sectionManager)
+            this.sectionManager = requestOrCtx.sectionManager;
     }
 }
 
@@ -44,33 +46,42 @@ export interface Renderer { (): string | Promise<string> }
 var evalExpr = new Function("$", "expr", "return eval(expr);");
 
 export class Section {
-    renderers: (Renderer | string)[];
+    renderers: { index: number, renderer: (Renderer | string), priority?: number }[]; // (index is used to maintain the correct insert order when combining the final rendered outputs)
 
     constructor(public readonly manager: SectionManager, public readonly name: string) { }
 
     /** Adds a new renderer or static string to the list of items to render for this section. */
-    add(value: Renderer | string) {
+    add(value: Renderer | string, priority = 0) {
         if (this.renderers)
-            this.renderers.push(value);
+            this.renderers.push({ index: this.renderers.length, renderer: value, priority });
         else
-            this.renderers = [value];
+            this.renderers = [{ index: 0, renderer: value, priority }];
     }
 
     async render() {
         var html = "", value: ReturnType<Renderer> = "";
-        if (this.renderers)
-            for (var i = 0, n = this.renderers.length; i < n; ++i) {
-                if (typeof this.renderers[i] == 'function') {
-                    value = (<Renderer>this.renderers[i])();
+        if (this.renderers) {
+            // (make sure to sort based on priorities: for instance, included views must render first so any sections are properly defined)
+            var renderers = this.renderers.slice().sort((a, b) => { return a.priority > b.priority ? -1 : a.priority < b.priority ? 1 : 0; }); // (note: 'slice' is used to sort a copy)
+            var finalOutputs: string[] = [];
+            for (var i = 0, n = renderers.length; i < n; ++i) {
+                if (typeof renderers[i].renderer == 'function') {
+                    value = (<Renderer>renderers[i].renderer)();
                     if (value instanceof Promise)
                         value = await value;
                 }
-                else if (typeof this.renderers[i] == 'string')
-                    value = <string>this.renderers[i];
+                else if (typeof renderers[i].renderer == 'string')
+                    value = <string>renderers[i].renderer;
                 else
-                    value = '' + this.renderers[i]; // (convert to string)
-                html += value;
+                    value = '' + renderers[i].renderer; // (convert to string)
+
+                finalOutputs[renderers[i].index] = value;
             }
+            // ... compile the final results in the CORRECT order ...
+            for (i = 0, n = finalOutputs.length; i < n; ++i)
+                if (finalOutputs[i] !== void 0 && finalOutputs[i] !== null)
+                    html += finalOutputs[i];
+        }
         return html;
     }
 }
@@ -83,14 +94,14 @@ export class SectionManager {
     /** Adds a new renderer or static string to the list of items to render for the specified section.
      * If a section does not exist then it is created first.
      */
-    add(value: Renderer | string, name?: string) {
+    add(value: Renderer | string, name?: string, priority = 0) {
         name = name || this.activeSection || SectionManager.defaultSectionName;
         var section: Section;
         if (!this.sections[name])
             this.sections[name] = section = new Section(this, name);
         else
             section = this.sections[name];
-        section.add(value);
+        section.add(value, priority);
     }
 
     /** Remove and return a section by name. If not found then the request is ignored. */
@@ -107,7 +118,7 @@ export class SectionManager {
 
 function _processExpression(expr: string, dataContext?: object): any {
     try {
-        var compiledExpression = expr.replace(/({){|(})}/g, "$1$2").replace(/(^|[^a-z0-9_$.])\./gmi, '$1$.');
+        var compiledExpression = expr.replace(/({){|(})}/g, "$1$2").replace(/(^|[^a-z0-9_$.)'"`\/])\./gmi, '$1$.');
         var value = evalExpr(dataContext || {}, compiledExpression); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
 
         if (value !== null && value !== void 0 && typeof value != 'string')
@@ -136,10 +147,14 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
             if (err) return callback(err);
 
             // ... get any existing section manager, or create a new one ...
-            var sectionManager = httpContext.sectionManager || (httpContext.sectionManager = new SectionManager());
+            let sectionManager = httpContext.sectionManager || (httpContext.sectionManager = new SectionManager());
             sectionManager.activeSection = void 0;
             // ... get the content from a previous processed view and remove it; the current view will generate new content ...
-            var childContent = sectionManager.remove(SectionManager.defaultSectionName); // (if and when requested, the child content will be available for this view only)
+            let viewScope = {
+                httpContext,
+                childContent: sectionManager.remove(SectionManager.defaultSectionName) // (if and when requested, the child content will be available for this view only)
+            };
+            let viewScopes: typeof viewScope[] = [];
 
             try {
                 var html = fileContent.toString();
@@ -159,6 +174,8 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                 // ... if we found some tokens to process, iterate over and process them ...
 
                 for (var i = 0, n = textParts.length; i < n; ++i) {
+                    httpContext = viewScope.httpContext;
+                    sectionManager = httpContext.sectionManager;
 
                     var textpart = textParts[i];
                     if (removeEOL) {
@@ -177,14 +194,15 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                     if (!token) continue; // (probably finished, so shortcut here when empty)
 
                     if (token[0] == '$') {
-                        var expr = token.substring(2, token.length - 1);
-                        var processExpr = false, outputExpr = true;
-                        var value: string | Renderer = void 0;
+                        let expr = token.substring(2, token.length - 1).trimRight(); // (don't trim left: ${ /regex/ } is allowed, and ${/etc} is reserved for closing tokens)
+                        let processExpr = false, outputExpr = true;
+                        let value: string | Renderer = void 0;
+                        let priority = 0; // (true when #include or #view is encountered so we can flag to have those rendered with a higher priority)
 
-                        if (expr[0] == '#') {
+                        if (expr[0] == '#' || expr[0] == '/') {
                             // ... this is a special command ...
                             let cmdSplitIndex = expr.indexOf(' ');
-                            let cmd = cmdSplitIndex >= 0 ? expr.substr(0, cmdSplitIndex) : expr;
+                            let cmd = cmdSplitIndex >= 0 ? expr.substr(0, cmdSplitIndex).trim() : expr;
                             let argStr = cmdSplitIndex >= 0 ? expr.substr(cmdSplitIndex).trim() : "";
                             //let args = argStr.split(':');
 
@@ -205,32 +223,56 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                                     case "#render": {
                                         // ... request to load and render a section in the token's position ...
                                         let sectionNameToRender = argStr || SectionManager.defaultSectionName; // ("let" is important here, since it will be locked only to the next async function expression and not shared across all of them, like 'var' would)
-                                        var optional = sectionNameToRender[sectionNameToRender.length - 1] == '?' ?
+                                        let optional = sectionNameToRender[sectionNameToRender.length - 1] == '?' ?
                                             (sectionNameToRender = sectionNameToRender.substr(0, sectionNameToRender.length - 1), true)
                                             : false;
-                                        if (!httpContext.sectionManager)
-                                            if (optional) { removeEOL = true; break; }
-                                            else throw new DS.Exception(`There are no sections defined.`);
-                                        if (sectionNameToRender == SectionManager.defaultSectionName) {
-                                            if (!childContent)
-                                                if (optional) { removeEOL = true; break; }
-                                                else throw new DS.Exception(`The section ''${sectionNameToRender} does not exist or was already rendered.`);
-                                            value = childContent.render.bind(childContent);
-                                            childContent = null; // (make sure the content is only output once)
-                                        } else {
-                                            if (!sectionManager.hasSection(sectionNameToRender))
-                                                if (optional) { removeEOL = true; break; }
-                                                else throw new DS.Exception(`There is no section defined with the name '${sectionNameToRender}'. You can append the '?' character to the name if the section is optional.`);
-                                            let section = httpContext.sectionManager.sections[sectionNameToRender];
-                                            value = section.render.bind(section);
-                                        }
+
+                                        let _viewScope = viewScope;
+
+                                        value = async () => {
+                                            var value: string | Renderer;
+
+                                            if (!_viewScope.httpContext.sectionManager)
+                                                if (optional) return "";
+                                                else throw new DS.Exception(`There are no sections defined.`);
+                                            if (sectionNameToRender == SectionManager.defaultSectionName) {
+                                                if (!_viewScope.childContent)
+                                                    if (optional) return "";
+                                                    else throw new DS.Exception(`The section ''${sectionNameToRender} does not exist or was already rendered.`);
+                                                value = await _viewScope.childContent.render();
+                                                _viewScope.childContent = null; // (make sure the content is only output once)
+                                            } else {
+                                                if (!sectionManager.hasSection(sectionNameToRender))
+                                                    if (optional) return "";
+                                                    else throw new DS.Exception(`There is no section defined with the name '${sectionNameToRender}'. You can append the '?' character to the name if the section is optional.`);
+                                                var section = _viewScope.httpContext.sectionManager.sections[sectionNameToRender];
+                                                value = await section.render();
+                                            }
+                                            return value;
+                                        };
+                                        priority = 10;
                                         removeEOL = true;
                                         break;
                                     }
+                                    case "#include": // (this means the same as '#view', except it inherits the same HttpContext object)
                                     case "#view": {
                                         // ... the first '|' character will split the view path from any expression ...
 
-                                        let viewPath: string, viewHttpContext = new HttpContext(httpContext);
+                                        let include = cmd == "#include";
+                                        let selfClosing = argStr[argStr.length - 1] == '/'; // (if true then the view token will not have a closing token)
+                                        if (selfClosing) argStr = argStr.substr(0, argStr.length - 1).trimRight();
+
+                                        let viewPath: string, viewHttpContext = new HttpContext(httpContext, include ? void 0 : {});
+
+                                        if (!include)
+                                            viewHttpContext.sectionManager = new SectionManager(); // (this will cause a new section manager to be created [not used with '#include', which does adopt the same manager])
+
+                                        if (!selfClosing) {
+                                            viewScopes.push(viewScope);
+                                            viewScope = { httpContext: viewHttpContext, childContent: null };
+                                            // (all operations on the next loop pass will affect only this nested view)
+                                        }
+
                                         cmdSplitIndex = argStr.indexOf('|');
 
                                         if (cmdSplitIndex >= 0) {
@@ -240,11 +282,14 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                                             _processExpression(expr, viewHttpContext.viewData);
                                         } else viewPath = argStr;
 
+                                        viewHttpContext.viewPath = DS.Path.combine(DS.Path.getPath(httpContext.viewPath), viewPath);
+
+                                        let _viewScope = viewScope;
+
                                         value = () => {
                                             return new Promise<string>((res, rej) => {
                                                 // ... request to load and render a view in the token's position ...
-                                                viewHttpContext.viewPath = DS.Path.combine(DS.Path.getPath(httpContext.viewPath), viewPath);
-                                                httpContext.response.render(viewHttpContext.viewPath, viewHttpContext, (err, html) => {
+                                                _viewScope.httpContext.response.render(viewHttpContext.viewPath, viewHttpContext, (err, html) => {
                                                     if (err) return rej(err);
                                                     // ... this HTML is the parent template to this view that is resolved by now and must be returned ...
                                                     res(html);
@@ -253,7 +298,18 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                                         };
                                         break;
                                     }
-                                    default: throw new DS.Exception(`The command invalid. Please check for typos. Also note that commands are case-sensitive, and usually all lowercase.`);
+                                    case "/view": {
+                                        if (viewScopes.length < 1)
+                                            throw new DS.Exception("You have an extra close-view token (i.e. '${/view}') that does not have a corresponding '${#view ...}' token.");
+                                        viewScope = viewScopes.pop();
+                                        break;
+                                    }
+                                    default: {
+                                        if (cmd[0] == '#')
+                                            throw new DS.Exception(`The command invalid. Please check for typos. Also note that commands are case-sensitive, and usually all lowercase.`);
+                                        // (else we will assume this is an expression and evaluate it; i.e. regex expression [because of '/'])
+                                        processExpr = true;
+                                    }
                                 }
                             }
                             catch (ex) {
@@ -269,16 +325,19 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                         }
 
                         if (value !== void 0 && value !== null)
-                            sectionManager.add(value);
+                            sectionManager.add(value, void 0, priority);
                     }
                     else
                         sectionManager.add(token); // (not a valid server token, so include this in the rendered output)
                 }
 
+                if (viewScopes.length > 0)
+                    throw new DS.Exception("You have a missing close-view token (i.e. '${/view}').");
+
                 if (layoutViewName) {
                     // ... get arguments: view:section
-                    var viewPath = layoutViewName[0] == '/' ? layoutViewName.substr(1) : DS.Path.combine(DS.Path.getPath(httpContext.viewPath), layoutViewName);
-                    httpContext.response.render(viewPath, httpContext, (err, html) => {
+                    let viewPath = layoutViewName[0] == '/' ? layoutViewName.substr(1) : DS.Path.combine(DS.Path.getPath(httpContext.viewPath), layoutViewName);
+                    httpContext.response.render(viewPath, new HttpContext(httpContext, void 0, viewPath), (err, html) => {
                         if (err) return callback(err);
                         // ... this HTML is the parent template to this view that is resolved by now and must be returned ...
                         callback(null, html);
@@ -297,12 +356,26 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                 }
             }
             catch (ex) {
-                callback(DS.IO.Response.fromError(`Error processing view '${filePath}' file contents: `, ex, void 0, httpContext).setViewInfo(filePath));
+                const coderadius = 2, codeTrimLen = 80;
+                let _i1 = i >= coderadius ? i - coderadius : 0, _i2 = i + coderadius < textParts.length ? i + coderadius : textParts.length - 1, s: string, htmlsegmentL = "", tokenSegment = "", htmlsegmentR = "";
+                for (let _i = _i1; _i <= _i2; ++_i) {
+                    s = textParts[_i] || "";
+                    if (_i <= i) htmlsegmentL += s; else htmlsegmentR += s;
+                    if (_i == i) htmlsegmentL += "[[ERROR]]";
+                    s = tokens[_i] || "";
+                    if (_i < i) htmlsegmentL += s; else if (_i == i) tokenSegment = s; else htmlsegmentR += s;
+                    if (_i == i) htmlsegmentR += "[[/ERROR]]";
+                }
+                if (htmlsegmentL.length > codeTrimLen)
+                    htmlsegmentL = htmlsegmentL.substr(-codeTrimLen);
+                if (htmlsegmentR.length > codeTrimLen)
+                    htmlsegmentR = htmlsegmentR.substr(0, codeTrimLen);
+                callback(DS.IO.Response.fromError(`Error processing view '${filePath}' file contents. The error was here: \r\n"${htmlsegmentL + tokenSegment + htmlsegmentR} "`, ex, void 0, httpContext).setViewInfo(filePath));
             }
         })
     }
     catch (ex) {
-        callback(DS.IO.Response.fromError(`Error processing view '${filePath}': `, ex, void 0, httpContext).setViewInfo(filePath));
+        callback(DS.IO.Response.fromError(`Error processing view '${filePath}'.`, ex, void 0, httpContext).setViewInfo(filePath));
     }
 }
 

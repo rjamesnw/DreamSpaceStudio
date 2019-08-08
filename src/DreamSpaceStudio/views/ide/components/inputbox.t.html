@@ -1,1 +1,1 @@
-<input type="${.type||'text'}" id="${.id}" name="${.name}" class="label ${.class}" title=".helptip" placeholder="${.placeholder}" ${.attributes}>${.content}${#render content?}</input>
+<input type="${.type||'text'}" ${.id&&'id="'+.id+'"'} name="${.name}" class="form-control ${.class}" title="${.helptip}" placeholder="${.placeholder}" ${.attributes}>${.content}${#render content?}</input>

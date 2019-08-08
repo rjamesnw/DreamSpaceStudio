@@ -107,6 +107,7 @@
     <Content Include="..\..\README.md">
       <Link>README.md</Link>
     </Content>
+    <Content Include="public\stylesheets\login.css" />
     <Content Include="server\t.html.ts" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\tsconfig.json" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\tsconfig.json" />
@@ -127,9 +128,9 @@
     <Content Include="users\readme.txt" />
     <Content Include="views\error.t.html" />
     <Content Include="views\ide\components\inputbox.t.html" />
+    <Content Include="views\ide\components\form.t.html" />
     <Content Include="views\ide\components\label.t.html" />
     <Content Include="views\ide\components\button.t.html" />
-    <Content Include="views\ide\components\layout.t.html" />
     <Content Include="views\ide\login.t.html" />
     <Content Include="views\layout.t.html" />
     <Content Include="views\ide\index.t.html">

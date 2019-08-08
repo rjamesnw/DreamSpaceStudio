@@ -19,11 +19,6 @@ namespace DS {
             return source.replace(regex, replaceWith);
         }
 
-        /** Replaces all tags in the given 'HTML' string with 'tagReplacement' (an empty string by default) and returns the result. */
-        export function replaceTags(html: string, tagReplacement?: string): string {
-            return html.replace(/<[^<>]*|>[^<>]*?>|>/g, tagReplacement);
-        }
-
         /** Pads a string with given characters to make it a given fixed length. If the string is greater or equal to the
           * specified fixed length, then the request is ignored, and the given string is returned.
           * @param {any} str The string to pad.
@@ -81,7 +76,7 @@ namespace DS {
 
         /** Returns an array of all matches of 'regex' in 'text', grouped into sub-arrays (string[matches][groups]). */
         export function matches(regex: RegExp, text: string): string[][] {
-            return Utilities.matches(regex, this.toString());
+            return Utilities.matches(regex, text === void 0 || text === null ? '' : '' + text);
         }
 
         /** Splits the lines of the text (delimited by '\r\n', '\r', or '\n') into an array of strings. */
@@ -294,7 +289,7 @@ namespace DS {
     export namespace HTML {
         // --------------------------------------------------------------------------------------------------------------------
 
-        // Removes the '<!-- -->' comment sequence from the ends of the specified HTML.
+        /** Removes the '<!-- -->' comment sequence from the ends of the specified HTML. */
         export function uncommentHTML(html: string): string { // TODO: Consider using regex
             var content = ("" + html).trim();
             var i1 = 0, i2 = content.length;
@@ -307,7 +302,7 @@ namespace DS {
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        // Gets the text between '<!-- -->' (assumed to be at each end of the given HTML).
+        //** Gets the text between '<!-- -->' (assumed to be at each end of the given HTML). */
         export function getCommentText(html: string): string { // TODO: Consider using regex
             var content = ("" + html).trim();
             var i1 = content.indexOf("<!--"), i2 = content.lastIndexOf("-->");
@@ -318,13 +313,33 @@ namespace DS {
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        // Gets the text between '<!-- -->' (assumed to be at each end of the given HTML).
+        /** Gets the text between '<!-- -->' (assumed to be at each end of the given HTML). */
         export function getScriptCommentText(html: string): string { // TODO: Consider using regex.
             var content = ("" + html).trim();
             var i1 = content.indexOf("/*"), i2 = content.lastIndexOf("*/");
             if (i1 < 0) i1 = 0;
             if (i2 < 0) i2 = content.length;
             return content.substring(i1, i2);
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        /** Replaces all tags in the given 'HTML' string with 'tagReplacement' (an empty string by default) and returns the result. */
+        export function replaceTags(html: string, tagReplacement?: string): string {
+            return html.replace(/<[^<>]*|>[^<>]*?>|>/g, tagReplacement);
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        /** Encodes any characters other than numbers and letters as html entities. 
+         * @param html The HTML text to encode (typically to display in a browser).
+         * @param ingoreChars You can optionally pass in a list of characters to ignore (such as "\r\n" to maintain source formatting when outputting HTML).
+         * @param encodeSpaceAsNBSP If true, the spaces are replaced with "&nbsp;" elements to maintain the spacing.  If false, the spaces will be collapsed when displayed in browsers.
+         */
+        export function encodeHTML(html: string, ingoreChars?: string, encodeSpaceAsNBSP = false) {
+            return html.replace(/[^0-9A-Za-z!@#$%^*()\-_=+{}\[\]:";',.?\/~`|\\]/g, function (c: string) {
+                return ingoreChars && ingoreChars.indexOf(c) >= 0 ? c : encodeSpaceAsNBSP && c == ' ' ? "&nbsp;" : c == ' ' ? c : "&#" + c.charCodeAt(0) + ";";
+            });
         }
 
         // --------------------------------------------------------------------------------------------------------------------

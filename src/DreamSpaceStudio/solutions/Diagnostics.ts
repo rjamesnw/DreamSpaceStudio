@@ -254,7 +254,7 @@ namespace DS {
             //??var logText = "";
             //??for (var i = 0, n = __logItems.length; i < n; ++i)
             //??    logText += String.replaceTags(__logItems[i].title) + ": " + String.replaceTags(__logItems[i].message) + "\r\n";
-            return StringUtils.replaceTags(StringUtils.replace(getLogAsHTML(), "&nbsp;", " "));
+            return HTML.replaceTags(StringUtils.replace(getLogAsHTML(), "&nbsp;", " "));
         }
 
         // ========================================================================================================================

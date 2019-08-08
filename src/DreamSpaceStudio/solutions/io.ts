@@ -51,6 +51,8 @@ namespace DS {
             static fromError(message: string, error: string | Error | Exception, httpStatusCode = HttpStatus.OK, data?: any) {
                 if (!(error instanceof Exception))
                     error = new Exception(error);
+                if (message)
+                    error = new Exception(message, void 0, <Exception>error);
                 return new Response(getErrorMessage(error, false), data, httpStatusCode, void 0, <Exception>error);
             }
         }

@@ -1,1 +1,1 @@
-<button id="${.id}" name="${.name}" class="button ${.class}" title=".helptip" ${.attributes}>${.content}${#render content?}</button>
+<button ${.id&&'id="'+.id+'"'} name="${.name}" type="${.type||'button'}" class="btn ${.class}" title="${.helptip}" ${.attributes}>${.content}${#render content?}</button>

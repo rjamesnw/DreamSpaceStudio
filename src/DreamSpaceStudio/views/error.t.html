@@ -4,13 +4,19 @@
         font-weight: bold;
         font-size: 16px;
     }
+
+    .error {
+        color: darkred;
+        font-weight: bold;
+    }
 </style>
 <h1>There was a problem rendering the page:</h1>
 <span class="label">Status Code:</span> ${.status||""}<br />
 <br />
-<span class="label">Message:</span><pre>
-${.message || .toString && .toString() || "Uknown error: " + $}
-</pre>
+<span class="label">Message:</span>
+<div style="font-family: 'Courier New', Consolas;">
+    ${DS.HTML.encodeHTML(.message && .message || .toString && .toString() || "Uknown error: " + $, "\r\n", true).replace(/\r\n/gm, "<br />\r\n").replace(/\[\[ERROR\]\]/gm, "<span class=\"error\">&#187;").replace(/\[\[\/ERROR\]\]/gm, "&#171;</span>")}
+</div>
 <span class="label">Stack:</span><pre>
 ${.error&&.error.stack&&(Array.isArray(.error.stack)&&.error.stack.join('<br />\r\n')||.error.stack)}
 </pre>

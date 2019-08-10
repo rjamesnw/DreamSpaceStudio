@@ -20,7 +20,7 @@ namespace DS {
                 if (typeof query == 'object')
                     this.addOrUpdate(query, makeNamesLowercase);
                 else {
-                    if (typeof query != 'string') query = Utilities.toString(query);
+                    if (typeof query != 'string') query = StringUtils.toString(query);
                     var nameValuePairs = query.match(QUERY_STRING_REGEX);
                     var i: number, n: number, eqIndex: number, nameValue: string;
                     if (nameValuePairs)

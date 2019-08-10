@@ -22,14 +22,14 @@ namespace DS {
             /** A password for login (not recommended!). Note: Depreciated, as stated in RFC 3986 3.2.1. */
             public password?: string) {
 
-            if (typeof protocol != 'string') protocol = Utilities.toString(protocol);
-            if (typeof hostName != 'string') hostName = Utilities.toString(hostName);
-            if (typeof port != 'string') port = Utilities.toString(port);
-            if (typeof path != 'string') path = Utilities.toString(path);
-            if (typeof query != 'string') query = Utilities.toString(query);
-            if (typeof fragment != 'string') fragment = Utilities.toString(fragment);
-            if (typeof username != 'string') username = Utilities.toString(username);
-            if (typeof password != 'string') password = Utilities.toString(password);
+            if (typeof protocol != 'string') protocol = StringUtils.toString(protocol);
+            if (typeof hostName != 'string') hostName = StringUtils.toString(hostName);
+            if (typeof port != 'string') port = StringUtils.toString(port);
+            if (typeof path != 'string') path = StringUtils.toString(path);
+            if (typeof query != 'string') query = StringUtils.toString(query);
+            if (typeof fragment != 'string') fragment = StringUtils.toString(fragment);
+            if (typeof username != 'string') username = StringUtils.toString(username);
+            if (typeof password != 'string') password = StringUtils.toString(password);
         }
 
         /** Returns only  host + port parts combined. */
@@ -52,10 +52,10 @@ namespace DS {
            */
         toString(origin?: string, path?: string, query?: string, fragment?: string) {
             // TODO: consider an option to auto-removed default ports based on protocols.
-            origin = origin && Utilities.toString(origin) || this.origin();
-            path = path && Utilities.toString(path) || this.path;
-            query = query && Utilities.toString(query) || this.query;
-            fragment = fragment && Utilities.toString(fragment) || this.fragment;
+            origin = origin && StringUtils.toString(origin) || this.origin();
+            path = path && StringUtils.toString(path) || this.path;
+            query = query && StringUtils.toString(query) || this.query;
+            fragment = fragment && StringUtils.toString(fragment) || this.fragment;
             if (query.charAt(0) == '?') query = query.substr(1);
             if (fragment.charAt(0) == '#') fragment = fragment.substr(1);
             return Path.combine(origin, path) + (query ? "?" + query : "") + (fragment ? "#" + fragment : "");
@@ -70,7 +70,7 @@ namespace DS {
            */
         getResourcePath(resourceName?: string) {
             var m = (this.path || "").match(/.*[\/\\]/);
-            return (m && m[0] || "") + (resourceName !== void 0 && resourceName !== null ? Utilities.toString(resourceName) : "");
+            return (m && m[0] || "") + (resourceName !== void 0 && resourceName !== null ? StringUtils.toString(resourceName) : "");
         }
 
         /** 

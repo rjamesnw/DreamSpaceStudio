@@ -54,11 +54,11 @@ var USER_GIVEN_GLOBAL_NS_NAME: string;
  * 'DEFAULT_ROOT_NS_NAME' by default.
  */
 namespace DS {
-/** The global DreamSpace namespace name.  Call 'registerGlobal()' to specify a custom name, otherwise the default 'DEFAULT_GLOBAL_NS_NAME' is used. */
+    /** The global DreamSpace namespace name.  Call 'registerGlobal()' to specify a custom name, otherwise the default 'DEFAULT_GLOBAL_NS_NAME' is used. */
     export var globalNamespaceName: string;
     Object.defineProperty(DS, "globalNamespaceName", { configurable: false, enumerable: true, get: () => { return USER_GIVEN_GLOBAL_NS_NAME || DEFAULT_GLOBAL_NS_NAME; } });
 
-/** The root DreamSpace namespace, which is just DreamSpace.global[DreamSpace.globalNamespaceName] (which is just 'window[DreamSpace.globalNamespaceName]' on browser clients). */
+    /** The root DreamSpace namespace, which is just DreamSpace.global[DreamSpace.globalNamespaceName] (which is just 'window[DreamSpace.globalNamespaceName]' on browser clients). */
     export var rootns: string;
     Object.defineProperty(DS, "rootns", { configurable: false, enumerable: true, get: () => { return global[globalNamespaceName]; } });
 
@@ -171,6 +171,18 @@ namespace DS {
             if (global.Object.prototype.hasOwnProperty.call(obj, key)) return false;
         return true;
     }
+
+    /** Returns true if the given value is null or undefined. 
+     * Note: In NodeJS you can use the native 'isNullOrUndefined()' function instead.
+     */
+    export function isNullOrUndefined(value: any) { return value === void 0 || value === null; }
+
+    /** Null or undefined to default. Returns the given value if it is NOT undefined or null, otherwise the default value is returned. 
+     * @description Side-note: Name was inspired from the VBA function 'NZ()' (Null to Zero; see https://support.office.com/en-us/article/Nz-Function-8ef85549-cc9c-438b-860a-7fd9f4c69b6c).
+     * @param value Value to check.
+     * @param defaultVal New value if "value" is undefined or null.
+     */
+    export function nud(value: any, defaultVal: any) { return value === void 0 || value === null ? defaultVal : value; }
 
     // ========================================================================================================================================
 

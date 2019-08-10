@@ -2,72 +2,77 @@ ${#layout components/panel}
 ${# .title='Login' }
 
 <div id="logreg-forms">
-    <$:view path="components/form" viewdata="">
+    <$:view $path="components/form" class="form-signin">
         <h1 class="h3 mb-3 font-weight-normal" style="text-align: center"> Sign in</h1>
         <div class="social-login">
-            <$:view path="button" viewdata="" class"facebook-btn social-btn">
+            <$:view $path="button" class="facebook-btn social-btn">
                 <span><i class="fab fa-facebook-f"></i> Sign in with Facebook</span>
             </$:view>
-            <$:view path="button" viewdata="" class"google-btn social-btn">
+            <$:view $path="button" class="google-btn social-btn">
                 <span><i class="fab fa-google-plus-g"></i> Sign in with Google+</span>
             </$:view>
         </div>
         <p style="text-align:center"> OR  </p>
-        ${#view inputbox|.type='email'; .id="inputEmail"; .placeholder='Email' /}<br />
-        ${#view inputbox|.type='password'; .id="inputPassword"; .placeholder='Password' /}
+        ${#view inputbox|[@].type='email'; [@].id="inputEmail"; [@].placeholder='Email'}<br />
+        ${#view inputbox|[@].type='password'; [@].id="inputPassword"; [@].placeholder='Password'}
 
-        ${#view button|.type='submit'; .class='btn-success btn-block'}
-        <i class="fas fa-sign-in-alt"></i> Sign in
-        ${/view}
+        <$:view $path="button" type='submit' class='btn-success btn-block'>
+            <i class="fas fa-sign-in-alt"></i> Sign in
+        </$:view>
         <a href="#" id="forgot_pswd">Forgot password?</a>
         <hr>
-        ${#view button|.class='btn-primary btn-block'; .id='btn-signup'}
-        <i class="fas fa-user-plus"></i> Sign up New Account
-        ${/view}
+        <$:view $path="button" class='btn-primary btn-block' id='btn-signup'>
+            <i class="fas fa-user-plus"></i> Sign up New Account
+        </$:view>
     </$:view>
-    <form action="/reset/password/" class="form-reset">
-        <input type="email" id="resetEmail" class="form-control" placeholder="Email address" required="" autofocus="">
-        <button class="btn btn-primary btn-block" type="submit">Reset Password</button>
+    <$:view $path="components/form" action="/reset/password/" class="form-reset">
+        <$:view $path="inputbox" type="email" id="resetEmail" placeholder="Email address" required="" autofocus="" />
+        <$:view $path="button" type="submit" class="btn-primary btn-block">Reset Password</$:view>
         <a href="#" id="cancel_reset"><i class="fas fa-angle-left"></i> Back</a>
-    </form>
-    <form action="/signup/" class="form-signup">
+    </$:view>
+    <$:view $path="components/form" action="/signup/" class="form-signup">
         <div class="social-login">
-            <button class="btn facebook-btn social-btn" type="button"><span><i class="fab fa-facebook-f"></i> Sign up with Facebook</span> </button>
+            <$:view $path="button" type="button" class="facebook-btn social-btn"><span><i class="fab fa-facebook-f"></i> Sign up with Facebook</span></$:view>
         </div>
         <div class="social-login">
-            <button class="btn google-btn social-btn" type="button"><span><i class="fab fa-google-plus-g"></i> Sign up with Google+</span> </button>
+            <$:view $path="button" type="button" class="google-btn social-btn"><span><i class="fab fa-google-plus-g"></i> Sign up with Google+</span></$:view>
         </div>
 
         <p style="text-align:center">OR</p>
-        <input type="text" id="user-name" class="form-control" placeholder="Full name" required="" autofocus="">
-        <input type="email" id="user-email" class="form-control" placeholder="Email address" required autofocus="">
-        <input type="password" id="user-pass" class="form-control" placeholder="Password" required autofocus="">
-        <input type="password" id="user-repeatpass" class="form-control" placeholder="Repeat Password" required autofocus="">
-        <button class="btn btn-primary btn-block" type="submit"><i class="fas fa-user-plus"></i> Sign Up</button>
+
+        <$:view $path="inputbox" type="text" id="user-name" placeholder="Full name" required autofocus />
+        <$:view $path="inputbox" type="email" id="user-email" placeholder="Email address" required autofocus />
+        <$:view $path="inputbox" type="password" id="user-pass" placeholder="Password" required autofocus />
+        <$:view $path="inputbox" type="password" id="user-repeatpass" placeholder="Repeat Password" required autofocus />
+
+        <$:view $path="button" class="btn-primary btn-block" type="submit" id="user-repeatpass" placeholder="Repeat Password" required autofocus><i class="fas fa-user-plus"></i> Sign Up</$:view>
+        
         <a href="#" id="cancel_signup"><i class="fas fa-angle-left"></i> Back</a>
-    </form>
+    </$:view>
     <br>
 </div>
-<p style="text-align:center">
-    <a href="http://bit.ly/2RjWFMfunction toggleResetPswd(e){
-       e.preventDefault();
-       $('#logreg-forms .form-signin').toggle() // display:block or none
-    $('#logreg-forms .form-reset').toggle() // display:block or none
+${#section footer}
+${#section scripts}
+<script>
+    function toggleResetPswd(e) {
+        e.preventDefault();
+        $('#logreg-forms .form-signin').toggle() // display:block or none
+        $('#logreg-forms .form-reset').toggle() // display:block or none
     }
 
-    function toggleSignUp(e){
-    e.preventDefault();
-    $('#logreg-forms .form-signin').toggle(); // display:block or none
-    $('#logreg-forms .form-signup').toggle(); // display:block or none
+    function toggleSignUp(e) {
+        e.preventDefault();
+        $('#logreg-forms .form-signin').toggle(); // display:block or none
+        $('#logreg-forms .form-signup').toggle(); // display:block or none
     }
 
-    $(()=>{
-    // Login Register Form
-    $('#logreg-forms #forgot_pswd').click(toggleResetPswd);
-    $('#logreg-forms #cancel_reset').click(toggleResetPswd);
-    $('#logreg-forms #btn-signup').click(toggleSignUp);
-    $('#logreg-forms #cancel_signup').click(toggleSignUp);
-    })g" target="_blank" style="color:black">By Artin</a>
-</p>
+    $(() => {
+        // Login Register Form
+        $('#logreg-forms #forgot_pswd').click(toggleResetPswd);
+        $('#logreg-forms #cancel_reset').click(toggleResetPswd);
+        $('#logreg-forms #btn-signup').click(toggleSignUp);
+        $('#logreg-forms #cancel_signup').click(toggleSignUp);
+    })
+</script>
 ${#section css}
 <link rel='stylesheet' href='/stylesheets/login.css' />

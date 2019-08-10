@@ -8,7 +8,7 @@ namespace DS {
 
         /** Parses the URL into 1: protocol (without '://'), 2: host, 3: port, 4: path, 5: query (without '?'), and 6: fragment (without '#'). */
         export function parse(url: string) {
-            if (typeof url != 'string') url = Utilities.toString(url);
+            if (typeof url != 'string') url = StringUtils.toString(url);
             var m = url.match(URL_PARSER_REGEX);
             return m && new Uri(
                 (m[1] || "").trim(),
@@ -74,8 +74,8 @@ namespace DS {
         * Set 'normalizePathSeparators' to true to normalize any '\' path characters to '/' instead.
         */
         export function combine(path1: string, path2: string, normalizePathSeparators = false): string {
-            if (typeof path1 != 'string') path1 = Utilities.toString(path1);
-            if (typeof path2 != 'string') path2 = Utilities.toString(path2);
+            if (typeof path1 != 'string') path1 = StringUtils.toString(path1);
+            if (typeof path2 != 'string') path2 = StringUtils.toString(path2);
             if (path2.charAt(0) == '~') path2 = path2.substr(1);
             if (!path2) return path1;
             if (!path1) return path2;
@@ -100,10 +100,10 @@ namespace DS {
            * @param {string} baseURL An optional path that specifies the site's root URL.  By default this is 'DreamSpace.baseURL'.
            */
         export function resolve(path: string, currentResourceURL = DS.global.location.href, baseURL = DS.baseURL) {
-            baseURL = Utilities.toString(baseURL).trim();
-            currentResourceURL = Utilities.toString(currentResourceURL).trim();
+            baseURL = StringUtils.toString(baseURL).trim();
+            currentResourceURL = StringUtils.toString(currentResourceURL).trim();
             if (currentResourceURL) currentResourceURL = parse(currentResourceURL).getResourceURL();
-            path = Utilities.toString(path).trim();
+            path = StringUtils.toString(path).trim();
             if (!path) return currentResourceURL || baseURL;
             if (path.charAt(0) == '/' || path.charAt(0) == '\\') {
                 // ... resolve to the root of the host; determine current or base, whichever is available ...

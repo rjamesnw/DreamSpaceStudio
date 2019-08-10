@@ -20,7 +20,7 @@ namespace DS {
 
         /** See the 'cacheBusting' property. */
         static get cacheBustingVar() { return this._cacheBustingVar || '_v_'; }; // (note: ResourceInfo.cs uses this same default)
-        static set cacheBustingVar(value) { this._cacheBustingVar = Utilities.toString(value) || '_v_'; };
+        static set cacheBustingVar(value) { this._cacheBustingVar = StringUtils.toString(value) || '_v_'; };
         private static _cacheBustingVar = '_v_';
 
         /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */

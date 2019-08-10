@@ -1,8 +1,100 @@
 import fs = require('fs') // this engine requires the fs module
 import { Request, Response } from 'express-serve-static-core';
+import { isNullOrUndefined, isUndefined } from 'util';
 
 /** The root of the views folder. By default this is 'views' (relative from 'DS.webRoot'). */
 export var viewsRoot = "views";
+
+interface IViewAttributeFunction {
+    attributes: IndexedObject;
+    /** Render attributes. */
+    (attributesToIgnore?: string[], attributesToInclude?: string[]): string;
+    /** Renders a single attribute, in which a user can prepend or append to it. */
+    (attributeName: string, prefix?: string, suffix?: string): string | { (): string };
+}
+
+export function createCallableViewAttributes(): IViewAttributeFunction {
+    var attributes: IndexedObject = {};
+    var attributesObject: IViewAttributeFunction = <any>function (p1: any, p2: any, p3: any) {
+        var s = "", value: any;
+        if (typeof p1 == 'string') {
+            let attrName: string = p1;
+            if (!attrName) throw new DS.Exception("An attribute name is required.");
+            value = attributes[attrName];
+            let p2Defined = !isNullOrUndefined(p2);
+            let p3Defined = !isNullOrUndefined(p3);
+            if (p2Defined || p3Defined) {
+                if (!isNullOrUndefined(p2))
+                    s = DS.StringUtils.append(DS.nud(p2, ''), DS.nud(value, ''), ' ');
+                else
+                    s = '' + value;
+                if (!isNullOrUndefined(p3))
+                    s = DS.StringUtils.append(s, DS.nud(p3, ''), ' ');
+            }
+            else return {
+                value,
+                toString: function () { return '' + DS.nud(this.value, ''); },
+                valueOf: function () { return this.toString(); },
+                add: function (namesListStr: string) {
+                    var namesList = DS.StringUtils.toString(namesListStr).split(' ');
+                    for (var i = 0, n = namesList.length; i < n; ++i) {
+                        var name = namesList[i];
+                        if (!isNullOrUndefined(name)) {
+                            name = DS.StringUtils.toString(name);
+                            var names = this.toString().toLowerCase().split(' ');
+                            if (names.indexOf(name.toLowerCase()) < 0)
+                                this.value = DS.StringUtils.append(this.toString(), name, ' ')
+                        }
+                    }
+                    return this;
+                },
+                remove: function (namesListStr: string) {
+                    var namesList = DS.StringUtils.toString(namesListStr).split(' ');
+                    for (var i = 0, n = namesList.length; i < n; ++i) {
+                        var name = namesList[i];
+                        if (!isNullOrUndefined(name)) {
+                            name = DS.StringUtils.toString(name);
+                            let _name_lc = ('' + name).toLowerCase();
+                            var names: string[] = this.toString().split(' ');
+                            for (let i = names.length - 1; i >= 0; --i)
+                                if (names[i].toLowerCase() == _name_lc)
+                                    names.splice(i, 1);
+                            this.value = names.join(' ');
+                        }
+                    }
+                    return this;
+                }
+            };
+
+        } else {
+            // ... render the name=value attributes ...
+            let attributesToIgnore: string[] = p1;
+            let attributesToInclude: string[] = p2;
+            for (var p in attributes) {
+                if (attributesToIgnore && attributesToIgnore.indexOf(p) >= 0) continue;
+                if (attributesToInclude && attributesToInclude.indexOf(p) < 0) continue;
+                value = attributes[p];
+                if (typeof value == 'function') // TODO: consider making this async also; low priority however.
+                    value = value();
+                s += (s ? ' ' : '') + p + (value !== void 0 && value !== null ? `="${value}"` : '');
+            }
+        }
+        return s;
+    }
+    attributesObject.attributes = attributes;
+    return attributesObject;
+}
+export class ViewData {
+    [index: string]: any;
+    '@' = createCallableViewAttributes();
+    /** Constructs a new ViewData object.  You can optional provide an object to copy properties and their values from. */
+    constructor(values?: IndexedObject) {
+        if (values)
+            for (var p in values)
+                if (Object.prototype.hasOwnProperty.call(values, p))
+                    this[p] = values[p];
+    }
+}
 
 export class HttpContext {
     /** The request object for the current request. */
@@ -12,7 +104,7 @@ export class HttpContext {
     /** The path to the view being rendered. */
     viewPath?: string;
     /** Optional data for the view being rendered. */
-    viewData?: any;
+    viewData?: ViewData;
     /** An accumulation of named contexts while parsing a previous view. */
     sectionManager?: SectionManager;
 
@@ -20,19 +112,19 @@ export class HttpContext {
      * @param viewData The data to use for this view.  If not specified, then the view data on the context will be used instead.
      * @param viewPath The relative path and view name to the view being rendered.
      */
-    constructor(httpContext: IHttpContext, viewData?: any, viewPath?: string);
+    constructor(httpContext: IHttpContext, viewData?: ViewData, viewPath?: string);
     /** Constructs a new HTTP context.
      * @param request The request object for the current request.
      * @param response The response object for the current request.
      * @param viewData The data to use for this view.  If not specified, then the view data on the context will be used instead.
      * @param viewPath The relative path and view name to the view being rendered.
      */
-    constructor(request: Request, response: Response, viewData?: any, viewPath?: string);
+    constructor(request: Request, response: Response, viewData?: ViewData, viewPath?: string);
     constructor(requestOrCtx: Request & IHttpContext, responseOrVewData?: Response | any, viewDataOrPath?: any | string, viewPath?: string) {
         var isHttpCtx = !!(requestOrCtx.request || requestOrCtx.response || 'viewData' in requestOrCtx);
         this.request = isHttpCtx ? requestOrCtx.request : requestOrCtx;
         this.response = isHttpCtx ? requestOrCtx.response : responseOrVewData;
-        this.viewData = isHttpCtx ? responseOrVewData || requestOrCtx.viewData : viewDataOrPath;
+        this.viewData = (isHttpCtx ? responseOrVewData || requestOrCtx.viewData : viewDataOrPath) || new ViewData();
         this.viewPath = isHttpCtx ? viewDataOrPath || requestOrCtx.viewPath : viewPath;
         if (isHttpCtx && requestOrCtx.sectionManager)
             this.sectionManager = requestOrCtx.sectionManager;
@@ -43,7 +135,7 @@ export interface IHttpContext extends HttpContext { }
 
 export interface Renderer { (): string | Promise<string> }
 
-var evalExpr = new Function("$", "expr", "return eval(expr);");
+var evalExpr = new Function("$", "expr", "httpContext", "var ctx = httpContext; return eval(expr);");
 
 export class Section {
     renderers: { index: number, renderer: (Renderer | string), priority?: number }[]; // (index is used to maintain the correct insert order when combining the final rendered outputs)
@@ -112,14 +204,18 @@ export class SectionManager {
         return section;
     }
 
-    /** Returns true if the named section exist. */
+    /** Returns true if the named section exists. */
     hasSection(name: string) { return this.sections && name in this.sections }
 }
 
-function _processExpression(expr: string, dataContext?: object): any {
+function _processExpression(httpContext: IHttpContext, expr: string, dataContext?: object): any {
     try {
-        var compiledExpression = expr.replace(/({){|(})}/g, "$1$2").replace(/(^|[^a-z0-9_$.)'"`\/])\./gmi, '$1$.');
-        var value = evalExpr(dataContext || {}, compiledExpression); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
+        var compiledExpression = expr.replace(/({){|(})}/g, "$1$2").replace(/\[@]\./g, "$['@'].attributes.").replace(/\[@]\(/g, "$['@'](")
+            .replace(/(\[\[[^\]]*]]|'(?:\\'|[^'])*'|"(?:\\"|[^"])*")|(^|[^a-z0-9_$.)[\]'"`\/\\])(\.|\[(?!\[))/gmi,
+                function (match, p1, p2, p3, offset: number, src: string) {
+                    return p1 ? p1 : p2 + '$' + p3; // (when p1 exists it is a string to be skipped (or special double square bracket token ([[...]]), otherwise it is valid view data property reference)
+                });
+        var value = evalExpr(dataContext || {}, compiledExpression, httpContext); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
 
         if (value !== null && value !== void 0 && typeof value != 'string')
             value = '' + value;
@@ -164,7 +260,7 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                 //  It was determined that the fastest option is to use native match()/split() using regex instead to maintain consistent
                 //  speed across the most popular browsers. The template parser does this as well.)
 
-                var tokenRegex = /`(?:[^`]|\\`)*?`|\${(?:{{|}}|[^}])*}/g;
+                var tokenRegex = /`(?:\\`|[^`])*?`|\${(?:{{|}}|[^}])*}|<\/?\$:(?:\\>|[^>])*>/g;
                 var textParts = html.split(tokenRegex);
                 var tokens = html.match(tokenRegex);
                 tokens.push(""); // (each iteration will store text+token, and there will always be one less token compared to text parts)
@@ -193,21 +289,30 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
 
                     if (!token) continue; // (probably finished, so shortcut here when empty)
 
-                    if (token[0] == '$') {
-                        let expr = token.substring(2, token.length - 1).trimRight(); // (don't trim left: ${ /regex/ } is allowed, and ${/etc} is reserved for closing tokens)
+                    let extractStartIndex = 2;
+                    let isTokenExpression = token[0] == '$';
+                    let isStartServerTagToken = token.substr(0, 3) == "<$:";
+                    let isEndServerTagToken = token.substr(0, 4) == "</$:" ? (extractStartIndex = 3, true) : false;
+
+                    if (isTokenExpression || isStartServerTagToken || isEndServerTagToken) {
+                        let expr = token.substring(extractStartIndex, token.length - 1).trimRight(); // (don't trim left: ${ /regex/ } is allowed, and ${/etc} is reserved for closing tokens)
                         let processExpr = false, outputExpr = true;
                         let value: string | Renderer = void 0;
                         let priority = 0; // (true when #include or #view is encountered so we can flag to have those rendered with a higher priority)
+                        let isCommand = expr[0] == '#';
+                        let isServerTag = expr[0] == ':';
 
-                        if (expr[0] == '#' || expr[0] == '/') {
+                        if (isCommand || isServerTag) {
                             // ... this is a special command ...
                             let cmdSplitIndex = expr.indexOf(' ');
-                            let cmd = cmdSplitIndex >= 0 ? expr.substr(0, cmdSplitIndex).trim() : expr;
+                            let cmd = cmdSplitIndex >= 0 ? expr.substr(0, cmdSplitIndex).trim() : expr, _cmd = cmd; // ('_cmd' is a normalized command string)
                             let argStr = cmdSplitIndex >= 0 ? expr.substr(cmdSplitIndex).trim() : "";
                             //let args = argStr.split(':');
 
+                            if (isServerTag) _cmd = '#' + cmd.substr(1); // (keep things simple and just convert this into a proper command)
+
                             try {
-                                switch (cmd) {
+                                switch (_cmd) {
                                     case "#": expr = argStr; processExpr = true; outputExpr = false; removeEOL = true; break;
                                     case "#layout":
                                         if (layoutViewName)
@@ -250,37 +355,104 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                                             }
                                             return value;
                                         };
-                                        priority = 10;
+
+                                        if (sectionNameToRender == SectionManager.defaultSectionName)
+                                            priority = Number.MAX_SAFE_INTEGER - 200; // (after the view and layout max priority, nested 'content' must be next)
+                                        else
+                                            priority = Number.MAX_SAFE_INTEGER - 300; // (after the view, layout, and nested priorities, all other rendered sections are handled in order)
+
                                         removeEOL = true;
+
                                         break;
                                     }
                                     case "#include": // (this means the same as '#view', except it inherits the same HttpContext object)
                                     case "#view": {
-                                        // ... the first '|' character will split the view path from any expression ...
+                                        if (isEndServerTagToken) {
+                                            if (viewScopes.length < 1)
+                                                throw new DS.Exception("You have an extra close-view server tag (i.e. '</$:view>') that does not have a corresponding '<$:view ...>' tag.");
+                                            viewScope = viewScopes.pop();
+                                            if (argStr)
+                                                throw new DS.Exception("The end server tag (i.e. '</$:view>') cannot contain any additional attributes or text.");
+                                            break;
+                                        }
 
-                                        let include = cmd == "#include";
-                                        let selfClosing = argStr[argStr.length - 1] == '/'; // (if true then the view token will not have a closing token)
+                                        let include = _cmd == "#include";
+                                        let selfClosing = isServerTag && argStr[argStr.length - 1] == '/'; // (if true then the view token will not have a closing tag)
                                         if (selfClosing) argStr = argStr.substr(0, argStr.length - 1).trimRight();
 
-                                        let viewPath: string, viewHttpContext = new HttpContext(httpContext, include ? void 0 : {});
+                                        let viewPath: string, viewHttpContext = new HttpContext(httpContext, include ? void 0 : new ViewData());
 
                                         if (!include)
                                             viewHttpContext.sectionManager = new SectionManager(); // (this will cause a new section manager to be created [not used with '#include', which does adopt the same manager])
 
-                                        if (!selfClosing) {
+                                        if (isServerTag && !selfClosing) {
                                             viewScopes.push(viewScope);
                                             viewScope = { httpContext: viewHttpContext, childContent: null };
                                             // (all operations on the next loop pass will affect only this nested view)
                                         }
 
-                                        cmdSplitIndex = argStr.indexOf('|');
+                                        // ... the first '|' character will split the view path from any expression ...
 
-                                        if (cmdSplitIndex >= 0) {
-                                            viewPath = argStr.substr(0, cmdSplitIndex);
-                                            expr = argStr.substr(cmdSplitIndex + 1);
-                                            viewHttpContext.viewData = {};
-                                            _processExpression(expr, viewHttpContext.viewData);
-                                        } else viewPath = argStr;
+                                        if (isServerTag) {
+                                            // ... process the 'argStr' as name=value attributes ...
+                                            var attributes = argStr.match(/[^\t\n\f \/>"'=]*\s*=\s*(?:"[^"]*"|'[^']*')/g); // (https://stackoverflow.com/a/926136/1236397)
+                                            for (let i = 0, n = attributes.length; i < n; ++i) {
+                                                let attribute = attributes[i];
+                                                let equalIndex = attribute.indexOf('='); // (we don't split in case the user has '=' in the value; just get the first '=' found)
+                                                let name = "", value: string;
+                                                if (equalIndex >= 0) {
+                                                    name = attribute.substring(0, equalIndex).trim();
+                                                    value = attribute.substring(equalIndex + 1).trim();
+                                                    // ... trim any quotes off the value ...
+                                                    let quote = value[0];
+                                                    if (quote == '"' || quote == "'") {
+                                                        let endQuote = value[value.length - 1];
+
+                                                        if (quote != endQuote)
+                                                            throw new DS.Exception(`Invalid attribute value: You started with a ${quote == "'" ? 'single' : 'double'} quote and ended with ${quote == "'" ? 'a single quote' : quote == '"' ? 'a double quote' : `'${endQuote}'`}.`);
+
+                                                        value = value.substring(1, value.length - 1);
+                                                    }
+                                                } else name = attribute.trim(); // (allow setting names without values; i.e. 'readonly')
+
+                                                // ... if the value is wrapped in braces '{}' then evaluate it (the name="{'{...}'}" format can work-around this if needed)...
+
+                                                if (value && value[0] == '{' && value[value.length - 1] == '}') {
+                                                    value = value.substring(1, value.length - 1).trim();
+                                                    value = _processExpression(httpContext, value, httpContext.viewData); // (note: here we use the view data of the parent view [this view], then the result is passed as an attribute value)
+                                                }
+
+                                                if (name[0] == '$') {
+                                                    // ... this is a special parameter ...
+
+                                                    if (name.substr(0, 6) == '$data-') {
+                                                        // ... this is a view-bag (view data) setting ...
+                                                        name = name.substr(6);
+                                                        viewHttpContext.viewData[name] = value;
+                                                    } else {
+                                                        // ... this is a view/include parameter ...
+                                                        switch (name) {
+                                                            case '$path': viewPath = (value || '').trim(); break;
+                                                            case '$': case '$expression': _processExpression(viewHttpContext, value, viewHttpContext.viewData); break; // (this runs in the nested view context)
+                                                            default: throw new DS.Exception(`The view data parameter '${name}' is not a supported parameter name. Please check for typos.`);
+                                                        }
+                                                    }
+                                                } else
+                                                    viewHttpContext.viewData["@"].attributes[name] = value;
+                                            }
+                                        } else {
+                                            // ... process the 'argStr' as a regular view expression token ...
+                                            cmdSplitIndex = argStr.indexOf('|');
+
+                                            if (cmdSplitIndex >= 0) {
+                                                viewPath = argStr.substr(0, cmdSplitIndex).trim();
+                                                expr = argStr.substr(cmdSplitIndex + 1);
+                                                _processExpression(httpContext, expr, viewHttpContext.viewData);
+                                            } else viewPath = argStr;
+                                        }
+
+                                        if (!viewPath)
+                                            throw new DS.Exception("No view path was specified. For server tags, use '$path=\"path/to/view\". For inline tokens, the path should immediately follow the '#view' or '#include' commands (i.e. '${#view path/to/view | optional expressions}').");
 
                                         viewHttpContext.viewPath = DS.Path.combine(DS.Path.getPath(httpContext.viewPath), viewPath);
 
@@ -296,16 +468,13 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                                                 });
                                             });
                                         };
-                                        break;
-                                    }
-                                    case "/view": {
-                                        if (viewScopes.length < 1)
-                                            throw new DS.Exception("You have an extra close-view token (i.e. '${/view}') that does not have a corresponding '${#view ...}' token.");
-                                        viewScope = viewScopes.pop();
+
+                                        priority = Number.MAX_SAFE_INTEGER - 100; // (make sure nested views and includes are always rendered first; '-100' is used to allow the user to override if necessary; if and when supported)
+
                                         break;
                                     }
                                     default: {
-                                        if (cmd[0] == '#')
+                                        if (_cmd[0] == '#')
                                             throw new DS.Exception(`The command invalid. Please check for typos. Also note that commands are case-sensitive, and usually all lowercase.`);
                                         // (else we will assume this is an expression and evaluate it; i.e. regex expression [because of '/'])
                                         processExpr = true;
@@ -313,18 +482,18 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
                                 }
                             }
                             catch (ex) {
-                                throw new DS.Exception(`Invalid token command '${cmd}' in token '${token}'.`, this, ex);
+                                throw new DS.Exception(`Invalid token command or server tag '${cmd}' in token '${token}'.`, this, ex);
                             }
                         } else processExpr = true;
 
                         if (processExpr) {
-                            value = _processExpression(expr, httpContext.viewData || {}); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
+                            value = _processExpression(httpContext, expr, httpContext.viewData || new ViewData()); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
 
                             if (!outputExpr)
                                 value = void 0;
                         }
 
-                        if (value !== void 0 && value !== null)
+                        if (!isNullOrUndefined(value))
                             sectionManager.add(value, void 0, priority);
                     }
                     else

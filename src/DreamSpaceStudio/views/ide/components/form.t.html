@@ -1,1 +1,1 @@
-<form ${.id&&'id="'+.id+'"'} name="${.name}" class="form-signin ${.class}" title="${.helptip}" ${.attributes} method="${.method||'post'}" action="${.action}">${.content}${#render content?}</form>
+<form class="${[@]('class')}" method="${[@].method||'post'}" ${[@](['class','method'])}>${.content}${#render content?}</form>

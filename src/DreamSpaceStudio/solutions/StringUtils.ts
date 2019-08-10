@@ -57,7 +57,8 @@ namespace DS {
             if (source === void 0) source = "";
             else if (typeof source != 'string') source = '' + source;
             if (typeof suffix != 'string') suffix = '' + suffix;
-            if (typeof delimiter != 'string') delimiter = '' + delimiter;
+            if (delimiter === void 0 || delimiter === null) delimiter = '';
+            else if (typeof delimiter != 'string') delimiter = '' + delimiter;
             if (!source) return suffix;
             return source + delimiter + suffix;
         }
@@ -74,9 +75,32 @@ namespace DS {
             return prefix + delimiter + source;
         }
 
-        /** Returns an array of all matches of 'regex' in 'text', grouped into sub-arrays (string[matches][groups]). */
+        /**
+         * Returns an array of all matches of 'regex' in 'text', grouped into sub-arrays (string[matches][groups], where
+         * 'groups' index 0 is the full matched text, and 1 onwards are any matched groups).
+         */
         export function matches(regex: RegExp, text: string): string[][] {
-            return Utilities.matches(regex, text === void 0 || text === null ? '' : '' + text);
+            text = toString(text);
+            var matchesFound: string[][] = [], result: RegExpExecArray;
+            if (!regex.global) throw new Exception("The 'global' flag is required in order to find all matches.");
+            regex.lastIndex = 0;
+            while ((result = regex.exec(text)) !== null)
+                matchesFound.push(result.slice());
+            return matchesFound;
+        }
+
+        /** 
+         * Converts the given value to a string and returns it.  'undefined' (void 0) and null become empty, string types are
+         * returned as is, and everything else will be converted to a string by calling 'toString()', or simply '""+value' if
+         * 'value.toString' is not a function. If for some reason a call to 'toString()' does not return a string the cycle
+         * starts over with the new value until a string is returned.
+         * Note: If no arguments are passed in (i.e. 'StringUtils.toString()'), then undefined is returned.
+         */
+        export function toString(value?: any): string {
+            if (arguments.length == 0) return void 0;
+            if (value === void 0 || value === null) return "";
+            if (typeof value == 'string') return value;
+            return typeof value.toString == 'function' ? toString(value.toString()) : "" + value; // ('value.toString()' should be a string, but in case it is not, this will cycle until a string type value is found, or no 'toString()' function exists)
         }
 
         /** Splits the lines of the text (delimited by '\r\n', '\r', or '\n') into an array of strings. */

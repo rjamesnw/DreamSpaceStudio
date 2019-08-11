@@ -45,8 +45,8 @@ ${# .title='Login' }
         <$:view $path="inputbox" type="password" id="user-pass" placeholder="Password" required autofocus />
         <$:view $path="inputbox" type="password" id="user-repeatpass" placeholder="Repeat Password" required autofocus />
 
-        <$:view $path="button" class="btn-primary btn-block" type="submit" id="user-repeatpass" placeholder="Repeat Password" required autofocus><i class="fas fa-user-plus"></i> Sign Up</$:view>
-        
+        <$:view $path="button" class="btn-primary btn-block" type="submit" placeholder="Repeat Password" required autofocus><i class="fas fa-user-plus"></i> Sign Up</$:view>
+
         <a href="#" id="cancel_signup"><i class="fas fa-angle-left"></i> Back</a>
     </$:view>
     <br>
@@ -56,8 +56,8 @@ ${#section scripts}
 <script>
     function toggleResetPswd(e) {
         e.preventDefault();
-        $('#logreg-forms .form-signin').toggle() // display:block or none
-        $('#logreg-forms .form-reset').toggle() // display:block or none
+        $('#logreg-forms .form-signin').toggle(); // display:block or none
+        $('#logreg-forms .form-reset').toggle(); // display:block or none
     }
 
     function toggleSignUp(e) {
@@ -66,13 +66,15 @@ ${#section scripts}
         $('#logreg-forms .form-signup').toggle(); // display:block or none
     }
 
-    $(() => {
+    function onReady() {
         // Login Register Form
         $('#logreg-forms #forgot_pswd').click(toggleResetPswd);
         $('#logreg-forms #cancel_reset').click(toggleResetPswd);
         $('#logreg-forms #btn-signup').click(toggleSignUp);
         $('#logreg-forms #cancel_signup').click(toggleSignUp);
-    })
+    }
+
+    $(onReady);
 </script>
 ${#section css}
 <link rel='stylesheet' href='/stylesheets/login.css' />

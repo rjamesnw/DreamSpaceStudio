@@ -131,6 +131,7 @@
     <Content Include="views\ide\components\form.t.html" />
     <Content Include="views\ide\components\label.t.html" />
     <Content Include="views\ide\components\button.t.html" />
+    <Content Include="views\ide\components\panel.t.html" />
     <Content Include="views\ide\login.t.html" />
     <Content Include="views\layout.t.html" />
     <Content Include="views\ide\index.t.html">

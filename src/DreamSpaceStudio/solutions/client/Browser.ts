@@ -86,11 +86,12 @@ namespace DS {
                 //window.dispatchEvent(event);
 
                 // ... the system and all modules are loaded and ready ...
-                log.write("Dispatching DOM 'onReady event ...", LogTypes.Info);
+                log.write("Dispatching DreamSpace.DOM 'onReady' event ...", LogTypes.Info);
+
                 Browser.onReady.autoTrigger = true;
                 Browser.onReady.dispatchEvent();
 
-                log.write("'DreamSpace.DOM.Loader' completed.", LogTypes.Success);
+                log.write("'DreamSpace.DOM bootstrapping completed.", LogTypes.Success);
 
                 log.endCapture();
 
@@ -108,7 +109,7 @@ namespace DS {
             function _doOnDOMLoaded(): void { // (note: executed immediately on the server before this script ends)
                 if (!_domLoaded) {
                     _domLoaded = true;
-                    var log = Diagnostics.log("DOM Loading", "HTML document was loaded and parsed. Loading any sub-resources next (CSS, JS, etc.)...", LogTypes.Success).beginCapture();
+                    var log = Diagnostics.log("DOM Loading", "HTML document has finished loading. Triggering 'onDOMLoaded' ...", LogTypes.Success).beginCapture();
                     onDOMLoaded.autoTrigger = true;
                     onDOMLoaded.dispatchEvent();
                     log.endCapture();
@@ -120,7 +121,7 @@ namespace DS {
                 if (!_pageLoaded) {
                     _doOnDOMLoaded(); // (just in case - the DOM load must precede the page load!)
                     _pageLoaded = true;
-                    var log = Diagnostics.log("DOM Loading", "The document and all sub-resources have finished loading.", LogTypes.Success).beginCapture();
+                    var log = Diagnostics.log("DOM Loading", "The document and all sub-resources have finished loading. Triggering 'onPageLoaded' ...", LogTypes.Success).beginCapture();
                     onPageLoaded.autoTrigger = true;
                     onPageLoaded.dispatchEvent();
                     _doReady();

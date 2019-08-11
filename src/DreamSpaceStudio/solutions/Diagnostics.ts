@@ -116,7 +116,8 @@ namespace DS {
                 //var i = __logCaptureStack.lastIndexOf(this);
                 //if (i >= 0) __logCaptureStack.splice(i, 1);
                 var item = __logCaptureStack.pop();
-                if (item != null) throw new Exception("Your calls to begin/end log capture do not match up. Make sure the calls to 'endCapture()' match up to your calls to 'beginCapture()'.", this);
+                if (item != this)
+                    throw new Exception("Your calls to begin/end log capture do not match up. Make sure the calls to 'endCapture()' match up to your calls to 'beginCapture()'.", this);
             }
 
             toString(): string {

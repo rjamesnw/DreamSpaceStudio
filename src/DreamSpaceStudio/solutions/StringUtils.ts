@@ -358,12 +358,12 @@ namespace DS {
         /** Encodes any characters other than numbers and letters as html entities. 
          * @param html The HTML text to encode (typically to display in a browser).
          * @param ingoreChars You can optionally pass in a list of characters to ignore (such as "\r\n" to maintain source formatting when outputting HTML).
-         * @param encodeSpaceAsNBSP If true, the spaces are replaced with "&nbsp;" elements to maintain the spacing.  If false, the spaces will be collapsed when displayed in browsers.
+         * @param encodeSpaceAsNBSP If true, the spaces are replaced with "&nbsp;" elements to maintain the spacing.  If false (the default), the spaces will be collapsed when displayed in browsers.
          */
         export function encodeHTML(html: string, ingoreChars?: string, encodeSpaceAsNBSP = false) {
-            return html.replace(/[^0-9A-Za-z!@#$%^*()\-_=+{}\[\]:";',.?\/~`|\\]/g, function (c: string) {
+            return !isNullOrUndefined(html) && ('' + html).replace(/[^0-9A-Za-z!@#$%^*()\-_=+{}\[\]:";',.?\/~`|\\]/g, function (c: string) {
                 return ingoreChars && ingoreChars.indexOf(c) >= 0 ? c : encodeSpaceAsNBSP && c == ' ' ? "&nbsp;" : c == ' ' ? c : "&#" + c.charCodeAt(0) + ";";
-            });
+            }) || "";
         }
 
         // --------------------------------------------------------------------------------------------------------------------

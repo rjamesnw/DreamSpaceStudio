@@ -45,7 +45,7 @@ templateEngine.apply(app);
         app.use(express.urlencoded({
             extended: true // (O[K]=1 becomes O:{K:1} when true)
         }));
-
+        
         // Parse JSON bodies (as sent by API clients)
         app.use(express.json());
 
@@ -54,6 +54,7 @@ templateEngine.apply(app);
         //x app.set('view engine', 'html');
 
         app.use(express.static(DS.Path.combine(cwd, 'public')));
+        app.use(express.static(DS.Path.combine(cwd, 'solutions')));
 
         app.use('/', indexRoutes);
         app.use('/ide', ideRoutes);

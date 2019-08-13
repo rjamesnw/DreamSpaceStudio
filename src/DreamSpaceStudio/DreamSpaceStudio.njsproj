@@ -107,6 +107,7 @@
     <Content Include="..\..\README.md">
       <Link>README.md</Link>
     </Content>
+    <Content Include="ideas.txt" />
     <Content Include="public\stylesheets\login.css" />
     <Content Include="server\t.html.ts" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\tsconfig.json" />

@@ -202,9 +202,9 @@ namespace DS {
             else return new Exception(error(functionNameOrTitle, msg, source, false, false), source);
         }
 
-        /** Returns this exception and any inner exceptions formatted for display (simply calls DS.getErrorMessage(this)). */
-        toString() { return getErrorMessage(this); }
-        valueOf() { return this.message; }
+        /** Returns this exception and any inner exceptions formatted for display (simply calls DS.getErrorMessage(this, true)). */
+        toString() { return getErrorMessage(this, true); }
+        valueOf() { return this.toString(); }
     }
 
     export interface IException extends Exception { }

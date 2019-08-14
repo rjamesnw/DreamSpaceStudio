@@ -4,6 +4,7 @@
 import express = require('express');
 import fs = require('fs');
 import { viewsRoot, HttpContext, ViewData } from '../t.html';
+import apiRoutes from './api';
 const router = express.Router();
 
 router.get('/', (req: express.Request, res: express.Response) => {
@@ -26,6 +27,9 @@ router.get('/', (req: express.Request, res: express.Response) => {
         else throw "View not found: " + viewPath;
     });
 });
+
+router.use('/api', apiRoutes);
+
 
 export default router;
 

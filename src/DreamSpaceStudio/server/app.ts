@@ -30,7 +30,6 @@ import * as templateEngine from "./t.html";
 
 import indexRoutes from './routes/index';
 import ideRoutes from './routes/ide';
-import userRoutes from './routes/user';
 
 var app = express();
 
@@ -45,7 +44,7 @@ templateEngine.apply(app);
         app.use(express.urlencoded({
             extended: true // (O[K]=1 becomes O:{K:1} when true)
         }));
-        
+
         // Parse JSON bodies (as sent by API clients)
         app.use(express.json());
 
@@ -53,12 +52,16 @@ templateEngine.apply(app);
         //x app.set('views', path.join(__dirname, 'views'));
         //x app.set('view engine', 'html');
 
-        app.use(express.static(DS.Path.combine(cwd, 'public')));
-        app.use(express.static(DS.Path.combine(cwd, 'solutions')));
+        var publicRoot = DS.Path.combine(cwd, 'public');
+        console.log("Static Public Folder: " + publicRoot);
+        app.use(express.static(publicRoot));
+
+        var solutionsRoot = DS.Path.combine(cwd, 'solutions');
+        console.log("Static Solutions Folder: " + solutionsRoot);
+        app.use(express.static(solutionsRoot));
 
         app.use('/', indexRoutes);
         app.use('/ide', ideRoutes);
-        app.use('/users', userRoutes);
 
         // ... allow exiting the server when in dev mode ...
         if (app.get('env') === 'development')

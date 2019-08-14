@@ -45,11 +45,12 @@
   </PropertyGroup>
   <ItemGroup>
     <TypeScriptCompile Include="server\htmlreader.ts" />
+    <TypeScriptCompile Include="server\routes\api.ts" />
     <TypeScriptCompile Include="server\routes\ide.ts" />
-    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\login.ts" />
-    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\types\_global.ts" />
-    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\login.ts" />
-    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\types\_global.ts" />
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\actions\authentication\login.ts" />
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\%24types\_global.ts" />
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\actions\authentication\login.ts" />
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\%24types\_global.ts" />
     <TypeScriptCompile Include="solutions\Browser.ts" />
     <TypeScriptCompile Include="solutions\client\Browser.ts" />
     <TypeScriptCompile Include="solutions\client\Events.ts" />
@@ -143,9 +144,13 @@
   <ItemGroup>
     <Folder Include="sessions\" />
     <Folder Include="sessions\CA33027B6BC64585833A1C14FEA1C2BF\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\actions\authentication\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\actions\" />
     <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\" />
-    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\types\" />
-    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\types\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\%24types\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\actions\authentication\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\actions\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\%24types\" />
     <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\" />
     <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\" />
     <Folder Include="solutions\client\" />

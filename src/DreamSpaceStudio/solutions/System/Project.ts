@@ -11,7 +11,7 @@
         workflows?: (ISavedWorkflow | string)[]; // (references either 1. a saved workflow object, or 2. a UID that references the workflow object)
     }
 
-    export class Project extends TrackableObject {
+    export class Project extends VirtualFileSystem.File {
         // --------------------------------------------------------------------------------------------------------------------
 
         //x /** The script instance for this project. */
@@ -29,6 +29,9 @@
 
         /** The site for this project.  Every project contains a site object, even for API-only projects. For API-only projects there are no pages. */
         readonly site: Site = new Site();
+
+        /** True if this project holds the main entry point when no other project is active. */
+        isStartup: boolean;
 
         // --------------------------------------------------------------------------------------------------------------------
         // Create a type of trash-bin to hold expressions so the user can restore them, or delete permanently.
@@ -53,10 +56,10 @@
             /** The title of the project. */ public name: string,
             /** The project's description. */ public description?: string
         ) {
-            super();
+            super(solution._fileManager, solution);
             if (!Path.isValidFileName(name))
                 throw "The project title '" + name + "' must also be a valid file name. Don't include special directory characters, such as: \\ / ? % * ";
-            this.directory = this.solution.directory.createDirectory(VirtualFileSystem.combine("projects", this._uid)); // (the path is "User ID"/"project's unique ID"/ )
+            this.directory = this.solution.directory.createDirectory(VirtualFileSystem.combine("projects", this._id)); // (the path is "User ID"/"project's unique ID"/ )
         }
 
         // --------------------------------------------------------------------------------------------------------------------
@@ -92,19 +95,19 @@
                 for (var i = 0, n = source.workflows.length; i < n; ++i) {
                     var workflow = source.workflows[i];
 
-                    if (typeof workflow == 'object' && workflow.uid) {
-                        source.workflows[i] = workflow.uid; // (replaced the object entry with the ID before saving the project graph later; these will be files instead)
+                    if (typeof workflow == 'object' && workflow.$id) {
+                        source.workflows[i] = workflow.$id; // (replaced the object entry with the ID before saving the project graph later; these will be files instead)
 
                         var wfJSON = workflow && JSON.stringify(workflow) || null;
 
-                        var file = this.directory.createFile((workflow.name || workflow.uid) + ".wf.json", wfJSON); // (wf: Workflow file)
+                        var file = this.directory.createFile((workflow.name || workflow.$id) + ".wf.json", wfJSON); // (wf: Workflow file)
                         this.files[file.absolutePath.toLocaleLowerCase()] = file;
                     }
                 }
 
             var projectJSON = this.serialize(source);
 
-            file = this.directory.createFile(this._uid + ".dsp.json", projectJSON); // (dsp: DreamSpace Project file)
+            file = this.directory.createFile(this._id + ".dsp.json", projectJSON); // (dsp: DreamSpace Project file)
             this.files[file.absolutePath.toLocaleLowerCase()] = file;
         }
 
@@ -167,6 +170,16 @@
         //    }
         //    else return null;
         //}
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        /** Returns a list of resources that match the given URL path. */
+        async getResource(path: string) {
+            return new Promise<Resource[]>((ok, err) => {
+                var unloadedProjects = this._unloadedProjects;
+
+            });
+        }
 
         // --------------------------------------------------------------------------------------------------------------------
     }

@@ -216,7 +216,7 @@
 
     // ============================================================================================================================
 
-    export var FUNC_NAME_REGEX = /^function\s*(\S+)\s*\(/i; // (note: never use the 'g' flag here, or '{regex}.exec()' will only work once every two calls [attempts to traverse])
+    export var FUNC_NAME_REGEX = /^(?:function|class)\s*(\S+)\s*\(/i; // (note: never use the 'g' flag here, or '{regex}.exec()' will only work once every two calls [attempts to traverse])
 
     /** Attempts to pull the function name from the function object, and returns an empty string if none could be determined. */
     export function getFunctionName(func: Function): string {
@@ -226,10 +226,10 @@
             // ... check the type (this quickly detects internal/native Browser types) ...
             var typeString: string = Object.prototype.toString.call(func);
             // (typeString is formated like "[object SomeType]")
-            if (typeString.charAt(0) == '[' && typeString.charAt(typeString.length - 1) == ']')
+            if (typeString.charAt(0) == '[' && typeString.charAt(typeString.length - 1) == ']') // (ex: '[object Function]')
                 name = typeString.substring(1, typeString.length - 1).split(' ')[1];
             if (!name || name == "Function" || name == "Object") { // (a basic function/object was found)
-                if (typeof func == 'function') {
+                if (typeof func == 'function') { // (same result for 'class' types also)
                     // ... if this has a function text get the name as defined (in IE, Window+'' returns '[object Window]' but in Chrome it returns 'function Window() { [native code] }') ...
                     var fstr = Function.prototype.toString.call(func);
                     var results = (FUNC_NAME_REGEX).exec(fstr); // (note: for function expression object contexts, the constructor (type) name is always 'Function')

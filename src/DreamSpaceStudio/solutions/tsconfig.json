@@ -25,6 +25,11 @@
     "Templating.ts",
     "Templating.parse.ts",
     "./*.ts",
+    "System/Events.ts",
+    "System/VirtualFileSystem.ts",
+    "System/Resrouce.ts",
+    "System/Solution.ts",
+    "System/Project.ts",
     "./System/*.ts"
   ],
   "exclude": [

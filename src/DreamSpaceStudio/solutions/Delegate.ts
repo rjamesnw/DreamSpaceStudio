@@ -52,13 +52,13 @@ namespace DS {
          */
         static getKey<TFunc extends DelegateFunction>(object: TrackableObject, func: TFunc): string {
             var isstaticctx = Delegate.__validate("getKey()", object, func);
-            var id = isstaticctx ? '-1' : object._uid.toString();
+            var id = isstaticctx ? '-1' : object._id.toString();
             return id + "," + (<IFunctionInfo><any>func).$__name; // (note: -1 means "global scope")
         }
 
         protected static __validate(callername: string, object: Object, func: DelegateFunction): boolean { // (returns 'true' if static)
             var isstaticctx: boolean = object === void 0 || object === null; // ('$__fullname' exists on modules and registered type objects)
-            if (!isstaticctx && typeof (<TrackableObject>object)._uid != 'number')
+            if (!isstaticctx && typeof (<TrackableObject>object)._id != 'number')
                 throw Exception.error("Delegate." + callername, "The object for this delegate does not contain a numerical '_uid' value (used as a global object reference for serialization), or '$__fullname' value (for static type references).  See 'AppDomain.registerClass()'.", this);
             return isstaticctx;
         }

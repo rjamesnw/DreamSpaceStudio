@@ -22,8 +22,8 @@
             reviewTimerHandle = void 0;
         }
 
-        export class DirectoryItem {
-            protected _fileManager: FileManager;
+        export class DirectoryItem extends TrackableObject {
+            readonly _fileManager: FileManager;
 
             /** Holds the UTC time the item was stored locally. If this is undefined then the item is in memory only, which might result in data loss if not stored on the server. */
             storedLocally: Date;
@@ -32,6 +32,7 @@
 
             /** The last time this*/
             get lastAccessed() { return this._lastAccessed; }
+
             /** Updates the 'lastAccessed' date+time value to the current value. Touching this directory item also refreshes the dates of all parent items. 
              * When the date of an item changes after a touch, it starts the process of reviewing and synchronizing with the back-end.
              */
@@ -82,7 +83,7 @@
 
             // --------------------------------------------------------------------------------------------------------------------
 
-            constructor(fileManager: FileManager, parent?: DirectoryItem) { this._fileManager = fileManager; this.parent = parent; }
+            constructor(fileManager: FileManager, parent?: DirectoryItem) { super(); this._fileManager = fileManager; this.parent = parent; }
 
             toString() { return this.absolutePath; }
 
@@ -299,7 +300,7 @@
             static get currentUser() { if (User.current) return User.current; throw "'There is no current user! User.changeCurrentUser()' must be called first."; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
 
             /** The API endpoint to the directory for the current user. */
-            static get currentUserEndpoint() { return combine(this.apiEndpoint, FileManager.currentUser._uid); }
+            static get currentUserEndpoint() { return combine(this.apiEndpoint, FileManager.currentUser._id); }
 
             /** The root directory represents the API endpoint at 'FileManager.apiEndpoint'. */
             readonly root: Directory;
@@ -316,28 +317,28 @@
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
             getDirectory(path?: string, userId?: string): Directory {
-                return this.root.getDirectory(combine(userId || FileManager.currentUser._uid, path));
+                return this.root.getDirectory(combine(userId || FileManager.currentUser._id, path));
             }
 
             /** Creates a directory under the current user root endpoint. 
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
             createDirectory(path: string, userId?: string): Directory {
-                return this.root.createDirectory(combine(userId || FileManager.currentUser._uid, path));
+                return this.root.createDirectory(combine(userId || FileManager.currentUser._id, path));
             }
 
             /** Gets a file under the current user root endpoint.  
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
             getFile(filePath: string, userId?: string): File {
-                return this.root.getFile(combine(userId || FileManager.currentUser._uid, filePath));
+                return this.root.getFile(combine(userId || FileManager.currentUser._id, filePath));
             }
 
             /** Creates a file under the current user root endpoint.  
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
             createFile(filePath: string, contents?: string, userId?: string): File {
-                return this.root.createFile(combine(userId || FileManager.currentUser._uid, filePath), contents);
+                return this.root.createFile(combine(userId || FileManager.currentUser._id, filePath), contents);
             }
 
             // --------------------------------------------------------------------------------------------------------------------

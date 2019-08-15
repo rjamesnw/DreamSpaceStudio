@@ -4,21 +4,21 @@
   "codeBase": "file://~/projects/A0B9F8AF038F470BA2B56800CC3C42AA",
   "categories": [
     {
-      "id": "B99EF1A5CA2445EE9B8684A06687B749",
+      "$id": "B99EF1A5CA2445EE9B8684A06687B749",
       "name": "Actions", /*(1. make all lowercase, 2. only identifier-similar chars [a-zA-Z0-9 _-.], 3. spaces become "_")*/
       "categories": [
         {
-          "id": "1D43B37BC1A549F1B338374FD2C9A59F",
+          "$id": "1D43B37BC1A549F1B338374FD2C9A59F",
           "name": "Authentication"
         }
       ]
     },
     {
-      "id": "325061075D404BF58C538D921F6F2145",
+      "$id": "325061075D404BF58C538D921F6F2145",
       "name": "Workflows",
       "categories": [
         {
-          "id": "C3F4D3C6FD834F92B32AD9804AD81292",
+          "$id": "C3F4D3C6FD834F92B32AD9804AD81292",
           "name": "Authentication"
         }
       ]
@@ -26,34 +26,56 @@
   ],
   "actions": [
     {
+      "$id": "2EE4527B23BF4B7391A92DD27198BE15",
       "name": "Login",
       "category": "B99EF1A5CA2445EE9B8684A06687B749", /* (relative from client/server folders) */
-      "description": "Handles the developer login process."
+      "description": "Handles the developer login process. If a 'targetUrl' query exists, the user is redirect after login."
+    },
+    {
+      "$id": "2EE4527B23BF4B7391A92DD27198BE15",
+      "name": "Login Or Redirect",
+      "category": "B99EF1A5CA2445EE9B8684A06687B749",
+      "description": "Handles redirecting to either the login page, or the IDE if already logged in."
     }
   ],
   "resources": [
     {
-      "id": "B351CA431DB14DB7B86D93EEA63A3D3F",
-      "type": "Page",
+      "$id": "C06C78C99F7744ADB4976665F90EF240",
+      "$type": "Page",
+      "name": "Index",
+      "description": "A switchboard that redirects to either login, or the IDE. This works better with mobile apps wrapped with Cordova; keeping the main views on the web server.",
+      "route": "/ide/index",
+      "view": "/views/ide/index",
+      "controls": [],
+      "events": {
+        "onload": {
+          "workflow": "DEF1B99CD78B4E8595D7ED73FE8D7A0D",
+          "parameters": []
+        }
+      }
+    },
+    {
+      "$id": "B351CA431DB14DB7B86D93EEA63A3D3F",
+      "$type": "Page",
       "name": "Login",
       "route": "/ide/login",
       "view": "/views/ide/login",
       "controls": [
         {
-          "id": "4807AB8F16F04B0A948B3CF46ECBE2BA", /* (all value sources will contain a 'getValue()' function that normalizes getting values across different sources; all referenced by GUIDs) */
+          "$id": "4807AB8F16F04B0A948B3CF46ECBE2BA", /* (all value sources will contain a 'getValue()' function that normalizes getting values across different sources; all referenced by GUIDs) */
           "maxLength": 128,
           "type": "Email"
         },
         {
-          "id": "02B4F5FEDEA347F09711801624A7AE7A",
+          "$id": "02B4F5FEDEA347F09711801624A7AE7A",
           "maxLength": 64,
           "type": "Password"
         },
         {
-          "id": "796486E7796B459099A9B2730F5AC5D7",
+          "$id": "796486E7796B459099A9B2730F5AC5D7",
           "events": {
             "onclick": {
-              "workflow": "Login Process",
+              "workflow": "C502A783793F4218B6AA2C0ED475F14F",
               "parameters": [ "username=4807AB8F16F04B0A948B3CF46ECBE2BA", "password=02B4F5FEDEA347F09711801624A7AE7A" ]
             }
           }
@@ -61,8 +83,8 @@
       ]
     },
     {
-      "id": "29D0E250EB3247B0BB6293E3B5CE2BA5",
-      "type": "REST",
+      "$id": "29D0E250EB3247B0BB6293E3B5CE2BA5",
+      "$type": "Rest",
       "name": "Login",
       "route": "/ide/api/login",
       "method": "POST",
@@ -72,10 +94,18 @@
   ],
   "workflows": [
     {
+      "$id": "DEF1B99CD78B4E8595D7ED73FE8D7A0D",
+      "name": "Login Check",
+      "category": "5E894309DCEE49B1A8241DEDEAB48D29",
+      "description": "Starts the application",
+      "action": "LoginCheck"
+    },
+    {
+      "$id": "C502A783793F4218B6AA2C0ED475F14F",
       "name": "Login Process",
       "category": "C3F4D3C6FD834F92B32AD9804AD81292",
       "description": "Handles the developer login process.",
-      "action": "Login"
+      "action": "2EE4527B23BF4B7391A92DD27198BE15"
     }
   ]
 }

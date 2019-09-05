@@ -2,5 +2,6 @@
   "$id": "31C541D23F2047389256AA479909B8E5",
   "$type": "Solution",
   "name": "DreamSpace",
-  "codeBase": "file://~/solutions/31C541D23F2047389256AA479909B8E5"
+  "codeBase": "file://~/solutions/31C541D23F2047389256AA479909B8E5",
+  "projects": [ "A0B9F8AF038F470BA2B56800CC3C42AA" ]
 }

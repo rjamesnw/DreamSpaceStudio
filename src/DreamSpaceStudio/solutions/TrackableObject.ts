@@ -1,7 +1,7 @@
 namespace DS {
     export interface ISavedTrackableObject {
         $id: string;
-        $type: string;
+        $objectType: string;
     }
 
     var trackedObjects: IndexedObject = {};
@@ -27,7 +27,8 @@ namespace DS {
         }
         private $__id: string;
 
-        readonly _type = getTypeName(this);
+        /** The name of the class the instance was created from. */
+        readonly _objectType = getTypeName(this);
 
         constructor() {
             this._id = Utilities.createGUID(false);
@@ -41,7 +42,7 @@ namespace DS {
             target = target || <ISavedTrackableObject>{};
 
             target.$id = this.$__id;
-            target.$type = this.$__type;
+            target.$objectType = this.$__type;
 
             return target;
         }
@@ -51,8 +52,8 @@ namespace DS {
             if (target) {
                 var _this = <Writeable<this>>this;
 
-                _this.$__name = target.$id;
-                _this.$__type = target.$type;
+                _this._id = target.$id;
+                _this._objectType = target.$objectType;
             }
             return this;
         }

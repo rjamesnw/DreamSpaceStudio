@@ -16,7 +16,10 @@
   "files": [
     "./ds.ts" // (make this first)
   ],
-  "include": [ "./*.ts" ],
+  "include": [
+    "./*.ts",
+    "./System/*.ts"
+  ],
   "exclude": [
     "node_modules",
     "projects",

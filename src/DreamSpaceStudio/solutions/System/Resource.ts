@@ -1,14 +1,14 @@
 namespace DS {
 
     /** Implemented by objects that can be assigned to a resource entry.  This allows such objects to support being added as a resource. */
-    export interface IResourceSource extends Pick<TrackableObject, '_id' | '_type'> {
+    export interface IResourceSource extends Pick<TrackableObject, '_id' | '_objectType'> {
         /** Returns the underlying value for a resource supported object. */
         getResourceValue(): Promise<any>;
         getResourceType(): ResourceTypes;
     }
 
     /** A single resource that exists on some URL path. 
-     * Projects define resources specific to that project, but other projects can also reference them, creating a dependency.
+     * Projects define resources specific to them, but other projects can also reference them, creating a dependency.
      * All resources have a globally unique ID (GUID), but not all resources may have unique paths. Multiple resources can exist
      * on a single route. If so, the first one found is returned to the client; however, console/debug warnings may be given.
      */

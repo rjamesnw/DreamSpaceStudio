@@ -57,6 +57,9 @@
     <TypeScriptCompile Include="solutions\client\Polyfills.ts" />
     <TypeScriptCompile Include="solutions\client\Storage.ts" />
     <TypeScriptCompile Include="solutions\client\StringUtils.ts" />
+    <TypeScriptCompile Include="solutions\client\System\Page.ts" />
+    <TypeScriptCompile Include="solutions\client\System\Project.ts" />
+    <TypeScriptCompile Include="solutions\client\System\Solution.ts" />
     <TypeScriptCompile Include="solutions\Delegate.ts" />
     <TypeScriptCompile Include="solutions\DependentObject.ts" />
     <TypeScriptCompile Include="solutions\Diagnostics.ts" />
@@ -67,6 +70,9 @@
     <TypeScriptCompile Include="solutions\client\navigation.ts" />
     <TypeScriptCompile Include="solutions\HTMLReader.ts" />
     <TypeScriptCompile Include="solutions\server\ds.ts" />
+    <TypeScriptCompile Include="solutions\server\System\Page.ts" />
+    <TypeScriptCompile Include="solutions\server\System\Project.ts" />
+    <TypeScriptCompile Include="solutions\server\System\Solution.ts" />
     <TypeScriptCompile Include="solutions\server\_global.ts" />
     <TypeScriptCompile Include="solutions\System\Component.ts" />
     <TypeScriptCompile Include="solutions\System\EventDefinition.ts" />
@@ -123,6 +129,7 @@
     <Content Include="solutions\readme.txt" />
     <Content Include="solutions\client\tsconfig.json" />
     <Content Include="solutions\server\tsconfig.json" />
+    <Content Include="solutions.json" />
     <Content Include="solutions\tsconfig.json" />
     <Content Include="server\tsconfig.json" />
     <Content Include="package.json" />
@@ -155,6 +162,8 @@
     <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\" />
     <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\" />
     <Folder Include="solutions\client\" />
+    <Folder Include="solutions\client\System\" />
+    <Folder Include="solutions\server\System\" />
     <Folder Include="solutions\System\" />
     <Folder Include="solutions\plugins\" />
     <Folder Include="solutions\server\" />

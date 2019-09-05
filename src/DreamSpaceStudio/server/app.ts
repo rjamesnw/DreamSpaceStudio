@@ -50,7 +50,7 @@ var fm = DS.VirtualFileSystem.fileManager;
     //await ds.init();
     // ... load all existing projects ...
 
-    var solutions = await DS.Solutions.load(); // (this will load the solutions only, and not projects, from the file system)
+    var solutions = await DS.Solutions.refresh(); // (this will load the solutions only, and not projects, from the file system)
     var startupSolution = solutions.startupSolution;
     var startupProject: DS.Project; // (can't load this yet until we know for sure what solution actually gets loaded)
 

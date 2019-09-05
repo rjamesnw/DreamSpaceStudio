@@ -442,6 +442,13 @@ namespace DS {
     export var types = modules;
 
     // =======================================================================================================================
+
+    /** The 'Abstracts' namespace holds functions, properties, and types that are shared between the server and client sides. Each side
+     * then extends the behaviors for the environment. Most types in the 'Abstracts' namespace are abstract types and need to be implemented.
+     */
+    export namespace Abstracts { }
+
+    // =======================================================================================================================
 }
 
 if (isNode && exports)

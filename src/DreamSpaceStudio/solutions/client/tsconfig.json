@@ -15,7 +15,8 @@
   },
   "include": [
     "Events.ts",
-    "./*.ts"
+    "./*.ts",
+    "./System/*.ts"
   ],
   "exclude": [
     "node_modules",

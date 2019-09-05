@@ -33,7 +33,7 @@ namespace DS {
         /** A solution with ALL projects owned by this user. 
          * Note: A solution defines what projects a user has access to, but does not automatically load all projects.
          */
-        solution: Solution;
+        solution: Abstracts.Solution;
 
         constructor(
             public email: string,

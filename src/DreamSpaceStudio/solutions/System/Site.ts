@@ -20,7 +20,7 @@ namespace DS {
         url: DeploymentEnvironmentsType = <any>[];
 
         /** One or more page templates that belong to the site. This is empty for API-only sites. */
-        readonly pages: Page[] = [];
+        readonly pages: Abstracts.Page[] = [];
     }
 
 }

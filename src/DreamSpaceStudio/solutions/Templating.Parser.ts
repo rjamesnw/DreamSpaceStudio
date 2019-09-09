@@ -15,8 +15,8 @@ namespace DS {
 
             export interface IHTMLParseResult { rootElements: VDOM.Node[]; templates: IDataTemplates }
 
-            var nameOf_Templating_Phrase_phraseType = DS.nameof(() => VDOM.Templating.Phrase.prototype.phraseType)
-            var nameOf_Templating_Header_headerLevel = DS.nameof(() => VDOM.Templating.Header.prototype.headerLevel)
+            var nameOf_Templating_Phrase_phraseType = DS.Utilities.nameof(() => VDOM.Templating.Phrase.prototype.phraseType)
+            var nameOf_Templating_Header_headerLevel = DS.Utilities.nameof(() => VDOM.Templating.Header.prototype.headerLevel)
 
             /** Parses HTML to create a graph object tree, and also returns any templates found.
             * This concept is similar to using XAML to load objects in WPF. As such, you have the option to use an HTML template, or dynamically build your

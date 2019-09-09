@@ -6,7 +6,7 @@ export async function login(username: string, password: string): Promise<DS.IO.I
     // ... this will use the file system to look up the user by iterating over the user GUID directories to find the user by username;
     //     this is find, since there will only ever be a handful of developers working on the system ...
 
-    var dirs = await DS.getDirectories("users");
+    var dirs = await DS.IO.getDirectories("users");
 
     response = new DS.IO.Response("OK", true);
 

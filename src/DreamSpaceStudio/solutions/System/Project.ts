@@ -13,18 +13,21 @@
 
     export namespace Abstracts {
 
-        export abstract class Project extends VirtualFileSystem.File {
+        export abstract class Project extends VirtualFileSystem.Abstract.File {
             // --------------------------------------------------------------------------------------------------------------------
+
+            static CONFIG_FILENAME = "project.json";
+            configFilename = Solution.CONFIG_FILENAME;
 
             //x /** The script instance for this project. */
             //x get script() { return this._script; }
             //x protected _script: IFlowScript;
 
             /** The file storage directory for this project. */
-            readonly directory: VirtualFileSystem.Directory;
+            readonly directory: VirtualFileSystem.Abstract.Directory;
 
             /** A list of all files associated with this project, indexed by the absolute lowercase file path. */
-            readonly files: { [index: string]: VirtualFileSystem.File } = {};
+            readonly files: { [index: string]: VirtualFileSystem.Abstract.File } = {};
 
             /** A list of user IDs and assigned roles for this project. */
             readonly userSecurity = new UserAccess();
@@ -90,7 +93,28 @@
              * is no free space in the local store, the system will try to sync with a remote store.  If that fails, the
              * data will only be in memory and a UI warning will display.
              */
-            abstract saveToStorage(source: ISavedProject): void;
+            saveToStorage(source = this.save()) {
+                if (!source) return; // (nothing to do)
+
+                if (Array.isArray(source.workflows))
+                    for (var i = 0, n = source.workflows.length; i < n; ++i) {
+                        var workflow = source.workflows[i];
+
+                        if (typeof workflow == 'object' && workflow.$id) {
+                            source.workflows[i] = workflow.$id; // (replaced the object entry with the ID before saving the project graph later; these will be files instead)
+
+                            var wfJSON = workflow && JSON.stringify(workflow) || null;
+
+                            var file = this.directory.createFile((workflow.name || workflow.$id) + ".wf.json", wfJSON); // (wf: Workflow file)
+                            this.files[file.absolutePath.toLocaleLowerCase()] = file;
+                        }
+                    }
+
+                var projectJSON = this.serialize(source);
+
+                file = this.directory.createFile(this._id + ".dsp.json", projectJSON); // (dsp: DreamSpace Project file)
+                this.files[file.absolutePath.toLocaleLowerCase()] = file;
+            }
 
             load(target?: ISavedProject): this {
                 if (target) {
@@ -98,10 +122,12 @@
 
                     super.load(target);
 
-                    _this.name = target.name;
-                    _this.description = target.description;
+                    if (!_this.propertyChanged<ISavedProject>('name')) _this.name = target.name;
+                    if (!_this.propertyChanged<ISavedProject>('description')) _this.description = target.description;
 
                     // TODO: associated files and scripts.
+
+                    this._lastConfig = target;
                 }
                 return this;
             }
@@ -160,6 +186,17 @@
                     var unloadedProjects = this._unloadedProjects;
 
                 });
+            }
+
+            // --------------------------------------------------------------------------------------------------------------------
+
+            /** Loads/merges any changes from the server-side JSON configuration file. */
+            async refresh(): Promise<void> {
+                var configFile = this.directory.getFile(this.configFilename);
+                if (!configFile) return;
+                var configJSON = await configFile.readText();
+                var config: ISavedProject = JSON.parse(configJSON);
+                this.load(config);
             }
 
             // --------------------------------------------------------------------------------------------------------------------

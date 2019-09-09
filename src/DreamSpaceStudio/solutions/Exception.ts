@@ -76,7 +76,7 @@ namespace DS {
 
                 if (caller) {
                     while (caller) {
-                        var callerName = getFullTypeName(caller) || "/*anonymous*/";
+                        var callerName = Utilities.getFullTypeName(caller) || "/*anonymous*/";
                         var args = caller.arguments;
                         var _args = args && args.length > 0 ? DS.global.Array.prototype.join.call(args, ', ') : "";
                         if (trace) trace += "called from ";

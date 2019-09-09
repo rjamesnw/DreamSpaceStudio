@@ -5,6 +5,7 @@
 namespace DS {
     // ========================================================================================================================
 
+    /** Contains a few utility functions for working with strings. */
     export namespace StringUtils {
         /** Replaces one string with another in a given string.
             * This function is optimized to select the faster method in the current browser. For instance, 'split()+join()' is
@@ -128,6 +129,16 @@ namespace DS {
                 lines[i] = lineFilter && (_line = lineFilter(1 + i, marginSize, paddedLineNumStr, line)) !== void 0 && _line !== null && _line || paddedLineNumStr + " " + line;
             }
             return lines.join("\r\n");
+        }
+
+        /** Converts a byte array to a UTF8 string. */
+        export function byteArrayToString(array: Uint8Array): string {
+            return new TextDecoder('utf-8').decode(array);
+        }
+
+        /** Converts a UTF8 string to a byte array. */
+        export function stringToByteArray(text: string): Uint8Array {
+            return new TextEncoder().encode(text);
         }
     }
 

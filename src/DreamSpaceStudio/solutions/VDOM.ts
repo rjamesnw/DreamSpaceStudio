@@ -120,7 +120,7 @@
             try {
                 clone = new (<any>o.constructor)();
             }
-            catch (err) { throw new Error(`deepClone(): Could not create instance for constructor '${DS.getFunctionName(o.constructor)}' (parameters may be required).\r\n${err}`); }
+            catch (err) { throw new Error(`deepClone(): Could not create instance for constructor '${DS.Utilities.getFunctionName(o.constructor)}' (parameters may be required).\r\n${err}`); }
             cloneWeakMap.set(v, clone);
             for (var p in o)
                 if (Object.prototype.hasOwnProperty.call(o, p))

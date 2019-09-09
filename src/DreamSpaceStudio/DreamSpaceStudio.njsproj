@@ -60,6 +60,7 @@
     <TypeScriptCompile Include="solutions\client\System\Page.ts" />
     <TypeScriptCompile Include="solutions\client\System\Project.ts" />
     <TypeScriptCompile Include="solutions\client\System\Solution.ts" />
+    <TypeScriptCompile Include="solutions\client\System\VirtualFileSystem.ts" />
     <TypeScriptCompile Include="solutions\Delegate.ts" />
     <TypeScriptCompile Include="solutions\DependentObject.ts" />
     <TypeScriptCompile Include="solutions\Diagnostics.ts" />
@@ -73,10 +74,10 @@
     <TypeScriptCompile Include="solutions\server\System\Page.ts" />
     <TypeScriptCompile Include="solutions\server\System\Project.ts" />
     <TypeScriptCompile Include="solutions\server\System\Solution.ts" />
+    <TypeScriptCompile Include="solutions\server\System\VirtualFileSystem.ts" />
     <TypeScriptCompile Include="solutions\server\_global.ts" />
     <TypeScriptCompile Include="solutions\System\Component.ts" />
     <TypeScriptCompile Include="solutions\System\EventDefinition.ts" />
-    <TypeScriptCompile Include="solutions\client\FileManager.ts" />
     <TypeScriptCompile Include="solutions\System\EventDispatcher.ts" />
     <TypeScriptCompile Include="solutions\System\Events.ts" />
     <TypeScriptCompile Include="solutions\System\Resource.ts" />

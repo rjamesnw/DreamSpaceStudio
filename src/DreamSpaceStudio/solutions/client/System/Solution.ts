@@ -22,28 +22,6 @@
     * When a project instance is created, the default 'Solution.onCreateProject' handler is used, which can be overridden for derived project types.
     */
     export class Solution extends Abstracts.Solution {
-
-        /** Compiles a list of all projects, both locally and remotely. */
-        async refreshProjects() {
-            return new Promise<Project>((ok, err) => {
-                var unloadedProjects = this._unloadedProjects;
-
-            });
-        }
-
-        /** Returns a list of projects that match the given URL path. */
-        async getProjects(path: string) {
-            return new Promise<Project[]>((ok, err) => {
-                var unloadedProjects = this._unloadedProjects;
-
-            });
-        }
-
-        /** Loads/merges any changes from the server-side JSON configuration file. */
-        async refresh(): Promise<void> {
-            var unloadedProjects = this._unloadedProjects;
-            return null;
-        }
     }
 
     // ========================================================================================================================

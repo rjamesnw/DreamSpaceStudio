@@ -22,7 +22,7 @@
             reviewTimerHandle = void 0;
         }
 
-        export class DirectoryItem extends TrackableObject {
+        export class DirectoryItem extends PersistableObject {
             readonly _fileManager: FileManager;
 
             /** Holds the UTC time the item was stored locally. If this is undefined then the item is in memory only, which might result in data loss if not stored on the server. */
@@ -205,85 +205,95 @@
             //}
         }
 
-        function _defaultCreateDirHandler(fileManager: FileManager, parent?: DirectoryItem) {
-            return new Directory(fileManager, parent);
-        };
+        export namespace Abstract {
+            export declare function _defaultCreateDirHandler(fileManager: FileManager, parent?: DirectoryItem): Directory; // (this will be defined on the client/server sides)
 
-        export class Directory extends DirectoryItem {
-            /** The function used to create directory instances.
-             * Host programs can overwrite this event property with a handler to create and return derived types instead.
-             */
-            static get onCreateDirectory() { return this._onCreateDirectory || _defaultCreateDirHandler; }
-            static set onCreateDirectory(value) { if (typeof value != 'function') throw "Directory.onCreateDirectory: Set failed - value is not a function."; this._onCreateDirectory = value; }
-            private static _onCreateDirectory = _defaultCreateDirHandler;
+            export abstract class Directory extends DirectoryItem {
+                /** The function used to create directory instances.
+                 * Host programs can overwrite this event property with a handler to create and return derived types instead.
+                 */
+                static get onCreateDirectory() { return this._onCreateDirectory || _defaultCreateDirHandler; }
+                static set onCreateDirectory(value) { if (typeof value != 'function') throw "Directory.onCreateDirectory: Set failed - value is not a function."; this._onCreateDirectory = value; }
+                private static _onCreateDirectory = _defaultCreateDirHandler;
 
-            constructor(fileManager: FileManager, parent?: DirectoryItem) { super(fileManager, parent); }
+                constructor(fileManager: FileManager, parent?: DirectoryItem) { super(fileManager, parent); }
 
-            getFile(filePath: string): File {
-                var item = this.resolve(filePath);
-                if (!(item instanceof File)) return null;
-                return item;
-            }
-
-            getDirectory(path: string): Directory {
-                var item = this.resolve(path);
-                if (!(item instanceof Directory)) return null;
-                return item;
-            }
-
-            /** Creates a directory under the user root endpoint. */
-            createDirectory(path: string): Directory {
-                if (path === void 0 || path === null || !this.hasChildren) return null;
-                var parts = Path.getPathParts(path), item: Directory = this; // (if path is empty it should default to this directory)
-                for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
-                    // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
-                    var childItem = item._childItemsByName[parts[i]];
-                    if (!childItem)
-                        item = Directory.onCreateDirectory(this._fileManager, this); // (create new directory names along the route)
-                    else if (childItem instanceof Directory)
-                        item = childItem; // (directory found, go in and continue)
-                    else
-                        throw "Cannot create path '" + path + "' under '" + this + "': '" + item + "' is not a directory.";
+                getFile(filePath: string): File {
+                    var item = this.resolve(filePath);
+                    if (!(item instanceof File)) return null;
+                    return item;
                 }
-                return item;
+
+                getDirectory(path: string): Directory {
+                    var item = this.resolve(path);
+                    if (!(item instanceof Directory)) return null;
+                    return item;
+                }
+
+                /** Creates a directory under the user root endpoint. */
+                createDirectory(path: string): Directory {
+                    if (path === void 0 || path === null || !this.hasChildren) return null;
+                    var parts = Path.getPathParts(path), item: Directory = this; // (if path is empty it should default to this directory)
+                    for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
+                        // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
+                        var childItem = item._childItemsByName[parts[i]];
+                        if (!childItem)
+                            item = Directory.onCreateDirectory(this._fileManager, this); // (create new directory names along the route)
+                        else if (childItem instanceof Directory)
+                            item = childItem; // (directory found, go in and continue)
+                        else
+                            throw "Cannot create path '" + path + "' under '" + this + "': '" + item + "' is not a directory.";
+                    }
+                    return item;
+                }
+
+                createFile(filePath: string, contents?: string): File {
+                    var filename = Path.getName(filePath);
+                    var directoryPath = Path.getPath(filePath);
+                    if (!filename) throw "A file name is required.";
+                    var dir = this.createDirectory(directoryPath);
+                    return File.onCreateFile(this._fileManager, dir, contents);
+                }
+
+                getJSONStructure() {
+                }
             }
 
-            createFile(filePath: string, contents?: string): File {
-                var filename = Path.getName(filePath);
-                var directoryPath = Path.getPath(filePath);
-                if (!filename) throw "A file name is required.";
-                var dir = this.createDirectory(directoryPath);
-                return File.onCreateFile(this._fileManager, dir, contents);
+            export declare function _defaultCreateFileHandler(fileManager: FileManager, parent?: DirectoryItem, content?: string): File; // (this will be defined on the client/server sides)
+
+            export abstract class File extends DirectoryItem {
+                /** The function used to create file instances.
+                 * Host programs can overwrite this event property with a handler to create and return derived types instead.
+                 */
+                static get onCreateFile() { return this._onCreateFile || _defaultCreateFileHandler; }
+                static set onCreateFile(value) { if (typeof value != 'function') throw "File.onCreateFile: Set failed - value is not a function."; this._onCreateFile = value; }
+                private static _onCreateFile: typeof _defaultCreateFileHandler;
+
+                get contents() { return this._contents; }
+                set contents(value: string) { this._contents = value; this.touch(); }
+                private _contents: string; // (a binary string with the file contents)
+
+                constructor(fileManager: FileManager, parent?: DirectoryItem, content?: string) {
+                    super(fileManager, parent);
+                    if (content !== void 0)
+                        this._contents = content;
+                }
+
+                toBase64() { return Encoding.base64Encode(this.contents); }
+                fromBase64(contentsB64: string) { this.contents = Encoding.base64Decode(contentsB64); }
+
+                /** Reads the file contents as an array of bytes. */
+                async read(): Promise<Uint8Array> {
+                    var contents = await DS.IO.read(this.absolutePath);
+                    return contents;
+                }
+                /** Reads the file binary contents as text in the UTF8 format. */
+                async readText(): Promise<string> {
+                    var contents = await DS.IO.read(this.absolutePath);
+                    var text = StringUtils.byteArrayToString(contents);
+                    return text;
+                }
             }
-
-            getJSONStructure() {
-            }
-        }
-
-        function _defaultCreateFileHandler(fileManager: FileManager, parent?: DirectoryItem, content?: string) {
-            return new File(fileManager, parent, content);
-        };
-
-        export class File extends DirectoryItem {
-            /** The function used to create file instances.
-             * Host programs can overwrite this event property with a handler to create and return derived types instead.
-             */
-            static get onCreateFile() { return this._onCreateFile || _defaultCreateFileHandler; }
-            static set onCreateFile(value) { if (typeof value != 'function') throw "File.onCreateFile: Set failed - value is not a function."; this._onCreateFile = value; }
-            private static _onCreateFile = _defaultCreateFileHandler;
-
-            get contents() { return this._contents; }
-            set contents(value: string) { this._contents = value; this.touch(); }
-            private _contents: string; // (a binary string with the file contents)
-
-            constructor(fileManager: FileManager, parent?: DirectoryItem, content?: string) {
-                super(fileManager, parent);
-                if (content !== void 0)
-                    this._contents = content;
-            }
-
-            toBase64() { return Encoding.base64Encode(this.contents); }
-            fromBase64(contentsB64: string) { this.contents = Encoding.base64Decode(contentsB64); }
         }
 
         /** Manages files in a virtual file system. This allows project files to be stored locally and synchronized with the server when a connection is available.
@@ -303,41 +313,41 @@
             static get currentUserEndpoint() { return combine(this.apiEndpoint, FileManager.currentUser._id); }
 
             /** The root directory represents the API endpoint at 'FileManager.apiEndpoint'. */
-            readonly root: Directory;
+            readonly root: Abstract.Directory;
 
             // --------------------------------------------------------------------------------------------------------------------
 
             constructor(
                 /** The URL endpoint for the FlowScript project files API. Defaults to 'FileManager.apiEndpoint'. */
                 public apiEndpoint = FileManager.apiEndpoint) {
-                this.root = Directory.onCreateDirectory(this);
+                this.root = Abstract.Directory.onCreateDirectory(this);
             }
 
             /** Gets a directory under the current user root endpoint. 
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
-            getDirectory(path?: string, userId?: string): Directory {
+            getDirectory(path?: string, userId?: string): Abstract.Directory {
                 return this.root.getDirectory(combine(userId || FileManager.currentUser._id, path));
             }
 
             /** Creates a directory under the current user root endpoint. 
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
-            createDirectory(path: string, userId?: string): Directory {
+            createDirectory(path: string, userId?: string): Abstract.Directory {
                 return this.root.createDirectory(combine(userId || FileManager.currentUser._id, path));
             }
 
             /** Gets a file under the current user root endpoint.  
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
-            getFile(filePath: string, userId?: string): File {
+            getFile(filePath: string, userId?: string): Abstract.File {
                 return this.root.getFile(combine(userId || FileManager.currentUser._id, filePath));
             }
 
             /** Creates a file under the current user root endpoint.  
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
-            createFile(filePath: string, contents?: string, userId?: string): File {
+            createFile(filePath: string, contents?: string, userId?: string): Abstract.File {
                 return this.root.createFile(combine(userId || FileManager.currentUser._id, filePath), contents);
             }
 
@@ -347,8 +357,8 @@
         // ========================================================================================================================
 
         /** Combine two paths into one. */
-        export function combine(path1: string | Directory, path2: string | Directory) {
-            return Path.combine(path1 instanceof Directory ? path1.absolutePath : path1, path2 instanceof Directory ? path2.absolutePath : path2);
+        export function combine(path1: string | Abstract.Directory, path2: string | Abstract.Directory) {
+            return Path.combine(path1 instanceof Abstract.Directory ? path1.absolutePath : path1, path2 instanceof Abstract.Directory ? path2.absolutePath : path2);
         }
 
         /** Manages the global file system for FlowScript by utilizing local storage space and remote server space. 

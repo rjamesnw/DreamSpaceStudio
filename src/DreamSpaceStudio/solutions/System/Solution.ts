@@ -25,13 +25,16 @@
         * Holds a collection of projects.
         * When a project instance is created, the default 'Solution.onCreateProject' handler is used, which can be overridden for derived project types.
         */
-        export abstract class Solution extends VirtualFileSystem.File {
+        export abstract class Solution extends VirtualFileSystem.Abstract.File {
+            static CONFIG_FILENAME = "solution.json";
+            configFilename = Solution.CONFIG_FILENAME;
+
             /** The function used to create project instances when a project is created from saved project data.
              * Host programs can overwrite this event property with a handler to create and return derived types instead (such as ProjectUI.ts).
              */
             static get onCreateProject() { return this._onCreateProject || _defaultCreateProjectHandler; }
             static set onCreateProject(value) { if (typeof value != 'function') throw "Solution.onCreateProject: Set failed - value is not a function."; this._onCreateProject = value; }
-            private static _onCreateProject = _defaultCreateProjectHandler;
+            private static _onCreateProject: typeof _defaultCreateProjectHandler;
 
             get count() { return this._projects.length; }
 
@@ -47,7 +50,7 @@
             //x private _unloadedProjects: ISavedProject[] = []; // (the unloaded projects)
 
             /** The file storage directory for all projects. */
-            readonly directory: VirtualFileSystem.Directory;
+            readonly directory: VirtualFileSystem.Abstract.Directory;
 
             /** A list of user IDs and assigned roles for this project. */
             readonly userSecurity = new UserAccess();
@@ -76,14 +79,31 @@
                 return project;
             }
 
-            /** Compiles a list of all projects, both locally and remotely. */
-            abstract async refreshProjects(): Promise<Project>;
-
             /** Returns a list of projects that match the given URL path. */
-            abstract async getProjects(path: string): Promise<Project[]>;
+            async getProjects(path: string): Promise<Project[]> {
+                throw Exception.notImplemented("Project.getProjects()");
+            }
+
+            /** Updates all projects from the data store and returns the project marked as the "start-up". */
+            async refreshProjects(): Promise<Project> { // (project returned is the start-up project)
+                var startupProject: Project = null;
+                for (var i = 0, n = this._projects.length, proj: Project; i < n; ++i) {
+                    proj = this._projects[i];
+                    if (proj.isStartup)
+                        startupProject = proj;
+                    proj.refresh();
+                }
+                return startupProject;
+            }
 
             /** Loads/merges any changes from the server-side JSON configuration file. */
-            abstract async refresh(): Promise<void>;
+            async refresh(): Promise<void> {
+                var configFile = this.directory.getFile(this.configFilename);
+                if (!configFile) return;
+                var configJSON = await configFile.readText();
+                var config: ISavedSolution = JSON.parse(configJSON);
+                this.load(config);
+            }
         }
 
         // ========================================================================================================================
@@ -94,7 +114,7 @@
              */
             static get onCreateSolution() { return this._onCreateSolution || _defaultCreateSolutionHandler; }
             static set onCreateSolution(value) { if (typeof value != 'function') throw "Solution.onCreateSolution: Set failed - value is not a function."; this._onCreateSolution = value; }
-            private static _onCreateSolution = _defaultCreateSolutionHandler;
+            private static _onCreateSolution: typeof _defaultCreateSolutionHandler;
 
             /* All projects for the current user. */
             static get solutions() { return this._solutions; }
@@ -114,7 +134,22 @@
             }
 
             /** Returns a list of available solution GUIDs that can be loaded. */
-            static getSolutionIDs(): Promise<string[]> { throw Exception.notImplemented("getSolutionIDs"); }
+            static async getSolutionIDs(): Promise<string[]> {
+
+                // ... load the 'solutions.json' file from the root to see which solutions are available ...
+
+                var solutionJson = await DS.IO.read("solutions.json");
+
+                if (solutionJson) {
+                    var jsonStr = StringUtils.byteArrayToString(solutionJson);
+                    var s: ISavedSolutions = JSON.parse(jsonStr);
+                }
+
+                if (s && s.solutions && s.solutions.length)
+                    return s.solutions;
+                else
+                    return [];
+            }
 
             /** Triggers the process to load all the solutions in the '/solutions' folder by first calling 'Solutions.getSProjectolutionIDs()'
              * to get the IDs from 'solutions.json'. While all solution configurations are loaded, the contained projects are not.

@@ -8,6 +8,7 @@ namespace DS {
      * Note: It is advised to use 'DreamSpace.Loader.loadResource()' to load resources instead of directly creating resource request objects.
      * Inheritance note: When creating via the 'new' factory method, any already existing instance with the same URL will be returned,
      * and NOT the new object instance.  For this reason, you should call 'loadResource()' instead.
+     * The method used to read a resource depends on client vs server sides, which is detected internally.
      */
     export class ResourceRequest {
         /** 

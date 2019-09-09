@@ -252,7 +252,7 @@ namespace DS {
 
         protected __exception(msg: string, error?: any) {
             if (error) msg += "\r\nInner error: " + getErrorMessage(error);
-            return Exception.error("{EventDispatcher}.dispatchEvent():", "Error in event " + this.__eventName + " on object type '" + getTypeName(this.owner) + "': " + msg, { exception: error, event: this, handler: this.__handlerCallInProgress });
+            return Exception.error("{EventDispatcher}.dispatchEvent():", "Error in event " + this.__eventName + " on object type '" + Utilities.getTypeName(this.owner) + "': " + msg, { exception: error, event: this, handler: this.__handlerCallInProgress });
         }
 
         /** Calls the event handlers that match the event mode on the current event instance. */

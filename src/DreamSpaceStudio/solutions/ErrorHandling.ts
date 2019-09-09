@@ -68,7 +68,7 @@ namespace DS {
                 do {
                     var errorInfo: _IError = <any>errorSource;
                     var error: Error = errorSource instanceof Error ? errorSource : typeof ErrorEvent == 'object' && errorSource instanceof ErrorEvent ? errorSource.error : null;
-                    var fname = errorInfo instanceof Function ? getTypeName(errorInfo, false) : errorInfo.functionName;
+                    var fname = errorInfo instanceof Function ? Utilities.getTypeName(errorInfo, false) : errorInfo.functionName;
 
                     msg += margin ? "\r\n" + margin + "**** Inner Exception ***\r\n" : "";
                     msg += margin + (fname ? "(" + fname + ") " : "") + (errorInfo.message || errorInfo.reason || errorInfo.type);

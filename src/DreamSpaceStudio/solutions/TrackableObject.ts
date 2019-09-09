@@ -28,14 +28,14 @@ namespace DS {
         private $__id: string;
 
         /** The name of the class the instance was created from. */
-        readonly _objectType = getTypeName(this);
+        readonly _objectType = Utilities.getTypeName(this);
 
         constructor() {
             this._id = Utilities.createGUID(false);
             trackedObjects[this._id] = this;
         }
 
-        /** Saves the project and related items to a specified object. 
+        /** Saves the tracking details and related items to a specified object. 
         * If no object is specified, then a new empty object is created and returned.
         */
         save(target?: ISavedTrackableObject): ISavedTrackableObject {
@@ -47,7 +47,7 @@ namespace DS {
             return target;
         }
 
-        /** Loads tracking details from a given object. */
+        /** Loads the tracking details from a given object. */
         load(target?: ISavedTrackableObject): this {
             if (target) {
                 var _this = <Writeable<this>>this;
@@ -60,4 +60,16 @@ namespace DS {
     }
 
     export interface ITrackableObject extends TrackableObject { }
+
+    /** Methods to deal with objects that persist data - typically by loading from and saved to JSON stores. */
+    export class PersistableObject extends TrackableObject {
+        _lastConfig: IndexedObject;
+
+        /** Determines if a property has changed given the last config object for this object instance.
+         * If no config object exists, then all properties are considered in a 'changed' (unsaved) state, because they are new.
+         */
+        propertyChanged<T extends ISavedTrackableObject>(name: keyof T) { return !this._lastConfig || this._lastConfig[<any>name] != this[<any>name]; }
+    }
+
+    export interface IPersistableObject extends PersistableObject { }
 }

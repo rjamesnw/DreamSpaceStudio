@@ -41,14 +41,14 @@
 
     /** One or more utility functions to ease development within DreamSpace environments. */
     export namespace Utilities {
-        // -------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------
 
         /** Escapes a RegEx string so it behaves like a normal string. This is useful for RexEx string based operations, such as 'replace()'. */
         export function escapeRegex(regExStr: string): string {
             return regExStr.replace(/([-[\]{}()*+?.,\\/^$|#])/g, "\\$1"); // TODO: Verify completeness.
         }
 
-        // ------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------
 
         /** This locates names of properties where only a reference and the object context is known.
         * If a reference match is found, the property name is returned, otherwise the result is 'undefined'.
@@ -59,7 +59,7 @@
             return void 0;
         }
 
-        // ------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------
 
         /** Erases all properties on the object, instead of deleting them (which takes longer).
         * @param {boolean} ignore An optional list of properties to ignore when erasing. The properties to ignore should equate to 'true'.
@@ -95,7 +95,7 @@
             return newObject;
         };
 
-        // ------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------
 
         /** Dereferences a property path in the form "A.B.C[*].D..." and returns the right most property value, if exists, otherwise
         * 'undefined' is returned.  If path is invalid, an exception will be thrown.
@@ -131,7 +131,7 @@
             return origin;
         } // (performance: http://jsperf.com/ways-to-dereference-a-delimited-property-string)
 
-        // ------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------
 
         /** Waits until a property of an object becomes available (i.e. is no longer 'undefined').
           * @param {Object} obj The object for the property.
@@ -155,7 +155,7 @@
             }
         }
 
-        // ------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------
 
         /** Helps support cases where 'apply' is missing for a host function object (i.e. IE7 'setTimeout', etc.).  This function
         * will attempt to call '.apply()' on the specified function, and fall back to a work around if missing.
@@ -172,7 +172,7 @@
             }
         }
 
-        // ------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------
 
         var _guidSeed = (function () { // (used in 'createGUID()')
             var text = global.navigator.userAgent + global.location.href; // TODO: This may need fixing on the server side.
@@ -200,107 +200,106 @@
                 c = pattern[pi++], result += c != 'x' && c != 'y' ? c : i > 0 ? hexTime[--i] : (r = Math.random() * randseed % 16 | 0, c == 'x' ? r : r & 0x3 | 0x8).toString(16);
             return result;
         }
-    }
 
-    // ============================================================================================================================
+        // --------------------------------------------------------------------------------------------------------------------
 
-    /** Returns the name of a namespace or variable reference at runtime. */
-    export function nameof(selector: () => any, fullname = false): string {
-        var s = '' + selector;
-        //var m = s.match(/return\s*([A-Z.]+)/i) || s.match(/=>\s*{?\s*([A-Z.]+)/i) || s.match(/function.*?{\s*([A-Z.]+)/i);
-        var m = s.match(/return\s+([A-Z0-9$_.]+)/i) || s.match(/.*?(?:=>|function.*?{)\s*([A-Z0-9$_.]+)/i);
-        var name = m && m[1] || "";
-        return fullname ? name : name.split('.').reverse()[0];
-    }
-    // (shared here: https://github.com/Microsoft/TypeScript/issues/1579#issuecomment-394551591)
+        /** Returns the name of a namespace or variable reference at runtime. */
+        export function nameof(selector: () => any, fullname = false): string {
+            var s = '' + selector;
+            //var m = s.match(/return\s*([A-Z.]+)/i) || s.match(/=>\s*{?\s*([A-Z.]+)/i) || s.match(/function.*?{\s*([A-Z.]+)/i);
+            var m = s.match(/return\s+([A-Z0-9$_.]+)/i) || s.match(/.*?(?:=>|function.*?{)\s*([A-Z0-9$_.]+)/i);
+            var name = m && m[1] || "";
+            return fullname ? name : name.split('.').reverse()[0];
+        }
+        // (shared here: https://github.com/Microsoft/TypeScript/issues/1579#issuecomment-394551591)
 
-    // ============================================================================================================================
+        // --------------------------------------------------------------------------------------------------------------------
 
-    export var FUNC_NAME_REGEX = /^(?:function|class)\s*(\S+)\s*\(/i; // (note: never use the 'g' flag here, or '{regex}.exec()' will only work once every two calls [attempts to traverse])
+        export var FUNC_NAME_REGEX = /^(?:function|class)\s*(\S+)\s*\(/i; // (note: never use the 'g' flag here, or '{regex}.exec()' will only work once every two calls [attempts to traverse])
 
-    /** Attempts to pull the function name from the function object, and returns an empty string if none could be determined. */
-    export function getFunctionName(func: Function): string {
-        // ... if an internal name is already set return it now ...
-        var name = (<ITypeInfo><any>func).$__name || func['name'];
-        if (name == void 0) {
-            // ... check the type (this quickly detects internal/native Browser types) ...
-            var typeString: string = Object.prototype.toString.call(func);
-            // (typeString is formated like "[object SomeType]")
-            if (typeString.charAt(0) == '[' && typeString.charAt(typeString.length - 1) == ']') // (ex: '[object Function]')
-                name = typeString.substring(1, typeString.length - 1).split(' ')[1];
-            if (!name || name == "Function" || name == "Object") { // (a basic function/object was found)
-                if (typeof func == 'function') { // (same result for 'class' types also)
-                    // ... if this has a function text get the name as defined (in IE, Window+'' returns '[object Window]' but in Chrome it returns 'function Window() { [native code] }') ...
-                    var fstr = Function.prototype.toString.call(func);
-                    var results = (FUNC_NAME_REGEX).exec(fstr); // (note: for function expression object contexts, the constructor (type) name is always 'Function')
-                    name = (results && results.length > 1) ? results[1] : void 0;
+        /** Attempts to pull the function name from the function object, and returns an empty string if none could be determined. */
+        export function getFunctionName(func: Function): string {
+            // ... if an internal name is already set return it now ...
+            var name = (<ITypeInfo><any>func).$__name || func['name'];
+            if (name == void 0) {
+                // ... check the type (this quickly detects internal/native Browser types) ...
+                var typeString: string = Object.prototype.toString.call(func);
+                // (typeString is formated like "[object SomeType]")
+                if (typeString.charAt(0) == '[' && typeString.charAt(typeString.length - 1) == ']') // (ex: '[object Function]')
+                    name = typeString.substring(1, typeString.length - 1).split(' ')[1];
+                if (!name || name == "Function" || name == "Object") { // (a basic function/object was found)
+                    if (typeof func == 'function') { // (same result for 'class' types also)
+                        // ... if this has a function text get the name as defined (in IE, Window+'' returns '[object Window]' but in Chrome it returns 'function Window() { [native code] }') ...
+                        var fstr = Function.prototype.toString.call(func);
+                        var results = (FUNC_NAME_REGEX).exec(fstr); // (note: for function expression object contexts, the constructor (type) name is always 'Function')
+                        name = (results && results.length > 1) ? results[1] : void 0;
+                    }
+                    else name = void 0;
                 }
-                else name = void 0;
             }
+            return name || "";
+
         }
-        return name || "";
 
-    }
+        // --------------------------------------------------------------------------------------------------------------------
 
-    // ############################################################################################################################
-
-    /** Returns the type name for an object instance registered with 'AppDomain.registerType()'.  If the object does not have
-    * type information, and the object is a function, then an attempt is made to pull the function name (if one exists).
-    * Note: This function returns the type name ONLY (not the FULL type name [no namespace path]).
-    * Note: The name will be undefined if a type name cannot be determined.
-    * @param {object} object The object to determine a type name for.  If the object type was not registered using 'AppDomain.registerType()',
-    * and the object is not a function, no type information will be available. Unregistered function objects simply
-    * return the function's name.
-    * @param {boolean} cacheTypeName (optional) If true (default), the name is cached using the 'ITypeInfo' interface via the '$__name' property.
-    * This helps to speed up future calls.
-    */
-    export function getTypeName(object: object, cacheTypeName = true): string {
-        if (object === void 0 || object === null) return void 0;
-        typeInfo = <ITypeInfo>object;
-        if (typeInfo.$__name === void 0 || typeInfo.$__name === null) {
-            if (typeof object == 'function')
-                if (cacheTypeName)
-                    return typeInfo.$__name = getFunctionName(object as Function);
-                else
-                    return getFunctionName(object as Function);
-            var typeInfo = <ITypeInfo><any>object.constructor;
+        /** Returns the type name for an object instance registered with 'AppDomain.registerType()'.  If the object does not have
+        * type information, and the object is a function, then an attempt is made to pull the function name (if one exists).
+        * Note: This function returns the type name ONLY (not the FULL type name [no namespace path]).
+        * Note: The name will be undefined if a type name cannot be determined.
+        * @param {object} object The object to determine a type name for.  If the object type was not registered using 'AppDomain.registerType()',
+        * and the object is not a function, no type information will be available. Unregistered function objects simply
+        * return the function's name.
+        * @param {boolean} cacheTypeName (optional) If true (default), the name is cached using the 'ITypeInfo' interface via the '$__name' property.
+        * This helps to speed up future calls.
+        */
+        export function getTypeName(object: object, cacheTypeName = true): string {
+            if (object === void 0 || object === null) return void 0;
+            typeInfo = <ITypeInfo>object;
             if (typeInfo.$__name === void 0 || typeInfo.$__name === null) {
-                if (cacheTypeName)
-                    return typeInfo.$__name = getFunctionName(object.constructor);
+                if (typeof object == 'function')
+                    if (cacheTypeName)
+                        return typeInfo.$__name = getFunctionName(object as Function);
+                    else
+                        return getFunctionName(object as Function);
+                var typeInfo = <ITypeInfo><any>object.constructor;
+                if (typeInfo.$__name === void 0 || typeInfo.$__name === null) {
+                    if (cacheTypeName)
+                        return typeInfo.$__name = getFunctionName(object.constructor);
+                    else
+                        return getFunctionName(object.constructor);
+                }
                 else
-                    return getFunctionName(object.constructor);
+                    return typeInfo.$__name;
             }
-            else
-                return typeInfo.$__name;
+            else return typeInfo.$__name;
         }
-        else return typeInfo.$__name;
+
+        /** 
+         * Returns the full type name of the type or namespace, if available, or the name o the object itself if the full name (with namespaces) is not known. 
+         * @see getTypeName()
+         */
+        export function getFullTypeName(object: object, cacheTypeName = true): string {
+            if ((<ITypeInfo>object).$__fullname) return (<ITypeInfo>object).$__fullname;
+            return getTypeName(object, cacheTypeName);
+        }
+
+        /** An utility to extend a TypeScript namespace, which returns a string to be executed using 'eval()'.
+         * When executed BEFORE the namespace to be added, it creates a pre-existing namespace reference that forces typescript to update.
+         * Example 1: extendNS(()=>Local.NS, "Imported.NS");
+         * Example 2: extendNS(()=>Local.NS, ()=>Imported.NS);
+         * @param selector The local namespace that will extend the target.
+         * @param name A selector or dotted identifier path to the target namespace name to extend from.
+         */
+        export function extendNS(selector: () => any, name: string | (() => any)) {
+            return "var " + nameof(selector) + " = " + (typeof name == 'function' ? nameof(name) : name) + ";";
+        }
+
+        //x Best to explicitly let TS and packing utilities know of the DS access explicitly. /** An internal utility to extend the 'DS' namespace within DreamSpace modules, which returns a string to be executed using 'eval()'.
+        // * It just calls 'extendNS(selector, "DS")'.
+        // */
+        //x export function extendDSNS(selector: () => any) { return extendNS(selector, "DS"); }
     }
-
-    /** 
-     * Returns the full type name of the type or namespace, if available, or the name o the object itself if the full name (with namespaces) is not known. 
-     * @see getTypeName()
-     */
-    export function getFullTypeName(object: object, cacheTypeName = true): string {
-        if ((<ITypeInfo>object).$__fullname) return (<ITypeInfo>object).$__fullname;
-        return getTypeName(object, cacheTypeName);
-    }
-
-    /** An utility to extend a TypeScript namespace, which returns a string to be executed using 'eval()'.
-     * When executed BEFORE the namespace to be added, it creates a pre-existing namespace reference that forces typescript to update.
-     * Example 1: extendNS(()=>Local.NS, "Imported.NS");
-     * Example 2: extendNS(()=>Local.NS, ()=>Imported.NS);
-     * @param selector The local namespace that will extend the target.
-     * @param name A selector or dotted identifier path to the target namespace name to extend from.
-     */
-    export function extendNS(selector: () => any, name: string | (() => any)) {
-        return "var " + nameof(selector) + " = " + (typeof name == 'function' ? nameof(name) : name) + ";";
-    }
-
-    //x Best to explicitly let TS and packing utilities know of the DS access explicitly. /** An internal utility to extend the 'DS' namespace within DreamSpace modules, which returns a string to be executed using 'eval()'.
-    // * It just calls 'extendNS(selector, "DS")'.
-    // */
-    //x export function extendDSNS(selector: () => any) { return extendNS(selector, "DS"); }
-
 }
 
 // ############################################################################################################################

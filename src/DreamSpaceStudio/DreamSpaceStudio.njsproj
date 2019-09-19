@@ -80,6 +80,7 @@
     <TypeScriptCompile Include="solutions\System\EventDefinition.ts" />
     <TypeScriptCompile Include="solutions\System\EventDispatcher.ts" />
     <TypeScriptCompile Include="solutions\System\Events.ts" />
+    <TypeScriptCompile Include="solutions\System\FileVersioning.ts" />
     <TypeScriptCompile Include="solutions\System\Resource.ts" />
     <TypeScriptCompile Include="solutions\System\VirtualFileSystem.ts" />
     <TypeScriptCompile Include="solutions\System\Page.ts" />
@@ -96,6 +97,7 @@
     <TypeScriptCompile Include="solutions\Resources.ts" />
     <TypeScriptCompile Include="solutions\Templating.ts" />
     <TypeScriptCompile Include="solutions\Time.ts" />
+    <TypeScriptCompile Include="solutions\PersistableObject.ts" />
     <TypeScriptCompile Include="solutions\TrackableObject.ts" />
     <TypeScriptCompile Include="solutions\VDOM.ts" />
     <TypeScriptCompile Include="solutions\_global.ts" />
@@ -121,9 +123,9 @@
     <Content Include="server\t.html.ts" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\tsconfig.json" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\tsconfig.json" />
-    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\project.json" />
+    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\project_1.json" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\tsconfig.json" />
-    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\solution.json" />
+    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\solution_1.json" />
     <Content Include="solutions\plugins\tsconfig_client_base.json" />
     <Content Include="solutions\plugins\tsconfig_shared_base.json" />
     <Content Include="solutions\plugins\tsconfig_server_base.json" />

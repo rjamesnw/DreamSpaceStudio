@@ -25,7 +25,7 @@
         * Holds a collection of projects.
         * When a project instance is created, the default 'Solution.onCreateProject' handler is used, which can be overridden for derived project types.
         */
-        export abstract class Solution extends VirtualFileSystem.Abstract.File {
+        export abstract class Solution extends TrackableObject {
             static CONFIG_FILENAME = "solution.json";
             configFilename = Solution.CONFIG_FILENAME;
 
@@ -55,6 +55,9 @@
             /** A list of user IDs and assigned roles for this project. */
             readonly userSecurity = new UserAccess();
 
+            /** A description for the project. */
+            description: string;
+
             /** Returns the startup project, or null if none found. */
             get startupProject() {
                 for (var i = 0, n = this._projects && this._projects.length || 0, p: Project; i < n; ++i)
@@ -62,8 +65,8 @@
                 return null;
             }
 
-            constructor(fileManager = VirtualFileSystem.fileManager, parent?: VirtualFileSystem.DirectoryItem) {
-                super(fileManager, parent);
+            constructor(fileManager = VirtualFileSystem.fileManager) {
+                super();
                 this.directory = fileManager.createDirectory(VirtualFileSystem.combine("solutions", this._id));
             }
 
@@ -94,6 +97,45 @@
                     proj.refresh();
                 }
                 return startupProject;
+            }
+
+            /** Saves the tracking details and related items to a specified object. 
+            * If no object is specified, then a new empty object is created and returned.
+            */
+            save(target?: ISavedSolution): ISavedSolution {
+                target = target || <ISavedSolution>{};
+
+                super.save(target);
+
+                target.name = this.name;
+                target.description = this.description;
+                target.directory = this.directory.absolutePath;
+
+                if (!target.projects)
+                    target.projects = [];
+
+                for (var i = 0, n = this.projects.length; i < n; ++i)
+                    this.projects[i].save(target);
+
+                return target;
+            }
+
+            /** Loads the tracking details from a given object. */
+            load(source?: ISavedSolution): this {
+                if (source) {
+                    super.load(source); // (this should be first so 'propertyChanged()' will work properly)
+
+                    var _this = <Writeable<this>>this;
+
+                    if (!_this.propertyChanged<ISavedSolution>('name')) _this.name = source.name;
+                    if (!_this.propertyChanged<ISavedSolution>('description')) _this.description = source.description;
+
+                    if (source.directory && source.directory != this.directory.absolutePath)
+
+                        for (var i = 0, n = this.projects.length; i < n; ++i)
+                            this.projects[i].load(source);
+                }
+                return this;
             }
 
             /** Loads/merges any changes from the server-side JSON configuration file. */

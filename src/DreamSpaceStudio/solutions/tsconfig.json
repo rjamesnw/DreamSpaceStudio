@@ -19,6 +19,7 @@
     "ErrorHandling.ts",
     "Exception.ts",
     "Diagnostics.ts",
+    "PersistableObject.ts",
     "TrackableObject.ts",
     "DependentObject.ts",
     "VDOM.ts",

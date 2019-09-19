@@ -1,7 +1,9 @@
 {
-  "uid": "A0B9F8AF038F470BA2B56800CC3C42AA",
+  "$id": "A0B9F8AF038F470BA2B56800CC3C42AA",
+  "$objectType": "Project",
   "name": "DreamSpace Studio (IDE)",
   "codeBase": "file://~/projects/A0B9F8AF038F470BA2B56800CC3C42AA",
+  "version": 1,
   "categories": [
     {
       "$id": "B99EF1A5CA2445EE9B8684A06687B749",

@@ -1,13 +1,13 @@
 namespace DS {
-    export interface ISavedTrackableObject {
+    export interface ISavedTrackableObject extends ISavedPersistableObject {
         $id: string;
         $objectType: string;
     }
 
     var trackedObjects: IndexedObject = {};
 
-    /** A common base type for all object that can be tracked by a globally unique ID. */
-    export class TrackableObject {
+    /** A common base type for all objects that can be tracked by a globally unique ID. */
+    export abstract class TrackableObject extends PersistableObject implements IResourceSource {
 
         /** Returns a tracked object, or undefined if not found. */
         static get<T = any>(id: string): T { return trackedObjects[id]; }
@@ -31,15 +31,23 @@ namespace DS {
         readonly _objectType = Utilities.getTypeName(this);
 
         constructor() {
+            super();
             this._id = Utilities.createGUID(false);
             trackedObjects[this._id] = this;
         }
 
-        /** Saves the tracking details and related items to a specified object. 
+        getResourceValue(): Promise<any> {
+        }
+        getResourceType(): ResourceTypes {
+        }
+
+        /** Saves the tracking details and related items to a specified object.
         * If no object is specified, then a new empty object is created and returned.
         */
-        save(target?: ISavedTrackableObject): ISavedTrackableObject {
+        saveToObject(target?: ISavedTrackableObject): ISavedTrackableObject {
             target = target || <ISavedTrackableObject>{};
+
+            super.saveToObject(target);
 
             target.$id = this.$__id;
             target.$objectType = this.$__type;
@@ -48,28 +56,18 @@ namespace DS {
         }
 
         /** Loads the tracking details from a given object. */
-        load(target?: ISavedTrackableObject): this {
-            if (target) {
+        loadFromObject(source?: ISavedTrackableObject, replace = false): this {
+            if (source) {
+                super.loadFromObject(source, replace);
+
                 var _this = <Writeable<this>>this;
 
-                _this._id = target.$id;
-                _this._objectType = target.$objectType;
+                _this._id = source.$id;
+                _this._objectType = source.$objectType;
             }
             return this;
         }
     }
 
     export interface ITrackableObject extends TrackableObject { }
-
-    /** Methods to deal with objects that persist data - typically by loading from and saved to JSON stores. */
-    export class PersistableObject extends TrackableObject {
-        _lastConfig: IndexedObject;
-
-        /** Determines if a property has changed given the last config object for this object instance.
-         * If no config object exists, then all properties are considered in a 'changed' (unsaved) state, because they are new.
-         */
-        propertyChanged<T extends ISavedTrackableObject>(name: keyof T) { return !this._lastConfig || this._lastConfig[<any>name] != this[<any>name]; }
-    }
-
-    export interface IPersistableObject extends PersistableObject { }
 }

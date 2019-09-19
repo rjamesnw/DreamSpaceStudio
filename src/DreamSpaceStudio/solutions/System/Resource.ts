@@ -7,7 +7,8 @@ namespace DS {
         getResourceType(): ResourceTypes;
     }
 
-    /** A single resource that exists on some URL path. 
+    /** Maps a single resource to some URL path, such as a static 'File' object, or even a 'Project' reference - basically,
+     * anything that implements 'IResourceSource', such as objects that inherit from 'TrackableObject'.
      * Projects define resources specific to them, but other projects can also reference them, creating a dependency.
      * All resources have a globally unique ID (GUID), but not all resources may have unique paths. Multiple resources can exist
      * on a single route. If so, the first one found is returned to the client; however, console/debug warnings may be given.

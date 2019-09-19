@@ -13,7 +13,7 @@
 
     export namespace Abstracts {
 
-        export abstract class Project extends VirtualFileSystem.Abstract.File {
+        export abstract class Project extends TrackableObject {
             // --------------------------------------------------------------------------------------------------------------------
 
             static CONFIG_FILENAME = "project.json";
@@ -22,9 +22,6 @@
             //x /** The script instance for this project. */
             //x get script() { return this._script; }
             //x protected _script: IFlowScript;
-
-            /** The file storage directory for this project. */
-            readonly directory: VirtualFileSystem.Abstract.Directory;
 
             /** A list of all files associated with this project, indexed by the absolute lowercase file path. */
             readonly files: { [index: string]: VirtualFileSystem.Abstract.File } = {};
@@ -61,7 +58,7 @@
             /** The title of the project. */ public name: string,
             /** The project's description. */ public description?: string
             ) {
-                super(solution._fileManager, solution);
+                super();
                 if (!Path.isValidFileName(name))
                     throw "The project title '" + name + "' must also be a valid file name. Don't include special directory characters, such as: \\ / ? % * ";
                 this.directory = this.solution.directory.createDirectory(VirtualFileSystem.combine("projects", this._id)); // (the path is "User ID"/"project's unique ID"/ )
@@ -69,13 +66,11 @@
 
             // --------------------------------------------------------------------------------------------------------------------
 
-            /** Saves the project and related items to a specified object. 
-             * If no object is specified, then a new empty object is created and returned.
-             */
-            save(target?: ISavedProject): ISavedProject {
+            /** Saves the project values to an object - typically prior to serialization. */
+            saveToObject(target?: ISavedProject): ISavedProject {
                 target = target || <ISavedProject>{};
 
-                super.save(target);
+                super.saveToObject(target);
 
                 target.name = this.name;
                 target.description = this.description;
@@ -83,9 +78,23 @@
                 for (var p in this.files)
                     (target.files || (target.files = [])).push(this.files[p].absolutePath);
 
-                target.workflows = [this.script.save()];
+                target.workflows = [];
 
                 return target;
+            }
+
+            /** Saves the project and related items to a specified object. 
+             * If no object is specified, then a new empty object is created and returned.
+             */
+            async save(): Promise<this> {
+
+                var data = await this.saveToObject();
+
+                // TODO: (... save to store ...)
+
+                var file = this.directory.createFile((workflow.name || workflow.$id) + ".wf.json", wfJSON); // (wf: Workflow file)
+
+                return this;
             }
 
             /** Saves the project to a persisted storage, such as the local browser storage, or a remote store, if possible. 
@@ -93,7 +102,7 @@
              * is no free space in the local store, the system will try to sync with a remote store.  If that fails, the
              * data will only be in memory and a UI warning will display.
              */
-            saveToStorage(source = this.save()) {
+            saveToStorage(source = this.saveToObject()) {
                 if (!source) return; // (nothing to do)
 
                 if (Array.isArray(source.workflows))
@@ -116,20 +125,34 @@
                 this.files[file.absolutePath.toLocaleLowerCase()] = file;
             }
 
-            load(target?: ISavedProject): this {
+            /** Loads and merges/replaces the project values from an object - typically prior to serialization.
+             * @param replace If true, the whole project and any changed properties are replaced.  If false (the default), then only unmodified properties get updated.
+             */
+            loadFromObject(target?: ISavedProject, replace = false): this {
                 if (target) {
                     var _this = <Writeable<this>>this;
 
-                    super.load(target);
+                    super.loadFromObject(target, replace);
 
-                    if (!_this.propertyChanged<ISavedProject>('name')) _this.name = target.name;
-                    if (!_this.propertyChanged<ISavedProject>('description')) _this.description = target.description;
+                    if (replace || !_this.propertyChanged<ISavedProject>('name')) _this.name = target.name;
+                    if (replace || !_this.propertyChanged<ISavedProject>('description')) _this.description = target.description;
 
                     // TODO: associated files and scripts.
-
-                    this._lastConfig = target;
                 }
                 return this;
+            }
+
+            /** Loads and merges/replaces the project values from the virtual file system.
+             * @param replace If true, the whole project and any changed properties are replaced.  If false (the default), then only unmodified properties get updated.
+             */
+            async load(replace = false): Promise<this> {
+
+                // TODO: (... load from file system if target is empty ...)
+                var target = null;
+
+                var _this = <Writeable<this>>this;
+
+                return this.loadFromObject(target, replace);
             }
 
             // --------------------------------------------------------------------------------------------------------------------

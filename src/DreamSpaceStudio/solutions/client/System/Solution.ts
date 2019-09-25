@@ -39,7 +39,7 @@
         }
 
         /** Triggers the process to load all the solutions in the '/solutions' folder. */
-        static async load(fm = VirtualFileSystem.fileManager) {
+        static async load(fm = VirtualFileSystem.FileManager.current) {
             return new Promise<typeof Solutions>((ok, err) => {
                 var unloadedSolutions: Solution[] = [];
 

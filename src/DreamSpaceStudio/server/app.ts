@@ -44,7 +44,7 @@ templateEngine.apply(app);
 
 // ... get the virtual file system ...
 
-var fm = DS.VirtualFileSystem.fileManager;
+var fm = DS.VirtualFileSystem.FileManager.current;
 
 (async () => {
     //await ds.init();

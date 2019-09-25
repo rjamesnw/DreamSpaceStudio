@@ -22,7 +22,7 @@
             reviewTimerHandle = void 0;
         }
 
-        export class DirectoryItem extends PersistableObject {
+        export class DirectoryItem extends TrackableObject {
             readonly _fileManager: FileManager;
 
             /** Holds the UTC time the item was stored locally. If this is undefined then the item is in memory only, which might result in data loss if not stored on the server. */
@@ -301,6 +301,12 @@
          * Note: The 'FlowScript.currentUser' object determines the user-specific root directory for projects.
          */
         export class FileManager {
+            /** Manages the global file system for FlowScript by utilizing local storage space and remote server space. 
+             * The file manager tries to keep recently accessed files local (while backed up to remove), and off-loads
+             * less-accessed files to save space.
+             */
+            static current = new FileManager();
+
             // --------------------------------------------------------------------------------------------------------------------
 
             /** The URL endpoint for the FlowScript project files API. */
@@ -360,13 +366,6 @@
         export function combine(path1: string | Abstract.Directory, path2: string | Abstract.Directory) {
             return Path.combine(path1 instanceof Abstract.Directory ? path1.absolutePath : path1, path2 instanceof Abstract.Directory ? path2.absolutePath : path2);
         }
-
-        /** Manages the global file system for FlowScript by utilizing local storage space and remote server space. 
-         * The file manager tries to keep recently accessed files local (while backed up to remove), and off-loads
-         * less-accessed files to save space.
-         */
-        export var fileManager: FileManager;
-
 
         // ========================================================================================================================
     }

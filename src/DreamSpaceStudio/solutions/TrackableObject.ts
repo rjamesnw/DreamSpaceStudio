@@ -44,10 +44,8 @@ namespace DS {
         /** Saves the tracking details and related items to a specified object.
         * If no object is specified, then a new empty object is created and returned.
         */
-        saveToObject(target?: ISavedTrackableObject): ISavedTrackableObject {
-            target = target || <ISavedTrackableObject>{};
-
-            super.saveToObject(target);
+        saveToObject<T extends ISavedPersistableObject>(target?: T & ISavedTrackableObject) {
+            target = super.saveToObject(target);
 
             target.$id = this.$__id;
             target.$objectType = this.$__type;

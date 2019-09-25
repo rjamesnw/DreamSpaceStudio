@@ -121,6 +121,7 @@
     <Content Include="ideas.txt" />
     <Content Include="public\stylesheets\login.css" />
     <Content Include="server\t.html.ts" />
+    <Content Include="versions.json" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\tsconfig.json" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\tsconfig.json" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\project_1.json" />
@@ -153,6 +154,7 @@
     <TypeScriptCompile Include="solutions\Globals.ts" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="versions\" />
     <Folder Include="sessions\" />
     <Folder Include="sessions\CA33027B6BC64585833A1C14FEA1C2BF\" />
     <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\actions\authentication\" />

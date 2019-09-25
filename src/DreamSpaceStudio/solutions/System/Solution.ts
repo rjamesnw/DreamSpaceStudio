@@ -65,7 +65,7 @@
                 return null;
             }
 
-            constructor(fileManager = VirtualFileSystem.fileManager) {
+            constructor(fileManager = VirtualFileSystem.FileManager.current) {
                 super();
                 this.directory = fileManager.createDirectory(VirtualFileSystem.combine("solutions", this._id));
             }
@@ -196,7 +196,7 @@
             /** Triggers the process to load all the solutions in the '/solutions' folder by first calling 'Solutions.getSProjectolutionIDs()'
              * to get the IDs from 'solutions.json'. While all solution configurations are loaded, the contained projects are not.
              */
-            static async refresh(fm = VirtualFileSystem.fileManager): Promise<typeof Solutions> {
+            static async refresh(fm = VirtualFileSystem.FileManager.current): Promise<typeof Solutions> {
                 var ids = await Solutions.getSolutionIDs();
                 var unloadedSolutions: Solution[] = [];
 

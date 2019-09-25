@@ -1,6 +1,5 @@
 namespace DS {
     export interface ISavedPersistableObject {
-        version: number;
     }
 
     /** Methods to deal with saving and loading plain non-system-tracked objects - typically by loading from and saved to JSON stores.
@@ -28,7 +27,9 @@ namespace DS {
         /** Triggers the process to save the project to a data store. */
         async save(): Promise<this> {
             if (await this.onBeforeSave()) {
-                var target = this.saveToObject();
+
+                var target = <ISavedPersistableObject>{};
+                target = this.saveToObject(target);
                 await this.onSave(target);
                 await this.onAfterSave(target);
             }
@@ -55,18 +56,14 @@ namespace DS {
         }
         protected async onAfterLoad(source: ISavedPersistableObject): Promise<void> { return Promise.resolve(); }
 
-        saveToObject(target?: ISavedPersistableObject): ISavedPersistableObject {
-            var _target = <ISavedPersistableObject><any>super.saveToObject(target);
-            _target.version = (this._version || 0) + 1 || 1; // (increment version before saving)
-            return _target;
+        saveToObject<T extends ISavedPersistableObject>(target?: T) {
+            return target || <any>{}; // (the base just returns a new object in case one wasn't supplied)
         }
 
         /** Loads data from a given object. 
          * Note: Every call to this method copies '_currentConfig' to '_lastConfig' and sets '_currentConfig' to the new incomming config file.
          */
         loadFromObject(source?: ISavedPersistableObject, replace = false): this {
-            var _this = <Writeable<this>>this;
-            _this._version = source.version || 1;
             return this;
         }
     }

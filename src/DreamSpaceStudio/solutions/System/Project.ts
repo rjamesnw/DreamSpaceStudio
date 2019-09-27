@@ -24,7 +24,7 @@
             //x protected _script: IFlowScript;
 
             /** A list of all files associated with this project, indexed by the absolute lowercase file path. */
-            readonly files: { [index: string]: VirtualFileSystem.Abstract.File } = {};
+            readonly files: { [index: string]: VirtualFileSystem.Abstracts.File } = {};
 
             /** A list of user IDs and assigned roles for this project. */
             readonly userSecurity = new UserAccess();

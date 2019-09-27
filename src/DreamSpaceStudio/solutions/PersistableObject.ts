@@ -11,11 +11,11 @@ namespace DS {
         readonly _currentConfig: ISavedPersistableObject & IndexedObject; // (note: if '_lastConfig' is null when SAVING for the first time, they both should be set to the same instance)
 
         /** The virtual file storage directory where this object will be persisted. */
-        directory: VirtualFileSystem.Abstract.Directory;
+        directory: VirtualFileSystem.Abstracts.Directory;
 
         /** A virtual file that represents the saved object data, if saved or loaded, otherwise this is undefined. 
          */
-        file: VirtualFileSystem.Abstract.File;
+        file: VirtualFileSystem.Abstracts.File;
 
         /** Determines if a property has changed by comparing the last config object for this object instance with the new one supplied.
           * If no config object exists, then all properties are considered in a 'changed' (unsaved) state, because they are new.

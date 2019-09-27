@@ -9,14 +9,23 @@ namespace DS {
     }
 
     export class FileVersion extends TrackableObject {
-        readonly file: VirtualFileSystem.Abstract.File;
+        readonly file: VirtualFileSystem.Abstracts.File;
         readonly replacedOn: Date; // (if this is undefined then the entry is the latest active version)
 
-        /** The file name to save the underlying data as. If not specified, then a GUID value will be generated and used automatically. */
-        readonly _filename: string;
+        /** The absoulte file name under which the associated file is saved under. If not specified, then a GUID value will be generated
+         * and used automatically. 
+         */
+        readonly _fileID: string;
 
         /** The original file name if changed, since replaced files may have the ISO UTC date-time stamp appended. */
-        readonly _originalFilename: string;
+        readonly _originalFileID: string;
+
+        get filename() { this.versionManager._fs.getFileById(this._originalFileID); }
+
+        /** Returns true if this version is the current version.  Current versions remain in their proper locations and do not
+         * exist in the 'versions' repository.
+         */
+        get isCurrent() { return !this._originalFileID; }
 
         /** The version of this persistable instance. If a version number is set, then it will be added to the file name.
          * If not set (the default), then versioning will not be used. Any value set that is less than 1 will be push up to 1 as the
@@ -29,12 +38,16 @@ namespace DS {
         /** An optional description for this version. */
         _versionDescription?: string;
 
-        /* Returns the file name with the version appended, or just the file name if no version exists. */
+        /* Returns the file name with the version appended, or just the file name if no version exists. 
+         * This name updates according to the '_originalFilename', 'replacedOn', and 'version' values. It is NOT the current
+         * name of the file version. Changing those properties will not change the current name originally saved under, which
+         * is stored in the '_filename' property.
+         */
         get versionedFileName() {
-            return this._filename + (this.replacedOn && this.replacedOn.toISOString ? '_' + this.replacedOn.toISOString() : "") + (this.version > 0 ? "_" + this.version : "");
+            return this._originalFileID + (this.replacedOn && this.replacedOn.toISOString ? '_' + this.replacedOn.toISOString() : "") + (this.version > 0 ? "_" + this.version : "");
         }
 
-        constructor(public readonly versionManager: VersionManager, public readonly originalFile: VirtualFileSystem.Abstract.File) {
+        constructor(public readonly versionManager: VersionManager, public readonly originalFile: VirtualFileSystem.Abstracts.File) {
             super();
 
         }
@@ -60,6 +73,15 @@ namespace DS {
                 _this._version = typeof source.version == 'number' ? (source.version > 0 ? source.version : 1) : void 0;
             }
             return this;
+        }
+
+        /** The given file will replace the current file, sending the current file into the 'versions' repository.
+         * Note that you can only version a non-versioned file ('isCurrent==true'), otherwise an error will be thrown.
+         */
+        async replaceWith(newfile: VirtualFileSystem.Abstracts.File) {
+            if (!newfile) return;
+            if (!(newfile instanceof VirtualFileSystem.Abstracts.File)) throw `Failed to replace file '${this._filename}' with a non-VirtualFileSystem.Abstract.File object. The value given was: ${JSON.stringify(newfile)}`;
+            if (!this.isCurrent) throw `You cannot re-version a versioned file. You attempted to replace file '${this._filename}' with file '${newfile.absolutePath}'.`;
         }
     }
 
@@ -87,17 +109,29 @@ namespace DS {
         /** Gets a file version given either a file object reference or GUID. 
          * If no version exists then 'undefined' is returned.
          */
-        getVersion(file: VirtualFileSystem.Abstract.File | string) {
-            var id = file && (<VirtualFileSystem.Abstract.File>file).$id || <string>file;
+        getVersion(file: VirtualFileSystem.Abstracts.File | string) {
+            var id = file && (<VirtualFileSystem.Abstracts.File>file).$id || <string>file;
             return this._fileToVersionMap[id];
         }
 
-        /** Adds a file to the version control system, if not already added. */
-        add(file: VirtualFileSystem.Abstract.File) {
+        /** Adds a file to the version control system, if not already added. 
+         * The file is not moved from its current location.
+         */
+        add(file: VirtualFileSystem.Abstracts.File) {
             var v = this.getVersion(file);
             if (!v)
                 this.versions.push(v = new FileVersion(this, file));
             return v;
+        }
+
+        /** Adds two files to the version control system, if not already added, then replaces the current file with the new file.
+         * The file is replaced by moving the file into the versions repository under a special version name, and moving the new
+         * file into the place of the current file.
+         */
+        replace(currentfile: VirtualFileSystem.Abstracts.File, newfile: VirtualFileSystem.Abstracts.File) {
+            var cFileVersion = this.add(currentfile);
+            var nFileVersion = this.add(newfile);
+            return nFile;
         }
     }
 }

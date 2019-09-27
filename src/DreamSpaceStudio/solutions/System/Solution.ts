@@ -50,7 +50,7 @@
             //x private _unloadedProjects: ISavedProject[] = []; // (the unloaded projects)
 
             /** The file storage directory for all projects. */
-            readonly directory: VirtualFileSystem.Abstract.Directory;
+            readonly directory: VirtualFileSystem.Abstracts.Directory;
 
             /** A list of user IDs and assigned roles for this project. */
             readonly userSecurity = new UserAccess();

@@ -55,6 +55,12 @@
             lastSynced: Date;
             syncError: string;
 
+            get name(): string { return this._name; }
+            private _name: string;
+
+            //get type(): string { return this._type; }
+            //private _type: string;
+
             /** Returns a reference to the parent item.  If there is no parent, then 'null' is returned.
              */
             get parent(): DirectoryItem { return this._parent; }
@@ -67,23 +73,16 @@
             }
             private _parent: DirectoryItem;
 
-            get name(): string { return this._name; }
-            private _name: string;
-
-            //get type(): string { return this._type; }
-            //private _type: string;
-
-            protected _childItems: DirectoryItem[] = [];
-            protected _childItemsByName: { [index: string]: DirectoryItem } = {};
-
-            get hasChildren() { return !!(this._childItems && this._childItems.length); }
-
             /** The full path + item name. */
             get absolutePath(): string { return this._parent && this._parent.absolutePath + '/' + this._name || this._name; }
 
             // --------------------------------------------------------------------------------------------------------------------
 
-            constructor(fileManager: FileManager, parent?: DirectoryItem) { super(); this._fileManager = fileManager; this.parent = parent; }
+            constructor(fileManager: FileManager, parent?: DirectoryItem) {
+                super();
+                this._fileManager = fileManager;
+                this.parent = parent;
+            }
 
             toString() { return this.absolutePath; }
 
@@ -125,66 +124,6 @@
                 return <T>(typeFilter ? (t instanceof typeFilter ? t : null) : t);
             }
 
-            /** Adds the given item under this item.
-              */
-            add<T extends DirectoryItem>(item: T): T {
-                if (item === void 0 || item === null)
-                    throw "Cannot add an empty item name/path to '" + this.absolutePath + "'.";
-                if (this.exists(item))
-                    throw "The item '" + item + "' already exists in the namespace '" + this.absolutePath + "'.";
-                if (typeof item !== 'object' || !(item instanceof DirectoryItem))
-                    throw "The item '" + item + "' is not a valid 'DirectoryItem' object.";
-                if (item.parent)
-                    if (item.parent == this)
-                        return item;
-                    else
-                        item.parent.remove(item);
-                item._parent = this;
-                if (!this._childItems)
-                    this._childItems = [];
-                if (!this._childItemsByName)
-                    this._childItemsByName = {};
-                this._childItems.push(item);
-                this._childItemsByName[item.name] = item;
-                return item;
-            }
-
-            /** Removes an item under this item. If nothing was removed, then null is returned, otherwise the removed item is returned (not the item passed in). */
-            remove<T extends DirectoryItem>(item: T): T;
-            /** Removes an item under this item.  If nothing was removed, then null is returned, otherwise the removed item is returned.
-             *  You can provide a nested item path if desired. For example, if the current item is 'A/B' within the 'A/B/C/D' namespace,
-             *  then you could pass in 'C/D'.
-              */
-            remove(name: string): DirectoryItem;
-            remove(itemOrName: any): DirectoryItem {
-                if (itemOrName === void 0 || itemOrName === null)
-                    throw "Cannot remove an empty name/path from directory '" + this.absolutePath + "'.";
-
-                if (!this.hasChildren) return null;
-
-                var parent: DirectoryItem; // (since types can be added as roots to other types [i.e. no parent references], need to remove item objects as immediate children, not via 'resolve()')
-
-                if (typeof itemOrName == 'object' && itemOrName instanceof DirectoryItem) {
-                    var t = <DirectoryItem>itemOrName;
-                    if (!this._childItemsByName[t.name])
-                        throw "Cannot remove item: There is no child item '" + itemOrName + "' under '" + this.absolutePath + "'.";
-                    parent = this;
-                }
-                else {
-                    var t = this.resolve(itemOrName);
-                    if (t) parent = t.parent;
-                }
-
-                if (t && parent) {
-                    delete parent._childItemsByName[t.name];
-                    var i = parent._childItems.indexOf(t);
-                    if (i >= 0) parent._childItems.splice(i, 1);
-                    t._parent = null;
-                }
-
-                return t;
-            }
-
             getJSONStructure<T extends typeof DirectoryItem>(typeFilter?: T) {
                 JSON.stringify(this, (k, v) => {
                     if (!k || k == '_childItems' || k == 'name') // ('k' is empty for the root object)
@@ -205,7 +144,7 @@
             //}
         }
 
-        export namespace Abstract {
+        export namespace Abstracts {
             export declare function _defaultCreateDirHandler(fileManager: FileManager, parent?: DirectoryItem): Directory; // (this will be defined on the client/server sides)
 
             export abstract class Directory extends DirectoryItem {
@@ -216,7 +155,14 @@
                 static set onCreateDirectory(value) { if (typeof value != 'function') throw "Directory.onCreateDirectory: Set failed - value is not a function."; this._onCreateDirectory = value; }
                 private static _onCreateDirectory = _defaultCreateDirHandler;
 
-                constructor(fileManager: FileManager, parent?: DirectoryItem) { super(fileManager, parent); }
+                protected _childItems: DirectoryItem[] = [];
+                protected _childItemsByName: { [index: string]: DirectoryItem } = {};
+
+                get hasChildren() { return !!(this._childItems && this._childItems.length); }
+
+                constructor(fileManager: FileManager, parent?: DirectoryItem) {
+                    super(fileManager, parent);
+                }
 
                 getFile(filePath: string): File {
                     var item = this.resolve(filePath);
@@ -253,6 +199,109 @@
                     if (!filename) throw "A file name is required.";
                     var dir = this.createDirectory(directoryPath);
                     return File.onCreateFile(this._fileManager, dir, contents);
+                }
+
+                /** Adds the given item under this item.
+                  */
+                add<T extends DirectoryItem>(item: T): T {
+                    if (item === void 0 || item === null)
+                        throw "Cannot add an empty item name/path to '" + this.absolutePath + "'.";
+                    if (this.exists(item))
+                        throw "The item '" + item + "' already exists in the namespace '" + this.absolutePath + "'.";
+                    if (typeof item !== 'object' || !(item instanceof DirectoryItem))
+                        throw "The item '" + item + "' is not a valid 'DirectoryItem' object.";
+
+                    if (this._fileManager)
+                        this._fileManager['onItemAdding'](this);
+
+                    if (item.parent)
+                        if (item.parent == this)
+                            return item;
+                        else
+                            item.parent.remove(item);
+
+                    item['_parent'] = this;
+
+                    if (!this._childItems)
+                        this._childItems = [];
+                    if (!this._childItemsByName)
+                        this._childItemsByName = {};
+
+                    this._childItems.push(item);
+                    this._childItemsByName[item.name] = item;
+
+                    if (this._fileManager)
+                        this._fileManager['onItemAdded'](this);
+
+                    return item;
+                }
+
+                /** Removes an item under this item. If nothing was removed, then null is returned, otherwise the removed item is returned (not the item passed in). */
+                remove<T extends DirectoryItem>(item: T): T;
+                /** Removes an item under this item.  If nothing was removed, then null is returned, otherwise the removed item is returned.
+                 *  You can provide a nested item path if desired. For example, if the current item is 'A/B' within the 'A/B/C/D' namespace,
+                 *  then you could pass in 'C/D'.
+                  */
+                remove(name: string): DirectoryItem;
+                remove(itemOrName: any): DirectoryItem {
+                    if (itemOrName === void 0 || itemOrName === null)
+                        throw "Cannot remove an empty name/path from directory '" + this.absolutePath + "'.";
+
+                    if (!this.hasChildren) return null;
+
+                    if (this._fileManager)
+                        this._fileManager['onItemRemoving'](this);
+
+                    var parent: DirectoryItem; // (since types can be added as roots to other types [i.e. no parent references], need to remove item objects as immediate children, not via 'resolve()')
+
+                    if (typeof itemOrName == 'object' && itemOrName instanceof DirectoryItem) {
+                        var t = <DirectoryItem>itemOrName;
+                        if (!this._childItemsByName[t.name])
+                            throw "Cannot remove item: There is no child item '" + itemOrName + "' under '" + this.absolutePath + "'.";
+                        parent = this;
+                    }
+                    else {
+                        var t = this.resolve(itemOrName);
+                        if (t) parent = t.parent;
+                    }
+
+                    if (t && parent) {
+                        delete parent._childItemsByName[t.name];
+                        var i = parent._childItems.indexOf(t);
+                        if (i >= 0) parent._childItems.splice(i, 1);
+                        t['_parent'] = null;
+                    }
+
+                    if (this._fileManager)
+                        this._fileManager['onItemRemoved'](this);
+
+                    return t;
+                }
+
+                /** Triggered when a directory item (i.e. directory or file) is about to be added to the system.
+                 * To abort you can:
+                 *   1. throw an exception - the error message (reason) will be displayed to the user.
+                 *   2. return an explicit 'false' value, which will prevent the item from adding without a reason.
+                 *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being added.
+                 */
+                protected onItemAdding(item: DirectoryItem): void | boolean | string {
+                }
+
+                /** Triggered when a directory item (i.e. directory or file) gets added to the system. */
+                protected onItemAdded(item: DirectoryItem) {
+                }
+
+                /** Triggered when a directory item (i.e. directory or file) id about to be removed from the system.
+                 * To abort you can:
+                 *   1. throw an exception - the error message (reason) will be displayed to the user.
+                 *   2. return an explicit 'false' value, which will prevent the item from getting removed without a reason.
+                 *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being removed.
+                 */
+                protected onItemRemoving(item: DirectoryItem): void | boolean | string {
+                }
+
+                /** Triggered when a directory item (i.e. directory or file) gets removed from the system. */
+                protected onItemRemoved(item: DirectoryItem) {
                 }
 
                 getJSONStructure() {
@@ -301,7 +350,9 @@
          * Note: The 'FlowScript.currentUser' object determines the user-specific root directory for projects.
          */
         export class FileManager {
-            /** Manages the global file system for FlowScript by utilizing local storage space and remote server space. 
+            static _filesByGUID: { [guid: string]: Abstracts.DirectoryItem } = {}; // (references files by GUID for faster lookup)
+
+            /** Manages the global file system for FlowScript by utilizing local storage space and remote server space.
              * The file manager tries to keep recently accessed files local (while backed up to remove), and off-loads
              * less-accessed files to save space.
              */
@@ -319,41 +370,74 @@
             static get currentUserEndpoint() { return combine(this.apiEndpoint, FileManager.currentUser._id); }
 
             /** The root directory represents the API endpoint at 'FileManager.apiEndpoint'. */
-            readonly root: Abstract.Directory;
+            readonly root: Abstracts.Directory;
 
             // --------------------------------------------------------------------------------------------------------------------
 
             constructor(
                 /** The URL endpoint for the FlowScript project files API. Defaults to 'FileManager.apiEndpoint'. */
                 public apiEndpoint = FileManager.apiEndpoint) {
-                this.root = Abstract.Directory.onCreateDirectory(this);
+                this.root = Abstracts.Directory.onCreateDirectory(this);
             }
 
-            /** Gets a directory under the current user root endpoint. 
+            /** Triggered when a directory item (i.e. directory or file) is about to be added to the system. 
+             * To abort you can:
+             *   1. throw an exception - the error message (reason) will be displayed to the user.
+             *   2. return an explicit 'false' value, which will prevent the item from adding without a reason.
+             *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being added.
+             */
+            protected onItemAdding(item: DirectoryItem): void | boolean | string {
+                if (item._id in FileManager._filesByGUID)
+                    throw `A directory item with this GUID '${item._id}' (name: '${FileManager._filesByGUID[item._id].name}') already exists.  Please remove the file first before adding it again.`;
+            }
+
+            /** Triggered when a directory item (i.e. directory or file) gets added to the system. */
+            protected onItemAdded(item: DirectoryItem) {
+                FileManager._filesByGUID[item._id] = item;
+            }
+
+            /** Triggered when a directory item (i.e. directory or file) id about to be removed from the system.
+             * To abort you can:
+             *   1. throw an exception - the error message (reason) will be displayed to the user.
+             *   2. return an explicit 'false' value, which will prevent the item from getting removed without a reason.
+             *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being removed.
+             */
+            protected onItemRemoving(item: DirectoryItem): void | boolean | string {
+                if (!(item._id in FileManager._filesByGUID))
+                    throw `Cannot remove directory item: No entry with GUID '${item._id}' (name: '${item.name}') was previously added.  This error is thrown to maintain the integrity of the virtual file system, as only existing items should ever be removed.`;
+            }
+
+            /** Triggered when a directory item (i.e. directory or file) gets removed from the system. */
+            protected onItemRemoved(item: DirectoryItem) {
+                if (item._id in FileManager._filesByGUID)
+                    delete FileManager._filesByGUID[item._id]; // (speed is not a huge importance here, otherwise we can just set it to 'void 0')
+            }
+
+            /** Gets a directory under the current user root endpoint.
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
-            getDirectory(path?: string, userId?: string): Abstract.Directory {
+            getDirectory(path?: string, userId?: string): Abstracts.Directory {
                 return this.root.getDirectory(combine(userId || FileManager.currentUser._id, path));
             }
 
             /** Creates a directory under the current user root endpoint. 
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
-            createDirectory(path: string, userId?: string): Abstract.Directory {
+            createDirectory(path: string, userId?: string): Abstracts.Directory {
                 return this.root.createDirectory(combine(userId || FileManager.currentUser._id, path));
             }
 
             /** Gets a file under the current user root endpoint.  
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
-            getFile(filePath: string, userId?: string): Abstract.File {
+            getFile(filePath: string, userId?: string): Abstracts.File {
                 return this.root.getFile(combine(userId || FileManager.currentUser._id, filePath));
             }
 
             /** Creates a file under the current user root endpoint.  
              * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
              */
-            createFile(filePath: string, contents?: string, userId?: string): Abstract.File {
+            createFile(filePath: string, contents?: string, userId?: string): Abstracts.File {
                 return this.root.createFile(combine(userId || FileManager.currentUser._id, filePath), contents);
             }
 
@@ -363,8 +447,8 @@
         // ========================================================================================================================
 
         /** Combine two paths into one. */
-        export function combine(path1: string | Abstract.Directory, path2: string | Abstract.Directory) {
-            return Path.combine(path1 instanceof Abstract.Directory ? path1.absolutePath : path1, path2 instanceof Abstract.Directory ? path2.absolutePath : path2);
+        export function combine(path1: string | Abstracts.Directory, path2: string | Abstracts.Directory) {
+            return Path.combine(path1 instanceof Abstracts.Directory ? path1.absolutePath : path1, path2 instanceof Abstracts.Directory ? path2.absolutePath : path2);
         }
 
         // ========================================================================================================================

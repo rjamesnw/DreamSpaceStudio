@@ -14,6 +14,16 @@ namespace DS {
             });
         }
 
+        IO.write = async function (path: string, content: Uint8Array): Promise<void> {
+            return new Promise<any>((resolve, reject) => {
+                var fs: typeof import("fs") = require("fs");
+                fs.writeFile(path, content, null, (err) => {
+                    if (err) return reject(err);
+                    resolve();
+                });
+            });
+        }
+
         /** Lists the contents of a directory. */
         IO.getFiles = async function (path: string): Promise<string[]> {
             return new Promise<any>((resolve, reject) => {

@@ -37,15 +37,17 @@ namespace DS {
         }
 
         getResourceValue(): Promise<any> {
+            return Promise.resolve();
         }
         getResourceType(): ResourceTypes {
+            return;
         }
 
         /** Saves the tracking details and related items to a specified object.
         * If no object is specified, then a new empty object is created and returned.
         */
-        saveToObject<T extends ISavedPersistableObject>(target?: T & ISavedTrackableObject) {
-            target = super.saveToObject(target);
+        saveConfigToObject<T extends ISavedPersistableObject>(target?: T & ISavedTrackableObject) {
+            target = super.saveConfigToObject(target);
 
             target.$id = this.$__id;
             target.$objectType = this.$__type;
@@ -54,9 +56,9 @@ namespace DS {
         }
 
         /** Loads the tracking details from a given object. */
-        loadFromObject(source?: ISavedTrackableObject, replace = false): this {
+        loadConfigFromObject(source?: ISavedTrackableObject, replace = false): this {
             if (source) {
-                super.loadFromObject(source, replace);
+                super.loadConfigFromObject(source, replace);
 
                 var _this = <Writeable<this>>this;
 

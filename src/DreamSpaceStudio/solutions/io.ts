@@ -242,8 +242,11 @@ namespace DS {
             });
         }
 
-        /** Loads a file and returns the contents as text. */
-        export declare function read(path: string): Promise<Uint8Array>;
+        /** Loads a file and returns the contents. */
+        export declare function read(path: string): Promise<Uint8Array>; // (environment specific implementation)
+
+        /** Saves contents to a file. */
+        export declare function write(path: string, content: Uint8Array): Promise<void>; // (environment specific implementation)
 
         /** Lists the contents of a directory. */
         export declare function getFiles(path: string): Promise<string[]>;

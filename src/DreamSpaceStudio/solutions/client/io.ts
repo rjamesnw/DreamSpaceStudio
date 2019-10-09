@@ -2,8 +2,10 @@
 // This API will be a layer of abstraction for the client side only.
 
 namespace DS {
+    // ========================================================================================================================
+
     export namespace IO {
-        // ========================================================================================================================
+        // --------------------------------------------------------------------------------------------------------------------
 
         /** This even is triggered when the user should wait for an action to complete. */
         export var onBeginWait = new EventDispatcher<typeof IO, { (msg: string): void }>(IO, "onBeginWait", true);
@@ -35,6 +37,49 @@ namespace DS {
                 onEndWait.dispatch();
             }
         }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+
+        function hasStorageSupport(funcName: string, path: string, reject: (reason?: any) => void) {
+            if (!Store.hasLocalStorage) {
+                reject(new Exception("IO.read(): This host does not support local storage, or local storage is disabled.", path));
+                return false;
+            }
+            else return true;
+        }
+
+        /** Loads a file and returns the contents as text. */
+        IO.read = async function (path: string): Promise<Uint8Array> {
+            return new Promise<any>((resolve, reject) => {
+                if (!hasStorageSupport("IO.read()", path, reject)) return;
+                var content = Store.get(Store.StorageType.Local, path, "DSFS");
+                return StringUtils.stringToByteArray(content);
+            });
+        }
+
+        IO.write = async function (path: string, content: Uint8Array): Promise<void> {
+            return new Promise<any>((resolve, reject) => {
+                if (!hasStorageSupport("IO.write()", path, reject)) return;
+                Store.set(Store.StorageType.Local, path, StringUtils.byteArrayToString(content), "DSFS");
+            });
+        }
+
+        /** Lists the contents of a directory. */
+        IO.getFiles = async function (path: string): Promise<string[]> {
+            return new Promise<any>((resolve, reject) => {
+                if (!hasStorageSupport("IO.getFiles()", path, reject)) return;
+            });
+        }
+
+        /** Lists the contents of a directory. */
+        IO.getDirectories = async function (path: string): Promise<string[]> {
+            return new Promise<any>((resolve, reject) => {
+                if (!hasStorageSupport("IO.getDirectories()", path, reject)) return;
+            });
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
     }
 
     // ========================================================================================================================

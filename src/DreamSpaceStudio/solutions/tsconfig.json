@@ -21,6 +21,7 @@
     "Diagnostics.ts",
     "PersistableObject.ts",
     "TrackableObject.ts",
+    "ConfigBaseObject.ts",
     "DependentObject.ts",
     "VDOM.ts",
     "Templating.ts",

@@ -318,29 +318,52 @@
                 static set onCreateFile(value) { if (typeof value != 'function') throw "File.onCreateFile: Set failed - value is not a function."; this._onCreateFile = value; }
                 private static _onCreateFile: typeof _defaultCreateFileHandler;
 
-                get contents() { return this._contents; }
-                set contents(value: string) { this._contents = value; this.touch(); }
-                private _contents: string; // (a binary string with the file contents)
+                get content() { return this._contents; }
+                set content(value: Uint8Array) { this._contents = value; this.touch(); }
+                private _contents: Uint8Array; // (a binary string with the file contents)
 
-                constructor(fileManager: FileManager, parent?: DirectoryItem, content?: string) {
+                get text(): string { return StringUtils.byteArrayToString(this._contents); }
+                set text(value: string) { this._contents = StringUtils.stringToByteArray(value); this.touch(); }
+
+                constructor(fileManager: FileManager, parent?: DirectoryItem, content?: string | Uint8Array) {
                     super(fileManager, parent);
                     if (content !== void 0)
-                        this._contents = content;
+                        this._contents = content instanceof Uint8Array ? content : StringUtils.stringToByteArray(content);
                 }
 
-                toBase64() { return Encoding.base64Encode(this.contents); }
-                fromBase64(contentsB64: string) { this.contents = Encoding.base64Decode(contentsB64); }
+                /** Converts the contents to text and returns it base-64 encoded. */
+                toBase64() { return Encoding.base64Encode(this.text); }
 
-                /** Reads the file contents as an array of bytes. */
-                async read(): Promise<Uint8Array> {
-                    var contents = await DS.IO.read(this.absolutePath);
-                    return contents;
+                /** Decodes the base-64 content and updates the current file contents with the result. */
+                fromBase64(contentB64: string) { this.text = Encoding.base64Decode(contentB64); }
+
+                protected async onSave(): Promise<this> {
+                    await DS.IO.write(this.absolutePath, this.content);
+                    return this; // (returning reference to the file object instead of string as it is copied by reference and thus faster)
                 }
-                /** Reads the file binary contents as text in the UTF8 format. */
-                async readText(): Promise<string> {
-                    var contents = await DS.IO.read(this.absolutePath);
-                    var text = StringUtils.byteArrayToString(contents);
-                    return text;
+
+                protected async onLoad(): Promise<this> {
+                    this.contents = await DS.IO.read(this.absolutePath);
+                    return this;
+                }
+
+                protected onAfterSuccessfulSave(result: this): void { }
+                protected onAfterSuccessfulLoad(result: this): void { }
+
+                /** Returns the resource value for this trackable object, which is just the config file contents. */
+                async getResourceValue(): Promise<any> {
+                    try {
+                        if (!this.lastAccessed) // ('lastAccessed' is undefined until the first save/load operation)
+                            return (await this.read()).text;
+                        return this.text;
+                    }
+                    catch (err) {
+                        throw new Exception(`Failed to load contents for project '${this.name}'.`, this, err);
+                    }
+                }
+
+                getResourceType(): ResourceTypes {
+                    return ResourceTypes.Application_JSON;
                 }
             }
         }
@@ -350,7 +373,9 @@
          * Note: The 'FlowScript.currentUser' object determines the user-specific root directory for projects.
          */
         export class FileManager {
-            static _filesByGUID: { [guid: string]: Abstracts.DirectoryItem } = {}; // (references files by GUID for faster lookup)
+            static _filesByGUID: { [guid: string]: DirectoryItem } = {}; // (references files by GUID for faster lookup)
+
+            static getFileByID(id: string) { return this._filesByGUID[id]; }
 
             /** Manages the global file system for FlowScript by utilizing local storage space and remote server space.
              * The file manager tries to keep recently accessed files local (while backed up to remove), and off-loads

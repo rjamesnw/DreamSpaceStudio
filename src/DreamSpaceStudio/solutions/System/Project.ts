@@ -13,11 +13,10 @@
 
     export namespace Abstracts {
 
-        export abstract class Project extends TrackableObject {
+        export abstract class Project extends ConfigBaseObject {
             // --------------------------------------------------------------------------------------------------------------------
 
             static CONFIG_FILENAME = "project.json";
-            configFilename = Solution.CONFIG_FILENAME;
 
             //x /** The script instance for this project. */
             //x get script() { return this._script; }
@@ -61,16 +60,16 @@
                 super();
                 if (!Path.isValidFileName(name))
                     throw "The project title '" + name + "' must also be a valid file name. Don't include special directory characters, such as: \\ / ? % * ";
+                this.configFilename = Project.CONFIG_FILENAME;
                 this.directory = this.solution.directory.createDirectory(VirtualFileSystem.combine("projects", this._id)); // (the path is "User ID"/"project's unique ID"/ )
             }
 
             // --------------------------------------------------------------------------------------------------------------------
 
             /** Saves the project values to an object - typically prior to serialization. */
-            saveToObject(target?: ISavedProject): ISavedProject {
-                target = target || <ISavedProject>{};
+            saveConfigToObject<T extends ISavedPersistableObject>(target?: T & ISavedProject) {
 
-                super.saveToObject(target);
+                target = super.saveConfigToObject(target);
 
                 target.name = this.name;
                 target.description = this.description;
@@ -83,26 +82,12 @@
                 return target;
             }
 
-            /** Saves the project and related items to a specified object. 
-             * If no object is specified, then a new empty object is created and returned.
-             */
-            async save(): Promise<this> {
-
-                var data = await this.saveToObject();
-
-                // TODO: (... save to store ...)
-
-                var file = this.directory.createFile((workflow.name || workflow.$id) + ".wf.json", wfJSON); // (wf: Workflow file)
-
-                return this;
-            }
-
             /** Saves the project to a persisted storage, such as the local browser storage, or a remote store, if possible. 
              * Usually the local storage is attempted first, then the system will try to sync with a remote store.  If there
              * is no free space in the local store, the system will try to sync with a remote store.  If that fails, the
              * data will only be in memory and a UI warning will display.
              */
-            saveToStorage(source = this.saveToObject()) {
+            saveToStorage(source = this.saveConfigToObject()) {
                 if (!source) return; // (nothing to do)
 
                 if (Array.isArray(source.workflows))
@@ -119,7 +104,7 @@
                         }
                     }
 
-                var projectJSON = this.serialize(source);
+                var projectJSON = JSON.stringify(source);
 
                 file = this.directory.createFile(this._id + ".dsp.json", projectJSON); // (dsp: DreamSpace Project file)
                 this.files[file.absolutePath.toLocaleLowerCase()] = file;
@@ -128,37 +113,69 @@
             /** Loads and merges/replaces the project values from an object - typically prior to serialization.
              * @param replace If true, the whole project and any changed properties are replaced.  If false (the default), then only unmodified properties get updated.
              */
-            loadFromObject(target?: ISavedProject, replace = false): this {
-                if (target) {
+            loadConfigFromObject(source?: ISavedProject, replace = false): this {
+                if (source) {
                     var _this = <Writeable<this>>this;
 
-                    super.loadFromObject(target, replace);
+                    super.loadConfigFromObject(source, replace);
 
-                    if (replace || !_this.propertyChanged<ISavedProject>('name')) _this.name = target.name;
-                    if (replace || !_this.propertyChanged<ISavedProject>('description')) _this.description = target.description;
+                    if (replace || !_this.propertyChanged<ISavedProject>('name')) _this.name = source.name;
+                    if (replace || !_this.propertyChanged<ISavedProject>('description')) _this.description = source.description;
 
                     // TODO: associated files and scripts.
                 }
                 return this;
             }
 
-            /** Loads and merges/replaces the project values from the virtual file system.
+            /** Returns the resource value for this trackable object, which is just the config file contents. */
+            async getResourceValue(): Promise<any> {
+                try {
+                    if (!this._file)
+                        return await this.onLoad();
+                    else
+                        return this._file.text;
+                }
+                catch (err) {
+                    throw new Exception(`Failed to load contents for project '${this.name}'.`, this, err);
+                }
+            }
+
+            getResourceType(): ResourceTypes {
+                return ResourceTypes.Application_JSON;
+            }
+
+            /** Saves the project and related items.
+             */
+            async onSave(): Promise<string> {
+                try {
+                    return await super.onSave();
+                }
+                catch (err) {
+                    throw new Exception(`Failed to save project '${this.name}'.`, this, err);
+                }
+
+                //x var file = this.directory.createFile((workflow.name || workflow.$id) + ".wf.json", wfJSON); // (wf: Workflow file)
+            }
+
+            /** Loads and merges/replaces the project from the virtual file system.
              * @param replace If true, the whole project and any changed properties are replaced.  If false (the default), then only unmodified properties get updated.
              */
-            async load(replace = false): Promise<this> {
-
-                // TODO: (... load from file system if target is empty ...)
-                var target = null;
-
-                var _this = <Writeable<this>>this;
-
-                return this.loadFromObject(target, replace);
+            async onLoad(replace = false): Promise<string> {
+                try {
+                    return await super.onLoad();
+                }
+                catch (err) {
+                    throw new Exception(`Failed to load project '${this.name}'.`, this, err);
+                }
             }
 
             // --------------------------------------------------------------------------------------------------------------------
 
-            /** Saves the project to data objects (calls this.save() when 'source' is undefined) and uses the JSON object to serialize the result into a string. */
-            serialize(source = this.save()): string {
+            /** Saves the project to data objects (calls this.save() when 'source' is undefined) and uses the JSON object to
+             * serialize the result into a string.
+             */
+            serialize(): string {
+                var source = this.saveConfigToObject();
                 var json = JSON.stringify(source);
                 return json;
             }
@@ -213,14 +230,19 @@
 
             // --------------------------------------------------------------------------------------------------------------------
 
-            /** Loads/merges any changes from the server-side JSON configuration file. */
-            async refresh(): Promise<void> {
-                var configFile = this.directory.getFile(this.configFilename);
-                if (!configFile) return;
-                var configJSON = await configFile.readText();
-                var config: ISavedProject = JSON.parse(configJSON);
-                this.load(config);
-            }
+            ///** Loads/merges any changes from the server-side JSON configuration file. */
+            //x async refresh(): Promise<void> {
+            //    var configFile = this.directory.getFile(this.configFilename);
+            //    if (!configFile) return;
+            //    var configJSON = await configFile.readText();
+            //    try {
+            //        var config: ISavedProject = JSON.parse(configJSON);
+            //    }
+            //    catch (err) {
+            //        throw new Exception(`File to load configuration for project '${this.name}'.`, this, err);
+            //    }
+            //    return await this.load();
+            //}
 
             // --------------------------------------------------------------------------------------------------------------------
         }

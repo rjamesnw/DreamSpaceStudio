@@ -25,9 +25,8 @@
         * Holds a collection of projects.
         * When a project instance is created, the default 'Solution.onCreateProject' handler is used, which can be overridden for derived project types.
         */
-        export abstract class Solution extends TrackableObject {
+        export abstract class Solution extends ConfigBaseObject {
             static CONFIG_FILENAME = "solution.json";
-            configFilename = Solution.CONFIG_FILENAME;
 
             /** The function used to create project instances when a project is created from saved project data.
              * Host programs can overwrite this event property with a handler to create and return derived types instead (such as ProjectUI.ts).
@@ -67,6 +66,7 @@
 
             constructor(fileManager = VirtualFileSystem.FileManager.current) {
                 super();
+                this.configFilename = Solution.CONFIG_FILENAME;
                 this.directory = fileManager.createDirectory(VirtualFileSystem.combine("solutions", this._id));
             }
 
@@ -102,10 +102,8 @@
             /** Saves the tracking details and related items to a specified object. 
             * If no object is specified, then a new empty object is created and returned.
             */
-            save(target?: ISavedSolution): ISavedSolution {
-                target = target || <ISavedSolution>{};
-
-                super.save(target);
+            saveConfigToObject<T extends ISavedPersistableObject>(target?: T & ISavedSolution) {
+                target = super.saveConfigToObject(target);
 
                 target.name = this.name;
                 target.description = this.description;
@@ -115,37 +113,80 @@
                     target.projects = [];
 
                 for (var i = 0, n = this.projects.length; i < n; ++i)
-                    this.projects[i].save(target);
+                    target.projects.push(this.projects[i].saveConfigToObject());
 
                 return target;
             }
 
             /** Loads the tracking details from a given object. */
-            load(source?: ISavedSolution): this {
+            loadConfigFromObject(source?: ISavedSolution, replace = false): this {
                 if (source) {
-                    super.load(source); // (this should be first so 'propertyChanged()' will work properly)
+                    super.loadConfigFromObject(source); // (this should be first so 'propertyChanged()' will work properly)
 
                     var _this = <Writeable<this>>this;
 
-                    if (!_this.propertyChanged<ISavedSolution>('name')) _this.name = source.name;
-                    if (!_this.propertyChanged<ISavedSolution>('description')) _this.description = source.description;
+                    if (!this.propertyChanged<ISavedSolution>('name')) _this.name = source.name;
+                    if (!this.propertyChanged<ISavedSolution>('description')) _this.description = source.description;
 
                     if (source.directory && source.directory != this.directory.absolutePath)
-
                         for (var i = 0, n = this.projects.length; i < n; ++i)
-                            this.projects[i].load(source);
+                            this.projects[i].loadConfigFromObject(source);
                 }
                 return this;
             }
 
-            /** Loads/merges any changes from the server-side JSON configuration file. */
-            async refresh(): Promise<void> {
-                var configFile = this.directory.getFile(this.configFilename);
-                if (!configFile) return;
-                var configJSON = await configFile.readText();
-                var config: ISavedSolution = JSON.parse(configJSON);
-                this.load(config);
+            /** Saves the solution and related items.
+            */
+            async onSave(): Promise<string> {
+                try {
+                    return await super.onSave();
+                }
+                catch (err) {
+                    throw new Exception(`Failed to save solution '${this.name}'.`, this, err);
+                }
+
+                //x var file = this.directory.createFile((workflow.name || workflow.$id) + ".wf.json", wfJSON); // (wf: Workflow file)
             }
+
+            /** Loads and merges/replaces the solution from the virtual file system.
+             * @param replace If true, the whole project and any changed properties are replaced.  If false (the default), then only unmodified properties get updated.
+             */
+            async onLoad(replace = false): Promise<string> {
+                try {
+                    return await super.onLoad();
+                }
+                catch (err) {
+                    throw new Exception(`Failed to load solution '${this.name}'.`, this, err);
+                }
+            }
+
+            ///** Loads and merges/replaces the solution values from the virtual file system.
+            // * @param replace If true, the whole solution and any changed properties are replaced.  If false (the default), then only unmodified properties get updated.
+            // */
+            //x async load(replace = false): Promise<this> {
+
+            //    var configFile = this.directory.getFile(this.configFilename);
+            //    if (!configFile) return;
+
+            //    try {
+            //        var configJSON = await configFile.readText();
+            //        var config: ISavedSolution = JSON.parse(configJSON);
+            //    }
+            //    catch (err) {
+            //        throw new Exception(`Failed to load and parse configuration for project '${this.name}'.`, this, err);
+            //    }
+
+            //    return this.loadConfigFromObject(config, replace);
+            //}
+
+            ///** Loads/merges any changes from the server-side JSON configuration file. */
+            //x async refresh(): Promise<void> {
+            //    var configFile = this.directory.getFile(this.configFilename);
+            //    if (!configFile) return;
+            //    var configJSON = await configFile.readText();
+            //    var config: ISavedSolution = JSON.parse(configJSON);
+            //    this.load(config);
+            //}
         }
 
         // ========================================================================================================================

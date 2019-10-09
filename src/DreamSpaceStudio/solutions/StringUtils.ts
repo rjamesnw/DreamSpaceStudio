@@ -138,7 +138,7 @@ namespace DS {
 
         /** Converts a UTF8 string to a byte array. */
         export function stringToByteArray(text: string): Uint8Array {
-            return new TextEncoder().encode(text);
+            return new TextEncoder().encode(toString(text));
         }
     }
 

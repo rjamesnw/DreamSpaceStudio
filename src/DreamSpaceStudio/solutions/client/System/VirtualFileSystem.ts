@@ -24,12 +24,12 @@
 
             async saveToLocal() {
                 var store = Store.getStorage(Store.StorageType.Local);
-                store.setItem(this.absolutePath, this.contents);
+                store.setItem(this.absolutePath, this.content);
             }
 
             async loadFromLocal() {
                 var store = Store.getStorage(Store.StorageType.Local);
-                this.contents = store.getItem(this.absolutePath);
+                this.content = store.getItem(this.absolutePath);
             }
 
             async read(): Promise<Uint8Array> {

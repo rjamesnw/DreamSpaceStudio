@@ -12,7 +12,7 @@ namespace DS {
         readonly file: VirtualFileSystem.Abstracts.File;
         readonly replacedOn: Date; // (if this is undefined then the entry is the latest active version)
 
-        /** The absoulte file name under which the associated file is saved under. If not specified, then a GUID value will be generated
+        /** The absolute file name under which the associated file is saved under. If not specified, then a GUID value will be generated
          * and used automatically. 
          */
         readonly _fileID: string;
@@ -20,7 +20,7 @@ namespace DS {
         /** The original file name if changed, since replaced files may have the ISO UTC date-time stamp appended. */
         readonly _originalFileID: string;
 
-        get filename() { this.versionManager._fs.getFileById(this._originalFileID); }
+        get filename() { var file = VirtualFileSystem.FileManager.getFileByID(this._originalFileID); return file && file.name || ''; }
 
         /** Returns true if this version is the current version.  Current versions remain in their proper locations and do not
          * exist in the 'versions' repository.
@@ -53,8 +53,8 @@ namespace DS {
         }
 
         /** Saves the versioning details to an object. If no object is specified, then a new empty object is created and returned. */
-        saveToObject<T extends ISavedPersistableObject>(target?: T & ISavedFileVersion) {
-            target = super.saveToObject(target);
+        saveConfigToObject<T extends ISavedPersistableObject>(target?: T & ISavedFileVersion) {
+            target = super.saveConfigToObject(target);
 
             target.version = (this._version || 0) + 1 || 1; // (increment version before saving)
 
@@ -64,9 +64,9 @@ namespace DS {
         /** Loads data from a given object. 
          * Note: Every call to this method copies '_currentConfig' to '_lastConfig' and sets '_currentConfig' to the new incomming config file.
          */
-        loadFromObject(source?: ISavedFileVersion, replace = false): this {
+        loadConfigFromObject(source?: ISavedFileVersion, replace = false): this {
             if (source) {
-                super.loadFromObject(source, replace);
+                super.loadConfigFromObject(source, replace);
 
                 var _this = <Writeable<this>>this;
 
@@ -78,10 +78,18 @@ namespace DS {
         /** The given file will replace the current file, sending the current file into the 'versions' repository.
          * Note that you can only version a non-versioned file ('isCurrent==true'), otherwise an error will be thrown.
          */
-        async replaceWith(newfile: VirtualFileSystem.Abstracts.File) {
+        async replaceWith(newfile: VirtualFileSystem.Abstracts.File): Promise<FileVersion> {
             if (!newfile) return;
             if (!(newfile instanceof VirtualFileSystem.Abstracts.File)) throw `Failed to replace file '${this._filename}' with a non-VirtualFileSystem.Abstract.File object. The value given was: ${JSON.stringify(newfile)}`;
-            if (!this.isCurrent) throw `You cannot re-version a versioned file. You attempted to replace file '${this._filename}' with file '${newfile.absolutePath}'.`;
+            if (!this.isCurrent)
+                throw `You cannot re-version a versioned file. You attempted to replace file '${this._filename}' with file '${newfile.absolutePath}'.`;
+
+            // ... make sure file has a version entry first ...
+
+            var newFileVersion = this.versionManager.add(newfile);
+
+            throw Exception.notImplemented("DS.FileVersion.replaceWith()");
+            // TODO: Implement replace code to replace this current version with the givne file.
         }
     }
 
@@ -115,6 +123,7 @@ namespace DS {
         }
 
         /** Adds a file to the version control system, if not already added. 
+         * If the file is already versioned then the version entry is returned.
          * The file is not moved from its current location.
          */
         add(file: VirtualFileSystem.Abstracts.File) {
@@ -128,10 +137,10 @@ namespace DS {
          * The file is replaced by moving the file into the versions repository under a special version name, and moving the new
          * file into the place of the current file.
          */
-        replace(currentfile: VirtualFileSystem.Abstracts.File, newfile: VirtualFileSystem.Abstracts.File) {
+        async replace(currentfile: VirtualFileSystem.Abstracts.File, newfile: VirtualFileSystem.Abstracts.File): FileVersion {
             var cFileVersion = this.add(currentfile);
-            var nFileVersion = this.add(newfile);
-            return nFile;
+            var newVersion = await cFileVersion.replaceWith(newfile);
+            return newVersion;
         }
     }
 }

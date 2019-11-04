@@ -299,6 +299,25 @@
         // * It just calls 'extendNS(selector, "DS")'.
         // */
         //x export function extendDSNS(selector: () => any) { return extendNS(selector, "DS"); }
+
+        export function ciIndexOf(arr: Array<any>, value: any): number { // (case-insensitive index search)
+            if (arr && arr.length > 0)
+                for (var i = 0, n = arr.length; i < n; ++i)
+                    if (arr[i] === value || typeof arr[i] == 'string' && typeof value == 'string' && (<string>arr[i]).toLowerCase() == value.toLowerCase())
+                        return i;
+            return -1;
+        }
+
+        /** Attempts to parse a string as JSON and returns the result.  If the values is not a string, or the conversion fails, the value is returned as is. 
+         * This is used mainly in message queue processing, so JSON can convert to an object by default for the handlers, otherwise the value is sent as is.
+         */
+        export function parseJsonElseKeepAsIs<T>(value: T): T {
+            if (typeof value != 'string' || !Data.JSON.stringify isJson(value)) return value;
+            try {
+                return JSON.parse(value);
+            }
+            catch (err) { return value; }
+        }
     }
 }
 

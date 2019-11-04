@@ -12,6 +12,16 @@ namespace DS {
         export namespace JSON {
             // ===================================================================================================================
 
+            /** Uses a regex by Douglas Crockford to break down the JSON into valid parts. */
+            export function isJSON(jsonText: string): boolean {
+                if (typeof jsonText !== "string" || !jsonText)
+                    return false;
+                jsonText = jsonText.trim();
+                return /^[\],:{}\s]*$/.test(jsonText.replace(/\\["\\\/bfnrtu]/g, '@').
+                    replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').
+                    replace(/(?:^|:|,)(?:\s*\[)+/g, ''));
+            }
+
             /** Converts a JSON string into an object with nested objects as required.
              * The given JSON string is validated first before it is parsed for security reasons. Invalid JSON will throw an exception.
             */
@@ -24,9 +34,7 @@ namespace DS {
 
                 // ... validate the JSON format ...
                 // (Note: regex is from "https://github.com/douglascrockford/JSON-js/blob/master/json2.js" [by Douglas Crockford])
-                if (/^[\],:{}\s]*$/.test(jsonText.replace(/\\["\\\/bfnrtu]/g, '@').
-                    replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, ']').
-                    replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
+                if (isJSON(jsonText)) {
 
                     // Try to use the native JSON parser first
                     return window && (<any>window).JSON && (<any>window).JSON.parse ?

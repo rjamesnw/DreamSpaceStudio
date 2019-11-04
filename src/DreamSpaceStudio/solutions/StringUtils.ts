@@ -104,6 +104,14 @@ namespace DS {
             return typeof value.toString == 'function' ? toString(value.toString()) : "" + value; // ('value.toString()' should be a string, but in case it is not, this will cycle until a string type value is found, or no 'toString()' function exists)
         }
 
+        /** Reduces multiple consecutive whitespace characters into a single space character. 
+         * This helps to make comparing words in a string easier.
+         */
+        export function reduceWhitespace(s: string) {
+            return (typeof s != 'string' ? toString(s) : s).replace(/\s+/g, ' ');
+        }
+
+
         /** Splits the lines of the text (delimited by '\r\n', '\r', or '\n') into an array of strings. */
         export function getLines(text: string): string[] {
             var txt = typeof text == 'string' ? text : '' + text;
@@ -139,6 +147,19 @@ namespace DS {
         /** Converts a UTF8 string to a byte array. */
         export function stringToByteArray(text: string): Uint8Array {
             return new TextEncoder().encode(toString(text));
+        }
+
+        /**
+         * Escapes control, escape, or double quote characters in a string and returns it.
+         * Note: Single quotes are not escaped by default.
+         * @param str The string to escape.
+         * @param includeSingleQuotes Escapes single quotes by doubling them.  This, along with escaping, is typically used to help sanitize strings before storing them in a database.
+         */
+        export function escapeString(str: string, includeSingleQuotes = false): string {
+            var str = JSON.stringify(typeof str == 'string' ? str : toString(str)).slice(1, -1);
+            if (includeSingleQuotes)
+                str = str.replace(/'/g, "''");
+            return str;
         }
     }
 

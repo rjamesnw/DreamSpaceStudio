@@ -308,13 +308,14 @@
             return -1;
         }
 
-        /** Attempts to parse a string as JSON and returns the result.  If the values is not a string, or the conversion fails, the value is returned as is. 
-         * This is used mainly in message queue processing, so JSON can convert to an object by default for the handlers, otherwise the value is sent as is.
+        /** Attempts to parse a string as JSON and returns the result.  If the value is not a string, or the conversion fails,
+         * the value is returned as is. 
+         * This is used mainly to convert JSON strings to objects, while allowing all other values to pass through as is.
          */
-        export function parseJsonElseKeepAsIs<T>(value: T): T {
-            if (typeof value != 'string' || !Data.JSON.stringify isJson(value)) return value;
+        export function parseJsonElseKeepAsIs<T = any>(value: any): T {
             try {
-                return JSON.parse(value);
+                if (typeof value == 'string' && Data.JSON.isJSON(value))
+                    return <T>Data.JSON.ToObject(value);
             }
             catch (err) { return value; }
         }

@@ -19,7 +19,7 @@ namespace DS {
          * Blocks user input until 'closeWait()' is called. Plugins can hook into 'onBeginWait' to receive notifications.
          * Note: Each call stacks, but the 'onBeginWait' event is triggered only once.
          * @param msg An optional message to display (default is 'Please wait...').
-         */
+         */ 
         export function wait(msg = "Please wait ...") {
             if (__waitRequestCounter == 0) // (fire only one time)
                 onBeginWait.dispatch(msg);

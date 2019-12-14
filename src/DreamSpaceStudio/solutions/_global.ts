@@ -40,7 +40,7 @@ interface IStaticGlobals {
     cssBaseURL: string;
 }
 
-var isNode = typeof global == 'object' && global.process && global.process.versions && global.process.versions.node;
+var isNode = typeof global == 'object' && !!global.process && !!global.process.versions && !!global.process.versions.node;
 
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
  * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.

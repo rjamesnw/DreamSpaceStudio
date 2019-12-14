@@ -6,6 +6,14 @@ namespace DS {
 
     // =======================================================================================================================
 
+    /** Time related function utilities. */
+    export namespace Time {
+        /** Returns a UTC timestamp string, similar to what is used with MySQL databases. */
+        export function getUTCTimestamp() { // TODO: Consider merging/including this with TimeSpan.
+            return new Date().toISOString().replace(/[^0-9]/g, "").substr(0, 14);
+        }
+    }
+
     /** 
      * Represents a span of time (not a date). Calculation of dates usually relies on calendar rules.  A time-span object
      * doesn't care about months and day of the month - JavaScript already has a date object for that.

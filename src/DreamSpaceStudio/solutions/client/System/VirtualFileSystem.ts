@@ -22,15 +22,15 @@
                 super(fileManager, parent, content);
             }
 
-            async saveToLocal() {
-                var store = Store.getStorage(Store.StorageType.Local);
-                store.setItem(this.absolutePath, this.content);
-            }
+            //async saveToLocal() {
+            //    var store = Store.getStorage(Store.StorageType.Local);
+            //    store.setItem(this.absolutePath, this.content);
+            //}
 
-            async loadFromLocal() {
-                var store = Store.getStorage(Store.StorageType.Local);
-                this.content = store.getItem(this.absolutePath);
-            }
+            //async loadFromLocal() {
+            //    var store = Store.getStorage(Store.StorageType.Local);
+            //    this.content = store.getItem(this.absolutePath);
+            //}
 
             async read(): Promise<Uint8Array> {
                 var fs: typeof import("fs") = require("fs");

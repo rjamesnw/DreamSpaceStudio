@@ -151,9 +151,9 @@
                 /** The function used to create directory instances.
                  * Host programs can overwrite this event property with a handler to create and return derived types instead.
                  */
-                static get onCreateDirectory() { return this._onCreateDirectory || _defaultCreateDirHandler; }
+                static get onCreateDirectory() { return this._onCreateDirectory || Abstracts._defaultCreateDirHandler; }
                 static set onCreateDirectory(value) { if (typeof value != 'function') throw "Directory.onCreateDirectory: Set failed - value is not a function."; this._onCreateDirectory = value; }
-                private static _onCreateDirectory = _defaultCreateDirHandler;
+                private static _onCreateDirectory: typeof _defaultCreateDirHandler;
 
                 protected _childItems: DirectoryItem[] = [];
                 protected _childItemsByName: { [index: string]: DirectoryItem } = {};
@@ -314,7 +314,7 @@
                 /** The function used to create file instances.
                  * Host programs can overwrite this event property with a handler to create and return derived types instead.
                  */
-                static get onCreateFile() { return this._onCreateFile || _defaultCreateFileHandler; }
+                static get onCreateFile() { return this._onCreateFile || Abstracts._defaultCreateFileHandler; }
                 static set onCreateFile(value) { if (typeof value != 'function') throw "File.onCreateFile: Set failed - value is not a function."; this._onCreateFile = value; }
                 private static _onCreateFile: typeof _defaultCreateFileHandler;
 
@@ -381,7 +381,8 @@
              * The file manager tries to keep recently accessed files local (while backed up to remove), and off-loads
              * less-accessed files to save space.
              */
-            static current = new FileManager();
+            static get current() { return this._current || (this._current = new FileManager()); }
+            private static _current: FileManager;
 
             // --------------------------------------------------------------------------------------------------------------------
 

@@ -137,7 +137,7 @@ namespace DS {
          * The file is replaced by moving the file into the versions repository under a special version name, and moving the new
          * file into the place of the current file.
          */
-        async replace(currentfile: VirtualFileSystem.Abstracts.File, newfile: VirtualFileSystem.Abstracts.File): FileVersion {
+        async replace(currentfile: VirtualFileSystem.Abstracts.File, newfile: VirtualFileSystem.Abstracts.File): Promise<FileVersion> {
             var cFileVersion = this.add(currentfile);
             var newVersion = await cFileVersion.replaceWith(newfile);
             return newVersion;

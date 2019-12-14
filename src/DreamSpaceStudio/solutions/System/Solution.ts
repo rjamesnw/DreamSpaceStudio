@@ -9,9 +9,11 @@
         projects?: (ISavedProject | string)[];
         //comments: string[];
     }
-
-    export interface ISavedSolutions {
-        solutions: string[];
+    
+    /** The system.json file contains the entire list of solutions in the system, including system-related settings.
+     */
+    export interface ISystem {
+        solutions?: ISavedSolution[];
     }
 
     export namespace Abstracts {
@@ -31,7 +33,7 @@
             /** The function used to create project instances when a project is created from saved project data.
              * Host programs can overwrite this event property with a handler to create and return derived types instead (such as ProjectUI.ts).
              */
-            static get onCreateProject() { return this._onCreateProject || _defaultCreateProjectHandler; }
+            static get onCreateProject() { return this._onCreateProject || Abstracts._defaultCreateProjectHandler; }
             static set onCreateProject(value) { if (typeof value != 'function') throw "Solution.onCreateProject: Set failed - value is not a function."; this._onCreateProject = value; }
             private static _onCreateProject: typeof _defaultCreateProjectHandler;
 
@@ -195,7 +197,7 @@
             /** The function used to create solution instances when a solution is created from saved solution data.
              * Host programs can overwrite this event property with a handler to create and return derived types instead.
              */
-            static get onCreateSolution() { return this._onCreateSolution || _defaultCreateSolutionHandler; }
+            static get onCreateSolution() { return this._onCreateSolution || Abstracts._defaultCreateSolutionHandler; }
             static set onCreateSolution(value) { if (typeof value != 'function') throw "Solution.onCreateSolution: Set failed - value is not a function."; this._onCreateSolution = value; }
             private static _onCreateSolution: typeof _defaultCreateSolutionHandler;
 
@@ -217,15 +219,15 @@
             }
 
             /** Returns a list of available solution GUIDs that can be loaded. */
-            static async getSolutionIDs(): Promise<string[]> {
+            static async getSolutions(): Promise<ISavedSolution[]> {
 
                 // ... load the 'solutions.json' file from the root to see which solutions are available ...
 
-                var solutionJson = await DS.IO.read("solutions.json");
+                var solutionJson = await DS.IO.read("system.json");
 
                 if (solutionJson) {
                     var jsonStr = StringUtils.byteArrayToString(solutionJson);
-                    var s: ISavedSolutions = JSON.parse(jsonStr);
+                    var s: ISystem = JSON.parse(jsonStr);
                 }
 
                 if (s && s.solutions && s.solutions.length)
@@ -234,21 +236,22 @@
                     return [];
             }
 
-            /** Triggers the process to load all the solutions in the '/solutions' folder by first calling 'Solutions.getSProjectolutionIDs()'
+            /** Triggers the process to load all the solution details in the '/solutions' folder by first calling 'Solutions.getSolutions()'
              * to get the IDs from 'solutions.json'. While all solution configurations are loaded, the contained projects are not.
              */
             static async refresh(fm = VirtualFileSystem.FileManager.current): Promise<typeof Solutions> {
-                var ids = await Solutions.getSolutionIDs();
+                var solutions = await Solutions.getSolutions();
                 var unloadedSolutions: Solution[] = [];
 
-                if (ids && ids.forEach)
-                    ids.forEach((v, i, arr) => {
-                        if (!this.get(v)) {
-                            var s = this.createSolution(v, void 0, v);
-                            if (s) {
-                                s._id = v;
-                                unloadedSolutions.push(s);
-                                this.solutions.push(s);
+                if (solutions && solutions.forEach)
+                    solutions.forEach((sol, i, arr) => {
+                        if (!this.get(sol.$id)) {
+                            var newSol = this.createSolution(sol.$id, void 0, sol.$id);
+                            if (newSol) {
+                                if (!StringUtils.toString(newSol._id).trim()) // (if not null, undefined, empty, or whitespace, then update the tracking GUID)
+                                    newSol._id = sol.$id;
+                                unloadedSolutions.push(newSol);
+                                this.solutions.push(newSol);
                             }
                         }
                     });
@@ -256,7 +259,7 @@
                 // ... wait for the solutions to load their data before we complete the process ...
 
                 for (var i = 0, n = unloadedSolutions.length; i < n; ++i)
-                    await unloadedSolutions[i].refresh();
+                    await unloadedSolutions[i].refreshProjects();
 
                 return Solutions;
             }
@@ -267,7 +270,7 @@
              * @param description The solution description.
              */
             static createSolution(name: string, description?: string, guid?: string): Solution {
-                var info: ISavedSolution = { $id: void 0, $objectType: "Solution", name, description }; // (an undefined ID will just used the default one created on the instance)
+                var info: ISavedSolution = { $id: guid, $objectType: "Solution", name, description }; // (an undefined ID will just used the default one created on the instance)
                 var solution = Solutions.onCreateSolution(info);
                 if (solution)
                     this.solutions.push(solution);

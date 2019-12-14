@@ -141,6 +141,11 @@ namespace DS {
 
         /** Converts a byte array to a UTF8 string. */
         export function byteArrayToString(array: Uint8Array): string {
+            if (typeof TextDecoder == 'undefined')
+                if (isNode)
+                    global.TextDecoder = require("util").TextDecoder;
+                else
+                    throw "TextDecoder is required, but not supported on this system. Please run on a system that supports it, or add a polyfill.";
             return new TextDecoder('utf-8').decode(array);
         }
 
@@ -156,7 +161,7 @@ namespace DS {
          * @param includeSingleQuotes Escapes single quotes by doubling them.  This, along with escaping, is typically used to help sanitize strings before storing them in a database.
          */
         export function escapeString(str: string, includeSingleQuotes = false): string {
-            var str = JSON.stringify(typeof str == 'string' ? str : toString(str)).slice(1, -1);
+            var str = JSON.stringify(typeof str == 'string' ? str : "" + str).slice(1, -1); // (JSON.stringify() will escape double quotes and other whitespace chars)
             if (includeSingleQuotes)
                 str = str.replace(/'/g, "''");
             return str;

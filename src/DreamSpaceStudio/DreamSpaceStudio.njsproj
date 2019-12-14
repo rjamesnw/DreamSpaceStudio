@@ -134,7 +134,7 @@
     <Content Include="solutions\readme.txt" />
     <Content Include="solutions\client\tsconfig.json" />
     <Content Include="solutions\server\tsconfig.json" />
-    <Content Include="solutions.json" />
+    <Content Include="system.json" />
     <Content Include="solutions\tsconfig.json" />
     <Content Include="server\tsconfig.json" />
     <Content Include="package.json" />

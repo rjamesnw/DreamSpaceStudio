@@ -3,6 +3,7 @@
 
     export interface ISavedProject extends ISavedTrackableObject {
         name: string;
+        version?: string;
         description?: string;
         directory?: string;
         /** File paths related to this project. */

@@ -5,7 +5,7 @@
 
     export namespace VirtualFileSystem {
         // ========================================================================================================================
-
+        
         Abstracts._defaultCreateDirHandler = function (fileManager: FileManager, parent?: DirectoryItem) {
             return new Directory(fileManager, parent);
         };

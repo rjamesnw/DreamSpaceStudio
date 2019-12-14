@@ -7,7 +7,7 @@ namespace DS {
      * Note: This class is rarely inherited from directly.  Instead use 'TrackableObject', which enhances the persistence with a tracking ID.
      */
     export abstract class PersistableObject {
-        /** Triggers the process to save the project to a data store. */
+        /** Triggers the process to save the object to a data store. */
         async save(): Promise<this> {
             if (await this.onBeforeSave()) { // (make sure we are in a state that allows saving)
                 var contents = await this.onSave(); // (do the save operation and get the storage contents)

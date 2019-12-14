@@ -14,7 +14,9 @@
     "types": [ "node" ] // (include only types we need; prevents node types from being included)
   },
   "files": [
-    "./ds.ts" // (make this first)
+    "./ds.ts", // (make this first)
+    "./_global.ts",
+    "./io.ts"
   ],
   "include": [
     "./*.ts",

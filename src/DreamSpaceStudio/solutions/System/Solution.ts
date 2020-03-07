@@ -251,7 +251,6 @@
                                 if (!StringUtils.toString(newSol._id).trim()) // (if not null, undefined, empty, or whitespace, then update the tracking GUID)
                                     newSol._id = sol.$id;
                                 unloadedSolutions.push(newSol);
-                                this.solutions.push(newSol);
                             }
                         }
                     });

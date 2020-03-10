@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig_client_base.json",
+  "references": [
+    { "path": "../../../" },
+    { "path": "../../../client" },
+    { "path": "../shared" }
+  ],
+  "compileOnSave": true,
+  "compilerOptions": {
+    "outDir": "./",
+    "rootDir": "./"
+  },
+  "include": [
+    "./**/*.ts"
+  ]
+}

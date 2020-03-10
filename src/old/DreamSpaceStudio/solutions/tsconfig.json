@@ -1,0 +1,42 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "incremental": true,
+    "outFile": "api.js",
+    "target": "es6",
+    "lib": [ "es6", "dom" ],
+    "types": [ "node", "request" ] // (include only types we need; prevents node types from being included)
+  },
+  "include": [
+    "_global.ts", // (make sure this is always first)
+    "Utilities.ts",
+    "Logging.ts",
+    "ErrorHandling.ts",
+    "Exception.ts",
+    "Diagnostics.ts",
+    "PersistableObject.ts",
+    "TrackableObject.ts",
+    "ConfigBaseObject.ts",
+    "DependentObject.ts",
+    "VDOM.ts",
+    "Templating.ts",
+    "Templating.parse.ts",
+    "./*.ts",
+    "System/Events.ts",
+    "System/VirtualFileSystem.ts",
+    "System/Resrouce.ts",
+    "System/Solution.ts",
+    "System/Project.ts",
+    "./System/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "projects",
+    "./*.d.ts"
+  ]
+}

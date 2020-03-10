@@ -1,0 +1,30 @@
+{
+  "references": [ { "path": "../" } ],
+  "compileOnSave": true,
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "incremental": true,
+    "outFile": "server_api.js",
+    "target": "es6",
+    "lib": [ "es6", "dom" ],
+    "types": [ "node" ] // (include only types we need; prevents node types from being included)
+  },
+  "files": [
+    "./ds.ts", // (make this first)
+    "./_global.ts",
+    "./io.ts"
+  ],
+  "include": [
+    "./*.ts",
+    "./System/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "projects",
+    "./*.d.ts"
+  ]
+}

@@ -1,0 +1,1 @@
+<button type="${[@].type||'button'}" class="${[@]('class').add('btn')}" ${[@](['class', 'type'])}>${.content}${#render content?}</button>

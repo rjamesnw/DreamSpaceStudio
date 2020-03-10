@@ -1,0 +1,12 @@
+{
+  "$id": "31C541D23F2047389256AA479909B8E5",
+  "$objectType": "Solution",
+  "name": "DreamSpace",
+  "description": "Client-server NodeJS IDE.",
+  "projects": [
+    {
+      "$id": "A0B9F8AF038F470BA2B56800CC3C42AA",
+      "version": 1
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "references": [ { "path": "../solutions/client" } ],
+  "compileOnSave": true,
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "incremental": true,
+    "outDir": "../public/js",
+    "target": "es6",
+    "module": "amd",
+    "lib": [ "es6", "dom" ],
+    "types": [
+      "requirejs",
+      "jquery",
+      "bootstrap"
+    ] // (include only types we need; prevents node types from being included)
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig_client_base.json",
+  "references": [
+    { "path": "../../../" },
+    { "path": "../../../client" },
+    { "path": "../../2677A76EE8A34818873FB0587B8C3108/client" },
+    { "path": "../../2677A76EE8A34818873FB0587B8C3108/shared" },
+    { "path": "../shared" }
+  ],
+  "compileOnSave": true,
+  "compilerOptions": {
+    "outDir": "./",
+    "rootDir": "./"
+    //"typeRoots": [ "../../2677A76EE8A34818873FB0587B8C3108/client" ]
+  },
+  "include": [
+    "./**/*.ts"
+  ]
+}

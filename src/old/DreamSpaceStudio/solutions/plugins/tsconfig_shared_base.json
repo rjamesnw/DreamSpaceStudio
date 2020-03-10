@@ -1,0 +1,21 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "composite": true,
+    "incremental": true,
+    "target": "es6",
+    "lib": [ "es6", "dom" ],
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "declaration": true,
+    "noEmitHelpers": true,
+    "experimentalDecorators": true,
+    "types": [ "node" ]
+  },
+  "exclude": [
+    "node_modules",
+    "**/server",
+    "**/*.d.ts"
+  ]
+}

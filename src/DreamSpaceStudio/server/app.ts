@@ -75,23 +75,31 @@ var fm = DS.VirtualFileSystem.FileManager.current;
         console.log("Static Solutions Folder: " + solutionsRoot);
         app.use(express.static(solutionsRoot));
 
+        app.use('/ide', function (req, res, next) {
+            // .. this endpoint will handle work-flow requests ...
+            var viewPath = DS.Path.combine('ide', req.path);
+            var indexViewPath = DS.Path.combine(viewPath, "index");
+            res.render(indexViewPath, new HttpContext(req, res, new ViewData()));
+        });
+
         //x app.use('/', indexRoutes);
         app.use('/ide', function (req, res, next) {
-            // ... force load the IDE project as the startup and serve it ...
-            var _ideSolution = solutions.get('31C541D23F2047389256AA479909B8E5');
+            res.render('ide/index', new HttpContext(req, res, new ViewData()));
+            //// ... force load the IDE project as the startup and serve it ...
+            //var _ideSolution = solutions.get('31C541D23F2047389256AA479909B8E5');
 
-            if (_ideSolution)
-                startupSolution = _ideSolution;
-            else
-                console.warn('Warning: The IDE solution was not found.'); // (allow this, in case people want to rename/delete the folder for security on prod releases)
+            //if (_ideSolution)
+            //    startupSolution = _ideSolution;
+            //else
+            //    console.warn('Warning: The IDE solution was not found.'); // (allow this, in case people want to rename/delete the folder for security on prod releases)
 
-            if (startupSolution)
-                startupSolution.refreshProjects().then((startingProject: DS.Project) => {
-                    startupProject = startingProject;
-                    next();
-                }, (err) => next(err));
-            else
-                next(new DS.Exception("No startup solution could be found."));
+            //if (startupSolution)
+            //    startupSolution.refreshProjects().then((startingProject: DS.Project) => {
+            //        startupProject = startingProject;
+            //        next();
+            //    }, (err) => next(err));
+            //else
+            //    next(new DS.Exception("No startup solution could be found."));
         });
 
         app.use(function (req, res, next) {

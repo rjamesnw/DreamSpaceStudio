@@ -1,0 +1,28 @@
+// Handles the global level scripts.
+{
+  "compileOnSave": true,
+  "references": [
+    { "path": "../../" }
+  ],
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": true,
+    "target": "es6",
+    "module": "none",
+    "noImplicitAny": true,
+    "sourceMap": false,
+    "declaration": false,
+    "lib": [ "es6", "dom" ],
+    "noEmitHelpers": true,
+    "experimentalDecorators": true,
+    "rootDir": "../../",
+    "typeRoots": [ "../2677A76EE8A34818873FB0587B8C3108/server" ]
+  },
+  "include": [
+    "./types/**/*.ts",
+    "./*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

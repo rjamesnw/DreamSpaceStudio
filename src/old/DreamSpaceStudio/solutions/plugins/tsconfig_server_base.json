@@ -1,0 +1,25 @@
+{
+  "compileOnSave": true,
+  //"references": [
+  //  { "path": "../" },
+  //  { "path": "../server" }
+  //],
+  "compilerOptions": {
+    "composite": true,
+    "incremental": true,
+    "target": "es6",
+    "lib": [ "es6" ],
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "declaration": true,
+    "noEmitHelpers": true,
+    "experimentalDecorators": true,
+    "types": [ "node" ] // (include only types we need; prevents node types from being included)
+  },
+  "exclude": [
+    "node_modules",
+    "**/server",
+    "**/*.d.ts"
+  ]
+}

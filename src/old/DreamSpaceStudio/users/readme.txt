@@ -1,0 +1,1 @@
+These are for DreamSpace Studio developers only.  This allows the IDE to be usable without a database, allowing the database to focus only on end users.

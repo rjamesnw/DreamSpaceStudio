@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig_shared_base.json",
+  "references": [
+    { "path": "../../../" },
+    { "path": "../../2677A76EE8A34818873FB0587B8C3108/shared" }
+  ],
+  "compileOnSave": true,
+  "compilerOptions": {
+    "outDir": "./",
+    "rootDir": "./"
+  },
+  "include": [
+    "./**/*.ts"
+  ]
+}

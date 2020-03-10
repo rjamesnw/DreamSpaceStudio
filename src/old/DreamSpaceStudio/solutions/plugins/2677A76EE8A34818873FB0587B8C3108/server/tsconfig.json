@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig_server_base.json",
+  "references": [
+    { "path": "../../../" },
+    { "path": "../../../server" },
+    { "path": "../shared" }
+  ],
+  "compileOnSave": true,
+  "compilerOptions": {
+    "outDir": "./",
+    "rootDir": "./"
+  },
+  "include": [
+    "./**/*.ts"
+  ]
+}

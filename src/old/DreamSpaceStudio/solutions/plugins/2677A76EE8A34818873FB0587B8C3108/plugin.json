@@ -1,0 +1,10 @@
+{
+  "uid": "2677A76EE8A34818873FB0587B8C3108",
+  "uri": "VDOM",
+  "name": "VDOM",
+  "displayName": "Virtual DOM",
+  "description": "Provides a simple virtual DOM for templating purposes.  This in no way completely replicates the browser DOM, but only serves to represent DOM elements of a parsed HTML/XML file.",
+  "globals": [ "file//~/html" ],
+  "components": [ "file//~/parser" ],
+  "types": []
+}

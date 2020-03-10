@@ -1,0 +1,13 @@
+1. Extracting and embedding/inlining  CSS can help speed up the layout process of cached pages by reducing the overhead of also checking for cached CSS files.
+2. Make sure JS resource load in parallel.  Allow the UI to get built quickly without waiting on scripts.
+3. Consider inlining scripts as well, for the same reasons as #1.
+4. Consider: 
+   a) Sending image sizes extracted by the server to prevent page auto-growth and shifting.
+   b) Inlining images as Base64 if under a certain size.
+5. Utilize GPU for transitions and effects for extra speed.
+6. If image or other visual elements are hidden (display:none, or based on opacity/colors), then don't process them until visible. 
+   Make sure these are in the pre-fetch queue in the background (in order of layout).
+7. Look into fetch() vs XHR: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch (consider a fetch polyfill if necessary). Warning: Possibly no cookies. (https://stackoverflow.com/questions/34558264/fetch-api-with-cookie)
+8. "Abstracts" are functions and types that are common to both client and server sides. All "Abstract" code exists in the core
+   "DS" root project; however, any function declarations and types that much be extended client or server side MUST be placed
+   into the "Abstracts" namespace so that the FINAL extending class can be in the root of the DS namespace.

@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig-base.json",
+  "compilerOptions": {
+  },
+  "include": [
+    "../node_modules/monaco-editor/monaco.d.ts",
+    "../node_modules/typescript/lib/typescriptServices.d.ts",
+    "./**/*.ts"
+  ]
+}

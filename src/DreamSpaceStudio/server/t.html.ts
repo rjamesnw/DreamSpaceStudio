@@ -2,8 +2,14 @@ import fs = require('fs') // this engine requires the fs module
 import { Request, Response } from 'express-serve-static-core';
 import { isNullOrUndefined, isUndefined } from 'util';
 
-/** The root of the views folder. By default this is 'views' (relative from 'DS.webRoot'). */
-export var viewsRoot = "views";
+/** The absolute root path of the views folder. By default this is 'features' (relative from 'DS.webRoot'). 
+ * What is features?  You can search more on "Feature Slices for ASP.NET Core MVC" as an example, but the concept of 
+ * "features" is very simple: Just group your views and code together!
+ * Yes, it doe sort of look like a type of "code behind" scenario, but it solves a typical MVC common issue where the views are
+ * dumped into one place, and the code in another. That makes it hard to quickly identify which code belongs to which view.
+ * For features, use folders as categories, or with views that contain multiple code files.
+ */
+export var viewsRoot = DS.Path.combine(DS.webRoot, "features");
 
 interface IViewAttributeFunction {
     attributes: IndexedObject;
@@ -87,7 +93,7 @@ export function createCallableViewAttributes(): IViewAttributeFunction {
 export class ViewData {
     [index: string]: any;
     '@' = createCallableViewAttributes();
-    /** Constructs a new ViewData object.  You can optional provide an object to copy properties and their values from. */
+    /** Constructs a new ViewData object.  You can optionally provide an object to copy properties and their values from. */
     constructor(values?: IndexedObject) {
         if (values)
             for (var p in values)
@@ -110,22 +116,24 @@ export class HttpContext {
 
     /** Constructs a new HTTP context using another existing context.
      * @param viewData The data to use for this view.  If not specified, then the view data on the context will be used instead.
-     * @param viewPath The relative path and view name to the view being rendered.
+     * @param viewBasePath The relative path to the view being rendered.  This will set a new ROOT path for the view to find other related content (could be useful for theme development)
+     * Note: This does not change where the initial view is found, only any included views.
      */
-    constructor(httpContext: IHttpContext, viewData?: ViewData, viewPath?: string);
+    constructor(httpContext: IHttpContext, viewData?: ViewData, viewBasePath?: string);
     /** Constructs a new HTTP context.
      * @param request The request object for the current request.
      * @param response The response object for the current request.
      * @param viewData The data to use for this view.  If not specified, then the view data on the context will be used instead.
-     * @param viewPath The relative path and view name to the view being rendered.
+     * @param viewBasePath The relative path to the view being rendered.  This will set a new ROOT path for the view to find other related content (could be useful for theme development)
+     * Note: This does not change where the initial view is found, only any included views.
      */
-    constructor(request: Request, response: Response, viewData?: ViewData, viewPath?: string);
-    constructor(requestOrCtx: Request & IHttpContext, responseOrVewData?: Response | any, viewDataOrPath?: any | string, viewPath?: string) {
+    constructor(request: Request, response: Response, viewData?: ViewData, viewBasePath?: string);
+    constructor(requestOrCtx: Request & IHttpContext, responseOrVewData?: Response | any, viewDataOrBasePath?: any | string, viewBasePath?: string) {
         var isHttpCtx = !!(requestOrCtx.request || requestOrCtx.response || 'viewData' in requestOrCtx);
         this.request = isHttpCtx ? requestOrCtx.request : requestOrCtx;
         this.response = isHttpCtx ? requestOrCtx.response : responseOrVewData;
-        this.viewData = (isHttpCtx ? responseOrVewData || requestOrCtx.viewData : viewDataOrPath) || new ViewData();
-        this.viewPath = isHttpCtx ? viewDataOrPath || requestOrCtx.viewPath : viewPath;
+        this.viewData = (isHttpCtx ? responseOrVewData || requestOrCtx.viewData : viewDataOrBasePath) || new ViewData();
+        this.viewPath = isHttpCtx ? viewDataOrBasePath && DS.Path.combine(viewDataOrBasePath, '/') || requestOrCtx.viewPath : viewBasePath && DS.Path.combine(viewBasePath, '/');
         if (isHttpCtx && requestOrCtx.sectionManager)
             this.sectionManager = requestOrCtx.sectionManager;
     }
@@ -226,18 +234,42 @@ function _processExpression(httpContext: IHttpContext, expr: string, dataContext
     }
 }
 
+export interface IExpressViewContext {
+    /** The name of the engine used - typically the extension name part without the preceeding dot. */
+    defaultEngne: string;
+    /** View file extension. */
+    ext: string;
+    /** The name of the view, which may include relative path information. */
+    name: string;
+    /** The absolute path to the view file. */
+    path: string;
+    /** The absolute path to the view file's directory. */
+    root: string;
+}
+
 /** Used by express when auto-requiring middleware when rendering templates.
  * By default, Express will 'require()' the engine based on the file extension; for example, "app.engine('ext', require('ext').__express)"
  * for "name.ext".
  * Note: Using this method means, however, you may also have to set up the view folder. It is recommended to call 'apply(expressApp)'
  * to have the defaults configured for most cases.
  */
-export var __express = function (filePath: string, httpContext: IHttpContext, callback: { (err: any, response?: any): void }) { // define the template engine
+export var __express = function (this: IExpressViewContext, filePath: string, httpContext: IHttpContext, callback: { (err: any, response?: any): void }) { // define the template engine
     try {
         if (!httpContext.request)
-            throw new DS.Exception("'httpContext.request' (of module type 'express-serve-static-core'.request) is required.");
+            throw new DS.Exception("'httpContext.request' (of module type 'express-serve-static-core'.request) is required. If rendering a view, it is recommended to create and pass a 'HttpContext' object instance.");
         if (!httpContext.response)
-            throw new DS.Exception("'httpContext.response' (of module type 'express-serve-static-core'.response) is required.");
+            throw new DS.Exception("'httpContext.response' (of module type 'express-serve-static-core'.response) is required. If rendering a view, it is recommended to create and pass a 'HttpContext' object instance.");
+
+        // ... update the views path if not set ...
+
+        //var fileDir = DS.Path.getPath(filePath);
+
+        if (!httpContext.viewPath)
+            httpContext.viewPath = this.name;
+
+        //x var viewsRootPath = viewsRoot;
+        //x if (!httpContext.viewPath && filePath.toLowerCase().indexOf(viewsRootPath.toLowerCase()) == 0)
+        //x    httpContext.viewPath = filePath.substr(viewsRootPath.length + 1);
 
         fs.readFile(filePath, function (err, fileContent) {
             if (err) return callback(err);
@@ -551,7 +583,7 @@ export var __express = function (filePath: string, httpContext: IHttpContext, ca
 export function apply(app: ReturnType<typeof import("express")>, viewsRootPath = viewsRoot) {
     // ... view engine setup ...
     app.engine('t.html', __express);
-    viewsRoot = DS.Path.isAbsolute(viewsRootPath[0]) ? viewsRootPath : DS.Path.combine(DS.webRoot, viewsRootPath);
+    viewsRoot = DS.Path.isAbsolute(viewsRootPath) ? viewsRootPath : DS.Path.combine(DS.webRoot, viewsRootPath);
     app.set('views', viewsRoot); // specify the views directory
     app.set('view engine', 't.html') // register the template engine
 }

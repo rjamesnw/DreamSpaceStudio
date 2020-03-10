@@ -22,6 +22,9 @@ monaco-editor/
 **/libs/V8.NET/
 *.git
 *.tsbuildinfo
+old_*
+old-*
+.old
 
 # User-specific files
 *.suo

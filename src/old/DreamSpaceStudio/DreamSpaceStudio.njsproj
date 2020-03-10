@@ -1,0 +1,238 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <Name>DreamSpaceStudio</Name>
+    <RootNamespace>DreamSpaceStudio</RootNamespace>
+    <LastActiveSolutionConfig>Debug|Any CPU</LastActiveSolutionConfig>
+    <SaveNodeJsSettingsInProjectFile>True</SaveNodeJsSettingsInProjectFile>
+    <TypeScriptBuildMode>true</TypeScriptBuildMode>
+    <LaunchUrl>http://localhost:45000/ide</LaunchUrl>
+    <NodeExePath>
+    </NodeExePath>
+    <NodeExeArguments>
+    </NodeExeArguments>
+    <DebuggerPort>
+    </DebuggerPort>
+    <Environment>nodemon=node_modules\nodemon\bin\nodemon.js--just_a_note</Environment>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>299b48b6-ada3-487d-b803-ad33d3471265</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>server\app.ts</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{349c5851-65df-11da-9384-00065b846f21};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
+    <NodejsPort>1337</NodejsPort>
+    <TypeScriptSourceMap>true</TypeScriptSourceMap>
+    <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
+    <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
+    <EnableTypeScript>true</EnableTypeScript>
+    <StartWebBrowser>True</StartWebBrowser>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <TypeScriptCompile Include="server\htmlreader.ts" />
+    <TypeScriptCompile Include="server\routes\api.ts" />
+    <TypeScriptCompile Include="server\routes\ide.ts" />
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\actions\authentication\login.ts" />
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\%24types\_global.ts" />
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\actions\authentication\login.ts" />
+    <TypeScriptCompile Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\%24types\_global.ts" />
+    <TypeScriptCompile Include="solutions\Browser.ts" />
+    <TypeScriptCompile Include="solutions\client\Browser.ts" />
+    <TypeScriptCompile Include="solutions\client\Events.ts" />
+    <TypeScriptCompile Include="solutions\client\Polyfills.ts" />
+    <TypeScriptCompile Include="solutions\client\Storage.ts" />
+    <TypeScriptCompile Include="solutions\client\StringUtils.ts" />
+    <TypeScriptCompile Include="solutions\client\System\Page.ts" />
+    <TypeScriptCompile Include="solutions\client\System\Project.ts" />
+    <TypeScriptCompile Include="solutions\client\System\Solution.ts" />
+    <TypeScriptCompile Include="solutions\client\System\VirtualFileSystem.ts" />
+    <TypeScriptCompile Include="solutions\Delegate.ts" />
+    <TypeScriptCompile Include="solutions\DependentObject.ts" />
+    <TypeScriptCompile Include="solutions\Diagnostics.ts" />
+    <TypeScriptCompile Include="solutions\client\io.ts" />
+    <TypeScriptCompile Include="solutions\Data.ts" />
+    <TypeScriptCompile Include="solutions\ErrorHandling.ts" />
+    <TypeScriptCompile Include="solutions\Exception.ts" />
+    <TypeScriptCompile Include="solutions\client\navigation.ts" />
+    <TypeScriptCompile Include="solutions\HTMLReader.ts" />
+    <TypeScriptCompile Include="solutions\server\ds.ts" />
+    <TypeScriptCompile Include="solutions\server\System\Page.ts" />
+    <TypeScriptCompile Include="solutions\server\System\Project.ts" />
+    <TypeScriptCompile Include="solutions\server\System\Solution.ts" />
+    <TypeScriptCompile Include="solutions\server\System\VirtualFileSystem.ts" />
+    <TypeScriptCompile Include="solutions\server\_global.ts" />
+    <TypeScriptCompile Include="solutions\System\Component.ts" />
+    <TypeScriptCompile Include="solutions\ConfigBasedObject.ts" />
+    <TypeScriptCompile Include="solutions\System\EventDefinition.ts" />
+    <TypeScriptCompile Include="solutions\System\EventDispatcher.ts" />
+    <TypeScriptCompile Include="solutions\System\Events.ts" />
+    <TypeScriptCompile Include="solutions\System\FileVersioning.ts" />
+    <TypeScriptCompile Include="solutions\System\Resource.ts" />
+    <TypeScriptCompile Include="solutions\System\VirtualFileSystem.ts" />
+    <TypeScriptCompile Include="solutions\System\Page.ts" />
+    <TypeScriptCompile Include="solutions\System\Project.ts" />
+    <TypeScriptCompile Include="solutions\System\Property.ts" />
+    <TypeScriptCompile Include="solutions\System\Security.ts" />
+    <TypeScriptCompile Include="solutions\System\Selection.ts" />
+    <TypeScriptCompile Include="solutions\System\Site.ts" />
+    <TypeScriptCompile Include="solutions\System\Solution.ts" />
+    <TypeScriptCompile Include="solutions\System\User.ts" />
+    <TypeScriptCompile Include="solutions\System\Workflow.ts" />
+    <TypeScriptCompile Include="solutions\Templating.Parser.ts" />
+    <TypeScriptCompile Include="solutions\ResourceRequest.ts" />
+    <TypeScriptCompile Include="solutions\Resources.ts" />
+    <TypeScriptCompile Include="solutions\Templating.ts" />
+    <TypeScriptCompile Include="solutions\Time.ts" />
+    <TypeScriptCompile Include="solutions\PersistableObject.ts" />
+    <TypeScriptCompile Include="solutions\TrackableObject.ts" />
+    <TypeScriptCompile Include="solutions\VDOM.ts" />
+    <TypeScriptCompile Include="solutions\_global.ts" />
+    <TypeScriptCompile Include="solutions\Logging.ts" />
+    <TypeScriptCompile Include="solutions\Path.ts" />
+    <TypeScriptCompile Include="solutions\io.ts" />
+    <TypeScriptCompile Include="solutions\Query.ts" />
+    <TypeScriptCompile Include="solutions\server\io.ts" />
+    <TypeScriptCompile Include="solutions\StringUtils.ts" />
+    <TypeScriptCompile Include="solutions\Uri.ts" />
+    <TypeScriptCompile Include="solutions\Utilities.ts" />
+    <TypeScriptCompile Include="server\app.ts" />
+    <TypeScriptCompile Include="server\routes\index.ts" />
+    <TypeScriptCompile Include="server\routes\user.ts" />
+    <Content Include="..\..\LICENSE">
+      <Link>LICENSE</Link>
+    </Content>
+    <Content Include="..\..\README.md">
+      <Link>README.md</Link>
+    </Content>
+    <Content Include="ideas.txt" />
+    <Content Include="public\stylesheets\login.css" />
+    <Content Include="server\t.html.ts" />
+    <Content Include="versions.json" />
+    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\tsconfig.json" />
+    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\tsconfig.json" />
+    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\project_1.json" />
+    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\tsconfig.json" />
+    <Content Include="solutions\31C541D23F2047389256AA479909B8E5\solution_1.json" />
+    <Content Include="solutions\plugins\tsconfig_client_base.json" />
+    <Content Include="solutions\plugins\tsconfig_shared_base.json" />
+    <Content Include="solutions\plugins\tsconfig_server_base.json" />
+    <Content Include="solutions\readme.txt" />
+    <Content Include="solutions\client\tsconfig.json" />
+    <Content Include="solutions\server\tsconfig.json" />
+    <Content Include="system.json" />
+    <Content Include="solutions\tsconfig.json" />
+    <Content Include="server\tsconfig.json" />
+    <Content Include="package.json" />
+    <Content Include="public\stylesheets\main.css" />
+    <Content Include="users\F7E1685E6F654C2A84EBF34A9FDE5DB4\user.json" />
+    <Content Include="users\readme.txt" />
+    <Content Include="vfs.json" />
+    <Content Include="views\error.t.html" />
+    <Content Include="views\ide\components\inputbox.t.html" />
+    <Content Include="views\ide\components\form.t.html" />
+    <Content Include="views\ide\components\label.t.html" />
+    <Content Include="views\ide\components\button.t.html" />
+    <Content Include="views\ide\components\panel.t.html" />
+    <Content Include="views\ide\login.t.html" />
+    <Content Include="views\layout.t.html" />
+    <Content Include="views\ide\index.t.html">
+      <SubType>Code</SubType>
+    </Content>
+    <TypeScriptCompile Include="solutions\Globals.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="versions\" />
+    <Folder Include="sessions\" />
+    <Folder Include="sessions\CA33027B6BC64585833A1C14FEA1C2BF\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\actions\authentication\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\actions\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\files\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\%24types\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\actions\authentication\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\actions\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\%24types\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\client\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\server\" />
+    <Folder Include="solutions\client\" />
+    <Folder Include="solutions\client\System\" />
+    <Folder Include="solutions\server\System\" />
+    <Folder Include="solutions\System\" />
+    <Folder Include="solutions\plugins\" />
+    <Folder Include="solutions\server\" />
+    <Folder Include="users\" />
+    <Folder Include="solutions\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\" />
+    <Folder Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\" />
+    <Folder Include="typescript\" />
+    <Folder Include="public\" />
+    <Folder Include="public\images\" />
+    <Folder Include="public\js\" />
+    <Folder Include="public\stylesheets\" />
+    <Folder Include="server\routes\" />
+    <Folder Include="server\" />
+    <Folder Include="users\F7E1685E6F654C2A84EBF34A9FDE5DB4\" />
+    <Folder Include="views\" />
+    <Folder Include="views\ide\" />
+    <Folder Include="views\ide\components\" />
+  </ItemGroup>
+  <!-- Do not delete the following Import Project.  While this appears to do nothing it is a marker for setting TypeScript properties before our import that depends on them. -->
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="False" />
+  <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsTools.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>False</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>0</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:48022/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>True</UseCustomServer>
+          <CustomServerUrl>http://localhost:1337</CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}" User="">
+        <WebProjectProperties>
+          <StartPageUrl>
+          </StartPageUrl>
+          <StartAction>CurrentPage</StartAction>
+          <AspNetDebugging>True</AspNetDebugging>
+          <SilverlightDebugging>False</SilverlightDebugging>
+          <NativeDebugging>False</NativeDebugging>
+          <SQLDebugging>False</SQLDebugging>
+          <ExternalProgram>
+          </ExternalProgram>
+          <StartExternalURL>
+          </StartExternalURL>
+          <StartCmdLineArguments>
+          </StartCmdLineArguments>
+          <StartWorkingDirectory>
+          </StartWorkingDirectory>
+          <EnableENC>False</EnableENC>
+          <AlwaysStartWebServerOnDebug>False</AlwaysStartWebServerOnDebug>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="xcopy /S /D /Y &quot;$(ProjectDir)node_modules\monaco-editor\*.ts&quot; &quot;$(ProjectDir)public\js\monaco-editor\&quot;&#xD;&#xA;xcopy /S /D /Y &quot;$(ProjectDir)node_modules\monaco-editor\*.js&quot; &quot;$(ProjectDir)public\js\monaco-editor\&quot;&#xD;&#xA;xcopy /S /D /Y &quot;$(ProjectDir)node_modules\monaco-editor\*.js.map&quot; &quot;$(ProjectDir)public\js\monaco-editor\&quot;&#xD;&#xA;xcopy /S /D /Y &quot;$(ProjectDir)node_modules\monaco-editor\*.css&quot; &quot;$(ProjectDir)public\js\monaco-editor\&quot;&#xD;&#xA;" />
+  </Target>
+</Project>

@@ -193,7 +193,6 @@
     <Folder Include="system\solutions\31C541D23F2047389256AA479909B8E5\" />
     <Folder Include="system\solutions\31C541D23F2047389256AA479909B8E5\Projects\" />
     <Folder Include="system\solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\" />
-    <Folder Include="typescript\" />
     <Folder Include="public\" />
     <Folder Include="public\images\" />
     <Folder Include="public\js\" />

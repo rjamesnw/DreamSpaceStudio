@@ -11,10 +11,12 @@
     "outDir": "../public/js",
     "target": "es6",
     "module": "amd",
+    "moduleResolution": "node",
     "lib": [ "es6", "dom" ],
     "types": [
       "requirejs",
       "jquery",
+      "popper.js",
       "bootstrap"
     ] // (include only types we need; prevents node types from being included)
   }

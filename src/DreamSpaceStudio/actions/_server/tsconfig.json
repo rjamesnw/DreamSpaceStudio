@@ -1,8 +1,9 @@
-// This has to be in the TypeScript folder to set default TS compiling to be the server, which is the main part of the app.
+// The server-actions config allows using the "tsc" CLI to compile the server actions manually.
 {
+  "extends": "../../tsconfig-base.json",
   "references": [
-    { "path": "../system" },
-    { "path": "../system/server" }
+    { "path": "../../system" },
+    { "path": "../../system/server" }
   ],
   "compilerOptions": {
     "incremental": true,
@@ -13,14 +14,17 @@
     "noImplicitAny": true,
     "declaration": true,
     "declarationMap": true,
-    "rootDir": "./",
+    "rootDir": "../",
     "declarationDir": "./decl",
+    "outDir": "./out",
     "experimentalDecorators": true,
     "types": [ "debug", "express", "node" ]
   },
   "include": [
     //"server/globals.d.ts",
-    "./**/*.ts"
+    "../_globals.ts",
+    "./_globals.ts",
+    "../**/*.server.ts"
     //"./System/**/*.ts"
   ],
   //"include": [ "Core/Polyfills.ts", "Core/System/Delegate.ts" ],

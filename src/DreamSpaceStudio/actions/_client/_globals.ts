@@ -1,3 +1,13 @@
+// CLIENT GLOBALS ONLY!
+
+namespace DS {
+    /** The currently active editor that the user has focused. */
+    export var activeEditor: monaco.editor.IStandaloneCodeEditor;
+
+    /** All editor instances created on the page by ID. */
+    export var editors: { [index: string]: monaco.editor.IStandaloneCodeEditor } = {};
+}
+
 var require: Require;
 require && require.config({ paths: { 'vs': 'js/monaco-editor/min/vs' } });
 

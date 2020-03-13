@@ -1,0 +1,28 @@
+// The client-actions config allows using the "tsc" CLI to compile the client actions manually.
+{
+  "extends": "../../tsconfig-base.json",
+  "references": [
+    { "path": "../../system" },
+    { "path": "../../system/client" }
+  ],
+  "compilerOptions": {
+    "module": "amd",
+    "moduleResolution": "node",
+    "lib": [ "es6", "dom" ],
+    "types": [
+      "requirejs",
+      "jquery",
+      "popper.js",
+      "bootstrap"
+    ] // (include only types we need; prevents node types from being included)
+  },
+  "include": [
+    "../../node_modules/monaco-editor/monaco.d.ts",
+    "../../node_modules/typescript/lib/typescriptServices.d.ts",
+    "../_globals.ts",
+    "./_globals.ts",
+    "../**/*.client.ts",
+    "node_modules",
+    "decl"
+  ]
+}

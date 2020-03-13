@@ -1,0 +1,3 @@
+// SHARED BY BOTH CLIENT AND SERVER!
+namespace DS {
+}

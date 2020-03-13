@@ -1,0 +1,15 @@
+// Prevent compiling by default from this folder onwards.
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "files": [
+    "./actions/_globals.ts"
+  ],
+  "exclude": [
+    "**/*.*",
+    "./node_modules",
+    "./**/decl"
+  ]
+}

@@ -44,7 +44,11 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="features\globals.ts" />
+    <TypeScriptCompile Include="actions\IDE\Monaco\init.C1963CDC956246598A959CF7609A2669.client.ts" />
+    <TypeScriptCompile Include="actions\_client\_globals.ts" />
+    <TypeScriptCompile Include="actions\_globals.ts" />
+    <TypeScriptCompile Include="actions\_server\_globals.ts" />
+    <TypeScriptCompile Include="features\_globals.ts" />
     <TypeScriptCompile Include="features\ide\editor\index.ts" />
     <TypeScriptCompile Include="features\ide\_modules_\TextEditor.Monaco.ts" />
     <TypeScriptCompile Include="features\ide\_modules_\TextEditor.ts" />
@@ -123,6 +127,10 @@
     <Content Include="..\..\README.md">
       <Link>README.md</Link>
     </Content>
+    <Content Include="tsconfig.json" />
+    <Content Include="tsconfig-base.json" />
+    <Content Include="actions\_client\tsconfig.json" />
+    <Content Include="actions\_server\tsconfig.json" />
     <Content Include="features\ide\editor\index.t.html" />
     <Content Include="features\tsconfig.json" />
     <Content Include="features\tsconfig-base.json" />
@@ -164,8 +172,13 @@
     <TypeScriptCompile Include="system\Globals.ts" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="actions\IDE\" />
+    <Folder Include="actions\IDE\Monaco\" />
+    <Folder Include="actions\_client\" />
+    <Folder Include="actions\_server\" />
     <Folder Include="features\ide\editor\" />
     <Folder Include="features\ide\_modules_\" />
+    <Folder Include="actions\" />
     <Folder Include="system\31C541D23F2047389256AA479909B8E5\" />
     <Folder Include="system\31C541D23F2047389256AA479909B8E5\Projects\" />
     <Folder Include="system\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\" />

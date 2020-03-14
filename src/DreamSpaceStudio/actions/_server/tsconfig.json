@@ -24,6 +24,7 @@
     //"server/globals.d.ts",
     "../_globals.ts",
     "./_globals.ts",
+    "../**/*.shared.ts",
     "../**/*.server.ts"
     //"./System/**/*.ts"
   ],

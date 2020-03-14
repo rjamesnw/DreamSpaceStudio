@@ -45,6 +45,9 @@
   </PropertyGroup>
   <ItemGroup>
     <TypeScriptCompile Include="actions\IDE\Monaco\init.C1963CDC956246598A959CF7609A2669.client.ts" />
+    <TypeScriptCompile Include="actions\IDE\Monaco\Monaco.shared.ts" />
+    <TypeScriptCompile Include="actions\IDE\Monaco\Monaco.server.ts" />
+    <TypeScriptCompile Include="actions\IDE\Monaco\Monaco.client.ts" />
     <TypeScriptCompile Include="actions\_client\_globals.ts" />
     <TypeScriptCompile Include="actions\_globals.ts" />
     <TypeScriptCompile Include="actions\_server\_globals.ts" />
@@ -127,6 +130,7 @@
     <Content Include="..\..\README.md">
       <Link>README.md</Link>
     </Content>
+    <Content Include="actions\IDE\Monaco\Monaco.json" />
     <Content Include="tsconfig.json" />
     <Content Include="tsconfig-base.json" />
     <Content Include="actions\_client\tsconfig.json" />

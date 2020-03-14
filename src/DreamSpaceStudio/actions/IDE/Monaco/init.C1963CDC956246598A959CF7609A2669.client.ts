@@ -1,5 +1,6 @@
-
-export default async function init(outputTarget: string | HTMLElement): Promise<DS.IO.IResponse<boolean>> {
+// WARNING: This code is auto-generated. Only code placed between the "### USER CODE START ###" and "### USER CODE END ###"
+// comments will be preserved between updates.
+export default async function init(editor: IMonaco, outputTarget: string | HTMLElement): Promise<DS.IO.IResponse<boolean>> {
     var response: DS.IO.IResponse<boolean>;
     // ### USER CODE START ###
 
@@ -11,7 +12,7 @@ export default async function init(outputTarget: string | HTMLElement): Promise<
 
     console.log("initialize(): Creating the Monaco editor promise ...");
 
-    return new Promise<any>((resolve, reject) => {
+    editor = await new Promise<any>((resolve, reject) => {
         console.log("initialize(): Loading the Monaco editor ...");
 
         require(['vs/editor/editor.main'], (main: typeof monaco) => {
@@ -29,7 +30,7 @@ export default async function init(outputTarget: string | HTMLElement): Promise<
 
             // ... load the editors ...
 
-            DS.activeEditor = this._editor = main.editor.create(this.target, {
+            DS.activeEditor = editor._editor = main.editor.create(editor.target, {
                 automaticLayout: true, // (https://stackoverflow.com/questions/47017753/monaco-editor-dynamically-resizable)
                 value: [
                     'function x() {',
@@ -39,7 +40,7 @@ export default async function init(outputTarget: string | HTMLElement): Promise<
                 language: 'typescript'
             });
 
-            this._outputEditor = main.editor.create(this.outputTarget, {
+            editor._outputEditor = main.editor.create(editor.outputTarget, {
                 automaticLayout: true,
                 readOnly: true,
                 codeLens: false,
@@ -51,16 +52,16 @@ export default async function init(outputTarget: string | HTMLElement): Promise<
             });
 
             var sync = () => {
-                if (this._tsServiceProxy)
+                if (editor._tsServiceProxy)
                     setTimeout(() => {
-                        this._tsServiceProxy.getEmitOutput(this._editor.getModel().uri.toString())
+                        editor._tsServiceProxy.getEmitOutput(editor._editor.getModel().uri.toString())
                             .then((r) => {
-                                this._outputEditor.setValue(r.outputFiles[0].text);
+                                editor._outputEditor.setValue(r.outputFiles[0].text);
                             });
                     }, 500);
             };
 
-            this._editor.onDidChangeModelContent(sync)
+            editor._editor.onDidChangeModelContent(sync)
 
             console.log("initialize(): Monaco editors created. Getting the TS worker ...");
 
@@ -68,16 +69,16 @@ export default async function init(outputTarget: string | HTMLElement): Promise<
 
             monaco.languages.typescript.getTypeScriptWorker().then((workerProxy: (v: monaco.Uri) => Promise<ts.IMonacoTypeScriptServiceProxy>) => {
                 console.log("initialize(): Got the TS worker proxy. Getting the service next ...");
-                var fileUri = this._editor.getModel().uri;
+                var fileUri = editor._editor.getModel().uri;
                 workerProxy(fileUri).then((tsProxy) => {
                     console.log("initialize(): Got the TS worker service proxy:");
                     console.log(tsProxy);
                     (<any>DS)['$__ts'] = tsProxy;
-                    this._tsServiceProxy = tsProxy;
-                    this._tsServiceProxy.getEmitOutput(fileUri.toString()).then((r: any) => {
+                    editor._tsServiceProxy = tsProxy;
+                    editor._tsServiceProxy.getEmitOutput(fileUri.toString()).then((r: any) => {
                         // ... execute any "ready" callbacks ...
-                        this._outputEditor.setValue(r.outputFiles[0].text);
-                        resolve(this);
+                        editor._outputEditor.setValue(r.outputFiles[0].text);
+                        resolve(editor);
                     });
                 });
             }, (reason) => { reject("Error getting TypeScript service worker: " + reason); });
@@ -90,6 +91,6 @@ export default async function init(outputTarget: string | HTMLElement): Promise<
 
     response = new DS.IO.Response("OK", true);
 
-    // ### USER CODE end ###
+    // ### USER CODE END ###
     return response;
 }

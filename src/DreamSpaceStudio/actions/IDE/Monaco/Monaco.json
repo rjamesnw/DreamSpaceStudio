@@ -1,0 +1,50 @@
+{
+  "type": "Object",
+  "properties": [
+    {
+      "name": "Editor",
+      "access": "internal",
+      "varName": "_editor",
+      "type": "monaco.editor.IStandaloneCodeEditor",
+      "platform": "client"
+    },
+    {
+      "name": "Output Editor",
+      "access": "internal",
+      "varName": "_outputEditor",
+      "type": "monaco.editor.IStandaloneCodeEditor",
+      "platform": "client"
+    },
+    {
+      "name": "TS Service Proxy",
+      "access": "internal",
+      "varName": "_tsServiceProxy",
+      "type": "ts.IMonacoTypeScriptServiceProxy",
+      "platform": "client"
+    },
+    {
+      "name": "Target Element",
+      "access": "public",
+      "varName": "target",
+      "type": "HTMLElement",
+      "description": "The target for the TypeScript editor.",
+      "platform": "client"
+    },
+    {
+      "name": "Output Target",
+      "access": "public",
+      "varName": "outputTarget",
+      "type": "HTMLElement",
+      "description": "The target element to render the editor in for the compiled JS (usually a DIV block).",
+      "platform": "client"
+    },
+    {
+      "name": "Recent Files",
+      "access": "public",
+      "varName": "recentFiles",
+      "type": "string[]",
+      "description": "The list of recent action code files.",
+      "platform": "shared"
+    }
+  ]
+}

@@ -21,6 +21,7 @@
     "../../node_modules/typescript/lib/typescriptServices.d.ts",
     "../_globals.ts",
     "./_globals.ts",
+    "../**/*.shared.ts",
     "../**/*.client.ts",
     "node_modules",
     "decl"

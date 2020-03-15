@@ -1,0 +1,22 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "incremental": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "outDir": "./public/js",
+    "target": "es6",
+    "lib": [ "es6" ],
+    "module": "commonjs",
+    "experimentalDecorators": true,
+    "types": [ "debug", "express", "node" ],
+    "moduleResolution": "node"
+  },
+  "exclude": [
+    "node_modules",
+    "decl"
+  ]
+}

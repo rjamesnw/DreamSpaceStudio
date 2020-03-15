@@ -1,36 +1,19 @@
 // The server-actions config allows using the "tsc" CLI to compile the server actions manually.
 {
-  "extends": "../../tsconfig-base.json",
+  "extends": "../../tsconfig-server-base.json",
   "references": [
     { "path": "../../system" },
     { "path": "../../system/server" }
   ],
   "compilerOptions": {
-    "incremental": true,
-    "module": "commonjs",
-    "target": "es6",
-    "lib": [ "es6" ],
-    "sourceMap": true,
-    "noImplicitAny": true,
-    "declaration": true,
-    "declarationMap": true,
     "rootDir": "../",
     "declarationDir": "./decl",
-    "outDir": "./out",
-    "experimentalDecorators": true,
-    "types": [ "debug", "express", "node" ]
+    "outDir": "./out"
   },
   "include": [
-    //"server/globals.d.ts",
     "../_globals.ts",
     "./_globals.ts",
     "../**/*.shared.ts",
     "../**/*.server.ts"
-    //"./System/**/*.ts"
-  ],
-  //"include": [ "Core/Polyfills.ts", "Core/System/Delegate.ts" ],
-  "exclude": [
-    "node_modules",
-    "decl"
   ]
 }

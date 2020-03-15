@@ -3309,27 +3309,40 @@ var DS;
 var DS;
 (function (DS) {
     // ===============================================================================================================================
+    let CacheMode;
+    (function (CacheMode) {
+        /** Bypass the cache and load as normal.  Successful responses are NOT cached. */
+        CacheMode[CacheMode["Bypass"] = -1] = "Bypass";
+        /** Load from the local storage if possible, otherwise load as normal.  Successful responses are cached. */
+        CacheMode[CacheMode["Store"] = 0] = "Store";
+        /** Ignore the local storage and load as normal.  Successful responses are cached, overwriting the existing data. */
+        CacheMode[CacheMode["Reload"] = 1] = "Reload";
+    })(CacheMode = DS.CacheMode || (DS.CacheMode = {}));
     /**
-     * Creates a new resource request object, which allows loaded resources using a "promise" style pattern (this is a custom
-     * implementation designed to work better with the DreamSpace system specifically, and to support parallel loading).
-     * Note: It is advised to use 'DreamSpace.Loader.loadResource()' to load resources instead of directly creating resource request objects.
-     * Inheritance note: When creating via the 'new' factory method, any already existing instance with the same URL will be returned,
-     * and NOT the new object instance.  For this reason, you should call 'loadResource()' instead.
-     * The method used to read a resource depends on client vs server sides, which is detected internally.
-     */
+      * Creates a new resource request object, which allows loaded resources using a "promise" style pattern (this is a custom
+      * implementation designed to work better with the DreamSpace system specifically, and to support parallel loading).
+      * Note: It is advised to use 'DreamSpace.Loader.loadResource()' to load resources instead of directly creating resource request objects.
+      * Inheritance note: When creating via the 'new' factory method, any already existing instance with the same URL will be returned,
+      * and NOT the new object instance.  For this reason, you should call 'loadResource()' instead.
+      * The method used to read a resource depends on client vs server sides, which is detected internally.
+      */
     class ResourceRequest {
         /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
-        constructor(url, type, async) {
+        constructor(url, type, method, body, delay, async) {
             /**
                * The HTTP request method to use, such as "GET" (the default), "POST", "PUT", "DELETE", etc.  Ignored for non-HTTP(S) URLs.
-               *
                */
             this.method = "GET";
+            /** A delay, in ms, before sending the request. Defaults to 0 (none).
+             * The main purpose of this is to prevent synchronous execution. When 0, the request executes immediately when 'start()'
+             * is called. Setting this to anything greater than 0 will allow future configurations during the current thread execution.
+             */
+            this.delay = 0;
             this.$__transformedData = DS.noop;
             /** The response code from the XHR response. */
             this.responseCode = 0; // (the response code returned)
             /** The response code message from the XHR response. */
-            this.responseMessage = ""; // (the response code message)
+            this.responseCodeMessage = ""; // (the response code message)
             /** The current request status. */
             this.status = DS.RequestStatuses.Pending;
             /** Includes the current message and all previous messages. Use this to trace any silenced errors in the request process. */
@@ -3358,6 +3371,9 @@ var DS;
                 return ResourceRequest._resourceRequestByURL[url]; // (abandon this new object instance in favor of the one already existing and returned it)
             this.url = url;
             this.type = type;
+            this.body = body;
+            this.method = method;
+            this.delay = delay;
             this.async = async;
             this.$__index = ResourceRequest._resourceRequests.length;
             ResourceRequest._resourceRequests.push(this);
@@ -3512,8 +3528,8 @@ var DS;
            * @param {string} password Optional password value, instead of storing the password in the instance.
            */
         start(method, body, username, password) {
-            if (this.async)
-                setTimeout(() => { this._Start(method, body, username, password); }, 0);
+            if (this.async || this.delay)
+                setTimeout(() => { this._Start(method, body, username, password); }, this.delay);
             else
                 this._Start();
             return this;
@@ -3889,7 +3905,7 @@ var DS;
                 this.response = void 0;
                 this.status = DS.RequestStatuses.Pending;
                 this.responseCode = 0;
-                this.responseMessage = "";
+                this.responseCodeMessage = "";
                 this._message = "";
                 this.messageLog = [];
                 if (includeDependentResources)

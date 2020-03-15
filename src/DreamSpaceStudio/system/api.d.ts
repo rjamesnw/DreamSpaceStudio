@@ -1479,14 +1479,22 @@ declare namespace DS {
     var pageQuery: Query;
 }
 declare namespace DS {
+    enum CacheMode {
+        /** Bypass the cache and load as normal.  Successful responses are NOT cached. */
+        Bypass = -1,
+        /** Load from the local storage if possible, otherwise load as normal.  Successful responses are cached. */
+        Store = 0,
+        /** Ignore the local storage and load as normal.  Successful responses are cached, overwriting the existing data. */
+        Reload = 1
+    }
     /**
-     * Creates a new resource request object, which allows loaded resources using a "promise" style pattern (this is a custom
-     * implementation designed to work better with the DreamSpace system specifically, and to support parallel loading).
-     * Note: It is advised to use 'DreamSpace.Loader.loadResource()' to load resources instead of directly creating resource request objects.
-     * Inheritance note: When creating via the 'new' factory method, any already existing instance with the same URL will be returned,
-     * and NOT the new object instance.  For this reason, you should call 'loadResource()' instead.
-     * The method used to read a resource depends on client vs server sides, which is detected internally.
-     */
+      * Creates a new resource request object, which allows loaded resources using a "promise" style pattern (this is a custom
+      * implementation designed to work better with the DreamSpace system specifically, and to support parallel loading).
+      * Note: It is advised to use 'DreamSpace.Loader.loadResource()' to load resources instead of directly creating resource request objects.
+      * Inheritance note: When creating via the 'new' factory method, any already existing instance with the same URL will be returned,
+      * and NOT the new object instance.  For this reason, you should call 'loadResource()' instead.
+      * The method used to read a resource depends on client vs server sides, which is detected internally.
+      */
     class ResourceRequest {
         /**
          * If true (the default) then a 'ResourceRequest.cacheBustingVar+"="+Date.now()' query item is added to make sure the browser never uses
@@ -1499,7 +1507,7 @@ declare namespace DS {
         static cacheBustingVar: string;
         private static _cacheBustingVar;
         /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
-        constructor(url: string, type: ResourceTypes | string, async?: boolean);
+        constructor(url: string, type: ResourceTypes | string, method?: string, body?: any, delay?: number, async?: boolean);
         private $__index;
         /** The requested resource URL. If the URL string starts with '~/' then it becomes relative to the content type base path. */
         url: string;
@@ -1507,11 +1515,15 @@ declare namespace DS {
         _url: string;
         /**
            * The HTTP request method to use, such as "GET" (the default), "POST", "PUT", "DELETE", etc.  Ignored for non-HTTP(S) URLs.
-           *
            */
         method: string;
         /** Optional data to send with the request, such as for POST operations. */
         body: any;
+        /** A delay, in ms, before sending the request. Defaults to 0 (none).
+         * The main purpose of this is to prevent synchronous execution. When 0, the request executes immediately when 'start()'
+         * is called. Setting this to anything greater than 0 will allow future configurations during the current thread execution.
+         */
+        delay: number;
         /** An optional username to pass to the XHR instance when opening the connecting. */
         username: string;
         /** An optional password to pass to the XHR instance when opening the connecting. */
@@ -1538,7 +1550,7 @@ declare namespace DS {
         /** The response code from the XHR response. */
         responseCode: number;
         /** The response code message from the XHR response. */
-        responseMessage: string;
+        responseCodeMessage: string;
         /** The current request status. */
         status: RequestStatuses;
         /**
@@ -1553,7 +1565,7 @@ declare namespace DS {
          * If true (default), them this request is non-blocking, otherwise the calling script will be blocked until the request
          * completes loading.  Please note that no progress callbacks can occur during blocked operations (since the thread is
          * effectively 'paused' in this scenario).
-         * Note: Depreciated: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Synchronous_and_Asynchronous_Requests#Synchronous_request
+         * Note: Deprecated: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Synchronous_and_Asynchronous_Requests#Synchronous_request
          * "Starting with Gecko 30.0 (Firefox 30.0 / Thunderbird 30.0 / SeaMonkey 2.27), Blink 39.0, and Edge 13, synchronous requests on the main thread have been deprecated due to the negative effects to the user experience."
          */
         async: boolean;

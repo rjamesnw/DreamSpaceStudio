@@ -1,10 +1,19 @@
 {
-  "extends": "./tsconfig-base.json",
+  "extends": "../tsconfig-client-base.json",
+  "references": [ { "path": "../system/client" } ],
+  "references": [ { "path": "../actions/_client" } ],
   "compilerOptions": {
+    "lib": [ "es6", "dom" ],
+    "types": [
+      "requirejs",
+      "jquery",
+      "popper.js",
+      "bootstrap"
+    ] // (include only types we need; prevents node types from being included)
   },
   "include": [
     "../node_modules/monaco-editor/monaco.d.ts",
     "../node_modules/typescript/lib/typescriptServices.d.ts",
-    "./**/*.ts"
+    "**/*.ts"
   ]
 }

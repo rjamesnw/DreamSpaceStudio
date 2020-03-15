@@ -9,6 +9,9 @@
     "incremental": true,
     "outDir": "./public/js",
     "target": "es6",
-    "rootDir":  "."
+    "rootDir": ".",
+    "experimentalDecorators": true,
+    "module": "amd",
+    "moduleResolution": "node"
   }
 }

@@ -1,3 +1,1 @@
-import { MonacoEditor } from "../_modules_/TextEditor.Monaco";
-
 // ...

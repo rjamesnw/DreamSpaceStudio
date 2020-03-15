@@ -1,6 +1,6 @@
 // The client-actions config allows using the "tsc" CLI to compile the client actions manually.
 {
-  "extends": "../../tsconfig-base.json",
+  "extends": "../../tsconfig-client-base.json",
   "references": [
     { "path": "../../system" },
     { "path": "../../system/client" }

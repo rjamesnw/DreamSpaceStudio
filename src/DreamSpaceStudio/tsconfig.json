@@ -2,14 +2,15 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    "lib": [ "es6" ],
+    "types": []
   },
   "files": [
     "./actions/_globals.ts"
   ],
   "exclude": [
     "**/*.*",
-    "./node_modules",
-    "./**/decl"
+    "node_modules"
   ]
 }

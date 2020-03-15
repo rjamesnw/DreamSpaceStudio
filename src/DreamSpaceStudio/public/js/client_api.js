@@ -815,6 +815,681 @@ var DS;
     })(StringUtils = DS.StringUtils || (DS.StringUtils = {}));
     // ############################################################################################################################
 })(DS || (DS = {}));
+var DS;
+(function (DS) {
+    let Utilities;
+    (function (Utilities) {
+        let HTML;
+        (function (HTML) {
+            function clearChildNodes(node) {
+                if (node)
+                    while (node.firstChild)
+                        node.removeChild(node.firstChild);
+                return node;
+            }
+            HTML.clearChildNodes = clearChildNodes;
+        })(HTML = Utilities.HTML || (Utilities.HTML = {}));
+    })(Utilities = DS.Utilities || (DS.Utilities = {}));
+})(DS || (DS = {}));
+var DS;
+(function (DS) {
+    var UI;
+    (function (UI) {
+        /**
+         * Common 'Views' and 'View' shared properties and functions.
+         */
+        class ViewBase {
+            // --------------------------------------------------------------------------------------------------------------------
+            get parent() { return this._parent; }
+            /** The root node for this view. */
+            get rootNode() { return this._rootNode; }
+            /** The root element for this view. This is 'rootNode', or 'null' is 'rootNode' is not an 'HTMLElement' type.*/
+            get rootElement() {
+                if (this._rootNode instanceof HTMLElement)
+                    return this._rootNode;
+                else
+                    throw "'rootNode' is not an HTMLElement based object.";
+            }
+            /** The node where content will be stored for this view. This defaults to 'rootElement', unless otherwise specified. */
+            get contentElement() { return this._contentElement || this.rootElement; }
+            // --------------------------------------------------------------------------------------------------------------------
+            /** Returns all elements from within this view type object that matches the given query string. */
+            queryElements(query) {
+                var node = this._rootNode;
+                if (node.querySelectorAll)
+                    return this._rootNode.querySelectorAll(query);
+                else
+                    for (var i = 0, n = this._rootNode.childNodes.length; i < n; ++i) {
+                        var node = this._rootNode.childNodes[i];
+                        if (node.querySelectorAll) {
+                            var result = node.querySelectorAll(query);
+                            if (result)
+                                return result;
+                        }
+                    }
+                return null;
+            }
+            /** Returns the first matching element from within this view that matches the given query string. */
+            queryElement(query) {
+                var node = this._rootNode;
+                if (node.querySelector)
+                    return this._rootNode.querySelector(query);
+                else
+                    for (var i = 0, n = this._rootNode.childNodes.length; i < n; ++i) {
+                        var node = this._rootNode.childNodes[i];
+                        if (node.querySelector) {
+                            var result = node.querySelector(query);
+                            if (result)
+                                return result;
+                        }
+                    }
+                return null;
+            }
+            /** Returns the first matching element from within this view that has the given ID. */
+            getElementById(id) { return this.queryElement("#" + id); }
+            /** Returns all elements from within this view that contains the given attribute name. */
+            getElementsByAttribute(name) { return this.queryElements("[" + name + "]"); }
+            /** Sets the value of an input element from within the root element for this view that matches the given ID, then returns the element that was set.
+             * If there is no value property, the 'innerHTML' property is assumed.
+             * If 'ignoreErrors' is false (default) and no element is found, an error is thrown.
+             */
+            setElementValueById(id, value = "", ignoreErrors = false) {
+                var el = this.getElementById(id);
+                if (!el)
+                    if (!ignoreErrors)
+                        throw "There is no element with an ID of '" + id + "' in this view.";
+                    else
+                        return null;
+                var hasValue = ('value' in el), hasInnerHTML = ('innerHTML' in el);
+                if (!hasValue && !hasInnerHTML)
+                    throw "Element ID '" + id + "' within this view does not represent an element with a 'value' or 'innerHTML' property.";
+                if (hasValue)
+                    el.value = value;
+                else
+                    el.innerHTML = value;
+                return el;
+            }
+            // --------------------------------------------------------------------------------------------------------------------
+            /** Searches the given node and all parents for a view based object. */
+            static getViewBase(fromNode, includeSelf = true) {
+                var el = fromNode;
+                if (el) {
+                    if (el.$__view)
+                        if (includeSelf)
+                            return el.$__view;
+                        else if (!el.parentNode && el.$__view.parent)
+                            // (if there is no parent node to move to, BUT this node has a view object, then the view object is detached, sub jump to the parent's node)
+                            return ViewBase.getViewBase(el.$__view.parent._rootNode);
+                    do {
+                        el = el.parentNode;
+                        if (el && el.$__view)
+                            return el.$__view;
+                    } while (el);
+                }
+                return null;
+            }
+            /**
+             * Traverse the view object parent hierarchy to find a view that this view based object is contained within.
+             * Note: This does not search the parent DOM nodes, only the view object specific hierarchy.
+             */
+            getParentView() {
+                if (this._parent)
+                    if (this._parent instanceof View)
+                        return this._parent;
+                    else
+                        return this._parent.getParentView();
+                return null;
+            }
+            /**
+             * Traverse the view object parent hierarchy to find a views container that this view based object is contained within.
+             * Note: This does not search the parent DOM nodes, only the view object specific hierarchy.
+             */
+            getParentViewsContainer() {
+                if (this._parent)
+                    if (this._parent instanceof Views)
+                        return this._parent;
+                    else
+                        return this._parent.getParentViewsContainer();
+                return null;
+            }
+            static getView(fromNode, includeSelf = true) {
+                var v = ViewBase.getViewBase(fromNode, includeSelf);
+                if (v)
+                    if (v instanceof View)
+                        return v;
+                    else
+                        return ViewBase.getView(v._rootNode, false);
+                return null;
+            }
+            static getViewsContainer(fromNode, includeSelf = true) {
+                var vc = ViewBase.getViewBase(fromNode, includeSelf);
+                if (vc)
+                    if (vc instanceof Views)
+                        return vc;
+                    else
+                        return ViewBase.getViewsContainer(vc._rootNode, false);
+                return null;
+            }
+            // --------------------------------------------------------------------------------------------------------------------
+            /**
+             * Builds view containers and views from elements within this container.
+             */
+            //* When calling this function with no parameters, the default root page view is established, and the other containers
+            //* and views are extracted and added in nested form based on nested associations.
+            //* @param rootElement The element to start build the views from.
+            buildViews() {
+                // ... look for 'data-view-container' attributes in the root view and extract those now ...
+                var containerElements = this.getElementsByAttribute('data-view-container');
+                var viewContainers = [];
+                for (var i = 0, n = containerElements.length; i < n; ++i)
+                    if (!containerElements[i].$__view) // (make sure this is not already wrapped in a view object)
+                        viewContainers.push(new Views(containerElements[i]));
+                // ... look for 'data-view' attributes on elements and attach those elements to their container parents ...
+                var views = this.getElementsByAttribute('data-view');
+                for (var i = 0, n = views.length; i < n; ++i) {
+                    var vEl = views[i], vname = vEl.attributes && vEl.attributes.getNamedItem("data-view").value || null;
+                    if (!vEl.$__view) { // (only add if not already added)
+                        var parentContainer = ViewBase.getViewsContainer(vEl, false);
+                        if (!parentContainer)
+                            throw "View '" + vname + "' (element '" + vEl.nodeName + "') does not have a parent views container.";
+                        parentContainer.createViewFromElement(vname, vEl);
+                    }
+                }
+                // ... hook up the view containers to the proper views they are contained in ...
+                for (var i = 0, n = viewContainers.length; i < n; ++i) {
+                    var vc = viewContainers[i];
+                    var v = ViewBase.getView(vc._rootNode, false);
+                    if (v && vc.parent != v) {
+                        if (v)
+                            v.addViewContainer(vc); // (adds the container to the list if missing - which is usually true when building for the first time)
+                    }
+                }
+                return this;
+            }
+        }
+        UI.ViewBase = ViewBase;
+        class View extends ViewBase {
+            constructor(name, urlOrElement, queryOrChildrenOnly, parent) {
+                super();
+                this.queryOrChildrenOnly = queryOrChildrenOnly;
+                this._name = name || typeof urlOrElement == 'object' && (urlOrElement.id || urlOrElement.nodeName);
+                if (urlOrElement instanceof Node && urlOrElement.nodeName == "HTML") {
+                    // ... the HTML element needs to be hooked up a special way ...
+                    this._rootNode = urlOrElement;
+                    this._contentElement = urlOrElement.querySelector("body"); // (note: in most cases, 'this._contentElement' being the 'body', usually also doubles as a view container)
+                    window.addEventListener("resize", () => { this._doOnResize(); });
+                    this._doOnResize(); // (this isn't called at least once by default when adding the event, so do so now)
+                }
+                else {
+                    // ... all other elements will be meshed with an iframe to capture resize events ...
+                    this._rootNode = document.createElement("div"); // (give all views a default DIV container)
+                    this.rootElement.innerHTML = "<iframe style=width:100%;height:100%;position:absolute;border:none;background-color:transparent;allowtransparency=true;visibility:hidden></iframe><div></div>";
+                    var iframe = this._rootNode.firstChild;
+                    iframe.onload = () => {
+                        if (iframe.contentWindow)
+                            iframe.contentWindow.addEventListener("resize", () => { this._doOnResize(); });
+                        this._doOnResize(); // (this isn't called at least once by default when adding the event, so do so now)
+                    };
+                    this._contentElement = this._rootNode.lastChild;
+                    if (urlOrElement instanceof HTMLElement) {
+                        if (urlOrElement.attributes)
+                            urlOrElement.attributes.removeNamedItem("data-view"); // (just in case, to prevent finding this node again)
+                        // ... add element, or its children, to this view ...
+                        if (queryOrChildrenOnly) {
+                            if (urlOrElement.childNodes) // (make sure this node supports children)
+                                for (var nodes = urlOrElement.childNodes, i = nodes.length - 1; i >= 0; --i) {
+                                    var child = nodes[i];
+                                    urlOrElement.removeChild(child);
+                                    this.contentElement.insertBefore(child, this.contentElement.firstChild);
+                                }
+                        }
+                        else {
+                            // ... add the element to the container element for this view (remove from any existing parent first) ...
+                            if (urlOrElement.parentElement)
+                                urlOrElement.parentElement.removeChild(urlOrElement);
+                            this.contentElement.appendChild(urlOrElement);
+                            this._contentElement = urlOrElement; // (this given element is now the content container)
+                        }
+                    }
+                    else if (urlOrElement) {
+                        this._url = "" + urlOrElement;
+                        this._request = new DS.ResourceRequest(this._url, DS.ResourceTypes.Text_HTML, "POST", queryOrChildrenOnly);
+                    }
+                }
+                if (this._rootNode)
+                    this._rootNode.$__view = this;
+                var parentContainer = ViewBase.getViewsContainer(this._rootNode, false) || parent;
+                if (parentContainer)
+                    parentContainer.addView(this);
+            }
+            get parent() { return this._parent; }
+            /** Holds a list of view containers that are managed by this view. */
+            childViewContainers() { return this._childViewContainers; }
+            /** Returns true if this view is the current view in the parent 'Views' container. */
+            isCurrentView() { return this.parent.currentView == this; }
+            /** Set to true when scripts are evaluated so they are not evaluated more than once. */
+            get scriptsApplied() { return this._scriptsApplied; }
+            /** This is true if this view is the one showing in the parent views container. */
+            get attached() { return this._parent ? this.parent.currentView == this : false; }
+            get url() { return this._url; }
+            get name() { return this._name; }
+            get originalHTML() { return this._request.transformedResponse; }
+            /** Adds a callback that gets executed ONCE when the view is shown.
+              * This can be used in view scripts to executed callbacks to run just after a view is attached for the first time.
+              */
+            oninit(func) {
+                if (!this._oninitHandlers)
+                    this._oninitHandlers = [];
+                this._oninitHandlers.push(func);
+                return this;
+            }
+            // --------------------------------------------------------------------------------------------------------------------
+            /** Returns a new 'Views' container that wraps an element nested within this view.
+              * Note: If the element exists outside this view, it will not be found.
+              * @param elementID The ID of a nested child element within this view.
+              * @param existingContentViewName If specified, any child elements of the target element are saved into a new view under this view container.
+              * If not specified, the child elements will be cleared out when a view becomes shown.
+              * @param showExistingContent If true (default), any existing contents remain visible once copied into a new view.
+              * Set this to 'false' to hide the existing contents.
+              */
+            createViewContainer(elementID, existingContentViewName, showExistingContent = true) {
+                var el = this.getElementById(elementID);
+                if (!el)
+                    throw "There is no element with ID '" + elementID + "' contained within this view.";
+                if (el.$__view)
+                    if (el.$__view instanceof Views)
+                        return el.$__view;
+                    else
+                        throw "Element '" + elementID + "' is already connected to view '" + el.$__view.name + "'.";
+                var view = ViewBase.getViewBase(el, false) || this; // (get the child view container to the proper view that will manage it)
+                if (view instanceof Views)
+                    throw "Element '" + elementID + "' is contained within a views container, and not a view. You can only create view containers from elements that have a view in the parent hierarchy.";
+                if (!(view instanceof View))
+                    throw "Element '" + elementID + "' does not contained a view in the parent hierarchy, which is required.";
+                var views = new Views(el);
+                //? view.addViewContainer(views);
+                // ... move any existing elements in this container into a view if requested; otherwise they will be removed when a view is set ...
+                if (existingContentViewName && el.firstChild) {
+                    var viewName = "" + existingContentViewName;
+                    var view = views.createViewFromElement(viewName, el, true);
+                    if (showExistingContent)
+                        view.show();
+                }
+                return views;
+            }
+            /** Adds a view container to this view and returns it. The container is first removed from any existing view parent. */
+            addViewContainer(views) {
+                var parentView = views['_parent'];
+                if (parentView == this)
+                    return views; // (already added)
+                if (parentView instanceof View)
+                    parentView.removeViewContainer(views);
+                if (views['_parent'] != this) {
+                    views['_parent'] = this;
+                    if (!this._childViewContainers)
+                        this._childViewContainers = [];
+                    this._childViewContainers.push(views);
+                }
+                return views;
+            }
+            /** Removes a view container from this view and returns it. If the container doesn't exist, 'undefined' is returned. */
+            removeViewContainer(views) {
+                views['_parent'] = null;
+                if (this._childViewContainers) {
+                    var i = this._childViewContainers.indexOf(views);
+                    if (i >= 0)
+                        return this._childViewContainers.splice(i, 1)[0];
+                }
+                return void 0;
+            }
+            /** Find an immediate child container with the specified name.  If 'recursive' is true, all nested child containers are also searched. */
+            getViewContainer(name, recursive = false) {
+                if (this._childViewContainers) {
+                    for (var i = 0, n = this._childViewContainers.length; i < n; ++i) {
+                        var vc = this._childViewContainers[i];
+                        if (vc.name == name)
+                            return vc;
+                    }
+                    for (var i = 0, n = this._childViewContainers.length; i < n; ++i)
+                        this._childViewContainers[i].getViewContainer(name, recursive);
+                }
+                return null;
+            }
+            // --------------------------------------------------------------------------------------------------------------------
+            /** Adds a callback that gets executed each time this view is shown. */
+            onshow(func) {
+                if (!this._onshowHandlers)
+                    this._onshowHandlers = [];
+                this._onshowHandlers.push(func);
+                return this;
+            }
+            show() {
+                if (this.parent)
+                    this.parent.showView(this);
+                return this;
+            }
+            _doOnShow() {
+                // ... run all the one-time init handlers, if any, and remove them ...
+                if (this._oninitHandlers && this._oninitHandlers.length) {
+                    for (var i = 0, len = this._oninitHandlers.length; i < len; ++i)
+                        this._oninitHandlers[i].call(this, this);
+                    this._oninitHandlers.length = 0; // (these only run once)
+                }
+                // ... run all the on-show handlers, if any ...
+                if (this._onshowHandlers && this._onshowHandlers.length)
+                    for (var i = 0, len = this._onshowHandlers.length; i < len; ++i)
+                        this._onshowHandlers[i].call(this, this);
+                // ... if this view is showing, which means all child views are also showing, so recursively run the handlers ...
+                if (this._childViewContainers && this._childViewContainers.length)
+                    for (var i = 0, n = this._childViewContainers.length; i < n; ++i)
+                        for (var vc = this._childViewContainers[i], i2 = 0, n2 = vc.count; i2 < n2; ++i2)
+                            vc.views[i2]._doOnShow();
+            }
+            // --------------------------------------------------------------------------------------------------------------------
+            /** Adds a callback that gets executed each time this view is shown. */
+            onhide(func) {
+                if (!this._onhideHandlers)
+                    this._onhideHandlers = [];
+                this._onhideHandlers.push(func);
+                return this;
+            }
+            hide() {
+                if (this.attached)
+                    this.parent.hideCurrentView();
+                return this;
+            }
+            _doOnHide() {
+                // ... run all the on-hide handlers, if any ...
+                if (this._onhideHandlers && this._onhideHandlers.length)
+                    for (var i = 0, len = this._onhideHandlers.length; i < len; ++i)
+                        this._onhideHandlers[i].call(this, this);
+                // ... if this view is hidden, which means all child views are also hidden, so recursively run the handlers ...
+                if (this._childViewContainers && this._childViewContainers.length)
+                    for (var i = 0, n = this._childViewContainers.length; i < n; ++i)
+                        for (var vc = this._childViewContainers[i], i2 = 0, n2 = vc.count; i2 < n2; ++i2)
+                            vc.views[i2]._doOnHide();
+            }
+            // --------------------------------------------------------------------------------------------------------------------
+            /** Adds a callback that gets executed each time this view changes size. */
+            onresize(func) {
+                if (!this._onresizeHandlers)
+                    this._onresizeHandlers = [];
+                this._onresizeHandlers.push(func);
+                return this;
+            }
+            _doOnResize() {
+                // ... run all the on-hide handlers, if any ...
+                if (this._onresizeHandlers && this._onresizeHandlers.length)
+                    for (var i = 0, len = this._onresizeHandlers.length; i < len; ++i)
+                        this._onresizeHandlers[i].call(this, this);
+                // ... if this view is resized, that means all child views may also be changed, so recursively run the handlers ...
+                if (this._childViewContainers && this._childViewContainers.length)
+                    for (var i = 0, n = this._childViewContainers.length; i < n; ++i)
+                        for (var vc = this._childViewContainers[i], i2 = 0, n2 = vc.count; i2 < n2; ++i2)
+                            vc.views[i2]._doOnResize();
+            }
+            // --------------------------------------------------------------------------------------------------------------------
+            /** Clears all children from the root node. The view is blank after calling this. */
+            clear() { DS.Utilities.HTML.clearChildNodes(this.contentElement); }
+            /** Clears all children from the root node and reloads the view. If the view is not loaded yet, then the view is cleared only. */
+            reset() { this.contentElement.innerHTML = this._request && this._request.transformedResponse || ""; }
+            // --------------------------------------------------------------------------------------------------------------------
+            //?private _executeScripts() {
+            //    if (!this._scriptsApplied) {
+            //        this._scriptsApplied = true; // (do first to make sure this doesn't get called again in the evaluation)
+            //        try {
+            //            if (this._scripts && this._scripts.length) {
+            //                View.scriptView = this;
+            //                for (var i = 0, len = this._scripts.length; i < len; ++i) {
+            //                    var script = this._scripts[i];
+            //                    var scriptElement = document.createElement("script"); // TODO: copy attributes also? (ideas: http://stackoverflow.com/questions/1197575/can-scripts-be-inserted-with-innerhtml)
+            //                    if (script.code)
+            //                        scriptElement.text = script.code;
+            //                    script.newScriptNode = scriptElement;
+            //                    if (script.originalScriptNode)
+            //                        script.originalScriptNode.parentNode.replaceChild(scriptElement, script.originalScriptNode);
+            //                    else
+            //                        document.body.appendChild(scriptElement);
+            //                    if (script.src)
+            //                        scriptElement.src = script.src; // (this allows debugging with maps if available!)
+            //                    //FlowScript.evalGlobal(this._scripts.join("\r\n\r\n"));
+            //                }
+            //            }
+            //        }
+            //        finally {
+            //            View.scriptView = void 0;
+            //        }
+            //    }
+            //}
+            // --------------------------------------------------------------------------------------------------------------------
+            onloaded(func) {
+                this._request.ready((req) => {
+                    if (this.contentElement && !this.contentElement.innerHTML) { // (only set once - don't clear anything existing)
+                        this.contentElement.innerHTML = req.transformedResponse;
+                        // ... load any scripts if found before triggering the callback ...
+                        var scripts = this.contentElement.getElementsByTagName("script");
+                        if (scripts.length) {
+                            var checkCompleted = () => {
+                                for (var i = 0, len = this._scripts.length; i < len; ++i)
+                                    if (!this._scripts[i].applied) {
+                                        loadScript(this._scripts[i]);
+                                        return;
+                                    }
+                                func.call(this, this, req);
+                            };
+                            var loadScript = (script) => {
+                                View.loadedView = this;
+                                //script.originalScriptNode.parentNode.replaceChild(script.newScriptNode, script.originalScriptNode);
+                                script.originalScriptNode.parentNode.removeChild(script.originalScriptNode);
+                                document.body.appendChild(script.newScriptNode);
+                                if (!script.src) {
+                                    if (script.code)
+                                        script.newScriptNode.text = script.code;
+                                    script.applied = true; // (no synchronous loading required)
+                                    checkCompleted();
+                                }
+                                else {
+                                    script.newScriptNode.onload = (_ev) => {
+                                        View.loadedView = void 0;
+                                        script.applied = true;
+                                        checkCompleted();
+                                    };
+                                    script.newScriptNode.onerror = (_ev) => {
+                                        View.loadedView = void 0;
+                                        this._request.setError("Failed to load a script for the view.", _ev);
+                                    };
+                                    script.newScriptNode.src = script.src;
+                                }
+                            };
+                            if (!this._scripts)
+                                this._scripts = [];
+                            for (var i = 0, len = scripts.length; i < len; ++i)
+                                this._scripts.push({ originalScriptNode: scripts[i], src: scripts[i].src, code: scripts[i].text, newScriptNode: document.createElement('script') });
+                            loadScript(this._scripts[0]);
+                        }
+                        else
+                            func.call(this, this, req);
+                    }
+                    else
+                        func.call(this, this, req);
+                });
+                return this;
+            }
+            // --------------------------------------------------------------------------------------------------------------------
+            onerror(func) {
+                this._request.catch((req) => { func.call(this, this, req); });
+                return this;
+            }
+            // --------------------------------------------------------------------------------------------------------------------
+            thenLoad(name, url, payload, delay = 0) {
+                var view = this.parent.createView(name, url, payload);
+                view._request = this._request.include(new DS.ResourceRequest(url, this._request.type, this._request.method, payload, delay));
+                return view;
+            }
+            // --------------------------------------------------------------------------------------------------------------------
+            send() { this._request.start(); return this; }
+        }
+        UI.View = View;
+        /**
+         * Holds a list of views dynamically loaded from the server.
+         */
+        class Views extends ViewBase {
+            constructor(viewsContainerOrID, containerName) {
+                super();
+                this._views = [];
+                if (viewsContainerOrID instanceof Node)
+                    this._rootNode = viewsContainerOrID;
+                else if (viewsContainerOrID) {
+                    this._rootNode = document.getElementById("" + viewsContainerOrID);
+                    if (!this._rootNode)
+                        throw "No element with an ID of '" + viewsContainerOrID + "' could be found.";
+                    if (this._rootNode.$__view != this)
+                        throw "The specified element is already associated with a view.";
+                }
+                if (this._rootNode) {
+                    this._rootNode.$__view = this;
+                    if (this._rootNode instanceof Element) {
+                        if (this._rootNode.attributes)
+                            this._rootNode.attributes.removeNamedItem("data-view-container"); // (just in case, to prevent finding this node again)
+                        if (!containerName) {
+                            if (this._rootNode.attributes) {
+                                var attr = this._rootNode.attributes.getNamedItem("data-view-container");
+                                containerName = attr && attr.value;
+                            }
+                            if (!containerName)
+                                containerName = this._rootNode.id || this._rootNode.nodeName;
+                        }
+                    }
+                }
+                this._name = containerName || "";
+                // ... check if there is a parent 'view' object we need to associated with ...
+                var parentView = ViewBase.getView(this._rootNode, false);
+                if (parentView)
+                    parentView.addViewContainer(this);
+            }
+            get parent() { return this._parent; }
+            get name() { return this._name; }
+            /** Returns the number of views in this container. */
+            get count() { return this._views.length; }
+            /** Returns the list of all views in this container. */
+            get views() { return this._views; }
+            get currentView() { return this._currentView; }
+            /** Returns the first view in the collection, or 'null' if empty. */
+            get firstView() { return this._views && this._views.length && this._views[0] || null; }
+            /** Returns the last view in the collection, or 'null' if empty. */
+            get lastView() { return this._views && this._views.length && this._views[this._views.length - 1] || null; }
+            addView(view, hidden = !!(this._views && this._views.length)) {
+                var parent = view["_parent"];
+                if (parent)
+                    if (parent == this)
+                        return view;
+                    else
+                        parent.removeView(view);
+                this._views.push(view);
+                view["_parent"] = this;
+                if (hidden && view.rootNode && view.rootNode.parentNode) // (remove from view when added, until the user decides to show it later)
+                    view.rootNode.parentNode.removeChild(view.rootNode);
+                return view;
+            }
+            removeView(view) {
+                var i = this._views.indexOf(view);
+                if (i >= 0) {
+                    view = this._views.splice(i, 1)[0];
+                    view["_parent"] = null;
+                }
+                else
+                    view = undefined;
+                return view;
+            }
+            /**
+             * Creates a new view from HTML loaded from a given URL.
+             * If a view with the same name exists, the view is returned as is, and all other arguments are ignored.
+             * @param name A name for this view.
+             * @param url The URL to load the view from. If not specified, a blank view is created.
+             * @param payload URL query values. Ignored if 'url' is not specified.
+             */
+            createView(name, url, payload, rootNode) {
+                var view = this.getView(name);
+                if (view)
+                    return view;
+                view = new View(name, url, payload, this);
+                this.addView(view);
+                return view;
+            }
+            /**
+             * Creates a new view from a DOM element, or its children.
+             * If a view with the same name exists, the view is returned as is, and all other arguments are ignored.
+             * @param name A name for this view.
+             * @param element The element to associated with the view (will be removed from any existing parent).  This is the element that will be added and removed from the parent Views container.
+             * @param childrenOnly If true, only the children of the specified element are moved into the new view.
+             */
+            createViewFromElement(name, elementOrID, childrenOnly) {
+                var view = this.getView(name);
+                if (view)
+                    return view;
+                var element = elementOrID instanceof HTMLElement ? elementOrID : this.getElementById(elementOrID);
+                if (!element)
+                    throw "Element '" + elementOrID + "' does not exist within this view.";
+                return new View(name, element, childrenOnly, this);
+            }
+            getView(name) {
+                for (var i = 0, len = this._views.length; i < len; ++i)
+                    if (this._views[i].name == name)
+                        return this._views[i];
+                return null;
+            }
+            showView(viewOrName) {
+                var _view;
+                if (_view === null || viewOrName instanceof View) {
+                    _view = viewOrName;
+                }
+                else {
+                    _view = this.getView('' + viewOrName);
+                    if (!_view)
+                        throw "There's no view named '" + viewOrName + "' (case sensitive).";
+                }
+                if (this._currentView != _view) {
+                    DS.Utilities.HTML.clearChildNodes(this.contentElement);
+                    if (this._currentView)
+                        this._currentView['_doOnHide']();
+                    if (_view && _view.rootNode) {
+                        this.contentElement.appendChild(_view.rootNode);
+                        this._currentView = _view;
+                        _view['_doOnShow']();
+                    }
+                    else
+                        this._currentView = null;
+                }
+                return _view;
+            }
+            hideCurrentView() {
+                this.showView(null);
+            }
+            /** Find the next immediate child container with the specified name.  If 'recursive' is true, all nested child containers are also searched. */
+            getViewContainer(name, recursive = false) {
+                if (this._views)
+                    for (var i = 0, n = this._views.length; i < n; ++i) {
+                        var vc = this._views[i].getViewContainer(name, recursive);
+                        if (vc)
+                            return vc;
+                    }
+                return null;
+            }
+            /**
+             * Builds view containers and views from elements, starting with the document root, which is 'window.document' by
+             * default if no root is specified. The root document object is the default container when building views.
+             * When calling this function with no parameters, the default root page view is established, and the other containers
+             * and views are extracted and added in nested form based on nested associations.
+             * @param rootElement The element to start build the views from.
+             */
+            static buildViews(documentRoot = document) {
+                var rootContainer = new Views(documentRoot);
+                return rootContainer.buildViews();
+            }
+        }
+        UI.Views = Views;
+    })(UI = DS.UI || (DS.UI = {}));
+})(DS || (DS = {}));
 // Contains DreamSpace API functions and types that user code can use to work with the system.
 // This API will be a layer of abstraction for the client side only.
 var DS;
@@ -938,110 +1613,5 @@ var DS;
         return new RegExp("^\/" + controller + "\/" + action + "(?:[\/?&#])?", "gi").test(DS.global.location.pathname);
     }
     DS.isView = isView;
-})(DS || (DS = {}));
-var DS;
-(function (DS) {
-    /** A page holds the UI design, which is basically just a single HTML page template. */
-    class Page extends DS.Abstracts.Page {
-        getResourceValue() { return Promise.resolve(""); }
-        getResourceType() { return DS.ResourceTypes.Text_HTML; }
-    }
-    DS.Page = Page;
-})(DS || (DS = {}));
-var DS;
-(function (DS) {
-    // ========================================================================================================================
-    class Project extends DS.Abstracts.Project {
-    }
-    DS.Project = Project;
-    // ========================================================================================================================
-})(DS || (DS = {}));
-var DS;
-(function (DS) {
-    // ########################################################################################################################
-    DS.Abstracts._defaultCreateSolutionHandler = function (solution) {
-        var s = new DS.Solution();
-        if (solution.$id)
-            s._id = solution.$id;
-        return s;
-    };
-    DS.Abstracts._defaultCreateProjectHandler = function (solution, project) {
-        var proj = new DS.Project(solution, project.name, project.description);
-        if (project.$id)
-            proj._id = project.$id;
-        return proj;
-    };
-    // ========================================================================================================================
-    /**
-    * Holds a collection of projects.
-    * When a project instance is created, the default 'Solution.onCreateProject' handler is used, which can be overridden for derived project types.
-    */
-    class Solution extends DS.Abstracts.Solution {
-    }
-    DS.Solution = Solution;
-    // ========================================================================================================================
-    class Solutions extends DS.Abstracts.Solutions {
-        /** Returns a list of available solution GUIDs that can be loaded. */
-        static getSolutionIDs() {
-            return new Promise((ok, err) => {
-                var ids = [];
-                // ... if server side, just scan the folder, otherwise call the API ...
-                ok(ids);
-            });
-        }
-        /** Triggers the process to load all the solutions in the '/solutions' folder. */
-        static load(fm = DS.VirtualFileSystem.FileManager.current) {
-            return __awaiter(this, void 0, void 0, function* () {
-                return new Promise((ok, err) => {
-                    var unloadedSolutions = [];
-                });
-            });
-        }
-    }
-    DS.Solutions = Solutions;
-    // ########################################################################################################################
-})(DS || (DS = {}));
-var DS;
-(function (DS) {
-    // ############################################################################################################################
-    // FileManager
-    let VirtualFileSystem;
-    (function (VirtualFileSystem) {
-        // ========================================================================================================================
-        VirtualFileSystem.Abstracts._defaultCreateDirHandler = function (fileManager, parent) {
-            return new Directory(fileManager, parent);
-        };
-        class Directory extends VirtualFileSystem.Abstracts.Directory {
-        }
-        VirtualFileSystem.Directory = Directory;
-        VirtualFileSystem.Abstracts._defaultCreateFileHandler = function (fileManager, parent, content) {
-            return new File(fileManager, parent, content);
-        };
-        class File extends VirtualFileSystem.Abstracts.File {
-            constructor(fileManager, parent, content) {
-                super(fileManager, parent, content);
-            }
-            //async saveToLocal() {
-            //    var store = Store.getStorage(Store.StorageType.Local);
-            //    store.setItem(this.absolutePath, this.content);
-            //}
-            //async loadFromLocal() {
-            //    var store = Store.getStorage(Store.StorageType.Local);
-            //    this.content = store.getItem(this.absolutePath);
-            //}
-            read() {
-                return __awaiter(this, void 0, void 0, function* () {
-                    var fs = require("fs");
-                    var util = require("util");
-                    var readFile = util.promisify(fs.readFile);
-                    var contents = yield readFile(this.absolutePath);
-                    return contents;
-                });
-            }
-        }
-        VirtualFileSystem.File = File;
-        // ========================================================================================================================
-    })(VirtualFileSystem = DS.VirtualFileSystem || (DS.VirtualFileSystem = {}));
-    // ############################################################################################################################
 })(DS || (DS = {}));
 //# sourceMappingURL=client_api.js.map

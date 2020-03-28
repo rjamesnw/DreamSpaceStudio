@@ -1,4 +1,4 @@
-export async function login(username: string, password: string): Promise<DS.IO.IResponse<boolean>> {
+export default async function login(username: string, password: string): Promise<DS.IO.IResponse<boolean>> {
     var response: DS.IO.IResponse<boolean>;
     // ### USER CODE START ###
 

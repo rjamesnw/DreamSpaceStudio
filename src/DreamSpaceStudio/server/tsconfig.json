@@ -13,6 +13,5 @@
     //"server/globals.d.ts",
     "./**/*.ts"
     //"./System/**/*.ts"
-  ],
-  "exclude": ["decl"]
+  ]
 }

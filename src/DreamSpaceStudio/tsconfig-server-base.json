@@ -7,7 +7,6 @@
     "declarationMap": true,
     "sourceMap": true,
     "noImplicitAny": true,
-    "outDir": "./public/js",
     "target": "es6",
     "lib": [ "es6" ],
     "module": "commonjs",
@@ -17,6 +16,6 @@
   },
   "exclude": [
     "node_modules",
-    "decl"
+    "**/decl"
   ]
 }

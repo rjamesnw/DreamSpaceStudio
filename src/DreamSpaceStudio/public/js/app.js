@@ -19,7 +19,7 @@ process.on('unhandledRejection', function (err) {
     //wait(); // not needed, since express keeps the message loop active
 });
 // ----------------------------------------------------------------------------------------------------------------------------
-require('../solutions/server/server_api'); // (adds the global.DS core system namespace API)
+require('../system/server/server_api'); // (adds the global.DS core system namespace API)
 DS.registerGlobal(); // (registers the system for managing global properties to prevent cluttering the JS global space)
 process.chdir(DS.Path.combine(__dirname, '..')); // (guarantee that we are in the correct working directory)
 var cwd = global.process.cwd(); // (current working directory, which should be the project folder)

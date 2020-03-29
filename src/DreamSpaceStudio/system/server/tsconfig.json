@@ -13,18 +13,14 @@
     "lib": [ "es6", "dom" ],
     "types": [ "node" ] // (include only types we need; prevents node types from being included)
   },
-  "files": [
+  "include": [
     "./ds.ts", // (make this first)
     "./_global.ts",
-    "./io.ts"
-  ],
-  "include": [
-    "./*.ts",
-    "./System/*.ts"
+    "./io.ts",
+    "./**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "projects",
-    "./*.d.ts"
+    "./**/*.d.ts"
   ]
 }

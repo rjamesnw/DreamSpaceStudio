@@ -33,11 +33,7 @@
             //}
 
             async read(): Promise<Uint8Array> {
-                var fs: typeof import("fs") = require("fs");
-                var util: typeof import("util") = require("util");
-                var readFile = util.promisify(fs.readFile);
-                var contents = await readFile(this.absolutePath);
-                return contents;
+                return null;
             }
         }
 

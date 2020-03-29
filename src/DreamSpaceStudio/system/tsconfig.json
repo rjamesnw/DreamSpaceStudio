@@ -27,12 +27,12 @@
     "Templating.ts",
     "Templating.parse.ts",
     "./*.ts",
-    "client_abstracts/Events.ts",
-    "client_abstracts/VirtualFileSystem.ts",
-    "client_abstracts/Resrouce.ts",
-    "client_abstracts/Solution.ts",
-    "client_abstracts/Project.ts",
-    "./client_abstracts/*.ts"
+    "abstracts/Events.ts",
+    "abstracts/VirtualFileSystem.ts",
+    "abstracts/Resrouce.ts",
+    "abstracts/Solution.ts",
+    "abstracts/Project.ts",
+    "./abstracts/*.ts"
   ],
   "exclude": [
     "node_modules",

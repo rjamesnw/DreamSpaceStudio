@@ -13,7 +13,7 @@ process.on('unhandledRejection', function (err) {
 
 // ----------------------------------------------------------------------------------------------------------------------------
 
-require('../solutions/server/server_api'); // (adds the global.DS core system namespace API)
+require('../system/server/server_api'); // (adds the global.DS core system namespace API)
 
 DS.registerGlobal(); // (registers the system for managing global properties to prevent cluttering the JS global space)
 

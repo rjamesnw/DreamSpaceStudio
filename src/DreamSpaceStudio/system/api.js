@@ -1,15 +1,19 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to set private field on non-instance");
+    }
+    privateMap.set(receiver, value);
+    return value;
 };
 // ###########################################################################################################################
 // These are functions for bootstrapping the core system.  It helps to set up common types and functions that will be needed,
 // such as DS.init() to execute callbacks to finalize to loading process (must be called by the end user).
 // ###########################################################################################################################
+if (!Array.prototype.remove) // Primarily to help support conversions from C# - also, this should exist anyhow!
+    Array.prototype.remove = function (item) {
+        var i = this.indexOf(this);
+        return i > -1 ? (this.splice(i, 1), true) : false;
+    };
 var isNode = typeof global == 'object' && !!global.process && !!global.process.versions && !!global.process.versions.node;
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
  * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.
@@ -25,6 +29,12 @@ var DS;
 (function (DS) {
     Object.defineProperty(DS, "globalNamespaceName", { configurable: false, enumerable: true, get: () => { return USER_GIVEN_GLOBAL_NS_NAME || DEFAULT_GLOBAL_NS_NAME; } });
     Object.defineProperty(DS, "rootns", { configurable: false, enumerable: true, get: () => { return DS.global[DS.globalNamespaceName]; } });
+    /** The platform-specific end of line character.
+     *  For browsers, the internet standard is \r\n.
+     *  For NodeJS on Windows, the standard is \r\n.
+     *  For NodeJS on all others this defaults to \n.
+     */
+    DS.EOL = "\r\n"; // The internet standard.  The server side code will update this to the platform standard.
     /**
      * The root namespace for the DreamSpace system.
      */
@@ -241,19 +251,17 @@ var DS;
      * complete loading before the system is officially ready to be used.
      * Example usage: "await init();" or "init().then(()=>{...});"
      */
-    function init() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((initCompleted) => __awaiter(this, void 0, void 0, function* () {
-                if (initCalled)
-                    throw "DreamSpace.init() can only be called once.";
-                initCalled = true;
-                var cbs = __onInitCallbacks;
-                for (var i = 0, n = cbs.length; i < n; ++i)
-                    yield (cbs[i]() || Promise.resolve());
-                __onInitCallbacks = null; // (make sure init() is not called again)
-                DS.log("DreamSpace.init()", "Initialized and ready.");
-                initCompleted();
-            }));
+    async function init() {
+        return new Promise(async (initCompleted) => {
+            if (initCalled)
+                throw "DreamSpace.init() can only be called once.";
+            initCalled = true;
+            var cbs = __onInitCallbacks;
+            for (var i = 0, n = cbs.length; i < n; ++i)
+                await (cbs[i]() || Promise.resolve());
+            __onInitCallbacks = null; // (make sure init() is not called again)
+            DS.log("DreamSpace.init()", "Initialized and ready.");
+            initCompleted();
         });
     }
     DS.init = init;
@@ -331,15 +339,11 @@ var DS;
     /** Must be used to load a module before it can be used.
      * This call returns a reference to the loaded module.
      * See 'modules$()' for loading multiple modules. */
-    function module(ns) {
-        return __awaiter(this, void 0, void 0, function* () { return ns instanceof Promise ? yield ns : ns; });
-    }
+    async function module(ns) { return ns instanceof Promise ? await ns : ns; }
     DS.module = module;
     /** Can be used to load multiple modules. You can also use 'module()' to load and return a single module. */
-    function modules(...ns) {
-        return __awaiter(this, void 0, void 0, function* () { for (var i = 0, n = ns.length; i < n; ++i)
-            yield module(ns[i]); });
-    }
+    async function modules(...ns) { for (var i = 0, n = ns.length; i < n; ++i)
+        await module(ns[i]); }
     DS.modules = modules;
     /** Must be used to load a type before it can be used. */
     DS.type = module;
@@ -651,7 +655,7 @@ var DS;
         function parseJsonElseKeepAsIs(value) {
             try {
                 if (typeof value == 'string' && DS.Data.JSON.isJSON(value))
-                    return DS.Data.JSON.ToObject(value);
+                    return DS.Data.JSON.toObject(value);
             }
             catch (err) {
                 return value;
@@ -1033,6 +1037,36 @@ var DS;
             else
                 return new Exception(DS.error(functionNameOrTitle, msg, source, false, false), source);
         }
+        /**
+         * Logs an "Argument Required" error message with an optional title, and returns an associated 'Exception'
+         * object for the caller to throw.
+         * The source of the exception object will be associated with the 'LogItem' object.
+         * This function is typically used with non-implemented functions in abstract types.
+         */
+        static argumentRequired(functionNameOrTitle, argumentName, source, message) {
+            var msg = `The parameter '${argumentName}' of function '${functionNameOrTitle}' is required.` + (message ? " " + message : "");
+            if (DS.Diagnostics && DS.Diagnostics.log) {
+                var logItem = DS.Diagnostics.log(functionNameOrTitle, msg, DS.LogTypes.Error);
+                return new Exception(logItem, source);
+            }
+            else
+                return new Exception(DS.error(functionNameOrTitle, msg, source, false, false), source);
+        }
+        /**
+         * Logs an "Argument Cannot Be Null" error message with an optional title, and returns an associated 'Exception'
+         * object for the caller to throw.
+         * The source of the exception object will be associated with the 'LogItem' object.
+         * This function is typically used with non-implemented functions in abstract types.
+         */
+        static argumentUndefinedOrNull(functionNameOrTitle, argumentName, source, message) {
+            var msg = `The parameter '${argumentName}' of function '${functionNameOrTitle}' cannot be undefined or null.` + (message ? " " + message : "");
+            if (DS.Diagnostics && DS.Diagnostics.log) {
+                var logItem = DS.Diagnostics.log(functionNameOrTitle, msg, DS.LogTypes.Error);
+                return new Exception(logItem, source);
+            }
+            else
+                return new Exception(DS.error(functionNameOrTitle, msg, source, false, false), source);
+        }
         /** Returns this exception and any inner exceptions formatted for display (simply calls DS.getErrorMessage(this, true)). */
         toString() { return DS.getErrorMessage(this, true); }
         valueOf() { return this.toString(); }
@@ -1314,47 +1348,35 @@ var DS;
      */
     class PersistableObject {
         /** Triggers the process to save the object to a data store. */
-        save() {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (yield this.onBeforeSave()) { // (make sure we are in a state that allows saving)
-                    var contents = yield this.onSave(); // (do the save operation and get the storage contents)
-                    this.onAfterSuccessfulSave(contents); // (run anything that needs to execute after )
-                }
-                return this;
-            });
+        async save() {
+            if (await this.onBeforeSave()) { // (make sure we are in a state that allows saving)
+                var contents = await this.onSave(); // (do the save operation and get the storage contents)
+                this.onAfterSuccessfulSave(contents); // (run anything that needs to execute after )
+            }
+            return this;
         }
         /** Triggers the process to load/sync the current project with a data store.
          * Note: Every call to this method copies '_currentConfig' to '_lastConfig' and sets '_currentConfig' to the new incoming config file.
          */
-        load(replace = false) {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (yield this.onBeforeLoad()) { // (make sure we are in a state that allows loading)
-                    var source = yield this.onLoad(); // (do the load operation and get the contents)
-                    this.onAfterSuccessfulLoad(source);
-                }
-                return this;
-            });
+        async load(replace = false) {
+            if (await this.onBeforeLoad()) { // (make sure we are in a state that allows loading)
+                var source = await this.onLoad(); // (do the load operation and get the contents)
+                this.onAfterSuccessfulLoad(source);
+            }
+            return this;
         }
-        onBeforeSave() {
-            return __awaiter(this, void 0, void 0, function* () { return Promise.resolve(); });
-        }
+        async onBeforeSave() { return Promise.resolve(); }
         onAfterSuccessfulSave(result) { }
-        onSave() {
-            return __awaiter(this, void 0, void 0, function* () {
-                return Promise.resolve();
-            });
+        async onSave() {
+            return Promise.resolve();
         }
-        onBeforeLoad() {
-            return __awaiter(this, void 0, void 0, function* () { return Promise.resolve(); });
-        }
+        async onBeforeLoad() { return Promise.resolve(); }
         onAfterSuccessfulLoad(result) { }
         /** Implementers can override this function to provide a different mechanism to retrieve the underlying content.
          * The default behavior simply returns 'undefined'.
          */
-        onLoad() {
-            return __awaiter(this, void 0, void 0, function* () {
-                return Promise.resolve();
-            });
+        async onLoad() {
+            return Promise.resolve();
         }
         saveConfigToObject(target) {
             return target || {}; // (the base just returns a new object in case one wasn't supplied)
@@ -1706,25 +1728,28 @@ var DS;
         }
         VDOM.Element = Element;
         /** Represents a single parsed HTML element. */
-        class HTMLElement extends Element {
-            constructor(
-            /** The node name.*/
-            nodeName = HTMLElement.defaultHTMLTagName, 
-            /** The node type.*/
-            nodeType = NodeTypes.ELEMENT_NODE, 
-            /** The element attributes.*/
-            attributes, 
-            /** The element CSS classes.*/
-            className, 
-            /** The element namespace prefix.*/
-            prefix) {
-                super(nodeName, nodeType, attributes);
-                this.className = className;
-                this.prefix = prefix;
+        let HTMLElement = /** @class */ (() => {
+            class HTMLElement extends Element {
+                constructor(
+                /** The node name.*/
+                nodeName = HTMLElement.defaultHTMLTagName, 
+                /** The node type.*/
+                nodeType = NodeTypes.ELEMENT_NODE, 
+                /** The element attributes.*/
+                attributes, 
+                /** The element CSS classes.*/
+                className, 
+                /** The element namespace prefix.*/
+                prefix) {
+                    super(nodeName, nodeType, attributes);
+                    this.className = className;
+                    this.prefix = prefix;
+                }
             }
-        }
-        /** Each new instance will initially set its '__htmlTag' property to this value. */
-        HTMLElement.defaultHTMLTagName = "div";
+            /** Each new instance will initially set its '__htmlTag' property to this value. */
+            HTMLElement.defaultHTMLTagName = "div";
+            return HTMLElement;
+        })();
         VDOM.HTMLElement = HTMLElement;
         class CharacterData extends Node {
             constructor(
@@ -2129,44 +2154,40 @@ var DS;
         propertyChanged(name) {
             return !this._currentConfig || !this._lastConfig || this._lastConfig[name] != this._currentConfig[name];
         }
-        onLoad() {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (!this.directory && !this._file)
-                    throw new DS.Exception("Cannot load configuration: A directory or file is required.", this);
-                if (!this._file && !this.configFilename)
-                    throw new DS.Exception("Cannot load configuration: A filename is required.", this);
-                if (!this._file)
-                    this._file = this.directory.createFile(this.configFilename);
-                var content = (yield this._file.read()).text;
-                try {
-                    var configObject = JSON.parse(content);
-                }
-                catch (err) {
-                    throw new DS.Exception("Failed to parse configuration file as JSON.", content, err);
-                }
-                this.loadConfigFromObject(configObject);
-                var _this = this;
-                _this._lastConfig = this._currentConfig;
-                _this._currentConfig = configObject;
-                return content;
-            });
+        async onLoad() {
+            if (!this.directory && !this._file)
+                throw new DS.Exception("Cannot load configuration: A directory or file is required.", this);
+            if (!this._file && !this.configFilename)
+                throw new DS.Exception("Cannot load configuration: A filename is required.", this);
+            if (!this._file)
+                this._file = this.directory.createFile(this.configFilename);
+            var content = (await this._file.read()).text;
+            try {
+                var configObject = JSON.parse(content);
+            }
+            catch (err) {
+                throw new DS.Exception("Failed to parse configuration file as JSON.", content, err);
+            }
+            this.loadConfigFromObject(configObject);
+            var _this = this;
+            _this._lastConfig = this._currentConfig;
+            _this._currentConfig = configObject;
+            return content;
         }
-        onSave() {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (!this.directory && !this._file)
-                    throw new DS.Exception("Cannot save configuration: A directory or file is required.", this);
-                if (!this._file && !this.configFilename)
-                    throw new DS.Exception("Cannot save configuration: A filename is required.", this);
-                if (!this._file)
-                    this._file = this.directory.createFile(this.configFilename);
-                var configObject = this.saveConfigToObject();
-                this._file.text = JSON.stringify(configObject);
-                yield this._file.save();
-                var _this = this;
-                _this._lastConfig = this._currentConfig;
-                _this._currentConfig = configObject;
-                return this._file.text;
-            });
+        async onSave() {
+            if (!this.directory && !this._file)
+                throw new DS.Exception("Cannot save configuration: A directory or file is required.", this);
+            if (!this._file && !this.configFilename)
+                throw new DS.Exception("Cannot save configuration: A filename is required.", this);
+            if (!this._file)
+                this._file = this.directory.createFile(this.configFilename);
+            var configObject = this.saveConfigToObject();
+            this._file.text = JSON.stringify(configObject);
+            await this._file.save();
+            var _this = this;
+            _this._lastConfig = this._currentConfig;
+            _this._currentConfig = configObject;
+            return this._file.text;
         }
         /** Save the configuration information to an object - typically prior to serialization. */
         saveConfigToObject(target) {
@@ -2208,7 +2229,7 @@ var DS;
             /** Converts a JSON string into an object with nested objects as required.
              * The given JSON string is validated first before it is parsed for security reasons. Invalid JSON will throw an exception.
             */
-            function ToObject(jsonText) {
+            function toObject(jsonText) {
                 if (typeof jsonText !== "string" || !jsonText)
                     return null;
                 // ... some browsers (IE) may not be able to handle the whitespace before or after the text ...
@@ -2224,7 +2245,7 @@ var DS;
                     throw new DS.Exception('Invalid JSON: "' + jsonText + '"');
                 }
             }
-            JSON.ToObject = ToObject;
+            JSON.toObject = toObject;
             /** A more powerful version of the built-in JSON.stringify() function that uses the same function to respect the
             * built-in rules while also limiting depth and supporting cyclical references.
             */
@@ -2249,6 +2270,21 @@ var DS;
                 return DS.global.JSON.stringify(_build(val, depth), null, space);
             }
             JSON.stringify = stringify;
+            /** Attempts to parse a string as JSON and returns the result.  If the value is not a string, or the conversion
+             * fails, the value is returned as is. This is used mainly in message queue processing, so JSON can convert to
+             * an object by default for the handlers, otherwise the value is sent as is.
+            */
+            function toObjectOrValue(value) {
+                if (typeof value != 'string' || !isJSON(value))
+                    return value;
+                try {
+                    return JSON.toObject(value);
+                }
+                catch (err) {
+                    return value;
+                }
+            }
+            JSON.toObjectOrValue = toObjectOrValue;
             // ===================================================================================================================
         })(JSON = Data.JSON || (Data.JSON = {}));
         // =============================================================================================
@@ -2277,79 +2313,82 @@ var DS;
         }
         Data.PropertyPathEndpoint = PropertyPathEndpoint;
         /** Holds details about the value source or target of a binding. */
-        class PropertyPath {
-            // ---------------------------------------------------------------------------------------------------------------
-            constructor(origin, path) {
-                this.origin = origin;
-                this.parsePath(path);
-            }
-            // ---------------------------------------------------------------------------------------------------------------
-            /** Parses the specified path string and updates this PropertyPath instance with the details. */
-            parsePath(path) {
-                if (path) {
-                    if (typeof path != 'string')
-                        path = '' + path;
-                    // ... use the native regex to parse out the path parts (including the symbols) ...
-                    var parts = path.match(PropertyPath.__PathPartRegEx);
-                    var lastQuote = ""; // (the end quote must match this if a quote is found)
-                    var pname, index, arg;
-                    for (var i = 0, n = parts.length; i < n; ++i) {
-                    }
+        let PropertyPath = /** @class */ (() => {
+            class PropertyPath {
+                // ---------------------------------------------------------------------------------------------------------------
+                constructor(origin, path) {
+                    this.origin = origin;
+                    this.parsePath(path);
                 }
-                return this;
+                // ---------------------------------------------------------------------------------------------------------------
+                /** Parses the specified path string and updates this PropertyPath instance with the details. */
+                parsePath(path) {
+                    if (path) {
+                        if (typeof path != 'string')
+                            path = '' + path;
+                        // ... use the native regex to parse out the path parts (including the symbols) ...
+                        var parts = path.match(PropertyPath.__PathPartRegEx);
+                        var lastQuote = ""; // (the end quote must match this if a quote is found)
+                        var pname, index, arg;
+                        for (var i = 0, n = parts.length; i < n; ++i) {
+                        }
+                    }
+                    return this;
+                }
+                // ---------------------------------------------------------------------------------------------------------------
+                /** Reconstructs the property path string using the internal path array details. */
+                __getPathString(level) {
+                    var path = "", pname, args, index;
+                    for (var i = 0, n = this.namePath.length; i < n && i <= level; ++i) {
+                        pname = this.namePath[i];
+                        if (pname)
+                            path = path ? path + "." + pname : pname;
+                        args = this.arguments[i];
+                        if (args) { // (if no parameter list, then only the function value itself is being referenced)
+                            if (!args.length)
+                                path += "()";
+                            else
+                                path += "(" + this.arguments.join(",") + ")";
+                        }
+                        else {
+                            index = this.indexes[i];
+                            if (index !== void 0) // (note: ignored if the value is a function with parameters)
+                                path += "[" + index + "]";
+                        }
+                    }
+                    return path;
+                }
+                /** Traverses the property path information and returns the final endpoint details.
+                * @param {object} origin The root object to begin the traversal on.  If an object was supplied to the constructor,
+                * then this parameter is optional; though, it can be used to override that object (for the call only).
+                * @param {PropertyPathEndpoint} existingEndpoint An optional existing endpoint instance if available, otherwise leave this undefined.
+                */
+                getEndpoint(origin, existingEndpoint) {
+                    if (!this.namePath || !this.namePath.length)
+                        return null;
+                    var i = 0, endpoint = existingEndpoint || new PropertyPathEndpoint();
+                    if (typeof endpoint.getValue != 'function')
+                        throw new DS.Exception("The existing endpoint object is not a valid 'PropertyPathEndpoint' instance.", this);
+                    endpoint.object = origin;
+                    endpoint.propertyName = this.namePath[0];
+                    endpoint.propertyIndex = this.indexes[0];
+                    endpoint.arguments = this.arguments[0];
+                    while (i < this.namePath.length) {
+                        endpoint.object = endpoint.getValue();
+                        if (endpoint.object === void 0)
+                            throw new DS.Exception("Invalid property path: " + this.__getPathString(i), this);
+                        i++;
+                        endpoint.propertyName = this.namePath[i];
+                        endpoint.propertyIndex = this.indexes[i];
+                        endpoint.arguments = this.arguments[i];
+                    }
+                    return endpoint;
+                }
             }
             // ---------------------------------------------------------------------------------------------------------------
-            /** Reconstructs the property path string using the internal path array details. */
-            __getPathString(level) {
-                var path = "", pname, args, index;
-                for (var i = 0, n = this.namePath.length; i < n && i <= level; ++i) {
-                    pname = this.namePath[i];
-                    if (pname)
-                        path = path ? path + "." + pname : pname;
-                    args = this.arguments[i];
-                    if (args) { // (if no parameter list, then only the function value itself is being referenced)
-                        if (!args.length)
-                            path += "()";
-                        else
-                            path += "(" + this.arguments.join(",") + ")";
-                    }
-                    else {
-                        index = this.indexes[i];
-                        if (index !== void 0) // (note: ignored if the value is a function with parameters)
-                            path += "[" + index + "]";
-                    }
-                }
-                return path;
-            }
-            /** Traverses the property path information and returns the final endpoint details.
-            * @param {object} origin The root object to begin the traversal on.  If an object was supplied to the constructor,
-            * then this parameter is optional; though, it can be used to override that object (for the call only).
-            * @param {PropertyPathEndpoint} existingEndpoint An optional existing endpoint instance if available, otherwise leave this undefined.
-            */
-            getEndpoint(origin, existingEndpoint) {
-                if (!this.namePath || !this.namePath.length)
-                    return null;
-                var i = 0, endpoint = existingEndpoint || new PropertyPathEndpoint();
-                if (typeof endpoint.getValue != 'function')
-                    throw new DS.Exception("The existing endpoint object is not a valid 'PropertyPathEndpoint' instance.", this);
-                endpoint.object = origin;
-                endpoint.propertyName = this.namePath[0];
-                endpoint.propertyIndex = this.indexes[0];
-                endpoint.arguments = this.arguments[0];
-                while (i < this.namePath.length) {
-                    endpoint.object = endpoint.getValue();
-                    if (endpoint.object === void 0)
-                        throw new DS.Exception("Invalid property path: " + this.__getPathString(i), this);
-                    i++;
-                    endpoint.propertyName = this.namePath[i];
-                    endpoint.propertyIndex = this.indexes[i];
-                    endpoint.arguments = this.arguments[i];
-                }
-                return endpoint;
-            }
-        }
-        // ---------------------------------------------------------------------------------------------------------------
-        PropertyPath.__PathPartRegEx = /\[|\]|\(|\)|"|'|\\|\.|[^\[\]\(\)"'\.\\]*/gi;
+            PropertyPath.__PathPartRegEx = /\[|\]|\(|\)|"|'|\\|\.|[^\[\]\(\)"'\.\\]*/gi;
+            return PropertyPath;
+        })();
         Data.PropertyPath = PropertyPath;
         /** The type of binding between object properties (used by System.IO.Data.Binding). */
         let BindingMode;
@@ -2746,224 +2785,227 @@ var DS;
       * Performance note: Since HTML can be large, it's not efficient to scan the HTML character by character. Instead, the HTML
       * reader uses the native RegEx engine to split up the HTML into chunks of delimiter text, which makes reading it much faster.
       */
-    class HTMLReader {
-        constructor(html) {
-            // (The RegEx above will identify areas that MAY need to delimited for parsing [not a guarantee].  The area outside of the delimiters is usually
-            // defined by the delimiter types, so the delimiters are moved out into their own array for quick parsing [this also allows the host browser's native
-            // environment to do much of the parsing instead of JavaScript].)
-            this.partIndex = 0;
-            /** The start index of the running text. */
-            this.textStartIndex = 0;
-            /** The end index of the running text. This is also the start index of the next tag, if any (since text runs between tags). */
-            this.textEndIndex = 0; // (this advances with every read so text can be quickly extracted from the source HTML instead of adding array items [just faster]).
-            this.__lastTextEndIndex = 0; // (for backing up from a read [see '__readNext()' && '__goBack()'])
-            /** A list of text parts that correspond to each delimiter (i.e. TDTDT [T=Text, D=Delimiter]). */
-            this.nonDelimiters = null;
-            /** A list of the delimiters that correspond to each of the text parts (i.e. TDTDT [T=Text, D=Delimiter]). */
-            this.delimiters = null;
-            /** The text that was read. */
-            this.text = "";
-            /** The delimiter that was read. */
-            this.delimiter = "";
-            /** The text that runs between indexes 'textStartIndex' and 'textEndIndex-1' (inclusive). */
-            this.runningText = "";
-            /** The bracket sequence before the tag name, such as '<' or '</'. */
-            this.tagBracket = "";
-            /** The tag name, if a tag was read. */
-            this.tagName = "";
-            /** The attribute name, if attribute was read. */
-            this.attributeName = "";
-            /** The attribute value, if attribute was read. */
-            this.attributeValue = "";
-            this.readMode = HTMLReaderModes.NotStarted;
-            /** If true, then the parser will produce errors on ill-formed HTML (eg. 'attribute=' with no value).
-            * This can greatly help identify possible areas of page errors.
-            */
-            this.strictMode = true;
-            // ... using RegEx allows the native browser system to split up the HTML text into parts that can be consumed more quickly ...
-            this.html = html;
-            this.delimiters = html.match(HTMLReader.__splitRegEx); // (get delimiters [inverse of 'split()'])
-            this.nonDelimiters = this.html.split(HTMLReader.__splitRegEx, void 0, this.delimiters); // (get text parts [inverse of 'match()']; last argument is ignored on newer systems [see related polyfill in DreamSpace.Browser])
-        }
-        /** Returns true if tag current tag block is a mark-up declaration in the form "<!...>", where '...' is any text EXCEPT the start of a comment ('--'). */
-        isMarkupDeclaration() {
-            return this.readMode == HTMLReaderModes.Tag
-                && this.tagName.length >= 4 && this.tagName.charAt(0) == '!' && this.tagName.charAt(1) != '-';
-            //(spec reference and info on dashes: http://weblog.200ok.com.au/2008/01/dashing-into-trouble-why-html-comments.html)
-        }
-        /** Returns true if tag current tag block is a mark-up declaration representing a comment block in the form "<!--...-->", where '...' is any text. */
-        isCommentBlock() {
-            return this.readMode == HTMLReaderModes.Tag
-                && this.tagName.length >= 7 && this.tagName.charAt(0) == '!' && this.tagName.charAt(1) == '-';
-            ///^!--.*-->$/.test(...) (see http://jsperf.com/test-regex-vs-charat)
-            //(spec reference and info on dashes: http://weblog.200ok.com.au/2008/01/dashing-into-trouble-why-html-comments.html)
-        }
-        /** Return true if the current tag block represents a script. */
-        isScriptBlock() {
-            return this.readMode == HTMLReaderModes.Tag
-                && this.tagName.length >= 6 && this.tagName.charAt(0) == 's' && this.tagName.charAt(1) == 'c' && this.tagName.charAt(this.tagName.length - 1) == '>';
-            // (tag is taken from pre - matched names, so no need to match the whole name)
-        }
-        /** Return true if the current tag block represents a style. */
-        isStyleBlock() {
-            return this.readMode == HTMLReaderModes.Tag
-                && this.tagName.length >= 5 && this.tagName.charAt(0) == 's' && this.tagName.charAt(1) == 't' && this.tagName.charAt(this.tagName.length - 1) == '>';
-            // (tag is taken from pre-matched names, so no need to match the whole name)
-        }
-        /** Returns true if the current position is a tag closure (i.e. '</', or '/>' [self-closing allowed for non-nestable tags]). */
-        isClosingTag() {
-            return this.readMode == HTMLReaderModes.Tag && this.tagBracket == '</' || this.readMode == HTMLReaderModes.EndOfTag && this.delimiter == '/>';
-            // (match "<tag/>" [no inner html/text] and "</tag> [end of inner html/text])
-        }
-        /** Returns true if the current delimiter represents a template token in the form '{{....}}'. */
-        isTempalteToken() {
-            return this.delimiter.length > 2 && this.delimiter.charAt(0) == '{' && this.delimiter.charAt(1) == '{';
-        }
-        // ----------------------------------------------------------------------------------------------------------------
-        getHTML() { return this.html; }
-        __readNext() {
-            if (this.partIndex >= this.nonDelimiters.length) {
-                if (this.readMode != HTMLReaderModes.End) {
+    let HTMLReader = /** @class */ (() => {
+        class HTMLReader {
+            constructor(html) {
+                // (The RegEx above will identify areas that MAY need to delimited for parsing [not a guarantee].  The area outside of the delimiters is usually
+                // defined by the delimiter types, so the delimiters are moved out into their own array for quick parsing [this also allows the host browser's native
+                // environment to do much of the parsing instead of JavaScript].)
+                this.partIndex = 0;
+                /** The start index of the running text. */
+                this.textStartIndex = 0;
+                /** The end index of the running text. This is also the start index of the next tag, if any (since text runs between tags). */
+                this.textEndIndex = 0; // (this advances with every read so text can be quickly extracted from the source HTML instead of adding array items [just faster]).
+                this.__lastTextEndIndex = 0; // (for backing up from a read [see '__readNext()' && '__goBack()'])
+                /** A list of text parts that correspond to each delimiter (i.e. TDTDT [T=Text, D=Delimiter]). */
+                this.nonDelimiters = null;
+                /** A list of the delimiters that correspond to each of the text parts (i.e. TDTDT [T=Text, D=Delimiter]). */
+                this.delimiters = null;
+                /** The text that was read. */
+                this.text = "";
+                /** The delimiter that was read. */
+                this.delimiter = "";
+                /** The text that runs between indexes 'textStartIndex' and 'textEndIndex-1' (inclusive). */
+                this.runningText = "";
+                /** The bracket sequence before the tag name, such as '<' or '</'. */
+                this.tagBracket = "";
+                /** The tag name, if a tag was read. */
+                this.tagName = "";
+                /** The attribute name, if attribute was read. */
+                this.attributeName = "";
+                /** The attribute value, if attribute was read. */
+                this.attributeValue = "";
+                this.readMode = HTMLReaderModes.NotStarted;
+                /** If true, then the parser will produce errors on ill-formed HTML (eg. 'attribute=' with no value).
+                * This can greatly help identify possible areas of page errors.
+                */
+                this.strictMode = true;
+                // ... using RegEx allows the native browser system to split up the HTML text into parts that can be consumed more quickly ...
+                this.html = html;
+                this.delimiters = html.match(HTMLReader.__splitRegEx); // (get delimiters [inverse of 'split()'])
+                this.nonDelimiters = this.html.split(HTMLReader.__splitRegEx, void 0, this.delimiters); // (get text parts [inverse of 'match()']; last argument is ignored on newer systems [see related polyfill in DreamSpace.Browser])
+            }
+            /** Returns true if tag current tag block is a mark-up declaration in the form "<!...>", where '...' is any text EXCEPT the start of a comment ('--'). */
+            isMarkupDeclaration() {
+                return this.readMode == HTMLReaderModes.Tag
+                    && this.tagName.length >= 4 && this.tagName.charAt(0) == '!' && this.tagName.charAt(1) != '-';
+                //(spec reference and info on dashes: http://weblog.200ok.com.au/2008/01/dashing-into-trouble-why-html-comments.html)
+            }
+            /** Returns true if tag current tag block is a mark-up declaration representing a comment block in the form "<!--...-->", where '...' is any text. */
+            isCommentBlock() {
+                return this.readMode == HTMLReaderModes.Tag
+                    && this.tagName.length >= 7 && this.tagName.charAt(0) == '!' && this.tagName.charAt(1) == '-';
+                ///^!--.*-->$/.test(...) (see http://jsperf.com/test-regex-vs-charat)
+                //(spec reference and info on dashes: http://weblog.200ok.com.au/2008/01/dashing-into-trouble-why-html-comments.html)
+            }
+            /** Return true if the current tag block represents a script. */
+            isScriptBlock() {
+                return this.readMode == HTMLReaderModes.Tag
+                    && this.tagName.length >= 6 && this.tagName.charAt(0) == 's' && this.tagName.charAt(1) == 'c' && this.tagName.charAt(this.tagName.length - 1) == '>';
+                // (tag is taken from pre - matched names, so no need to match the whole name)
+            }
+            /** Return true if the current tag block represents a style. */
+            isStyleBlock() {
+                return this.readMode == HTMLReaderModes.Tag
+                    && this.tagName.length >= 5 && this.tagName.charAt(0) == 's' && this.tagName.charAt(1) == 't' && this.tagName.charAt(this.tagName.length - 1) == '>';
+                // (tag is taken from pre-matched names, so no need to match the whole name)
+            }
+            /** Returns true if the current position is a tag closure (i.e. '</', or '/>' [self-closing allowed for non-nestable tags]). */
+            isClosingTag() {
+                return this.readMode == HTMLReaderModes.Tag && this.tagBracket == '</' || this.readMode == HTMLReaderModes.EndOfTag && this.delimiter == '/>';
+                // (match "<tag/>" [no inner html/text] and "</tag> [end of inner html/text])
+            }
+            /** Returns true if the current delimiter represents a template token in the form '{{....}}'. */
+            isTempalteToken() {
+                return this.delimiter.length > 2 && this.delimiter.charAt(0) == '{' && this.delimiter.charAt(1) == '{';
+            }
+            // ----------------------------------------------------------------------------------------------------------------
+            getHTML() { return this.html; }
+            __readNext() {
+                if (this.partIndex >= this.nonDelimiters.length) {
+                    if (this.readMode != HTMLReaderModes.End) {
+                        this.__lastTextEndIndex = this.textEndIndex;
+                        this.textEndIndex += this.delimiter.length;
+                        this.text = "";
+                        this.delimiter = "";
+                        this.readMode = HTMLReaderModes.End;
+                    }
+                }
+                else {
+                    this.text = this.nonDelimiters[this.partIndex];
                     this.__lastTextEndIndex = this.textEndIndex;
-                    this.textEndIndex += this.delimiter.length;
-                    this.text = "";
-                    this.delimiter = "";
-                    this.readMode = HTMLReaderModes.End;
+                    this.textEndIndex += this.delimiter.length + this.text.length; // (add last delimiter length and the current text length)
+                    this.delimiter = this.partIndex < this.delimiters.length ? this.delimiters[this.partIndex] : "";
+                    this.partIndex++;
                 }
             }
-            else {
+            __goBack() {
+                this.partIndex--;
+                this.textEndIndex = this.__lastTextEndIndex;
                 this.text = this.nonDelimiters[this.partIndex];
-                this.__lastTextEndIndex = this.textEndIndex;
-                this.textEndIndex += this.delimiter.length + this.text.length; // (add last delimiter length and the current text length)
                 this.delimiter = this.partIndex < this.delimiters.length ? this.delimiters[this.partIndex] : "";
-                this.partIndex++;
             }
-        }
-        __goBack() {
-            this.partIndex--;
-            this.textEndIndex = this.__lastTextEndIndex;
-            this.text = this.nonDelimiters[this.partIndex];
-            this.delimiter = this.partIndex < this.delimiters.length ? this.delimiters[this.partIndex] : "";
-        }
-        __reQueueDelimiter() {
-            this.partIndex--;
-            this.textEndIndex -= this.delimiter.length;
-            this.nonDelimiters[this.partIndex] = ""; // (need to make sure not to read the text next time around on this same index point [may be an attribute, which would cause a cyclical read case])
-        }
-        /** If the current delimiter is whitespace, then this advances the reading (note: all whitespace will be grouped into one delimiter).
-            * True is returned if whitespace (or an empty string) was found and skipped, otherwise false is returned, and no action was taken.
-            * @param {boolean} onlyIfTextIsEmpty If true, advances past the whitespace delimiter ONLY if the preceding text read was also empty.  This can happen
-            * if whitespace immediately follows another delimiter (such as space after a tag name).
-            */
-        __skipWhiteSpace(onlyIfTextIsEmpty = false) {
-            if (this.readMode != HTMLReaderModes.End
-                && (this.delimiter.length == 0 || this.delimiter.charCodeAt(0) <= 32)
-                && (!onlyIfTextIsEmpty || !this.text)) {
+            __reQueueDelimiter() {
+                this.partIndex--;
+                this.textEndIndex -= this.delimiter.length;
+                this.nonDelimiters[this.partIndex] = ""; // (need to make sure not to read the text next time around on this same index point [may be an attribute, which would cause a cyclical read case])
+            }
+            /** If the current delimiter is whitespace, then this advances the reading (note: all whitespace will be grouped into one delimiter).
+                * True is returned if whitespace (or an empty string) was found and skipped, otherwise false is returned, and no action was taken.
+                * @param {boolean} onlyIfTextIsEmpty If true, advances past the whitespace delimiter ONLY if the preceding text read was also empty.  This can happen
+                * if whitespace immediately follows another delimiter (such as space after a tag name).
+                */
+            __skipWhiteSpace(onlyIfTextIsEmpty = false) {
+                if (this.readMode != HTMLReaderModes.End
+                    && (this.delimiter.length == 0 || this.delimiter.charCodeAt(0) <= 32)
+                    && (!onlyIfTextIsEmpty || !this.text)) {
+                    this.__readNext();
+                    return true;
+                }
+                else
+                    return false;
+            }
+            throwError(msg) {
+                this.__readNext(); // (includes the delimiter and next text in the running text)
+                throw new DS.Exception(msg + " on line " + this.getCurrentLineNumber() + ": <br/>\r\n" + this.getCurrentRunningText());
+            }
+            // -------------------------------------------------------------------------------------------------------------------
+            /** Reads the next tag or attribute in the underlying html. */
+            readNext() {
+                this.textStartIndex = this.textEndIndex + this.delimiter.length;
                 this.__readNext();
-                return true;
-            }
-            else
-                return false;
-        }
-        throwError(msg) {
-            this.__readNext(); // (includes the delimiter and next text in the running text)
-            throw new DS.Exception(msg + " on line " + this.getCurrentLineNumber() + ": <br/>\r\n" + this.getCurrentRunningText());
-        }
-        // -------------------------------------------------------------------------------------------------------------------
-        /** Reads the next tag or attribute in the underlying html. */
-        readNext() {
-            this.textStartIndex = this.textEndIndex + this.delimiter.length;
-            this.__readNext();
-            if (this.readMode == HTMLReaderModes.Tag
-                && this.tagBracket != '</' && this.tagName.charAt(this.tagName.length - 1) != ">" // (skip entire tag block delimiters, such as "<script></script>", "<style></style>", and "<!-- -->")
-                || this.readMode == HTMLReaderModes.Attribute) {
-                this.__skipWhiteSpace(true);
-                // Valid formats supported: <TAG A 'B' C=D E='F' 'G'=H 'I'='J' K.L = MNO P.Q="RS" />
-                // (note: user will be notified of invalid formatting)
-                this.attributeName = this.text.toLocaleLowerCase();
-                var isAttributeValueQuoted = false;
-                if (this.attributeName) {
-                    // (and attribute exists, so '=', '/>', '>', or whitespace should follow)
-                    if (this.delimiter == '=') {
-                        // ('=' exists, so a valid value should exist)
-                        this.__readNext(); // (advance to the next part)
-                        this.__skipWhiteSpace(true); // (skip ahead one more if on whitespace AND empty text ['a= b', where the space delimiter has empty text, vs 'a=b ', where the space delimiter as text 'b'])
-                        isAttributeValueQuoted = this.delimiter.charAt(0) == '"' || this.delimiter.charAt(0) == "'";
-                        this.attributeValue = isAttributeValueQuoted ? this.delimiter : this.text;
-                        // (if quotes are used, the delimiter will contain the value, otherwise the value is the text)
-                        if (this.strictMode && this.attributeValue == "")
-                            this.throwError("Attribute '" + this.attributeName + "' is missing a value (use =\"\" to denote empty attribute values).");
-                        // .. strip any quotes to get the value ...
-                        if (this.attributeValue.length >= 2 && (this.attributeValue.charAt(0) == "'" || this.attributeValue.charAt(0) == '"'))
-                            this.attributeValue = this.attributeValue.substring(1, this.attributeValue.length - 1);
+                if (this.readMode == HTMLReaderModes.Tag
+                    && this.tagBracket != '</' && this.tagName.charAt(this.tagName.length - 1) != ">" // (skip entire tag block delimiters, such as "<script></script>", "<style></style>", and "<!-- -->")
+                    || this.readMode == HTMLReaderModes.Attribute) {
+                    this.__skipWhiteSpace(true);
+                    // Valid formats supported: <TAG A 'B' C=D E='F' 'G'=H 'I'='J' K.L = MNO P.Q="RS" />
+                    // (note: user will be notified of invalid formatting)
+                    this.attributeName = this.text.toLocaleLowerCase();
+                    var isAttributeValueQuoted = false;
+                    if (this.attributeName) {
+                        // (and attribute exists, so '=', '/>', '>', or whitespace should follow)
+                        if (this.delimiter == '=') {
+                            // ('=' exists, so a valid value should exist)
+                            this.__readNext(); // (advance to the next part)
+                            this.__skipWhiteSpace(true); // (skip ahead one more if on whitespace AND empty text ['a= b', where the space delimiter has empty text, vs 'a=b ', where the space delimiter as text 'b'])
+                            isAttributeValueQuoted = this.delimiter.charAt(0) == '"' || this.delimiter.charAt(0) == "'";
+                            this.attributeValue = isAttributeValueQuoted ? this.delimiter : this.text;
+                            // (if quotes are used, the delimiter will contain the value, otherwise the value is the text)
+                            if (this.strictMode && this.attributeValue == "")
+                                this.throwError("Attribute '" + this.attributeName + "' is missing a value (use =\"\" to denote empty attribute values).");
+                            // .. strip any quotes to get the value ...
+                            if (this.attributeValue.length >= 2 && (this.attributeValue.charAt(0) == "'" || this.attributeValue.charAt(0) == '"'))
+                                this.attributeValue = this.attributeValue.substring(1, this.attributeValue.length - 1);
+                        }
+                        // ... only an end bracket sequence ('>' or '/>') or whitespace should exist next at this point (white space if there's more attributes to follow)...
+                        // (note: quoted attribute values are delimiters, so there's no need to check the delimiter if so at this point)
+                        if (!isAttributeValueQuoted) {
+                            if (this.delimiter != '/>' && this.delimiter != '>' && this.delimiter.charCodeAt(0) > 32)
+                                this.throwError("A closing tag bracket or whitespace is missing after the attribute '" + this.attributeName + (this.attributeValue ? "=" + this.attributeValue : "") + "'");
+                            this.__reQueueDelimiter(); // (clears the text part and backs up the parts index for another read to properly close off the tag on the next read)
+                        }
+                        this.readMode = HTMLReaderModes.Attribute;
+                        return;
                     }
-                    // ... only an end bracket sequence ('>' or '/>') or whitespace should exist next at this point (white space if there's more attributes to follow)...
-                    // (note: quoted attribute values are delimiters, so there's no need to check the delimiter if so at this point)
-                    if (!isAttributeValueQuoted) {
-                        if (this.delimiter != '/>' && this.delimiter != '>' && this.delimiter.charCodeAt(0) > 32)
-                            this.throwError("A closing tag bracket or whitespace is missing after the attribute '" + this.attributeName + (this.attributeValue ? "=" + this.attributeValue : "") + "'");
-                        this.__reQueueDelimiter(); // (clears the text part and backs up the parts index for another read to properly close off the tag on the next read)
-                    }
-                    this.readMode = HTMLReaderModes.Attribute;
+                    // ... no attribute found, so expect '/>', '>', or grouped whitespace ...
+                    this.__skipWhiteSpace(); // (skip any whitespace so end brackets can be verified)
+                    if (this.delimiter != '/>' && this.delimiter != '>')
+                        this.throwError("A closing tag bracket is missing for tag '" + this.tagBracket + this.tagName + "'."); //??A valid attribute format (i.e. a, a=b, or a='b c', etc.) was expected
+                    this.readMode = HTMLReaderModes.EndOfTag;
                     return;
                 }
-                // ... no attribute found, so expect '/>', '>', or grouped whitespace ...
-                this.__skipWhiteSpace(); // (skip any whitespace so end brackets can be verified)
-                if (this.delimiter != '/>' && this.delimiter != '>')
-                    this.throwError("A closing tag bracket is missing for tag '" + this.tagBracket + this.tagName + "'."); //??A valid attribute format (i.e. a, a=b, or a='b c', etc.) was expected
-                this.readMode = HTMLReaderModes.EndOfTag;
-                return;
-            }
-            this.__skipWhiteSpace(); // (will be ignored if no whitespace exists, otherwise the next non-whitespace delimiter will become available)
-            // ... locate a valid tag or token ...
-            // (note: 'this.arrayIndex == 0' after reading from the delimiter side)
-            while (this.readMode != HTMLReaderModes.End) {
-                if (this.delimiter.charAt(0) == '<') {
-                    if (this.delimiter.charAt(1) == '/') {
-                        this.tagBracket = this.delimiter.substring(0, 2);
-                        this.tagName = this.delimiter.substring(2).toLocaleLowerCase();
-                        break;
+                this.__skipWhiteSpace(); // (will be ignored if no whitespace exists, otherwise the next non-whitespace delimiter will become available)
+                // ... locate a valid tag or token ...
+                // (note: 'this.arrayIndex == 0' after reading from the delimiter side)
+                while (this.readMode != HTMLReaderModes.End) {
+                    if (this.delimiter.charAt(0) == '<') {
+                        if (this.delimiter.charAt(1) == '/') {
+                            this.tagBracket = this.delimiter.substring(0, 2);
+                            this.tagName = this.delimiter.substring(2).toLocaleLowerCase();
+                            break;
+                        }
+                        else {
+                            this.tagBracket = this.delimiter.substring(0, 1);
+                            this.tagName = this.delimiter.substring(1).toLocaleLowerCase();
+                            break;
+                        }
                     }
-                    else {
-                        this.tagBracket = this.delimiter.substring(0, 1);
-                        this.tagName = this.delimiter.substring(1).toLocaleLowerCase();
-                        break;
-                    }
-                }
-                //else if (this.delimiter.length > 2 && this.delimiter.charAt(0) == '{' && this.delimiter.charAt(1) == '{') {
-                //    this.readMode = Markup.HTMLReaderModes.TemplateToken;
-                //    break;
-                //}
-                this.__readNext();
-            }
-            ;
-            if (this.readMode != HTMLReaderModes.End) {
-                this.runningText = this.getCurrentRunningText();
-                this.readMode = HTMLReaderModes.Tag;
-                // ... do a quick look ahead if on an end tag to verify closure ...
-                if (this.tagBracket == '</') {
+                    //else if (this.delimiter.length > 2 && this.delimiter.charAt(0) == '{' && this.delimiter.charAt(1) == '{') {
+                    //    this.readMode = Markup.HTMLReaderModes.TemplateToken;
+                    //    break;
+                    //}
                     this.__readNext();
-                    this.__skipWhiteSpace();
-                    if (this.delimiter != '>')
-                        this.throwError("Invalid end for tag '" + this.tagBracket + this.tagName + "' ('>' was expected).");
                 }
+                ;
+                if (this.readMode != HTMLReaderModes.End) {
+                    this.runningText = this.getCurrentRunningText();
+                    this.readMode = HTMLReaderModes.Tag;
+                    // ... do a quick look ahead if on an end tag to verify closure ...
+                    if (this.tagBracket == '</') {
+                        this.__readNext();
+                        this.__skipWhiteSpace();
+                        if (this.delimiter != '>')
+                            this.throwError("Invalid end for tag '" + this.tagBracket + this.tagName + "' ('>' was expected).");
+                    }
+                }
+                else
+                    this.tagName = "";
             }
-            else
-                this.tagName = "";
+            // -------------------------------------------------------------------------------------------------------------------
+            getCurrentRunningText() {
+                return this.html.substring(this.textStartIndex, this.textEndIndex);
+            }
+            getCurrentLineNumber() {
+                for (var ln = 1, i = this.textEndIndex - 1; i >= 0; --i)
+                    if (this.html.charCodeAt(i) == 10) // (LF at the very least; see https://en.wikipedia.org/wiki/Newline#Representations)
+                        ++ln;
+                return ln;
+            }
         }
         // -------------------------------------------------------------------------------------------------------------------
-        getCurrentRunningText() {
-            return this.html.substring(this.textStartIndex, this.textEndIndex);
-        }
-        getCurrentLineNumber() {
-            for (var ln = 1, i = this.textEndIndex - 1; i >= 0; --i)
-                if (this.html.charCodeAt(i) == 10) // (LF at the very least; see https://en.wikipedia.org/wiki/Newline#Representations)
-                    ++ln;
-            return ln;
-        }
-    }
-    // -------------------------------------------------------------------------------------------------------------------
-    HTMLReader.__splitRegEx = /<!(?:--[\S\s]*?--)?[\S\s]*?>|<script\b[\S\s]*?<\/script[\S\s]*?>|<style\b[\S\s]*?<\/style[\S\s]*?>|<\![A-Z0-9]+|<\/[A-Z0-9]+|<[A-Z0-9]+|\/?>|&[A-Z]+;?|&#[0-9]+;?|&#x[A-F0-9]+;?|(?:'[^<>]*?'|"[^<>]*?")|=|\s+|\{\{[^\{\}]*?\}\}/gi;
+        HTMLReader.__splitRegEx = /<!(?:--[\S\s]*?--)?[\S\s]*?>|<script\b[\S\s]*?<\/script[\S\s]*?>|<style\b[\S\s]*?<\/style[\S\s]*?>|<\![A-Z0-9]+|<\/[A-Z0-9]+|<[A-Z0-9]+|\/?>|&[A-Z]+;?|&#[0-9]+;?|&#x[A-F0-9]+;?|(?:'[^<>]*?'|"[^<>]*?")|=|\s+|\{\{[^\{\}]*?\}\}/gi;
+        return HTMLReader;
+    })();
     DS.HTMLReader = HTMLReader;
 })(DS || (DS = {}));
 var DS;
@@ -3326,612 +3368,615 @@ var DS;
       * and NOT the new object instance.  For this reason, you should call 'loadResource()' instead.
       * The method used to read a resource depends on client vs server sides, which is detected internally.
       */
-    class ResourceRequest {
-        /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
-        constructor(url, type, method, body, delay, async) {
-            /**
-               * The HTTP request method to use, such as "GET" (the default), "POST", "PUT", "DELETE", etc.  Ignored for non-HTTP(S) URLs.
-               */
-            this.method = "GET";
-            /** A delay, in ms, before sending the request. Defaults to 0 (none).
-             * The main purpose of this is to prevent synchronous execution. When 0, the request executes immediately when 'start()'
-             * is called. Setting this to anything greater than 0 will allow future configurations during the current thread execution.
-             */
-            this.delay = 0;
-            this.$__transformedData = DS.noop;
-            /** The response code from the XHR response. */
-            this.responseCode = 0; // (the response code returned)
-            /** The response code message from the XHR response. */
-            this.responseCodeMessage = ""; // (the response code message)
-            /** The current request status. */
-            this.status = DS.RequestStatuses.Pending;
-            /** Includes the current message and all previous messages. Use this to trace any silenced errors in the request process. */
-            this.messageLog = [];
-            /**
-             * If true (the default) then a '"_="+Date.now()' query item is added to make sure the browser never uses
-             * the cache. To change the variable used, set the 'cacheBustingVar' property also.
-             * Note: DreamSpace has its own caching that uses the local storage, where supported.
-             */
-            this.cacheBusting = ResourceRequest.cacheBusting;
+    let ResourceRequest = /** @class */ (() => {
+        class ResourceRequest {
+            /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
+            constructor(url, type, method, body, delay, async) {
+                /**
+                   * The HTTP request method to use, such as "GET" (the default), "POST", "PUT", "DELETE", etc.  Ignored for non-HTTP(S) URLs.
+                   */
+                this.method = "GET";
+                /** A delay, in ms, before sending the request. Defaults to 0 (none).
+                 * The main purpose of this is to prevent synchronous execution. When 0, the request executes immediately when 'start()'
+                 * is called. Setting this to anything greater than 0 will allow future configurations during the current thread execution.
+                 */
+                this.delay = 0;
+                this.$__transformedData = DS.noop;
+                /** The response code from the XHR response. */
+                this.responseCode = 0; // (the response code returned)
+                /** The response code message from the XHR response. */
+                this.responseCodeMessage = ""; // (the response code message)
+                /** The current request status. */
+                this.status = DS.RequestStatuses.Pending;
+                /** Includes the current message and all previous messages. Use this to trace any silenced errors in the request process. */
+                this.messageLog = [];
+                /**
+                 * If true (the default) then a '"_="+Date.now()' query item is added to make sure the browser never uses
+                 * the cache. To change the variable used, set the 'cacheBustingVar' property also.
+                 * Note: DreamSpace has its own caching that uses the local storage, where supported.
+                 */
+                this.cacheBusting = ResourceRequest.cacheBusting;
+                /** See the 'cacheBusting' property. */
+                this.cacheBustingVar = ResourceRequest.cacheBustingVar;
+                /** This is a list of all the callbacks waiting on the status of this request (such as on loaded or error).
+                * There's also an 'on finally' which should execute on success OR failure, regardless.
+                * For each entry, only ONE of any callback type will be set.
+                */
+                this._promiseChain = [];
+                this._promiseChainIndex = 0; // (the current position in the event chain)
+                this._parentCompletedCount = 0; // (when this equals the # of 'dependents', the all parent resources have loaded [just faster than iterating over them])
+                this._paused = false;
+                if (url === void 0 || url === null)
+                    throw "A resource URL is required.";
+                if (type === void 0)
+                    throw "The resource type is required.";
+                if (ResourceRequest._resourceRequestByURL[url])
+                    return ResourceRequest._resourceRequestByURL[url]; // (abandon this new object instance in favor of the one already existing and returned it)
+                this.url = url;
+                this.type = type;
+                this.body = body;
+                this.method = method;
+                this.delay = delay;
+                this.async = async;
+                this.$__index = ResourceRequest._resourceRequests.length;
+                ResourceRequest._resourceRequests.push(this);
+                ResourceRequest._resourceRequestByURL[this.url] = this;
+            }
             /** See the 'cacheBusting' property. */
-            this.cacheBustingVar = ResourceRequest.cacheBustingVar;
-            /** This is a list of all the callbacks waiting on the status of this request (such as on loaded or error).
-            * There's also an 'on finally' which should execute on success OR failure, regardless.
-            * For each entry, only ONE of any callback type will be set.
-            */
-            this._promiseChain = [];
-            this._promiseChainIndex = 0; // (the current position in the event chain)
-            this._parentCompletedCount = 0; // (when this equals the # of 'dependents', the all parent resources have loaded [just faster than iterating over them])
-            this._paused = false;
-            if (url === void 0 || url === null)
-                throw "A resource URL is required.";
-            if (type === void 0)
-                throw "The resource type is required.";
-            if (ResourceRequest._resourceRequestByURL[url])
-                return ResourceRequest._resourceRequestByURL[url]; // (abandon this new object instance in favor of the one already existing and returned it)
-            this.url = url;
-            this.type = type;
-            this.body = body;
-            this.method = method;
-            this.delay = delay;
-            this.async = async;
-            this.$__index = ResourceRequest._resourceRequests.length;
-            ResourceRequest._resourceRequests.push(this);
-            ResourceRequest._resourceRequestByURL[this.url] = this;
-        }
-        /** See the 'cacheBusting' property. */
-        static get cacheBustingVar() { return this._cacheBustingVar || '_v_'; }
-        ; // (note: ResourceInfo.cs uses this same default)
-        static set cacheBustingVar(value) { this._cacheBustingVar = DS.StringUtils.toString(value) || '_v_'; }
-        ;
-        /** The requested resource URL. If the URL string starts with '~/' then it becomes relative to the content type base path. */
-        get url() {
-            if (typeof this._url == 'string' && this._url.charAt(0) == "~") {
-                var _baseURL = DS.basePathFromResourceType(this.type);
-                return DS.Path.resolve(this._url, void 0, _baseURL);
+            static get cacheBustingVar() { return this._cacheBustingVar || '_v_'; }
+            ; // (note: ResourceInfo.cs uses this same default)
+            static set cacheBustingVar(value) { this._cacheBustingVar = DS.StringUtils.toString(value) || '_v_'; }
+            ;
+            /** The requested resource URL. If the URL string starts with '~/' then it becomes relative to the content type base path. */
+            get url() {
+                if (typeof this._url == 'string' && this._url.charAt(0) == "~") {
+                    var _baseURL = DS.basePathFromResourceType(this.type);
+                    return DS.Path.resolve(this._url, void 0, _baseURL);
+                }
+                return this._url;
             }
-            return this._url;
-        }
-        set url(value) { this._url = value; }
-        /** This gets the transformed response as a result of callback handlers (if any).
-          * If no transformations were made, then the value in 'response' is returned as is.
-          */
-        get transformedResponse() {
-            return this.$__transformedData === DS.noop ? this.response : this.$__transformedData;
-        }
-        /**
-         * A progress/error message related to the status (may not be the same as the response message).
-         * Setting this property sets the local message and updates the local message log. Make sure to set 'this.status' first before setting a message.
-         */
-        get message() {
-            return this._message;
-        }
-        set message(value) {
-            this._message = value;
-            this.messageLog.push(this._message);
-            if (this.status == DS.RequestStatuses.Error)
-                DS.error("ResourceRequest (" + this.url + ")", this._message, this, false); // (send resource loading error messages to the console to aid debugging)
-            else
-                DS.log("ResourceRequest (" + this.url + ")", this._message, DS.LogTypes.Normal, this);
-        }
-        _queueDoNext(data) {
-            setTimeout(() => {
-                // ... before this, fire any handlers that would execute before this ...
-                this._doNext();
-            }, 0);
-        } // (simulate an async response, in case more handlers need to be added next)
-        _queueDoError() { setTimeout(() => { this._doError(); }, 0); } // (simulate an async response, in case more handlers need to be added next)
-        _requeueHandlersIfNeeded() {
-            if (this.status == DS.RequestStatuses.Error)
-                this._queueDoError();
-            else if (this.status >= DS.RequestStatuses.Waiting) {
-                this._queueDoNext(this.response);
+            set url(value) { this._url = value; }
+            /** This gets the transformed response as a result of callback handlers (if any).
+              * If no transformations were made, then the value in 'response' is returned as is.
+              */
+            get transformedResponse() {
+                return this.$__transformedData === DS.noop ? this.response : this.$__transformedData;
             }
-            // ... else, not needed, as the chain is still being traversed, so anything added will get run as expected ...
-        }
-        /** Triggers a success or error callback after the resource loads, or fails to load. */
-        then(success, error) {
-            if (success !== void 0 && success !== null && typeof success != 'function' || error !== void 0 && error !== null && typeof error !== 'function')
-                throw "A handler function given is not a function.";
-            else {
-                this._promiseChain.push({ onLoaded: success, onError: error });
-                this._requeueHandlersIfNeeded();
+            /**
+             * A progress/error message related to the status (may not be the same as the response message).
+             * Setting this property sets the local message and updates the local message log. Make sure to set 'this.status' first before setting a message.
+             */
+            get message() {
+                return this._message;
             }
-            if (this.status == DS.RequestStatuses.Waiting || this.status == DS.RequestStatuses.Ready) {
-                this.status = DS.RequestStatuses.Loaded; // (back up)
-                this.message = "New 'then' handler added.";
+            set message(value) {
+                this._message = value;
+                this.messageLog.push(this._message);
+                if (this.status == DS.RequestStatuses.Error)
+                    DS.error("ResourceRequest (" + this.url + ")", this._message, this, false); // (send resource loading error messages to the console to aid debugging)
+                else
+                    DS.log("ResourceRequest (" + this.url + ")", this._message, DS.LogTypes.Normal, this);
             }
-            return this;
-        }
-        /** Adds another request and makes it dependent on the current 'parent' request.  When all parent requests have completed,
-          * the dependant request fires its 'onReady' event.
-          * Note: The given request is returned, and not the current context, so be sure to complete configurations before hand.
-          */
-        include(request) {
-            if (!request._parentRequests)
-                request._parentRequests = [];
-            if (!this._dependants)
-                this._dependants = [];
-            request._parentRequests.push(this);
-            this._dependants.push(request);
-            return request;
-        }
-        /** Returns a promise that hooks into this request. This is provided to support the async/await semantics.
-         * When the 'ready()' or 'catch' events fire, the promise is given the resource request instance in both cases.
-         * On success the value should be in either the 'transformedResponse' or 'response' properties of the request instance. */
-        asPromise() { return new Promise((res, rej) => { this.ready((h) => { res(h); }); this.catch((h) => { res(h); }); }); }
-        /**
-         * Add a call-back handler for when the request completes successfully.
-         * This event is triggered after the resource successfully loads and all callbacks in the promise chain get called.
-         * @param handler
-         */
-        ready(handler) {
-            if (typeof handler == 'function') {
-                if (!this._onReady)
-                    this._onReady = [];
-                this._onReady.push(handler);
-                this._requeueHandlersIfNeeded();
+            _queueDoNext(data) {
+                setTimeout(() => {
+                    // ... before this, fire any handlers that would execute before this ...
+                    this._doNext();
+                }, 0);
+            } // (simulate an async response, in case more handlers need to be added next)
+            _queueDoError() { setTimeout(() => { this._doError(); }, 0); } // (simulate an async response, in case more handlers need to be added next)
+            _requeueHandlersIfNeeded() {
+                if (this.status == DS.RequestStatuses.Error)
+                    this._queueDoError();
+                else if (this.status >= DS.RequestStatuses.Waiting) {
+                    this._queueDoNext(this.response);
+                }
+                // ... else, not needed, as the chain is still being traversed, so anything added will get run as expected ...
             }
-            else
-                throw "Handler is not a function.";
-            return this;
-        }
-        /** Adds a hook into the resource load progress event. */
-        while(progressHandler) {
-            if (typeof progressHandler == 'function') {
-                if (!this._onProgress)
-                    this._onProgress = [];
-                this._onProgress.push(progressHandler);
-                this._requeueHandlersIfNeeded();
+            /** Triggers a success or error callback after the resource loads, or fails to load. */
+            then(success, error) {
+                if (success !== void 0 && success !== null && typeof success != 'function' || error !== void 0 && error !== null && typeof error !== 'function')
+                    throw "A handler function given is not a function.";
+                else {
+                    this._promiseChain.push({ onLoaded: success, onError: error });
+                    this._requeueHandlersIfNeeded();
+                }
+                if (this.status == DS.RequestStatuses.Waiting || this.status == DS.RequestStatuses.Ready) {
+                    this.status = DS.RequestStatuses.Loaded; // (back up)
+                    this.message = "New 'then' handler added.";
+                }
+                return this;
             }
-            else
-                throw "Handler is not a function.";
-            return this;
-        }
-        /** Call this anytime while loading is in progress to terminate the request early. An error event will be triggered as well. */
-        abort() {
-            if (this._xhr.readyState > XMLHttpRequest.UNSENT && this._xhr.readyState < XMLHttpRequest.DONE) {
-                this._xhr.abort();
+            /** Adds another request and makes it dependent on the current 'parent' request.  When all parent requests have completed,
+              * the dependant request fires its 'onReady' event.
+              * Note: The given request is returned, and not the current context, so be sure to complete configurations before hand.
+              */
+            include(request) {
+                if (!request._parentRequests)
+                    request._parentRequests = [];
+                if (!this._dependants)
+                    this._dependants = [];
+                request._parentRequests.push(this);
+                this._dependants.push(request);
+                return request;
             }
-        }
-        /**
-         * Provide a handler to catch any errors from this request.
-         */
-        catch(errorHandler) {
-            if (typeof errorHandler == 'function') {
-                this._promiseChain.push({ onError: errorHandler });
-                this._requeueHandlersIfNeeded();
+            /** Returns a promise that hooks into this request. This is provided to support the async/await semantics.
+             * When the 'ready()' or 'catch' events fire, the promise is given the resource request instance in both cases.
+             * On success the value should be in either the 'transformedResponse' or 'response' properties of the request instance. */
+            asPromise() { return new Promise((res, rej) => { this.ready((h) => { res(h); }); this.catch((h) => { res(h); }); }); }
+            /**
+             * Add a call-back handler for when the request completes successfully.
+             * This event is triggered after the resource successfully loads and all callbacks in the promise chain get called.
+             * @param handler
+             */
+            ready(handler) {
+                if (typeof handler == 'function') {
+                    if (!this._onReady)
+                        this._onReady = [];
+                    this._onReady.push(handler);
+                    this._requeueHandlersIfNeeded();
+                }
+                else
+                    throw "Handler is not a function.";
+                return this;
             }
-            else
-                throw "Handler is not a function.";
-            return this;
-        }
-        /**
-         * Provide a handler which should execute on success OR failure, regardless.
-         */
-        finally(cleanupHandler) {
-            if (typeof cleanupHandler == 'function') {
-                this._promiseChain.push({ onFinally: cleanupHandler });
-                this._requeueHandlersIfNeeded();
+            /** Adds a hook into the resource load progress event. */
+            while(progressHandler) {
+                if (typeof progressHandler == 'function') {
+                    if (!this._onProgress)
+                        this._onProgress = [];
+                    this._onProgress.push(progressHandler);
+                    this._requeueHandlersIfNeeded();
+                }
+                else
+                    throw "Handler is not a function.";
+                return this;
             }
-            else
-                throw "Handler is not a function.";
-            return this;
-        }
-        /**
-           * Starts loading the current resource.  If the current resource has dependencies, they are triggered to load first (in proper
-           * order).  Regardless of the start order, all scripts are loaded in parallel.
-           * Note: This call queues the start request in 'async' mode, which begins only after the current script execution is completed.
-           * @param {string} method An optional method to override the default request method set in the 'method' property on this request instance.
-           * @param {string} body Optional payload data to send, which overrides any value set in the 'payload' property on this request instance.
-           * @param {string} username Optional username value, instead of storing the username in the instance.
-           * @param {string} password Optional password value, instead of storing the password in the instance.
-           */
-        start(method, body, username, password) {
-            if (this.async || this.delay)
-                setTimeout(() => { this._Start(method, body, username, password); }, this.delay);
-            else
-                this._Start();
-            return this;
-        }
-        _Start(_method, _body, _username, _password) {
-            // ... start at the top most parent first, and work down ...
-            if (this._parentRequests)
-                for (var i = 0, n = this._parentRequests.length; i < n; ++i)
-                    this._parentRequests[i].start();
-            var url = this.url;
-            var xhr = this._xhr;
-            function loaded(status, statusText, response, responseType) {
-                if (status == 200 || status == 304) {
-                    this.response = response;
-                    this.status == DS.RequestStatuses.Loaded;
-                    this.message = status == 304 ? "Loading completed (from browser cache)." : "Loading completed.";
-                    // ... check if the expected mime type matches, otherwise throw an error to be safe ...
-                    if (this.type && responseType && this.type != responseType) {
-                        this.setError("Resource type mismatch: expected type was '" + this.type + "', but received '" + responseType + "' (XHR type '" + xhr.responseType + "').\r\n");
+            /** Call this anytime while loading is in progress to terminate the request early. An error event will be triggered as well. */
+            abort() {
+                if (this._xhr.readyState > XMLHttpRequest.UNSENT && this._xhr.readyState < XMLHttpRequest.DONE) {
+                    this._xhr.abort();
+                }
+            }
+            /**
+             * Provide a handler to catch any errors from this request.
+             */
+            catch(errorHandler) {
+                if (typeof errorHandler == 'function') {
+                    this._promiseChain.push({ onError: errorHandler });
+                    this._requeueHandlersIfNeeded();
+                }
+                else
+                    throw "Handler is not a function.";
+                return this;
+            }
+            /**
+             * Provide a handler which should execute on success OR failure, regardless.
+             */
+            finally(cleanupHandler) {
+                if (typeof cleanupHandler == 'function') {
+                    this._promiseChain.push({ onFinally: cleanupHandler });
+                    this._requeueHandlersIfNeeded();
+                }
+                else
+                    throw "Handler is not a function.";
+                return this;
+            }
+            /**
+               * Starts loading the current resource.  If the current resource has dependencies, they are triggered to load first (in proper
+               * order).  Regardless of the start order, all scripts are loaded in parallel.
+               * Note: This call queues the start request in 'async' mode, which begins only after the current script execution is completed.
+               * @param {string} method An optional method to override the default request method set in the 'method' property on this request instance.
+               * @param {string} body Optional payload data to send, which overrides any value set in the 'payload' property on this request instance.
+               * @param {string} username Optional username value, instead of storing the username in the instance.
+               * @param {string} password Optional password value, instead of storing the password in the instance.
+               */
+            start(method, body, username, password) {
+                if (this.async || this.delay)
+                    setTimeout(() => { this._Start(method, body, username, password); }, this.delay);
+                else
+                    this._Start();
+                return this;
+            }
+            _Start(_method, _body, _username, _password) {
+                // ... start at the top most parent first, and work down ...
+                if (this._parentRequests)
+                    for (var i = 0, n = this._parentRequests.length; i < n; ++i)
+                        this._parentRequests[i].start();
+                var url = this.url;
+                var xhr = this._xhr;
+                function loaded(status, statusText, response, responseType) {
+                    if (status == 200 || status == 304) {
+                        this.response = response;
+                        this.status == DS.RequestStatuses.Loaded;
+                        this.message = status == 304 ? "Loading completed (from browser cache)." : "Loading completed.";
+                        // ... check if the expected mime type matches, otherwise throw an error to be safe ...
+                        if (this.type && responseType && this.type != responseType) {
+                            this.setError("Resource type mismatch: expected type was '" + this.type + "', but received '" + responseType + "' (XHR type '" + xhr.responseType + "').\r\n");
+                        }
+                        else {
+                            if (!DS.isDebugging && typeof DS.global.Storage !== void 0)
+                                try {
+                                    DS.global.localStorage.setItem("version", DS.version);
+                                    DS.global.localStorage.setItem("appVersion", DS.getAppVersion());
+                                    DS.global.localStorage.setItem("resource:" + this.url, this.response);
+                                    this.message = "Resource cached in local storage.";
+                                }
+                                catch (e) {
+                                    // .. failed: out of space? ...
+                                    // TODO: consider saving to web SQL as well, or on failure (as a backup; perhaps create a storage class with this support). //?
+                                }
+                            else
+                                this.message = "Resource not cached in local storage because of debug mode. Release mode will use local storage to help survive clearing DreamSpace files when temporary content files are deleted.";
+                            this._doNext();
+                        }
                     }
                     else {
-                        if (!DS.isDebugging && typeof DS.global.Storage !== void 0)
-                            try {
-                                DS.global.localStorage.setItem("version", DS.version);
-                                DS.global.localStorage.setItem("appVersion", DS.getAppVersion());
-                                DS.global.localStorage.setItem("resource:" + this.url, this.response);
-                                this.message = "Resource cached in local storage.";
-                            }
-                            catch (e) {
-                                // .. failed: out of space? ...
-                                // TODO: consider saving to web SQL as well, or on failure (as a backup; perhaps create a storage class with this support). //?
-                            }
-                        else
-                            this.message = "Resource not cached in local storage because of debug mode. Release mode will use local storage to help survive clearing DreamSpace files when temporary content files are deleted.";
-                        this._doNext();
+                        this.setError("There was a problem loading the resource (status code " + status + ": " + statusText + ").\r\n");
                     }
                 }
-                else {
-                    this.setError("There was a problem loading the resource (status code " + status + ": " + statusText + ").\r\n");
+                ;
+                if (this.status == DS.RequestStatuses.Pending) {
+                    this.status = DS.RequestStatuses.Loading; // (do this first to protect against any possible cyclical calls)
+                    this.message = "Loading resource ...";
+                    // ... this request has not been started yet; attempt to load the resource ...
+                    // ... 1. see first if this file is cached in the web storage, then load it from there instead ...
+                    //    (ignore the local caching if in debug or the versions are different)
+                    if (!DS.isDebugging && typeof DS.global.Storage !== void 0)
+                        try {
+                            var currentAppVersion = DS.getAppVersion();
+                            var versionInLocalStorage = DS.global.localStorage.getItem("version");
+                            var appVersionInLocalStorage = DS.global.localStorage.getItem("appVersion");
+                            if (versionInLocalStorage && appVersionInLocalStorage && DS.version == versionInLocalStorage && currentAppVersion == appVersionInLocalStorage) {
+                                // ... all versions match, just pull from local storage (faster) ...
+                                this.response = DS.global.localStorage.getItem("resource:" + this.url); // (should return 'null' if not found)
+                                if (this.response !== null && this.response !== void 0) {
+                                    this.status = DS.RequestStatuses.Loaded;
+                                    this._doNext();
+                                    return;
+                                }
+                            }
+                        }
+                        catch (e) {
+                            // ... not supported? ...
+                        }
+                    // ... 2. check web SQL for the resource ...
+                    // TODO: Consider Web SQL Database as well. (though not supported by IE yet, as usual, but could help greatly on the others) //?
+                    // ... 3. if not in web storage, try loading from a DreamSpace core system, if available ...
+                    // TODO: Message DreamSpace core system for resource data. // TODO: need to build the bridge class first.
+                    // ... next, determine the best way to load the resource ...
+                    if (XMLHttpRequest) {
+                        if (!this._xhr) {
+                            this._xhr = isNode ? new (require("xhr2"))() : new XMLHttpRequest();
+                            // ... this script is not cached, so load it ...
+                            xhr.onreadystatechange = () => {
+                                switch (xhr.readyState) {
+                                    case XMLHttpRequest.UNSENT: break;
+                                    case XMLHttpRequest.OPENED:
+                                        this.message = "Opened connection ...";
+                                        break;
+                                    case XMLHttpRequest.HEADERS_RECEIVED:
+                                        this.message = "Headers received ...";
+                                        break;
+                                    case XMLHttpRequest.LOADING: break; // (this will be handled by the progress event)
+                                    case XMLHttpRequest.DONE:
+                                        loaded(xhr.status, xhr.statusText, xhr.response, xhr.getResponseHeader('content-type'));
+                                        break;
+                                }
+                            };
+                            xhr.onerror = (ev) => { this.setError(void 0, ev); this._doError(); };
+                            xhr.onabort = () => { this.setError("Request aborted."); };
+                            xhr.ontimeout = () => { this.setError("Request timed out."); };
+                            xhr.onprogress = (evt) => {
+                                this.message = Math.round(evt.loaded / evt.total * 100) + "% loaded ...";
+                                if (this._onProgress && this._onProgress.length)
+                                    this._doOnProgress(evt.loaded / evt.total * 100);
+                            };
+                            // (note: all event 'on...' properties only available in IE10+)
+                        }
+                    }
+                }
+                else // (this request was already started)
+                    return;
+                if (xhr && xhr.readyState != 0)
+                    xhr.abort(); // (abort existing, just in case)
+                try {
+                    // ... check if we need to bust the cache ...
+                    if (this.cacheBusting) {
+                        var bustVar = this.cacheBustingVar;
+                        if (bustVar.indexOf(" ") >= 0)
+                            DS.log("start()", "There is a space character in the cache busting query name for resource '" + url + "'.", DS.LogTypes.Warning);
+                    }
+                    if (!_method)
+                        _method = this.method || "GET";
+                    xhr.open(_method, url, this.async, _username || this.username || void 0, _password || this.password || void 0);
+                }
+                catch (ex) {
+                    DS.error("start()", "Failed to load resource from URL '" + url + "': " + (ex.message || ex), this);
+                }
+                try {
+                    var payload = _body || this.body;
+                    if (typeof payload == 'object' && payload.__proto__ == Object.prototype) {
+                        // (can't send object literals! convert to something else ...)
+                        if (_method == 'GET') {
+                            var q = new DS.Query(payload);
+                            payload = q.toString(false);
+                        }
+                        else {
+                            if (this.type == DS.ResourceTypes.Application_JSON) {
+                                if (typeof payload == 'object')
+                                    payload = JSON.stringify(payload);
+                                xhr.setRequestHeader("Content-Type", DS.ResourceTypes.Application_JSON + ";charset=UTF-8");
+                            }
+                            var formData = new FormData(); // TODO: Test if "multipart/form-data" is needed.
+                            for (var p in payload)
+                                formData.append(p, payload[p]);
+                            payload = formData;
+                        }
+                    }
+                    xhr.send(payload);
+                }
+                catch (ex) {
+                    DS.error("start()", "Failed to send request to endpoint for URL '" + url + "': " + (ex.message || ex), this);
+                }
+                //?if (!this.async && (xhr.status)) doSuccess();
+            }
+            /** Upon return, the 'then' or 'ready' event chain will pause until 'continue()' is called. */
+            pause() {
+                if (this.status >= DS.RequestStatuses.Pending && this.status < DS.RequestStatuses.Ready
+                    || this.status == DS.RequestStatuses.Ready && this._onReady.length)
+                    this._paused = true;
+                return this;
+            }
+            /** After calling 'pause()', use this function to re-queue the 'then' or 'ready' even chain for continuation.
+              * Note: This queues on a timer with a 0 ms delay, and does not call any events before returning to the caller.
+              */
+            continue() {
+                if (this._paused) {
+                    this._paused = false;
+                    this._requeueHandlersIfNeeded();
+                }
+                return this;
+            }
+            _doOnProgress(percent) {
+                // ... notify any handlers as well ...
+                if (this._onProgress) {
+                    for (var i = 0, n = this._onProgress.length; i < n; ++i)
+                        try {
+                            var cb = this._onProgress[i];
+                            if (cb)
+                                cb.call(this, this);
+                        }
+                        catch (e) {
+                            this._onProgress[i] = null; // (won't be called again)
+                            this.setError("'on progress' callback #" + i + " has thrown an error:", e);
+                            // ... do nothing, not important ...
+                        }
                 }
             }
-            ;
-            if (this.status == DS.RequestStatuses.Pending) {
-                this.status = DS.RequestStatuses.Loading; // (do this first to protect against any possible cyclical calls)
-                this.message = "Loading resource ...";
-                // ... this request has not been started yet; attempt to load the resource ...
-                // ... 1. see first if this file is cached in the web storage, then load it from there instead ...
-                //    (ignore the local caching if in debug or the versions are different)
-                if (!DS.isDebugging && typeof DS.global.Storage !== void 0)
-                    try {
-                        var currentAppVersion = DS.getAppVersion();
-                        var versionInLocalStorage = DS.global.localStorage.getItem("version");
-                        var appVersionInLocalStorage = DS.global.localStorage.getItem("appVersion");
-                        if (versionInLocalStorage && appVersionInLocalStorage && DS.version == versionInLocalStorage && currentAppVersion == appVersionInLocalStorage) {
-                            // ... all versions match, just pull from local storage (faster) ...
-                            this.response = DS.global.localStorage.getItem("resource:" + this.url); // (should return 'null' if not found)
-                            if (this.response !== null && this.response !== void 0) {
-                                this.status = DS.RequestStatuses.Loaded;
-                                this._doNext();
+            setError(message, error) {
+                if (error) {
+                    var errMsg = DS.getErrorMessage(error);
+                    if (errMsg) {
+                        if (message)
+                            message += " \r\n";
+                        message += errMsg;
+                    }
+                }
+                this.status = DS.RequestStatuses.Error;
+                this.message = message; // (automatically adds to 'this.messages' and writes to the console)
+            }
+            _doNext() {
+                if (this.status == DS.RequestStatuses.Error) {
+                    this._doError(); // (still in an error state, so pass on to trigger error handlers in case new ones were added)
+                    return;
+                }
+                if (this._onProgress && this._onProgress.length) {
+                    this._doOnProgress(100);
+                    this._onProgress.length = 0;
+                }
+                for (var n = this._promiseChain.length; this._promiseChainIndex < n; ++this._promiseChainIndex) {
+                    if (this._paused)
+                        return;
+                    var handlers = this._promiseChain[this._promiseChainIndex]; // (get all the handlers waiting for the result of this request)
+                    if (handlers.onLoaded) {
+                        try {
+                            var data = handlers.onLoaded.call(this, this, this.transformedResponse); // (call the handler with the current data and get the resulting data, if any)
+                        }
+                        catch (e) {
+                            this.setError("An 'onLoaded' handler failed.", e);
+                            ++this._promiseChainIndex; // (the success callback failed, so trigger the error chain starting at next index)
+                            this._doError();
+                            return;
+                        }
+                        if (typeof data === 'object' && data instanceof ResourceRequest) {
+                            // ... a 'LoadRequest' was returned (see end of post http://goo.gl/9HeBrN#20715224, and also http://goo.gl/qKpcR3), so check it's status ...
+                            if (data.status == DS.RequestStatuses.Error) {
+                                this.setError("Rejected request returned from 'onLoaded' handler.");
+                                ++this._promiseChainIndex;
+                                this._doError(); // (cascade the error)
                                 return;
                             }
-                        }
-                    }
-                    catch (e) {
-                        // ... not supported? ...
-                    }
-                // ... 2. check web SQL for the resource ...
-                // TODO: Consider Web SQL Database as well. (though not supported by IE yet, as usual, but could help greatly on the others) //?
-                // ... 3. if not in web storage, try loading from a DreamSpace core system, if available ...
-                // TODO: Message DreamSpace core system for resource data. // TODO: need to build the bridge class first.
-                // ... next, determine the best way to load the resource ...
-                if (XMLHttpRequest) {
-                    if (!this._xhr) {
-                        this._xhr = isNode ? new (require("xhr2"))() : new XMLHttpRequest();
-                        // ... this script is not cached, so load it ...
-                        xhr.onreadystatechange = () => {
-                            switch (xhr.readyState) {
-                                case XMLHttpRequest.UNSENT: break;
-                                case XMLHttpRequest.OPENED:
-                                    this.message = "Opened connection ...";
-                                    break;
-                                case XMLHttpRequest.HEADERS_RECEIVED:
-                                    this.message = "Headers received ...";
-                                    break;
-                                case XMLHttpRequest.LOADING: break; // (this will be handled by the progress event)
-                                case XMLHttpRequest.DONE:
-                                    loaded(xhr.status, xhr.statusText, xhr.response, xhr.getResponseHeader('content-type'));
-                                    break;
+                            else {
+                                // ... get the data from the request object ...
+                                var newResReq = data;
+                                if (newResReq.status >= DS.RequestStatuses.Ready) {
+                                    if (newResReq === this)
+                                        continue; // ('self' [this] was returned, so go directly to the next item)
+                                    data = newResReq.transformedResponse; // (the data is ready, so read now)
+                                }
+                                else { // (loading is started, or still in progress, so wait; we simply hook into the request object to get notified when the data is ready)
+                                    newResReq.ready((sender) => { this.$__transformedData = sender.transformedResponse; this._doNext(); })
+                                        .catch((sender) => { this.setError("Resource returned from next handler has failed to load.", sender); this._doError(); });
+                                    return;
+                                }
                             }
-                        };
-                        xhr.onerror = (ev) => { this.setError(void 0, ev); this._doError(); };
-                        xhr.onabort = () => { this.setError("Request aborted."); };
-                        xhr.ontimeout = () => { this.setError("Request timed out."); };
-                        xhr.onprogress = (evt) => {
-                            this.message = Math.round(evt.loaded / evt.total * 100) + "% loaded ...";
-                            if (this._onProgress && this._onProgress.length)
-                                this._doOnProgress(evt.loaded / evt.total * 100);
-                        };
-                        // (note: all event 'on...' properties only available in IE10+)
-                    }
-                }
-            }
-            else // (this request was already started)
-                return;
-            if (xhr && xhr.readyState != 0)
-                xhr.abort(); // (abort existing, just in case)
-            try {
-                // ... check if we need to bust the cache ...
-                if (this.cacheBusting) {
-                    var bustVar = this.cacheBustingVar;
-                    if (bustVar.indexOf(" ") >= 0)
-                        DS.log("start()", "There is a space character in the cache busting query name for resource '" + url + "'.", DS.LogTypes.Warning);
-                }
-                if (!_method)
-                    _method = this.method || "GET";
-                xhr.open(_method, url, this.async, _username || this.username || void 0, _password || this.password || void 0);
-            }
-            catch (ex) {
-                DS.error("start()", "Failed to load resource from URL '" + url + "': " + (ex.message || ex), this);
-            }
-            try {
-                var payload = _body || this.body;
-                if (typeof payload == 'object' && payload.__proto__ == Object.prototype) {
-                    // (can't send object literals! convert to something else ...)
-                    if (_method == 'GET') {
-                        var q = new DS.Query(payload);
-                        payload = q.toString(false);
-                    }
-                    else {
-                        if (this.type == DS.ResourceTypes.Application_JSON) {
-                            if (typeof payload == 'object')
-                                payload = JSON.stringify(payload);
-                            xhr.setRequestHeader("Content-Type", DS.ResourceTypes.Application_JSON + ";charset=UTF-8");
                         }
-                        var formData = new FormData(); // TODO: Test if "multipart/form-data" is needed.
-                        for (var p in payload)
-                            formData.append(p, payload[p]);
-                        payload = formData;
+                        if (data !== void 0)
+                            this.$__transformedData = data;
+                    }
+                    else if (handlers.onFinally) {
+                        try {
+                            handlers.onFinally.call(this);
+                        }
+                        catch (e) {
+                            this.setError("Cleanup handler failed.", e);
+                            ++this._promiseChainIndex; // (the finally callback failed, so trigger the error chain starting at next index)
+                            this._doError();
+                        }
                     }
                 }
-                xhr.send(payload);
+                this._promiseChain.length = 0;
+                this._promiseChainIndex = 0;
+                // ... finished: now trigger any "ready" handlers ...
+                if (this.status < DS.RequestStatuses.Waiting)
+                    this.status = DS.RequestStatuses.Waiting; // (default to this next before being 'ready')
+                this._doReady(); // (this triggers in dependency order)
             }
-            catch (ex) {
-                DS.error("start()", "Failed to send request to endpoint for URL '" + url + "': " + (ex.message || ex), this);
-            }
-            //?if (!this.async && (xhr.status)) doSuccess();
-        }
-        /** Upon return, the 'then' or 'ready' event chain will pause until 'continue()' is called. */
-        pause() {
-            if (this.status >= DS.RequestStatuses.Pending && this.status < DS.RequestStatuses.Ready
-                || this.status == DS.RequestStatuses.Ready && this._onReady.length)
-                this._paused = true;
-            return this;
-        }
-        /** After calling 'pause()', use this function to re-queue the 'then' or 'ready' even chain for continuation.
-          * Note: This queues on a timer with a 0 ms delay, and does not call any events before returning to the caller.
-          */
-        continue() {
-            if (this._paused) {
-                this._paused = false;
-                this._requeueHandlersIfNeeded();
-            }
-            return this;
-        }
-        _doOnProgress(percent) {
-            // ... notify any handlers as well ...
-            if (this._onProgress) {
-                for (var i = 0, n = this._onProgress.length; i < n; ++i)
-                    try {
-                        var cb = this._onProgress[i];
-                        if (cb)
-                            cb.call(this, this);
-                    }
-                    catch (e) {
-                        this._onProgress[i] = null; // (won't be called again)
-                        this.setError("'on progress' callback #" + i + " has thrown an error:", e);
-                        // ... do nothing, not important ...
-                    }
-            }
-        }
-        setError(message, error) {
-            if (error) {
-                var errMsg = DS.getErrorMessage(error);
-                if (errMsg) {
-                    if (message)
-                        message += " \r\n";
-                    message += errMsg;
-                }
-            }
-            this.status = DS.RequestStatuses.Error;
-            this.message = message; // (automatically adds to 'this.messages' and writes to the console)
-        }
-        _doNext() {
-            if (this.status == DS.RequestStatuses.Error) {
-                this._doError(); // (still in an error state, so pass on to trigger error handlers in case new ones were added)
-                return;
-            }
-            if (this._onProgress && this._onProgress.length) {
-                this._doOnProgress(100);
-                this._onProgress.length = 0;
-            }
-            for (var n = this._promiseChain.length; this._promiseChainIndex < n; ++this._promiseChainIndex) {
+            _doReady() {
                 if (this._paused)
                     return;
-                var handlers = this._promiseChain[this._promiseChainIndex]; // (get all the handlers waiting for the result of this request)
-                if (handlers.onLoaded) {
-                    try {
-                        var data = handlers.onLoaded.call(this, this, this.transformedResponse); // (call the handler with the current data and get the resulting data, if any)
+                if (this.status < DS.RequestStatuses.Waiting)
+                    return; // (the 'ready' event must only trigger after the resource loads, AND all handlers have been called)
+                // ... check parent dependencies first ...
+                if (this.status == DS.RequestStatuses.Waiting)
+                    if (!this._parentRequests || !this._parentRequests.length) {
+                        this.status = DS.RequestStatuses.Ready; // (no parent resource dependencies, so this resource is 'ready' by default)
+                        this.message = "Resource has no dependencies, and is now ready.";
                     }
-                    catch (e) {
-                        this.setError("An 'onLoaded' handler failed.", e);
-                        ++this._promiseChainIndex; // (the success callback failed, so trigger the error chain starting at next index)
-                        this._doError();
+                    else // ...need to determine if all parent (dependent) resources are completed first ...
+                     if (this._parentCompletedCount == this._parentRequests.length) {
+                        this.status = DS.RequestStatuses.Ready; // (all parent resource dependencies are now 'ready')
+                        this.message = "*** All dependencies for resource have loaded, and are now ready. ***";
+                    }
+                    else {
+                        this.message = "Resource is waiting on dependencies (" + this._parentCompletedCount + "/" + this._parentRequests.length + " ready so far)...";
+                        return; // (nothing more to do yet)
+                    }
+                // ... call the local 'onReady' event, and then trigger the call on the children as required.
+                if (this.status == DS.RequestStatuses.Ready) {
+                    if (this._onReady && this._onReady.length) {
+                        try {
+                            for (var i = 0, n = this._onReady.length; i < n; ++i) {
+                                this._onReady[i].call(this, this);
+                                if (this.status < DS.RequestStatuses.Ready)
+                                    return; // (a callback changed state so stop at this point as we are no longer ready!)
+                            }
+                            if (this._paused)
+                                return;
+                        }
+                        catch (e) {
+                            this.setError("Error in ready handler.", e);
+                            if (DS.isDebugging && (this.type == DS.ResourceTypes.Application_Script || this.type == DS.ResourceTypes.Application_ECMAScript))
+                                throw e; // (propagate script errors to the browser for debuggers, if any)
+                        }
+                    }
+                    if (this._dependants)
+                        for (var i = 0, n = this._dependants.length; i < n; ++i) {
+                            ++this._dependants[i]._parentCompletedCount;
+                            this._dependants[i]._doReady(); // (notify all children that this resource is now 'ready' for use [all events have been run, as opposed to just being loaded])
+                            if (this.status < DS.RequestStatuses.Ready)
+                                return; // (something changed the "Ready" state so abort!)
+                        }
+                }
+            }
+            _doError() {
+                if (this._paused)
+                    return;
+                if (this.status != DS.RequestStatuses.Error) {
+                    this._doNext(); // (still in an error state, so pass on to trigger error handlers in case new ones were added)
+                    return;
+                }
+                for (var n = this._promiseChain.length; this._promiseChainIndex < n; ++this._promiseChainIndex) {
+                    if (this._paused)
+                        return;
+                    var handlers = this._promiseChain[this._promiseChainIndex];
+                    if (handlers.onError) {
+                        try {
+                            var newData = handlers.onError.call(this, this, this.message); // (this handler should "fix" the situation and return valid data)
+                        }
+                        catch (e) {
+                            this.setError("Error handler failed.", e);
+                        }
+                        if (typeof newData === 'object' && newData instanceof ResourceRequest) {
+                            // ... a 'LoadRequest' was returned (see end of post http://goo.gl/9HeBrN#20715224, and also http://goo.gl/qKpcR3), so check it's status ...
+                            if (newData.status == DS.RequestStatuses.Error)
+                                return; // (no correction made, still in error; terminate the event chain here)
+                            else {
+                                var newResReq = newData;
+                                if (newResReq.status >= DS.RequestStatuses.Ready)
+                                    newData = newResReq.transformedResponse;
+                                else { // (loading is started, or still in progress, so wait)
+                                    newResReq.ready((sender) => { this.$__transformedData = sender.transformedResponse; this._doNext(); })
+                                        .catch((sender) => { this.setError("Resource returned from error handler has failed to load.", sender); this._doError(); });
+                                    return;
+                                }
+                            }
+                        }
+                        // ... continue with the value from the error handler (even if none) ...
+                        this.status = DS.RequestStatuses.Loaded;
+                        this._message = void 0; // (clear the current message [but keep history])
+                        ++this._promiseChainIndex; // (pass on to next handler in the chain)
+                        this.$__transformedData = newData;
+                        this._doNext();
                         return;
                     }
-                    if (typeof data === 'object' && data instanceof ResourceRequest) {
-                        // ... a 'LoadRequest' was returned (see end of post http://goo.gl/9HeBrN#20715224, and also http://goo.gl/qKpcR3), so check it's status ...
-                        if (data.status == DS.RequestStatuses.Error) {
-                            this.setError("Rejected request returned from 'onLoaded' handler.");
-                            ++this._promiseChainIndex;
-                            this._doError(); // (cascade the error)
-                            return;
+                    else if (handlers.onFinally) {
+                        try {
+                            handlers.onFinally.call(this);
                         }
-                        else {
-                            // ... get the data from the request object ...
-                            var newResReq = data;
-                            if (newResReq.status >= DS.RequestStatuses.Ready) {
-                                if (newResReq === this)
-                                    continue; // ('self' [this] was returned, so go directly to the next item)
-                                data = newResReq.transformedResponse; // (the data is ready, so read now)
-                            }
-                            else { // (loading is started, or still in progress, so wait; we simply hook into the request object to get notified when the data is ready)
-                                newResReq.ready((sender) => { this.$__transformedData = sender.transformedResponse; this._doNext(); })
-                                    .catch((sender) => { this.setError("Resource returned from next handler has failed to load.", sender); this._doError(); });
-                                return;
-                            }
+                        catch (e) {
+                            this.setError("Cleanup handler failed.", e);
                         }
                     }
-                    if (data !== void 0)
-                        this.$__transformedData = data;
                 }
-                else if (handlers.onFinally) {
-                    try {
-                        handlers.onFinally.call(this);
-                    }
-                    catch (e) {
-                        this.setError("Cleanup handler failed.", e);
-                        ++this._promiseChainIndex; // (the finally callback failed, so trigger the error chain starting at next index)
-                        this._doError();
-                    }
+                // ... if this is reached, then there are no following error handlers, so throw the existing message ...
+                if (this.status == DS.RequestStatuses.Error) {
+                    var msgs = this.messageLog.join("\r\n· ");
+                    if (msgs)
+                        msgs = ":\r\n· " + msgs;
+                    else
+                        msgs = ".";
+                    throw new Error("Unhandled error loading resource " + (typeof this.type == 'string' ? DS.ResourceTypes[this.type] : this.type) + " from '" + this.url + "'" + msgs + "\r\n");
                 }
             }
-            this._promiseChain.length = 0;
-            this._promiseChainIndex = 0;
-            // ... finished: now trigger any "ready" handlers ...
-            if (this.status < DS.RequestStatuses.Waiting)
-                this.status = DS.RequestStatuses.Waiting; // (default to this next before being 'ready')
-            this._doReady(); // (this triggers in dependency order)
-        }
-        _doReady() {
-            if (this._paused)
-                return;
-            if (this.status < DS.RequestStatuses.Waiting)
-                return; // (the 'ready' event must only trigger after the resource loads, AND all handlers have been called)
-            // ... check parent dependencies first ...
-            if (this.status == DS.RequestStatuses.Waiting)
-                if (!this._parentRequests || !this._parentRequests.length) {
-                    this.status = DS.RequestStatuses.Ready; // (no parent resource dependencies, so this resource is 'ready' by default)
-                    this.message = "Resource has no dependencies, and is now ready.";
+            /** Resets the current resource data, and optionally all dependencies, and restarts the whole loading process.
+              * Note: All handlers (including the 'progress' and 'ready' handlers) are cleared and will have to be reapplied (clean slate).
+              * @param {boolean} includeDependentResources Reload all resource dependencies as well.
+              */
+            reload(includeDependentResources = true) {
+                if (this.status == DS.RequestStatuses.Error || this.status >= DS.RequestStatuses.Ready) {
+                    this.response = void 0;
+                    this.status = DS.RequestStatuses.Pending;
+                    this.responseCode = 0;
+                    this.responseCodeMessage = "";
+                    this._message = "";
+                    this.messageLog = [];
+                    if (includeDependentResources)
+                        for (var i = 0, n = this._parentRequests.length; i < n; ++i)
+                            this._parentRequests[i].reload(includeDependentResources);
+                    if (this._onProgress)
+                        this._onProgress.length = 0;
+                    if (this._onReady)
+                        this._onReady.length = 0;
+                    if (this._promiseChain)
+                        this._promiseChain.length = 0;
+                    this.start();
                 }
-                else // ...need to determine if all parent (dependent) resources are completed first ...
-                 if (this._parentCompletedCount == this._parentRequests.length) {
-                    this.status = DS.RequestStatuses.Ready; // (all parent resource dependencies are now 'ready')
-                    this.message = "*** All dependencies for resource have loaded, and are now ready. ***";
-                }
-                else {
-                    this.message = "Resource is waiting on dependencies (" + this._parentCompletedCount + "/" + this._parentRequests.length + " ready so far)...";
-                    return; // (nothing more to do yet)
-                }
-            // ... call the local 'onReady' event, and then trigger the call on the children as required.
-            if (this.status == DS.RequestStatuses.Ready) {
-                if (this._onReady && this._onReady.length) {
-                    try {
-                        for (var i = 0, n = this._onReady.length; i < n; ++i) {
-                            this._onReady[i].call(this, this);
-                            if (this.status < DS.RequestStatuses.Ready)
-                                return; // (a callback changed state so stop at this point as we are no longer ready!)
-                        }
-                        if (this._paused)
-                            return;
-                    }
-                    catch (e) {
-                        this.setError("Error in ready handler.", e);
-                        if (DS.isDebugging && (this.type == DS.ResourceTypes.Application_Script || this.type == DS.ResourceTypes.Application_ECMAScript))
-                            throw e; // (propagate script errors to the browser for debuggers, if any)
-                    }
-                }
-                if (this._dependants)
-                    for (var i = 0, n = this._dependants.length; i < n; ++i) {
-                        ++this._dependants[i]._parentCompletedCount;
-                        this._dependants[i]._doReady(); // (notify all children that this resource is now 'ready' for use [all events have been run, as opposed to just being loaded])
-                        if (this.status < DS.RequestStatuses.Ready)
-                            return; // (something changed the "Ready" state so abort!)
-                    }
+                return this;
             }
         }
-        _doError() {
-            if (this._paused)
-                return;
-            if (this.status != DS.RequestStatuses.Error) {
-                this._doNext(); // (still in an error state, so pass on to trigger error handlers in case new ones were added)
-                return;
-            }
-            for (var n = this._promiseChain.length; this._promiseChainIndex < n; ++this._promiseChainIndex) {
-                if (this._paused)
-                    return;
-                var handlers = this._promiseChain[this._promiseChainIndex];
-                if (handlers.onError) {
-                    try {
-                        var newData = handlers.onError.call(this, this, this.message); // (this handler should "fix" the situation and return valid data)
-                    }
-                    catch (e) {
-                        this.setError("Error handler failed.", e);
-                    }
-                    if (typeof newData === 'object' && newData instanceof ResourceRequest) {
-                        // ... a 'LoadRequest' was returned (see end of post http://goo.gl/9HeBrN#20715224, and also http://goo.gl/qKpcR3), so check it's status ...
-                        if (newData.status == DS.RequestStatuses.Error)
-                            return; // (no correction made, still in error; terminate the event chain here)
-                        else {
-                            var newResReq = newData;
-                            if (newResReq.status >= DS.RequestStatuses.Ready)
-                                newData = newResReq.transformedResponse;
-                            else { // (loading is started, or still in progress, so wait)
-                                newResReq.ready((sender) => { this.$__transformedData = sender.transformedResponse; this._doNext(); })
-                                    .catch((sender) => { this.setError("Resource returned from error handler has failed to load.", sender); this._doError(); });
-                                return;
-                            }
-                        }
-                    }
-                    // ... continue with the value from the error handler (even if none) ...
-                    this.status = DS.RequestStatuses.Loaded;
-                    this._message = void 0; // (clear the current message [but keep history])
-                    ++this._promiseChainIndex; // (pass on to next handler in the chain)
-                    this.$__transformedData = newData;
-                    this._doNext();
-                    return;
-                }
-                else if (handlers.onFinally) {
-                    try {
-                        handlers.onFinally.call(this);
-                    }
-                    catch (e) {
-                        this.setError("Cleanup handler failed.", e);
-                    }
-                }
-            }
-            // ... if this is reached, then there are no following error handlers, so throw the existing message ...
-            if (this.status == DS.RequestStatuses.Error) {
-                var msgs = this.messageLog.join("\r\n· ");
-                if (msgs)
-                    msgs = ":\r\n· " + msgs;
-                else
-                    msgs = ".";
-                throw new Error("Unhandled error loading resource " + (typeof this.type == 'string' ? DS.ResourceTypes[this.type] : this.type) + " from '" + this.url + "'" + msgs + "\r\n");
-            }
-        }
-        /** Resets the current resource data, and optionally all dependencies, and restarts the whole loading process.
-          * Note: All handlers (including the 'progress' and 'ready' handlers) are cleared and will have to be reapplied (clean slate).
-          * @param {boolean} includeDependentResources Reload all resource dependencies as well.
-          */
-        reload(includeDependentResources = true) {
-            if (this.status == DS.RequestStatuses.Error || this.status >= DS.RequestStatuses.Ready) {
-                this.response = void 0;
-                this.status = DS.RequestStatuses.Pending;
-                this.responseCode = 0;
-                this.responseCodeMessage = "";
-                this._message = "";
-                this.messageLog = [];
-                if (includeDependentResources)
-                    for (var i = 0, n = this._parentRequests.length; i < n; ++i)
-                        this._parentRequests[i].reload(includeDependentResources);
-                if (this._onProgress)
-                    this._onProgress.length = 0;
-                if (this._onReady)
-                    this._onReady.length = 0;
-                if (this._promiseChain)
-                    this._promiseChain.length = 0;
-                this.start();
-            }
-            return this;
-        }
-    }
-    /**
-     * If true (the default) then a 'ResourceRequest.cacheBustingVar+"="+Date.now()' query item is added to make sure the browser never uses
-     * the cache. To change the variable used, set the 'cacheBustingVar' property also.
-     * Each resource request instance can also have its own value set separate from the global one.
-     * Note: DreamSpace has its own caching that uses the local storage, where supported.
-     */
-    ResourceRequest.cacheBusting = true;
-    ResourceRequest._cacheBustingVar = '_v_';
-    ResourceRequest._resourceRequests = []; // (requests are loaded in parallel, but executed in order of request)
-    ResourceRequest._resourceRequestByURL = {}; // (a quick named index lookup into '__loadRequests')
+        /**
+         * If true (the default) then a 'ResourceRequest.cacheBustingVar+"="+Date.now()' query item is added to make sure the browser never uses
+         * the cache. To change the variable used, set the 'cacheBustingVar' property also.
+         * Each resource request instance can also have its own value set separate from the global one.
+         * Note: DreamSpace has its own caching that uses the local storage, where supported.
+         */
+        ResourceRequest.cacheBusting = true;
+        ResourceRequest._cacheBustingVar = '_v_';
+        ResourceRequest._resourceRequests = []; // (requests are loaded in parallel, but executed in order of request)
+        ResourceRequest._resourceRequestByURL = {}; // (a quick named index lookup into '__loadRequests')
+        return ResourceRequest;
+    })();
     DS.ResourceRequest = ResourceRequest;
     // ===============================================================================================================================
 })(DS || (DS = {}));
@@ -4190,13 +4235,6 @@ var DS;
             return typeof value.toString == 'function' ? toString(value.toString()) : "" + value; // ('value.toString()' should be a string, but in case it is not, this will cycle until a string type value is found, or no 'toString()' function exists)
         }
         StringUtils.toString = toString;
-        /** Reduces multiple consecutive whitespace characters into a single space character.
-         * This helps to make comparing words in a string easier.
-         */
-        function reduceWhitespace(s) {
-            return (typeof s != 'string' ? toString(s) : s).replace(/\s+/g, ' ');
-        }
-        StringUtils.reduceWhitespace = reduceWhitespace;
         /** Splits the lines of the text (delimited by '\r\n', '\r', or '\n') into an array of strings. */
         function getLines(text) {
             var txt = typeof text == 'string' ? text : '' + text;
@@ -4249,6 +4287,13 @@ var DS;
             return str;
         }
         StringUtils.escapeString = escapeString;
+        /** Reduces multiple consecutive whitespace characters into a single space character.
+         * This helps with either presentation, or when comparing text entered by users.
+         */
+        function reduceWhitespace(s) {
+            return (typeof s != 'string' ? toString(s) : s).replace(/\s+/g, ' ');
+        }
+        StringUtils.reduceWhitespace = reduceWhitespace;
     })(StringUtils = DS.StringUtils || (DS.StringUtils = {}));
     // ========================================================================================================================
     let Encoding;
@@ -4455,9 +4500,15 @@ var DS;
         // --------------------------------------------------------------------------------------------------------------------
         /** Replaces all tags in the given 'HTML' string with 'tagReplacement' (an empty string by default) and returns the result. */
         function replaceTags(html, tagReplacement) {
-            return html.replace(/<[^<>]*|>[^<>]*?>|>/g, tagReplacement);
+            return html.replace(/<[^<>]*|>[^<>]*?>|>/g, tagReplacement !== null && tagReplacement !== void 0 ? tagReplacement : "");
         }
         HTML.replaceTags = replaceTags;
+        // --------------------------------------------------------------------------------------------------------------------
+        /** Simply converts '<br/>' into EOL characters and strips all the HTML tags from the given HTML. */
+        function htmlToPlainText(html) {
+            return replaceTags(toString(html).replace(/<br\s*\/?>/g, '\r\n'));
+        }
+        HTML.htmlToPlainText = htmlToPlainText;
         // --------------------------------------------------------------------------------------------------------------------
         /** Encodes any characters other than numbers and letters as html entities.
          * @param html The HTML text to encode (typically to display in a browser).
@@ -5510,32 +5561,26 @@ var DS;
                 toBase64() { return DS.Encoding.base64Encode(this.text); }
                 /** Decodes the base-64 content and updates the current file contents with the result. */
                 fromBase64(contentB64) { this.text = DS.Encoding.base64Decode(contentB64); }
-                onSave() {
-                    return __awaiter(this, void 0, void 0, function* () {
-                        yield DS.IO.write(this.absolutePath, this.content);
-                        return this; // (returning reference to the file object instead of string as it is copied by reference and thus faster)
-                    });
+                async onSave() {
+                    await DS.IO.write(this.absolutePath, this.content);
+                    return this; // (returning reference to the file object instead of string as it is copied by reference and thus faster)
                 }
-                onLoad() {
-                    return __awaiter(this, void 0, void 0, function* () {
-                        this.contents = yield DS.IO.read(this.absolutePath);
-                        return this;
-                    });
+                async onLoad() {
+                    this.contents = await DS.IO.read(this.absolutePath);
+                    return this;
                 }
                 onAfterSuccessfulSave(result) { }
                 onAfterSuccessfulLoad(result) { }
                 /** Returns the resource value for this trackable object, which is just the config file contents. */
-                getResourceValue() {
-                    return __awaiter(this, void 0, void 0, function* () {
-                        try {
-                            if (!this.lastAccessed) // ('lastAccessed' is undefined until the first save/load operation)
-                                return (yield this.read()).text;
-                            return this.text;
-                        }
-                        catch (err) {
-                            throw new DS.Exception(`Failed to load contents for project '${this.name}'.`, this, err);
-                        }
-                    });
+                async getResourceValue() {
+                    try {
+                        if (!this.lastAccessed) // ('lastAccessed' is undefined until the first save/load operation)
+                            return (await this.read()).text;
+                        return this.text;
+                    }
+                    catch (err) {
+                        throw new DS.Exception(`Failed to load contents for project '${this.name}'.`, this, err);
+                    }
                 }
                 getResourceType() {
                     return DS.ResourceTypes.Application_JSON;
@@ -5547,83 +5592,86 @@ var DS;
          * For off-line storage to work, the browser must support local storage.
          * Note: The 'FlowScript.currentUser' object determines the user-specific root directory for projects.
          */
-        class FileManager {
+        let FileManager = /** @class */ (() => {
+            class FileManager {
+                // --------------------------------------------------------------------------------------------------------------------
+                constructor(
+                /** The URL endpoint for the FlowScript project files API. Defaults to 'FileManager.apiEndpoint'. */
+                apiEndpoint = FileManager.apiEndpoint) {
+                    this.apiEndpoint = apiEndpoint;
+                    this.root = Abstracts.Directory.onCreateDirectory(this);
+                }
+                static getFileByID(id) { return this._filesByGUID[id]; }
+                /** Manages the global file system for FlowScript by utilizing local storage space and remote server space.
+                 * The file manager tries to keep recently accessed files local (while backed up to remove), and off-loads
+                 * less-accessed files to save space.
+                 */
+                static get current() { return this._current || (this._current = new FileManager()); }
+                /** Just a local property that checks for and returns 'FlowScript.currentUser'. */
+                static get currentUser() { if (DS.User.current)
+                    return DS.User.current; throw "'There is no current user! User.changeCurrentUser()' must be called first."; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
+                /** The API endpoint to the directory for the current user. */
+                static get currentUserEndpoint() { return combine(this.apiEndpoint, FileManager.currentUser._id); }
+                /** Triggered when a directory item (i.e. directory or file) is about to be added to the system.
+                 * To abort you can:
+                 *   1. throw an exception - the error message (reason) will be displayed to the user.
+                 *   2. return an explicit 'false' value, which will prevent the item from adding without a reason.
+                 *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being added.
+                 */
+                onItemAdding(item) {
+                    if (item._id in FileManager._filesByGUID)
+                        throw `A directory item with this GUID '${item._id}' (name: '${FileManager._filesByGUID[item._id].name}') already exists.  Please remove the file first before adding it again.`;
+                }
+                /** Triggered when a directory item (i.e. directory or file) gets added to the system. */
+                onItemAdded(item) {
+                    FileManager._filesByGUID[item._id] = item;
+                }
+                /** Triggered when a directory item (i.e. directory or file) id about to be removed from the system.
+                 * To abort you can:
+                 *   1. throw an exception - the error message (reason) will be displayed to the user.
+                 *   2. return an explicit 'false' value, which will prevent the item from getting removed without a reason.
+                 *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being removed.
+                 */
+                onItemRemoving(item) {
+                    if (!(item._id in FileManager._filesByGUID))
+                        throw `Cannot remove directory item: No entry with GUID '${item._id}' (name: '${item.name}') was previously added.  This error is thrown to maintain the integrity of the virtual file system, as only existing items should ever be removed.`;
+                }
+                /** Triggered when a directory item (i.e. directory or file) gets removed from the system. */
+                onItemRemoved(item) {
+                    if (item._id in FileManager._filesByGUID)
+                        delete FileManager._filesByGUID[item._id]; // (speed is not a huge importance here, otherwise we can just set it to 'void 0')
+                }
+                /** Gets a directory under the current user root endpoint.
+                 * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+                 */
+                getDirectory(path, userId) {
+                    return this.root.getDirectory(combine(userId || FileManager.currentUser._id, path));
+                }
+                /** Creates a directory under the current user root endpoint.
+                 * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+                 */
+                createDirectory(path, userId) {
+                    return this.root.createDirectory(combine(userId || FileManager.currentUser._id, path));
+                }
+                /** Gets a file under the current user root endpoint.
+                 * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+                 */
+                getFile(filePath, userId) {
+                    return this.root.getFile(combine(userId || FileManager.currentUser._id, filePath));
+                }
+                /** Creates a file under the current user root endpoint.
+                 * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+                 */
+                createFile(filePath, contents, userId) {
+                    return this.root.createFile(combine(userId || FileManager.currentUser._id, filePath), contents);
+                }
+            }
+            FileManager._filesByGUID = {}; // (references files by GUID for faster lookup)
             // --------------------------------------------------------------------------------------------------------------------
-            constructor(
-            /** The URL endpoint for the FlowScript project files API. Defaults to 'FileManager.apiEndpoint'. */
-            apiEndpoint = FileManager.apiEndpoint) {
-                this.apiEndpoint = apiEndpoint;
-                this.root = Abstracts.Directory.onCreateDirectory(this);
-            }
-            static getFileByID(id) { return this._filesByGUID[id]; }
-            /** Manages the global file system for FlowScript by utilizing local storage space and remote server space.
-             * The file manager tries to keep recently accessed files local (while backed up to remove), and off-loads
-             * less-accessed files to save space.
-             */
-            static get current() { return this._current || (this._current = new FileManager()); }
-            /** Just a local property that checks for and returns 'FlowScript.currentUser'. */
-            static get currentUser() { if (DS.User.current)
-                return DS.User.current; throw "'There is no current user! User.changeCurrentUser()' must be called first."; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
-            /** The API endpoint to the directory for the current user. */
-            static get currentUserEndpoint() { return combine(this.apiEndpoint, FileManager.currentUser._id); }
-            /** Triggered when a directory item (i.e. directory or file) is about to be added to the system.
-             * To abort you can:
-             *   1. throw an exception - the error message (reason) will be displayed to the user.
-             *   2. return an explicit 'false' value, which will prevent the item from adding without a reason.
-             *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being added.
-             */
-            onItemAdding(item) {
-                if (item._id in FileManager._filesByGUID)
-                    throw `A directory item with this GUID '${item._id}' (name: '${FileManager._filesByGUID[item._id].name}') already exists.  Please remove the file first before adding it again.`;
-            }
-            /** Triggered when a directory item (i.e. directory or file) gets added to the system. */
-            onItemAdded(item) {
-                FileManager._filesByGUID[item._id] = item;
-            }
-            /** Triggered when a directory item (i.e. directory or file) id about to be removed from the system.
-             * To abort you can:
-             *   1. throw an exception - the error message (reason) will be displayed to the user.
-             *   2. return an explicit 'false' value, which will prevent the item from getting removed without a reason.
-             *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being removed.
-             */
-            onItemRemoving(item) {
-                if (!(item._id in FileManager._filesByGUID))
-                    throw `Cannot remove directory item: No entry with GUID '${item._id}' (name: '${item.name}') was previously added.  This error is thrown to maintain the integrity of the virtual file system, as only existing items should ever be removed.`;
-            }
-            /** Triggered when a directory item (i.e. directory or file) gets removed from the system. */
-            onItemRemoved(item) {
-                if (item._id in FileManager._filesByGUID)
-                    delete FileManager._filesByGUID[item._id]; // (speed is not a huge importance here, otherwise we can just set it to 'void 0')
-            }
-            /** Gets a directory under the current user root endpoint.
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            getDirectory(path, userId) {
-                return this.root.getDirectory(combine(userId || FileManager.currentUser._id, path));
-            }
-            /** Creates a directory under the current user root endpoint.
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            createDirectory(path, userId) {
-                return this.root.createDirectory(combine(userId || FileManager.currentUser._id, path));
-            }
-            /** Gets a file under the current user root endpoint.
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            getFile(filePath, userId) {
-                return this.root.getFile(combine(userId || FileManager.currentUser._id, filePath));
-            }
-            /** Creates a file under the current user root endpoint.
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            createFile(filePath, contents, userId) {
-                return this.root.createFile(combine(userId || FileManager.currentUser._id, filePath), contents);
-            }
-        }
-        FileManager._filesByGUID = {}; // (references files by GUID for faster lookup)
-        // --------------------------------------------------------------------------------------------------------------------
-        /** The URL endpoint for the FlowScript project files API. */
-        FileManager.apiEndpoint = "/api/files";
+            /** The URL endpoint for the FlowScript project files API. */
+            FileManager.apiEndpoint = "/api/files";
+            return FileManager;
+        })();
         VirtualFileSystem.FileManager = FileManager;
         // ========================================================================================================================
         /** Combine two paths into one. */
@@ -5645,54 +5693,52 @@ var DS;
         * Holds a collection of projects.
         * When a project instance is created, the default 'Solution.onCreateProject' handler is used, which can be overridden for derived project types.
         */
-        class Solution extends DS.ConfigBaseObject {
-            constructor(fileManager = DS.VirtualFileSystem.FileManager.current) {
-                super();
-                this._projects = []; // (the loaded projects that are currently active)
-                this._userIDs = []; // (the loaded projects that are currently active)
-                /** A list of user IDs and assigned roles for this project. */
-                this.userSecurity = new DS.UserAccess();
-                this.configFilename = Solution.CONFIG_FILENAME;
-                this.directory = fileManager.createDirectory(DS.VirtualFileSystem.combine("solutions", this._id));
-            }
-            /** The function used to create project instances when a project is created from saved project data.
-             * Host programs can overwrite this event property with a handler to create and return derived types instead (such as ProjectUI.ts).
-             */
-            static get onCreateProject() { return this._onCreateProject || Abstracts._defaultCreateProjectHandler; }
-            static set onCreateProject(value) { if (typeof value != 'function')
-                throw "Solution.onCreateProject: Set failed - value is not a function."; this._onCreateProject = value; }
-            get count() { return this._projects.length; }
-            /* All projects for the current user. */
-            get projects() { return this._projects; }
-            /* A list of users, by ID, that are allowed . */
-            get userIDs() { return this._userIDs; }
-            /** Returns the startup project, or null if none found. */
-            get startupProject() {
-                for (var i = 0, n = this._projects && this._projects.length || 0, p; i < n; ++i)
-                    if ((p = this._projects[i]).isStartup)
-                        return p;
-                return null;
-            }
-            /**
-             * Creates a new project with the given title and description.
-             * @param name The project title.
-             * @param description The project description.
-             */
-            createProject(name, description) {
-                var info = { $id: void 0, $objectType: "Project", name, description };
-                var project = Solution.onCreateProject(this, info);
-                this._projects.push(project);
-                return project;
-            }
-            /** Returns a list of projects that match the given URL path. */
-            getProjects(path) {
-                return __awaiter(this, void 0, void 0, function* () {
+        let Solution = /** @class */ (() => {
+            class Solution extends DS.ConfigBaseObject {
+                constructor(fileManager = DS.VirtualFileSystem.FileManager.current) {
+                    super();
+                    this._projects = []; // (the loaded projects that are currently active)
+                    this._userIDs = []; // (the loaded projects that are currently active)
+                    /** A list of user IDs and assigned roles for this project. */
+                    this.userSecurity = new DS.UserAccess();
+                    this.configFilename = Solution.CONFIG_FILENAME;
+                    this.directory = fileManager.createDirectory(DS.VirtualFileSystem.combine("solutions", this._id));
+                }
+                /** The function used to create project instances when a project is created from saved project data.
+                 * Host programs can overwrite this event property with a handler to create and return derived types instead (such as ProjectUI.ts).
+                 */
+                static get onCreateProject() { return this._onCreateProject || Abstracts._defaultCreateProjectHandler; }
+                static set onCreateProject(value) { if (typeof value != 'function')
+                    throw "Solution.onCreateProject: Set failed - value is not a function."; this._onCreateProject = value; }
+                get count() { return this._projects.length; }
+                /* All projects for the current user. */
+                get projects() { return this._projects; }
+                /* A list of users, by ID, that are allowed . */
+                get userIDs() { return this._userIDs; }
+                /** Returns the startup project, or null if none found. */
+                get startupProject() {
+                    for (var i = 0, n = this._projects && this._projects.length || 0, p; i < n; ++i)
+                        if ((p = this._projects[i]).isStartup)
+                            return p;
+                    return null;
+                }
+                /**
+                 * Creates a new project with the given title and description.
+                 * @param name The project title.
+                 * @param description The project description.
+                 */
+                createProject(name, description) {
+                    var info = { $id: void 0, $objectType: "Project", name, description };
+                    var project = Solution.onCreateProject(this, info);
+                    this._projects.push(project);
+                    return project;
+                }
+                /** Returns a list of projects that match the given URL path. */
+                async getProjects(path) {
                     throw DS.Exception.notImplemented("Project.getProjects()");
-                });
-            }
-            /** Updates all projects from the data store and returns the project marked as the "start-up". */
-            refreshProjects() {
-                return __awaiter(this, void 0, void 0, function* () {
+                }
+                /** Updates all projects from the data store and returns the project marked as the "start-up". */
+                async refreshProjects() {
                     var startupProject = null;
                     for (var i = 0, n = this._projects.length, proj; i < n; ++i) {
                         proj = this._projects[i];
@@ -5701,100 +5747,91 @@ var DS;
                         proj.refresh();
                     }
                     return startupProject;
-                });
-            }
-            /** Saves the tracking details and related items to a specified object.
-            * If no object is specified, then a new empty object is created and returned.
-            */
-            saveConfigToObject(target) {
-                target = super.saveConfigToObject(target);
-                target.name = this.name;
-                target.description = this.description;
-                target.directory = this.directory.absolutePath;
-                if (!target.projects)
-                    target.projects = [];
-                for (var i = 0, n = this.projects.length; i < n; ++i)
-                    target.projects.push(this.projects[i].saveConfigToObject());
-                return target;
-            }
-            /** Loads the tracking details from a given object. */
-            loadConfigFromObject(source, replace = false) {
-                if (source) {
-                    super.loadConfigFromObject(source); // (this should be first so 'propertyChanged()' will work properly)
-                    var _this = this;
-                    if (!this.propertyChanged('name'))
-                        _this.name = source.name;
-                    if (!this.propertyChanged('description'))
-                        _this.description = source.description;
-                    if (source.directory && source.directory != this.directory.absolutePath)
-                        for (var i = 0, n = this.projects.length; i < n; ++i)
-                            this.projects[i].loadConfigFromObject(source);
                 }
-                return this;
-            }
-            /** Saves the solution and related items.
-            */
-            onSave() {
-                const _super = Object.create(null, {
-                    onSave: { get: () => super.onSave }
-                });
-                return __awaiter(this, void 0, void 0, function* () {
+                /** Saves the tracking details and related items to a specified object.
+                * If no object is specified, then a new empty object is created and returned.
+                */
+                saveConfigToObject(target) {
+                    target = super.saveConfigToObject(target);
+                    target.name = this.name;
+                    target.description = this.description;
+                    target.directory = this.directory.absolutePath;
+                    if (!target.projects)
+                        target.projects = [];
+                    for (var i = 0, n = this.projects.length; i < n; ++i)
+                        target.projects.push(this.projects[i].saveConfigToObject());
+                    return target;
+                }
+                /** Loads the tracking details from a given object. */
+                loadConfigFromObject(source, replace = false) {
+                    if (source) {
+                        super.loadConfigFromObject(source); // (this should be first so 'propertyChanged()' will work properly)
+                        var _this = this;
+                        if (!this.propertyChanged('name'))
+                            _this.name = source.name;
+                        if (!this.propertyChanged('description'))
+                            _this.description = source.description;
+                        if (source.directory && source.directory != this.directory.absolutePath)
+                            for (var i = 0, n = this.projects.length; i < n; ++i)
+                                this.projects[i].loadConfigFromObject(source);
+                    }
+                    return this;
+                }
+                /** Saves the solution and related items.
+                */
+                async onSave() {
                     try {
-                        return yield _super.onSave.call(this);
+                        return await super.onSave();
                     }
                     catch (err) {
                         throw new DS.Exception(`Failed to save solution '${this.name}'.`, this, err);
                     }
                     //x var file = this.directory.createFile((workflow.name || workflow.$id) + ".wf.json", wfJSON); // (wf: Workflow file)
-                });
-            }
-            /** Loads and merges/replaces the solution from the virtual file system.
-             * @param replace If true, the whole project and any changed properties are replaced.  If false (the default), then only unmodified properties get updated.
-             */
-            onLoad(replace = false) {
-                const _super = Object.create(null, {
-                    onLoad: { get: () => super.onLoad }
-                });
-                return __awaiter(this, void 0, void 0, function* () {
+                }
+                /** Loads and merges/replaces the solution from the virtual file system.
+                 * @param replace If true, the whole project and any changed properties are replaced.  If false (the default), then only unmodified properties get updated.
+                 */
+                async onLoad(replace = false) {
                     try {
-                        return yield _super.onLoad.call(this);
+                        return await super.onLoad();
                     }
                     catch (err) {
                         throw new DS.Exception(`Failed to load solution '${this.name}'.`, this, err);
                     }
-                });
+                }
             }
-        }
-        Solution.CONFIG_FILENAME = "solution.json";
+            Solution.CONFIG_FILENAME = "solution.json";
+            return Solution;
+        })();
         Abstracts.Solution = Solution;
         // ========================================================================================================================
-        class Solutions {
-            /** The function used to create solution instances when a solution is created from saved solution data.
-             * Host programs can overwrite this event property with a handler to create and return derived types instead.
-             */
-            static get onCreateSolution() { return this._onCreateSolution || Abstracts._defaultCreateSolutionHandler; }
-            static set onCreateSolution(value) { if (typeof value != 'function')
-                throw "Solution.onCreateSolution: Set failed - value is not a function."; this._onCreateSolution = value; }
-            /* All projects for the current user. */
-            static get solutions() { return this._solutions; }
-            static get startupSolution() {
-                for (var i = 0, n = this._solutions && this._solutions.length || 0, s; i < n; ++i)
-                    if ((s = this._solutions[i]).startupProject)
-                        return s;
-                return null;
-            }
-            /** Returns the solution with the specified ID, or null if not found. */
-            static get(id) {
-                for (var i = 0, n = this._solutions && this._solutions.length || 0, s; i < n; ++i)
-                    if ((s = this._solutions[i])._id == id)
-                        return s;
-                return null;
-            }
-            /** Returns a list of available solution GUIDs that can be loaded. */
-            static getSolutions() {
-                return __awaiter(this, void 0, void 0, function* () {
+        let Solutions = /** @class */ (() => {
+            class Solutions {
+                /** The function used to create solution instances when a solution is created from saved solution data.
+                 * Host programs can overwrite this event property with a handler to create and return derived types instead.
+                 */
+                static get onCreateSolution() { return this._onCreateSolution || Abstracts._defaultCreateSolutionHandler; }
+                static set onCreateSolution(value) { if (typeof value != 'function')
+                    throw "Solution.onCreateSolution: Set failed - value is not a function."; this._onCreateSolution = value; }
+                /* All projects for the current user. */
+                static get solutions() { return this._solutions; }
+                static get startupSolution() {
+                    for (var i = 0, n = this._solutions && this._solutions.length || 0, s; i < n; ++i)
+                        if ((s = this._solutions[i]).startupProject)
+                            return s;
+                    return null;
+                }
+                /** Returns the solution with the specified ID, or null if not found. */
+                static get(id) {
+                    for (var i = 0, n = this._solutions && this._solutions.length || 0, s; i < n; ++i)
+                        if ((s = this._solutions[i])._id == id)
+                            return s;
+                    return null;
+                }
+                /** Returns a list of available solution GUIDs that can be loaded. */
+                static async getSolutions() {
                     // ... load the 'solutions.json' file from the root to see which solutions are available ...
-                    var solutionJson = yield DS.IO.read("system.json");
+                    var solutionJson = await DS.IO.read("system.json");
                     if (solutionJson) {
                         var jsonStr = DS.StringUtils.byteArrayToString(solutionJson);
                         var s = JSON.parse(jsonStr);
@@ -5803,14 +5840,12 @@ var DS;
                         return s.solutions;
                     else
                         return [];
-                });
-            }
-            /** Triggers the process to load all the solution details in the '/solutions' folder by first calling 'Solutions.getSolutions()'
-             * to get the IDs from 'solutions.json'. While all solution configurations are loaded, the contained projects are not.
-             */
-            static refresh(fm = DS.VirtualFileSystem.FileManager.current) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    var solutions = yield Solutions.getSolutions();
+                }
+                /** Triggers the process to load all the solution details in the '/solutions' folder by first calling 'Solutions.getSolutions()'
+                 * to get the IDs from 'solutions.json'. While all solution configurations are loaded, the contained projects are not.
+                 */
+                static async refresh(fm = DS.VirtualFileSystem.FileManager.current) {
+                    var solutions = await Solutions.getSolutions();
                     var unloadedSolutions = [];
                     if (solutions && solutions.forEach)
                         solutions.forEach((sol, i, arr) => {
@@ -5825,24 +5860,25 @@ var DS;
                         });
                     // ... wait for the solutions to load their data before we complete the process ...
                     for (var i = 0, n = unloadedSolutions.length; i < n; ++i)
-                        yield unloadedSolutions[i].refreshProjects();
+                        await unloadedSolutions[i].refreshProjects();
                     return Solutions;
-                });
+                }
+                /**
+                 * Creates a new solution with the given title and description.
+                 * @param name The solution title.
+                 * @param description The solution description.
+                 */
+                static createSolution(name, description, guid) {
+                    var info = { $id: guid, $objectType: "Solution", name, description }; // (an undefined ID will just used the default one created on the instance)
+                    var solution = Solutions.onCreateSolution(info);
+                    if (solution)
+                        this.solutions.push(solution);
+                    return solution;
+                }
             }
-            /**
-             * Creates a new solution with the given title and description.
-             * @param name The solution title.
-             * @param description The solution description.
-             */
-            static createSolution(name, description, guid) {
-                var info = { $id: guid, $objectType: "Solution", name, description }; // (an undefined ID will just used the default one created on the instance)
-                var solution = Solutions.onCreateSolution(info);
-                if (solution)
-                    this.solutions.push(solution);
-                return solution;
-            }
-        }
-        Solutions._solutions = []; // (the loaded projects that are currently active)
+            Solutions._solutions = []; // (the loaded projects that are currently active)
+            return Solutions;
+        })();
         Abstracts.Solutions = Solutions;
         // ========================================================================================================================
     })(Abstracts = DS.Abstracts || (DS.Abstracts = {}));
@@ -5853,190 +5889,179 @@ var DS;
     // ========================================================================================================================
     let Abstracts;
     (function (Abstracts) {
-        class Project extends DS.ConfigBaseObject {
-            // --------------------------------------------------------------------------------------------------------------------
-            constructor(
-            /** The solution this project belongs to. */ solution, 
-            /** The title of the project. */ name, 
-            /** The project's description. */ description) {
-                super();
-                this.solution = solution;
-                this.name = name;
-                this.description = description;
-                //x /** The script instance for this project. */
-                //x get script() { return this._script; }
-                //x protected _script: IFlowScript;
-                /** A list of all files associated with this project, indexed by the absolute lowercase file path. */
-                this.files = {};
-                /** A list of user IDs and assigned roles for this project. */
-                this.userSecurity = new DS.UserAccess();
-                /** The site for this project.  Every project contains a site object, even for API-only projects. For API-only projects there are no pages. */
-                this.site = new DS.Site();
-                this._expressionBin = [];
-                this.onExpressionBinItemAdded = new DS.EventDispatcher(this, "onExpressionBinItemAdded");
-                this.onExpressionBinItemRemoved = new DS.EventDispatcher(this, "onExpressionBinItemRemoved");
-                if (!DS.Path.isValidFileName(name))
-                    throw "The project title '" + name + "' must also be a valid file name. Don't include special directory characters, such as: \\ / ? % * ";
-                this.configFilename = Project.CONFIG_FILENAME;
-                this.directory = this.solution.directory.createDirectory(DS.VirtualFileSystem.combine("projects", this._id)); // (the path is "User ID"/"project's unique ID"/ )
-            }
-            // --------------------------------------------------------------------------------------------------------------------
-            // Create a type of trash-bin to hold expressions so the user can restore them, or delete permanently.
-            /** Holds a list of expressions the developer has removed from scripts. This renders to a global space, which allows
-              * developers to move expressions easily between scripts.
-              * Use 'addExpressionToBin()' and 'removeExpressionFromBin()' to modify this list, which also triggers the UI to update.
-              */
-            get expressionBin() { return this._expressionBin; }
-            /** Returns the expression that was picked by the user for some operation. In the future this may also be used during drag-n-drop operations. */
-            get pickedItem() { return this._pickedItem; }
-            // --------------------------------------------------------------------------------------------------------------------
-            /** Saves the project values to an object - typically prior to serialization. */
-            saveConfigToObject(target) {
-                target = super.saveConfigToObject(target);
-                target.name = this.name;
-                target.description = this.description;
-                for (var p in this.files)
-                    (target.files || (target.files = [])).push(this.files[p].absolutePath);
-                target.workflows = [];
-                return target;
-            }
-            /** Saves the project to a persisted storage, such as the local browser storage, or a remote store, if possible.
-             * Usually the local storage is attempted first, then the system will try to sync with a remote store.  If there
-             * is no free space in the local store, the system will try to sync with a remote store.  If that fails, the
-             * data will only be in memory and a UI warning will display.
-             */
-            saveToStorage(source = this.saveConfigToObject()) {
-                if (!source)
-                    return; // (nothing to do)
-                if (Array.isArray(source.workflows))
-                    for (var i = 0, n = source.workflows.length; i < n; ++i) {
-                        var workflow = source.workflows[i];
-                        if (typeof workflow == 'object' && workflow.$id) {
-                            source.workflows[i] = workflow.$id; // (replaced the object entry with the ID before saving the project graph later; these will be files instead)
-                            var wfJSON = workflow && JSON.stringify(workflow) || null;
-                            var file = this.directory.createFile((workflow.name || workflow.$id) + ".wf.json", wfJSON); // (wf: Workflow file)
-                            this.files[file.absolutePath.toLocaleLowerCase()] = file;
-                        }
-                    }
-                var projectJSON = JSON.stringify(source);
-                file = this.directory.createFile(this._id + ".dsp.json", projectJSON); // (dsp: DreamSpace Project file)
-                this.files[file.absolutePath.toLocaleLowerCase()] = file;
-            }
-            /** Loads and merges/replaces the project values from an object - typically prior to serialization.
-             * @param replace If true, the whole project and any changed properties are replaced.  If false (the default), then only unmodified properties get updated.
-             */
-            loadConfigFromObject(source, replace = false) {
-                if (source) {
-                    var _this = this;
-                    super.loadConfigFromObject(source, replace);
-                    if (replace || !_this.propertyChanged('name'))
-                        _this.name = source.name;
-                    if (replace || !_this.propertyChanged('description'))
-                        _this.description = source.description;
-                    // TODO: associated files and scripts.
+        let Project = /** @class */ (() => {
+            class Project extends DS.ConfigBaseObject {
+                // --------------------------------------------------------------------------------------------------------------------
+                constructor(
+                /** The solution this project belongs to. */ solution, 
+                /** The title of the project. */ name, 
+                /** The project's description. */ description) {
+                    super();
+                    this.solution = solution;
+                    this.name = name;
+                    this.description = description;
+                    //x /** The script instance for this project. */
+                    //x get script() { return this._script; }
+                    //x protected _script: IFlowScript;
+                    /** A list of all files associated with this project, indexed by the absolute lowercase file path. */
+                    this.files = {};
+                    /** A list of user IDs and assigned roles for this project. */
+                    this.userSecurity = new DS.UserAccess();
+                    /** The site for this project.  Every project contains a site object, even for API-only projects. For API-only projects there are no pages. */
+                    this.site = new DS.Site();
+                    this._expressionBin = [];
+                    this.onExpressionBinItemAdded = new DS.EventDispatcher(this, "onExpressionBinItemAdded");
+                    this.onExpressionBinItemRemoved = new DS.EventDispatcher(this, "onExpressionBinItemRemoved");
+                    if (!DS.Path.isValidFileName(name))
+                        throw "The project title '" + name + "' must also be a valid file name. Don't include special directory characters, such as: \\ / ? % * ";
+                    this.configFilename = Project.CONFIG_FILENAME;
+                    this.directory = this.solution.directory.createDirectory(DS.VirtualFileSystem.combine("projects", this._id)); // (the path is "User ID"/"project's unique ID"/ )
                 }
-                return this;
-            }
-            /** Returns the resource value for this trackable object, which is just the config file contents. */
-            getResourceValue() {
-                return __awaiter(this, void 0, void 0, function* () {
+                // --------------------------------------------------------------------------------------------------------------------
+                // Create a type of trash-bin to hold expressions so the user can restore them, or delete permanently.
+                /** Holds a list of expressions the developer has removed from scripts. This renders to a global space, which allows
+                  * developers to move expressions easily between scripts.
+                  * Use 'addExpressionToBin()' and 'removeExpressionFromBin()' to modify this list, which also triggers the UI to update.
+                  */
+                get expressionBin() { return this._expressionBin; }
+                /** Returns the expression that was picked by the user for some operation. In the future this may also be used during drag-n-drop operations. */
+                get pickedItem() { return this._pickedItem; }
+                // --------------------------------------------------------------------------------------------------------------------
+                /** Saves the project values to an object - typically prior to serialization. */
+                saveConfigToObject(target) {
+                    target = super.saveConfigToObject(target);
+                    target.name = this.name;
+                    target.description = this.description;
+                    for (var p in this.files)
+                        (target.files || (target.files = [])).push(this.files[p].absolutePath);
+                    target.workflows = [];
+                    return target;
+                }
+                /** Saves the project to a persisted storage, such as the local browser storage, or a remote store, if possible.
+                 * Usually the local storage is attempted first, then the system will try to sync with a remote store.  If there
+                 * is no free space in the local store, the system will try to sync with a remote store.  If that fails, the
+                 * data will only be in memory and a UI warning will display.
+                 */
+                saveToStorage(source = this.saveConfigToObject()) {
+                    if (!source)
+                        return; // (nothing to do)
+                    if (Array.isArray(source.workflows))
+                        for (var i = 0, n = source.workflows.length; i < n; ++i) {
+                            var workflow = source.workflows[i];
+                            if (typeof workflow == 'object' && workflow.$id) {
+                                source.workflows[i] = workflow.$id; // (replaced the object entry with the ID before saving the project graph later; these will be files instead)
+                                var wfJSON = workflow && JSON.stringify(workflow) || null;
+                                var file = this.directory.createFile((workflow.name || workflow.$id) + ".wf.json", wfJSON); // (wf: Workflow file)
+                                this.files[file.absolutePath.toLocaleLowerCase()] = file;
+                            }
+                        }
+                    var projectJSON = JSON.stringify(source);
+                    file = this.directory.createFile(this._id + ".dsp.json", projectJSON); // (dsp: DreamSpace Project file)
+                    this.files[file.absolutePath.toLocaleLowerCase()] = file;
+                }
+                /** Loads and merges/replaces the project values from an object - typically prior to serialization.
+                 * @param replace If true, the whole project and any changed properties are replaced.  If false (the default), then only unmodified properties get updated.
+                 */
+                loadConfigFromObject(source, replace = false) {
+                    if (source) {
+                        var _this = this;
+                        super.loadConfigFromObject(source, replace);
+                        if (replace || !_this.propertyChanged('name'))
+                            _this.name = source.name;
+                        if (replace || !_this.propertyChanged('description'))
+                            _this.description = source.description;
+                        // TODO: associated files and scripts.
+                    }
+                    return this;
+                }
+                /** Returns the resource value for this trackable object, which is just the config file contents. */
+                async getResourceValue() {
                     try {
                         if (!this._file)
-                            return yield this.onLoad();
+                            return await this.onLoad();
                         else
                             return this._file.text;
                     }
                     catch (err) {
                         throw new DS.Exception(`Failed to load contents for project '${this.name}'.`, this, err);
                     }
-                });
-            }
-            getResourceType() {
-                return DS.ResourceTypes.Application_JSON;
-            }
-            /** Saves the project and related items.
-             */
-            onSave() {
-                const _super = Object.create(null, {
-                    onSave: { get: () => super.onSave }
-                });
-                return __awaiter(this, void 0, void 0, function* () {
+                }
+                getResourceType() {
+                    return DS.ResourceTypes.Application_JSON;
+                }
+                /** Saves the project and related items.
+                 */
+                async onSave() {
                     try {
-                        return yield _super.onSave.call(this);
+                        return await super.onSave();
                     }
                     catch (err) {
                         throw new DS.Exception(`Failed to save project '${this.name}'.`, this, err);
                     }
                     //x var file = this.directory.createFile((workflow.name || workflow.$id) + ".wf.json", wfJSON); // (wf: Workflow file)
-                });
-            }
-            /** Loads and merges/replaces the project from the virtual file system.
-             * @param replace If true, the whole project and any changed properties are replaced.  If false (the default), then only unmodified properties get updated.
-             */
-            onLoad(replace = false) {
-                const _super = Object.create(null, {
-                    onLoad: { get: () => super.onLoad }
-                });
-                return __awaiter(this, void 0, void 0, function* () {
+                }
+                /** Loads and merges/replaces the project from the virtual file system.
+                 * @param replace If true, the whole project and any changed properties are replaced.  If false (the default), then only unmodified properties get updated.
+                 */
+                async onLoad(replace = false) {
                     try {
-                        return yield _super.onLoad.call(this);
+                        return await super.onLoad();
                     }
                     catch (err) {
                         throw new DS.Exception(`Failed to load project '${this.name}'.`, this, err);
                     }
-                });
-            }
-            // --------------------------------------------------------------------------------------------------------------------
-            /** Saves the project to data objects (calls this.save() when 'source' is undefined) and uses the JSON object to
-             * serialize the result into a string.
-             */
-            serialize() {
-                var source = this.saveConfigToObject();
-                var json = JSON.stringify(source);
-                return json;
-            }
-            // --------------------------------------------------------------------------------------------------------------------
-            addToBin(expr, triggerEvent = true) {
-                if (this._expressionBin.indexOf(expr) < 0) {
-                    this._expressionBin.push(expr);
-                    if (triggerEvent)
-                        this.onExpressionBinItemAdded.trigger(expr, this);
                 }
-            }
-            removeFromBin(expr, triggerEvent = true) {
-                var i = this._expressionBin.indexOf(expr);
-                if (i >= 0) {
-                    var expr = this._expressionBin.splice(i, 1)[0];
-                    if (triggerEvent)
-                        this.onExpressionBinItemRemoved.trigger(expr, this);
+                // --------------------------------------------------------------------------------------------------------------------
+                /** Saves the project to data objects (calls this.save() when 'source' is undefined) and uses the JSON object to
+                 * serialize the result into a string.
+                 */
+                serialize() {
+                    var source = this.saveConfigToObject();
+                    var json = JSON.stringify(source);
+                    return json;
                 }
-            }
-            isInBin(expr) { return this._expressionBin.indexOf(expr) >= 0; }
-            // --------------------------------------------------------------------------------------------------------------------
-            pick(expr) {
-                this._pickedItem = expr;
-            }
-            // --------------------------------------------------------------------------------------------------------------------
-            //private _findChildNode(node: HTMLElement, fstype: Type): HTMLElement { //?
-            //    if (node) {
-            //        for (var i = 0, len = node.childNodes.length; i < len; ++i)
-            //            if ((<any>node.childNodes[i])["$__fs_type"] == fstype)
-            //                return <HTMLElement>node.childNodes[i];
-            //    }
-            //    else return null;
-            //}
-            // --------------------------------------------------------------------------------------------------------------------
-            /** Returns a list of resources that match the given URL path. */
-            getResource(path) {
-                return __awaiter(this, void 0, void 0, function* () {
+                // --------------------------------------------------------------------------------------------------------------------
+                addToBin(expr, triggerEvent = true) {
+                    if (this._expressionBin.indexOf(expr) < 0) {
+                        this._expressionBin.push(expr);
+                        if (triggerEvent)
+                            this.onExpressionBinItemAdded.trigger(expr, this);
+                    }
+                }
+                removeFromBin(expr, triggerEvent = true) {
+                    var i = this._expressionBin.indexOf(expr);
+                    if (i >= 0) {
+                        var expr = this._expressionBin.splice(i, 1)[0];
+                        if (triggerEvent)
+                            this.onExpressionBinItemRemoved.trigger(expr, this);
+                    }
+                }
+                isInBin(expr) { return this._expressionBin.indexOf(expr) >= 0; }
+                // --------------------------------------------------------------------------------------------------------------------
+                pick(expr) {
+                    this._pickedItem = expr;
+                }
+                // --------------------------------------------------------------------------------------------------------------------
+                //private _findChildNode(node: HTMLElement, fstype: Type): HTMLElement { //?
+                //    if (node) {
+                //        for (var i = 0, len = node.childNodes.length; i < len; ++i)
+                //            if ((<any>node.childNodes[i])["$__fs_type"] == fstype)
+                //                return <HTMLElement>node.childNodes[i];
+                //    }
+                //    else return null;
+                //}
+                // --------------------------------------------------------------------------------------------------------------------
+                /** Returns a list of resources that match the given URL path. */
+                async getResource(path) {
                     return new Promise((ok, err) => {
                         var unloadedProjects = this._unloadedProjects;
                     });
-                });
+                }
             }
-        }
-        // --------------------------------------------------------------------------------------------------------------------
-        Project.CONFIG_FILENAME = "project.json";
+            // --------------------------------------------------------------------------------------------------------------------
+            Project.CONFIG_FILENAME = "project.json";
+            return Project;
+        })();
         Abstracts.Project = Project;
     })(Abstracts = DS.Abstracts || (DS.Abstracts = {}));
     // ========================================================================================================================
@@ -6065,10 +6090,8 @@ var DS;
         validate(errorList) {
             return errorList;
         }
-        execute() {
-            return __awaiter(this, void 0, void 0, function* () { if (!this.validate())
-                throw "Please correct the errors first."; });
-        }
+        async execute() { if (!this.validate())
+            throw "Please correct the errors first."; }
     }
     DS.Component = Component;
 })(DS || (DS = {}));
@@ -6470,11 +6493,13 @@ var DS;
 // ############################################################################################################################
 var DS;
 (function (DS) {
+    var __version;
     class FileVersion extends DS.TrackableObject {
         constructor(versionManager, originalFile) {
             super();
             this.versionManager = versionManager;
             this.originalFile = originalFile;
+            __version.set(this, void 0);
         }
         get filename() { var file = DS.VirtualFileSystem.FileManager.getFileByID(this._originalFileID); return file && file.name || ''; }
         /** Returns true if this version is the current version.  Current versions remain in their proper locations and do not
@@ -6507,74 +6532,73 @@ var DS;
         loadConfigFromObject(source, replace = false) {
             if (source) {
                 super.loadConfigFromObject(source, replace);
-                var _this = this;
-                _this._version = typeof source.version == 'number' ? (source.version > 0 ? source.version : 1) : void 0;
+                __classPrivateFieldSet(this, __version, typeof source.version == 'number' ? (source.version > 0 ? source.version : 1) : void 0);
             }
             return this;
         }
         /** The given file will replace the current file, sending the current file into the 'versions' repository.
          * Note that you can only version a non-versioned file ('isCurrent==true'), otherwise an error will be thrown.
          */
-        replaceWith(newfile) {
-            return __awaiter(this, void 0, void 0, function* () {
-                if (!newfile)
-                    return;
-                if (!(newfile instanceof DS.VirtualFileSystem.Abstracts.File))
-                    throw `Failed to replace file '${this._filename}' with a non-VirtualFileSystem.Abstract.File object. The value given was: ${JSON.stringify(newfile)}`;
-                if (!this.isCurrent)
-                    throw `You cannot re-version a versioned file. You attempted to replace file '${this._filename}' with file '${newfile.absolutePath}'.`;
-                // ... make sure file has a version entry first ...
-                var newFileVersion = this.versionManager.add(newfile);
-                throw DS.Exception.notImplemented("DS.FileVersion.replaceWith()");
-                // TODO: Implement replace code to replace this current version with the givne file.
-            });
+        async replaceWith(newfile) {
+            if (!newfile)
+                return;
+            if (!(newfile instanceof DS.VirtualFileSystem.Abstracts.File))
+                throw `Failed to replace file '${this._filename}' with a non-VirtualFileSystem.Abstract.File object. The value given was: ${JSON.stringify(newfile)}`;
+            if (!this.isCurrent)
+                throw `You cannot re-version a versioned file. You attempted to replace file '${this._filename}' with file '${newfile.absolutePath}'.`;
+            // ... make sure file has a version entry first ...
+            var newFileVersion = this.versionManager.add(newfile);
+            throw DS.Exception.notImplemented("DS.FileVersion.replaceWith()");
+            // TODO: Implement replace code to replace this current version with the givne file.
         }
     }
+    __version = new WeakMap();
     DS.FileVersion = FileVersion;
     /** Manages lists of file versions.
      * This object acts like a trash bin by assigning a version counter and date/time to a file in the virtual file system.
      */
-    class VersionManager extends DS.PersistableObject {
-        constructor(fs) {
-            super();
-            this.versions = [];
-            this._fileToVersionMap = {}; // (maps a file GUID to a file version for quick lookup)
-            this._fs = fs;
-        }
-        /** Gets a file version given either a file object reference or GUID.
-         * If no version exists then 'undefined' is returned.
-         */
-        getVersion(file) {
-            var id = file && file.$id || file;
-            return this._fileToVersionMap[id];
-        }
-        /** Adds a file to the version control system, if not already added.
-         * If the file is already versioned then the version entry is returned.
-         * The file is not moved from its current location.
-         */
-        add(file) {
-            var v = this.getVersion(file);
-            if (!v)
-                this.versions.push(v = new FileVersion(this, file));
-            return v;
-        }
-        /** Adds two files to the version control system, if not already added, then replaces the current file with the new file.
-         * The file is replaced by moving the file into the versions repository under a special version name, and moving the new
-         * file into the place of the current file.
-         */
-        replace(currentfile, newfile) {
-            return __awaiter(this, void 0, void 0, function* () {
+    let VersionManager = /** @class */ (() => {
+        class VersionManager extends DS.PersistableObject {
+            constructor(fs) {
+                super();
+                this.versions = [];
+                this._fileToVersionMap = {}; // (maps a file GUID to a file version for quick lookup)
+                this._fs = fs;
+            }
+            /** Gets a file version given either a file object reference or GUID.
+             * If no version exists then 'undefined' is returned.
+             */
+            getVersion(file) {
+                var id = file && file.$id || file;
+                return this._fileToVersionMap[id];
+            }
+            /** Adds a file to the version control system, if not already added.
+             * If the file is already versioned then the version entry is returned.
+             * The file is not moved from its current location.
+             */
+            add(file) {
+                var v = this.getVersion(file);
+                if (!v)
+                    this.versions.push(v = new FileVersion(this, file));
+                return v;
+            }
+            /** Adds two files to the version control system, if not already added, then replaces the current file with the new file.
+             * The file is replaced by moving the file into the versions repository under a special version name, and moving the new
+             * file into the place of the current file.
+             */
+            async replace(currentfile, newfile) {
                 var cFileVersion = this.add(currentfile);
-                var newVersion = yield cFileVersion.replaceWith(newfile);
+                var newVersion = await cFileVersion.replaceWith(newfile);
                 return newVersion;
-            });
+            }
         }
-    }
-    VersionManager.current = new VersionManager();
-    /* The base path where all the replaced files end up. The versioning system will simply swap files as requested from
-     * this base directory and the source target directory.
-     */
-    VersionManager.versionsBasePath = "versions";
+        VersionManager.current = new VersionManager();
+        /* The base path where all the replaced files end up. The versioning system will simply swap files as requested from
+         * this base directory and the source target directory.
+         */
+        VersionManager.versionsBasePath = "versions";
+        return VersionManager;
+    })();
     DS.VersionManager = VersionManager;
 })(DS || (DS = {}));
 var DS;
@@ -6623,9 +6647,7 @@ var DS;
         isMatch(urlPath) {
             return false;
         }
-        getValue() {
-            return __awaiter(this, void 0, void 0, function* () { return null; });
-        }
+        async getValue() { return null; }
     }
     DS.Resource = Resource;
 })(DS || (DS = {}));
@@ -6745,32 +6767,33 @@ var DS;
     /** The current user of the FlowScript system.
      * The user 'id' (a GUID) is used as the root directory for projects.
      */
-    class User extends DS.TrackableObject {
-        constructor(email, firstname, lastname) {
-            super();
-            this.email = email;
-            this.firstname = firstname;
-            this.lastname = lastname;
-            /** Holds a mapping of this user ID to global roles associated with the user. */
-            this._security = new DS.UserAccess();
-        }
-        /** Returns the current user object. */
-        static get current() { return _currentUser; }
-        /** Starts the process of changing the current user. */
-        static changeCurrentUser(user) {
-            return __awaiter(this, void 0, void 0, function* () {
+    let User = /** @class */ (() => {
+        class User extends DS.TrackableObject {
+            constructor(email, firstname, lastname) {
+                super();
+                this.email = email;
+                this.firstname = firstname;
+                this.lastname = lastname;
+                /** Holds a mapping of this user ID to global roles associated with the user. */
+                this._security = new DS.UserAccess();
+            }
+            /** Returns the current user object. */
+            static get current() { return _currentUser; }
+            /** Starts the process of changing the current user. */
+            static async changeCurrentUser(user) {
                 return new Promise((resolve, reject) => {
                     this.onCurrentUserChanging.triggerAsync(_currentUser, user)
                         .then(() => this.onCurrentUserChanged.triggerAsync(_currentUser, user), reject) // (any exception in the previous promise will trigger 'reject')
                         .then(resolve, reject); // (any exception in the previous 'then' will trigger 'reject')
                 });
-            });
+            }
         }
-    }
-    /** Triggered when the current user is about to change.  If any handler returns false then the request is cancelled (such as if the current project is not saved yet). */
-    User.onCurrentUserChanging = new DS.EventDispatcher(User, "onCurrentUserChanging");
-    /** Triggered when the current user has changed. This event cannot be cancelled - use the 'onCurrentUserChanging' event for that. */
-    User.onCurrentUserChanged = new DS.EventDispatcher(User, "onCurrentUserChanged", false, false);
+        /** Triggered when the current user is about to change.  If any handler returns false then the request is cancelled (such as if the current project is not saved yet). */
+        User.onCurrentUserChanging = new DS.EventDispatcher(User, "onCurrentUserChanging");
+        /** Triggered when the current user has changed. This event cannot be cancelled - use the 'onCurrentUserChanging' event for that. */
+        User.onCurrentUserChanged = new DS.EventDispatcher(User, "onCurrentUserChanged", false, false);
+        return User;
+    })();
     DS.User = User;
     // ############################################################################################################################
     var _currentUser = new User("");
@@ -6802,9 +6825,7 @@ var DS;
             super(...arguments);
             this.steps = [];
         }
-        execute() {
-            return __awaiter(this, void 0, void 0, function* () { });
-        }
+        async execute() { }
     }
     DS.Workflow = Workflow;
     /** One or more "swim-lanes", from top to bottom (in order of sequence), that contain a series of components to execute. */

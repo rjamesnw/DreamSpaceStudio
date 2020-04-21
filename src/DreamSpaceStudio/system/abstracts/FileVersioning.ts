@@ -33,7 +33,7 @@ namespace DS {
          */
         get version(): number { return typeof this._version == 'number' ? this._version : void 0; }
         set version(v: number) { this._version = typeof v != 'number' ? 1 : v < 1 ? 1 : v; }
-        private _version?: number;
+        #_version?: number;
 
         /** An optional description for this version. */
         _versionDescription?: string;
@@ -68,9 +68,7 @@ namespace DS {
             if (source) {
                 super.loadConfigFromObject(source, replace);
 
-                var _this = <Writeable<this>>this;
-
-                _this._version = typeof source.version == 'number' ? (source.version > 0 ? source.version : 1) : void 0;
+                this.#_version = typeof source.version == 'number' ? (source.version > 0 ? source.version : 1) : void 0;
             }
             return this;
         }

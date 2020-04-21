@@ -583,7 +583,7 @@ export var __express = function (this: IExpressViewContext, filePath: string, ht
 export function apply(app: ReturnType<typeof import("express")>, viewsRootPath = viewsRoot) {
     // ... view engine setup ...
     app.engine('t.html', __express);
-    viewsRoot = DS.Path.isAbsolute(viewsRootPath) ? viewsRootPath : DS.Path.combine(DS.webRoot, viewsRootPath);
+    viewsRoot = DS.Path.toAbsolute(viewsRootPath);
     app.set('views', viewsRoot); // specify the views directory
     app.set('view engine', 't.html') // register the template engine
 }

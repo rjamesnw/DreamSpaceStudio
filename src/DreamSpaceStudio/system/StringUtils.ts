@@ -104,14 +104,6 @@ namespace DS {
             return typeof value.toString == 'function' ? toString(value.toString()) : "" + value; // ('value.toString()' should be a string, but in case it is not, this will cycle until a string type value is found, or no 'toString()' function exists)
         }
 
-        /** Reduces multiple consecutive whitespace characters into a single space character. 
-         * This helps to make comparing words in a string easier.
-         */
-        export function reduceWhitespace(s: string) {
-            return (typeof s != 'string' ? toString(s) : s).replace(/\s+/g, ' ');
-        }
-
-
         /** Splits the lines of the text (delimited by '\r\n', '\r', or '\n') into an array of strings. */
         export function getLines(text: string): string[] {
             var txt = typeof text == 'string' ? text : '' + text;
@@ -165,6 +157,13 @@ namespace DS {
             if (includeSingleQuotes)
                 str = str.replace(/'/g, "''");
             return str;
+        }
+
+        /** Reduces multiple consecutive whitespace characters into a single space character. 
+         * This helps with either presentation, or when comparing text entered by users.
+         */
+        export function reduceWhitespace(s: string) {
+            return (typeof s != 'string' ? toString(s) : s).replace(/\s+/g, ' ');
         }
     }
 
@@ -387,7 +386,14 @@ namespace DS {
 
         /** Replaces all tags in the given 'HTML' string with 'tagReplacement' (an empty string by default) and returns the result. */
         export function replaceTags(html: string, tagReplacement?: string): string {
-            return html.replace(/<[^<>]*|>[^<>]*?>|>/g, tagReplacement);
+            return html.replace(/<[^<>]*|>[^<>]*?>|>/g, tagReplacement ?? "");
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        /** Simply converts '<br/>' into EOL characters and strips all the HTML tags from the given HTML. */
+        export function htmlToPlainText(html: string) {
+            return replaceTags(toString(html).replace(/<br\s*\/?>/g, '\r\n'));
         }
 
         // --------------------------------------------------------------------------------------------------------------------

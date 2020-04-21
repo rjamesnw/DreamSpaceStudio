@@ -25,7 +25,7 @@ namespace DS {
             /** Converts a JSON string into an object with nested objects as required.
              * The given JSON string is validated first before it is parsed for security reasons. Invalid JSON will throw an exception.
             */
-            export function ToObject(jsonText: string): Object {
+            export function toObject(jsonText: string): Object {
                 if (typeof jsonText !== "string" || !jsonText)
                     return null;
 
@@ -59,6 +59,18 @@ namespace DS {
                             o === void 0 ? {} : o);
                 }
                 return global.JSON.stringify(_build(val, depth), null, space);
+            }
+
+            /** Attempts to parse a string as JSON and returns the result.  If the value is not a string, or the conversion
+             * fails, the value is returned as is. This is used mainly in message queue processing, so JSON can convert to
+             * an object by default for the handlers, otherwise the value is sent as is.
+            */
+            export function toObjectOrValue<T extends object | any>(value: T): T {
+                if (typeof value != 'string' || !isJSON(value)) return value;
+                try {
+                    return <any>JSON.toObject(value);
+                }
+                catch (err) { return value; }
             }
 
             // ===================================================================================================================

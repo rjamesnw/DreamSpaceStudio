@@ -315,7 +315,7 @@
         export function parseJsonElseKeepAsIs<T = any>(value: any): T {
             try {
                 if (typeof value == 'string' && Data.JSON.isJSON(value))
-                    return <T>Data.JSON.ToObject(value);
+                    return <T>Data.JSON.toObject(value);
             }
             catch (err) { return value; }
         }

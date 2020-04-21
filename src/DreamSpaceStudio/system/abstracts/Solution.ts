@@ -56,6 +56,9 @@
             /** A list of user IDs and assigned roles for this project. */
             readonly userSecurity = new UserAccess();
 
+            /** A name for the project. */
+            name: string;
+
             /** A description for the project. */
             description: string;
 

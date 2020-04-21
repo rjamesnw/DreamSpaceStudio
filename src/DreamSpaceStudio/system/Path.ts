@@ -157,5 +157,4 @@ namespace DS {
          */
         export function isAbsolute(path: string) { return absRegex.test(path); }
     }
-
 }

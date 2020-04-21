@@ -9,8 +9,8 @@
     "noImplicitAny": true,
     "incremental": true,
     "outFile": "server_api.js",
-    "target": "es6",
-    "lib": [ "es6", "dom" ],
+    "target": "ES2017",
+    "lib": [ "ES2017", "dom" ],
     "types": [ "node" ] // (include only types we need; prevents node types from being included)
   },
   "include": [

@@ -3,6 +3,16 @@
 // such as DS.init() to execute callbacks to finalize to loading process (must be called by the end user).
 // ###########################################################################################################################
 
+interface Array<T> {
+    /** Removes the specified item and returns true if removed, or false if not found. */
+    remove(item: T): boolean;
+}
+if (!Array.prototype.remove) // Primarily to help support conversions from C# - also, this should exist anyhow!
+    Array.prototype.remove = function (this: Array<any>, item: any) {
+        var i = this.indexOf(this);
+        return i > -1 ? (this.splice(i, 1), true) : false;
+    };
+
 interface IndexedObject {
     [name: string]: any;
 }
@@ -64,6 +74,13 @@ namespace DS {
 
     /** The current application version (user defined). */
     export var appVersion: string;
+
+    /** The platform-specific end of line character. 
+     *  For browsers, the internet standard is \r\n.
+     *  For NodeJS on Windows, the standard is \r\n.
+     *  For NodeJS on all others this defaults to \n.
+     */
+    export var EOL = "\r\n"; // The internet standard.  The server side code will update this to the platform standard.
 
     /**
      * The root namespace for the DreamSpace system.

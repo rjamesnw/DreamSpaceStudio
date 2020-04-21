@@ -1,3 +1,7 @@
+interface Array<T> {
+    /** Removes the specified item and returns true if removed, or false if not found. */
+    remove(item: T): boolean;
+}
 interface IndexedObject {
     [name: string]: any;
 }
@@ -48,6 +52,12 @@ declare namespace DS {
     var rootns: string;
     /** The current application version (user defined). */
     var appVersion: string;
+    /** The platform-specific end of line character.
+     *  For browsers, the internet standard is \r\n.
+     *  For NodeJS on Windows, the standard is \r\n.
+     *  For NodeJS on all others this defaults to \n.
+     */
+    var EOL: string;
     /**
      * The root namespace for the DreamSpace system.
      */
@@ -483,6 +493,20 @@ declare namespace DS {
          * This function is typically used with non-implemented functions in abstract types.
          */
         static notImplemented(functionNameOrTitle: string, source?: object, message?: string): Exception;
+        /**
+         * Logs an "Argument Required" error message with an optional title, and returns an associated 'Exception'
+         * object for the caller to throw.
+         * The source of the exception object will be associated with the 'LogItem' object.
+         * This function is typically used with non-implemented functions in abstract types.
+         */
+        static argumentRequired(functionNameOrTitle: string, argumentName: string, source?: object, message?: string): Exception;
+        /**
+         * Logs an "Argument Cannot Be Null" error message with an optional title, and returns an associated 'Exception'
+         * object for the caller to throw.
+         * The source of the exception object will be associated with the 'LogItem' object.
+         * This function is typically used with non-implemented functions in abstract types.
+         */
+        static argumentUndefinedOrNull(functionNameOrTitle: string, argumentName: string, source?: object, message?: string): Exception;
         /** Returns this exception and any inner exceptions formatted for display (simply calls DS.getErrorMessage(this, true)). */
         toString(): string;
         valueOf(): string;
@@ -585,7 +609,8 @@ declare namespace DS {
         static get<T = any>(id: string): T;
         [name: string]: any;
         /** A globally unique ID for this object. */
-        _id: string;
+        get _id(): string;
+        set _id(id: string);
         private $__id;
         /** The name of the class the instance was created from. */
         readonly _objectType: string;
@@ -605,7 +630,7 @@ declare namespace DS {
 declare namespace DS {
     /** Represents an object that can have a parent object. */
     abstract class DependentObject extends TrackableObject {
-        readonly parent: DependentObject;
+        get parent(): DependentObject;
         protected __parent: DependentObject;
     }
     interface IDependencyObject extends DependentObject {
@@ -656,7 +681,7 @@ declare namespace DS {
         }
         class NodeList {
             private _owner;
-            readonly length: number;
+            get length(): number;
             constructor(owner: Node, firstNode: Node);
             forEach(callback: (currentValue: Node, currentIndex: number, listObj: this) => void, thisArg?: {}): void;
             /** Returns a node at the given index, or null if the index is out of bounds. */
@@ -699,7 +724,8 @@ declare namespace DS {
             readonly parentElement: Node;
             outerText: any;
             textContent: any;
-            nodeValue: string;
+            get nodeValue(): string;
+            set nodeValue(value: string);
             /** Constructs a new node for the Virtual DOM.
              */
             constructor(
@@ -729,8 +755,9 @@ declare namespace DS {
             /** Gets or sets the child objects based on a string.  When setting a string, the current children are replaced by the parsed result.
              * Please be mindful that this is done on every read, so if the node hierarchy is large this could slow things down.
              */
-            innerHTML: string;
-            readonly outerHTML: string;
+            get innerHTML(): string;
+            set innerHTML(value: string);
+            get outerHTML(): string;
             toString(): string;
             constructor(
             /** The node name.*/
@@ -770,7 +797,7 @@ declare namespace DS {
         }
         abstract class CharacterData extends Node {
             data?: string;
-            readonly length: number;
+            get length(): number;
             constructor(
             /** The node name.*/
             nodeName: string, 
@@ -852,7 +879,7 @@ declare namespace DS {
                  * calling 'validate()' prior to rendering output when overriding 'get outerHTML()'.
                  */
                 abstract validate(): void;
-                readonly outerHTML: string;
+                get outerHTML(): string;
                 /** If this is true, then 'assertSupportedNodeTypes()' and 'assertUnsupportedNodeTypes()' always succeeds. */
                 __disableNodeTypeValidation: boolean;
                 /** Call this to validate supported element types. */
@@ -864,7 +891,7 @@ declare namespace DS {
                 phraseType: PhraseTypes;
                 constructor(nodeName?: string);
                 validate(): void;
-                readonly outerHTML: string;
+                get outerHTML(): string;
             }
             class HTMLText extends TemplateElement {
                 constructor();
@@ -875,7 +902,7 @@ declare namespace DS {
                 headerLevel: number;
                 constructor(/**A value from 1-6.*/ headerLevel?: number);
                 validate(): void;
-                readonly outerHTML: string;
+                get outerHTML(): string;
                 onRedraw(recursive?: boolean): void;
             }
         }
@@ -1001,11 +1028,16 @@ declare namespace DS {
             /** Converts a JSON string into an object with nested objects as required.
              * The given JSON string is validated first before it is parsed for security reasons. Invalid JSON will throw an exception.
             */
-            function ToObject(jsonText: string): Object;
+            function toObject(jsonText: string): Object;
             /** A more powerful version of the built-in JSON.stringify() function that uses the same function to respect the
             * built-in rules while also limiting depth and supporting cyclical references.
             */
             function stringify(val: any, depth: number, replacer: (this: any, key: string, value: any) => any, space?: string | number, onGetObjID?: (val: IndexedObject) => string): string;
+            /** Attempts to parse a string as JSON and returns the result.  If the value is not a string, or the conversion
+             * fails, the value is returned as is. This is used mainly in message queue processing, so JSON can convert to
+             * an object by default for the handlers, otherwise the value is sent as is.
+            */
+            function toObjectOrValue<T extends object | any>(value: T): T;
         }
         /** Represents a value conversion object. */
         interface IValueConverter {
@@ -1136,7 +1168,7 @@ declare namespace DS {
         /** A read-only key string that uniquely identifies the combination of object instance and function in this delegate.
         * This property is set for new instances by default.  Calling 'update()' will update it if necessary.
         */
-        readonly key: string;
+        get key(): string;
         private __key;
         /** The function to be called on the associated object. */
         func: IFunctionInfo;
@@ -1504,13 +1536,15 @@ declare namespace DS {
          */
         static cacheBusting: boolean;
         /** See the 'cacheBusting' property. */
-        static cacheBustingVar: string;
+        static get cacheBustingVar(): string;
+        static set cacheBustingVar(value: string);
         private static _cacheBustingVar;
         /** Disposes this instance, sets all properties to 'undefined', and calls the constructor again (a complete reset). */
         constructor(url: string, type: ResourceTypes | string, method?: string, body?: any, delay?: number, async?: boolean);
         private $__index;
         /** The requested resource URL. If the URL string starts with '~/' then it becomes relative to the content type base path. */
-        url: string;
+        get url(): string;
+        set url(value: string);
         /** The raw unresolved URL given for this resource. Use the 'url' property to resolve content roots when '~' is used. */
         _url: string;
         /**
@@ -1545,7 +1579,7 @@ declare namespace DS {
         /** This gets the transformed response as a result of callback handlers (if any).
           * If no transformations were made, then the value in 'response' is returned as is.
           */
-        readonly transformedResponse: any;
+        get transformedResponse(): any;
         private $__transformedData;
         /** The response code from the XHR response. */
         responseCode: number;
@@ -1557,7 +1591,8 @@ declare namespace DS {
          * A progress/error message related to the status (may not be the same as the response message).
          * Setting this property sets the local message and updates the local message log. Make sure to set 'this.status' first before setting a message.
          */
-        message: string;
+        get message(): string;
+        set message(value: string);
         private _message;
         /** Includes the current message and all previous messages. Use this to trace any silenced errors in the request process. */
         messageLog: string[];
@@ -1807,10 +1842,6 @@ declare namespace DS {
          * Note: If no arguments are passed in (i.e. 'StringUtils.toString()'), then undefined is returned.
          */
         function toString(value?: any): string;
-        /** Reduces multiple consecutive whitespace characters into a single space character.
-         * This helps to make comparing words in a string easier.
-         */
-        function reduceWhitespace(s: string): string;
         /** Splits the lines of the text (delimited by '\r\n', '\r', or '\n') into an array of strings. */
         function getLines(text: string): string[];
         interface IAddLineNumbersFilter {
@@ -1832,6 +1863,10 @@ declare namespace DS {
          * @param includeSingleQuotes Escapes single quotes by doubling them.  This, along with escaping, is typically used to help sanitize strings before storing them in a database.
          */
         function escapeString(str: string, includeSingleQuotes?: boolean): string;
+        /** Reduces multiple consecutive whitespace characters into a single space character.
+         * This helps with either presentation, or when comparing text entered by users.
+         */
+        function reduceWhitespace(s: string): string;
     }
     namespace Encoding {
         enum Base64Modes {
@@ -1872,6 +1907,8 @@ declare namespace DS {
         function getScriptCommentText(html: string): string;
         /** Replaces all tags in the given 'HTML' string with 'tagReplacement' (an empty string by default) and returns the result. */
         function replaceTags(html: string, tagReplacement?: string): string;
+        /** Simply converts '<br/>' into EOL characters and strips all the HTML tags from the given HTML. */
+        function htmlToPlainText(html: string): string;
         /** Encodes any characters other than numbers and letters as html entities.
          * @param html The HTML text to encode (typically to display in a browser).
          * @param ingoreChars You can optionally pass in a list of characters to ignore (such as "\r\n" to maintain source formatting when outputting HTML).
@@ -2361,7 +2398,7 @@ declare namespace DS {
             /** Holds the UTC time the item was stored remotely. If this is undefined and the item is not stored locally then the item is only in memory and that could lead to data loss. */
             storedRemotely: Date;
             /** The last time this*/
-            readonly lastAccessed: Date;
+            get lastAccessed(): Date;
             /** Updates the 'lastAccessed' date+time value to the current value. Touching this directory item also refreshes the dates of all parent items.
              * When the date of an item changes after a touch, it starts the process of reviewing and synchronizing with the back-end.
              */
@@ -2374,15 +2411,16 @@ declare namespace DS {
             syncStatus: SyncStatus;
             lastSynced: Date;
             syncError: string;
-            readonly name: string;
+            get name(): string;
             private _name;
             /** Returns a reference to the parent item.  If there is no parent, then 'null' is returned.
              */
+            get parent(): DirectoryItem;
             /** Sets a new parent type for this.  The current item will be removed from its parent (if any), and added to the given parent. */
-            parent: DirectoryItem;
+            set parent(parent: DirectoryItem);
             private _parent;
             /** The full path + item name. */
-            readonly absolutePath: string;
+            get absolutePath(): string;
             constructor(fileManager: FileManager, parent?: DirectoryItem);
             toString(): string;
             /** Checks if a namespace item exists.  You can also provide a nested item path.
@@ -2406,13 +2444,14 @@ declare namespace DS {
                 /** The function used to create directory instances.
                  * Host programs can overwrite this event property with a handler to create and return derived types instead.
                  */
-                static onCreateDirectory: typeof _defaultCreateDirHandler;
+                static get onCreateDirectory(): typeof _defaultCreateDirHandler;
+                static set onCreateDirectory(value: typeof _defaultCreateDirHandler);
                 private static _onCreateDirectory;
                 protected _childItems: DirectoryItem[];
                 protected _childItemsByName: {
                     [index: string]: DirectoryItem;
                 };
-                readonly hasChildren: boolean;
+                get hasChildren(): boolean;
                 constructor(fileManager: FileManager, parent?: DirectoryItem);
                 getFile(filePath: string): File;
                 getDirectory(path: string): Directory;
@@ -2454,11 +2493,14 @@ declare namespace DS {
                 /** The function used to create file instances.
                  * Host programs can overwrite this event property with a handler to create and return derived types instead.
                  */
-                static onCreateFile: typeof _defaultCreateFileHandler;
+                static get onCreateFile(): typeof _defaultCreateFileHandler;
+                static set onCreateFile(value: typeof _defaultCreateFileHandler);
                 private static _onCreateFile;
-                content: Uint8Array;
+                get content(): Uint8Array;
+                set content(value: Uint8Array);
                 private _contents;
-                text: string;
+                get text(): string;
+                set text(value: string);
                 constructor(fileManager: FileManager, parent?: DirectoryItem, content?: string | Uint8Array);
                 /** Converts the contents to text and returns it base-64 encoded. */
                 toBase64(): string;
@@ -2488,14 +2530,14 @@ declare namespace DS {
              * The file manager tries to keep recently accessed files local (while backed up to remove), and off-loads
              * less-accessed files to save space.
              */
-            static readonly current: FileManager;
+            static get current(): FileManager;
             private static _current;
             /** The URL endpoint for the FlowScript project files API. */
             static apiEndpoint: string;
             /** Just a local property that checks for and returns 'FlowScript.currentUser'. */
-            static readonly currentUser: User;
+            static get currentUser(): User;
             /** The API endpoint to the directory for the current user. */
-            static readonly currentUserEndpoint: string;
+            static get currentUserEndpoint(): string;
             /** The root directory represents the API endpoint at 'FileManager.apiEndpoint'. */
             readonly root: Abstracts.Directory;
             constructor(
@@ -2565,21 +2607,24 @@ declare namespace DS {
             /** The function used to create project instances when a project is created from saved project data.
              * Host programs can overwrite this event property with a handler to create and return derived types instead (such as ProjectUI.ts).
              */
-            static onCreateProject: typeof _defaultCreateProjectHandler;
+            static get onCreateProject(): typeof _defaultCreateProjectHandler;
+            static set onCreateProject(value: typeof _defaultCreateProjectHandler);
             private static _onCreateProject;
-            readonly count: number;
-            readonly projects: Project[];
+            get count(): number;
+            get projects(): Project[];
             private _projects;
-            readonly userIDs: string[];
+            get userIDs(): string[];
             private _userIDs;
             /** The file storage directory for all projects. */
             readonly directory: VirtualFileSystem.Abstracts.Directory;
             /** A list of user IDs and assigned roles for this project. */
             readonly userSecurity: UserAccess;
+            /** A name for the project. */
+            name: string;
             /** A description for the project. */
             description: string;
             /** Returns the startup project, or null if none found. */
-            readonly startupProject: Project;
+            get startupProject(): Project;
             constructor(fileManager?: VirtualFileSystem.FileManager);
             /**
              * Creates a new project with the given title and description.
@@ -2609,11 +2654,12 @@ declare namespace DS {
             /** The function used to create solution instances when a solution is created from saved solution data.
              * Host programs can overwrite this event property with a handler to create and return derived types instead.
              */
-            static onCreateSolution: typeof _defaultCreateSolutionHandler;
+            static get onCreateSolution(): typeof _defaultCreateSolutionHandler;
+            static set onCreateSolution(value: typeof _defaultCreateSolutionHandler);
             private static _onCreateSolution;
-            static readonly solutions: Solution[];
+            static get solutions(): Solution[];
             private static _solutions;
-            static readonly startupSolution: Solution;
+            static get startupSolution(): Solution;
             /** Returns the solution with the specified ID, or null if not found. */
             static get(id: string): Solution;
             /** Returns a list of available solution GUIDs that can be loaded. */
@@ -2661,12 +2707,12 @@ declare namespace DS {
               * developers to move expressions easily between scripts.
               * Use 'addExpressionToBin()' and 'removeExpressionFromBin()' to modify this list, which also triggers the UI to update.
               */
-            readonly expressionBin: SelectedItem[];
+            get expressionBin(): SelectedItem[];
             private _expressionBin;
             onExpressionBinItemAdded: EventDispatcher<Project, (item: SelectedItem, project: Project) => void>;
             onExpressionBinItemRemoved: EventDispatcher<Project, (item: SelectedItem, project: Project) => void>;
             /** Returns the expression that was picked by the user for some operation. In the future this may also be used during drag-n-drop operations. */
-            readonly pickedItem: SelectedItem;
+            get pickedItem(): SelectedItem;
             private _pickedItem;
             constructor(
             /** The solution this project belongs to. */ solution: Solution, 
@@ -2679,7 +2725,7 @@ declare namespace DS {
              * is no free space in the local store, the system will try to sync with a remote store.  If that fails, the
              * data will only be in memory and a UI warning will display.
              */
-            saveToStorage(source?: ISavedProject): void;
+            saveToStorage(source?: ISavedPersistableObject & ISavedProject): void;
             /** Loads and merges/replaces the project values from an object - typically prior to serialization.
              * @param replace If true, the whole project and any changed properties are replaced.  If false (the default), then only unmodified properties get updated.
              */
@@ -2940,6 +2986,7 @@ declare namespace DS {
         "replacedOn": string;
     }
     class FileVersion extends TrackableObject {
+        #private;
         readonly versionManager: VersionManager;
         readonly originalFile: VirtualFileSystem.Abstracts.File;
         readonly file: VirtualFileSystem.Abstracts.File;
@@ -2950,20 +2997,20 @@ declare namespace DS {
         readonly _fileID: string;
         /** The original file name if changed, since replaced files may have the ISO UTC date-time stamp appended. */
         readonly _originalFileID: string;
-        readonly filename: string;
+        get filename(): string;
         /** Returns true if this version is the current version.  Current versions remain in their proper locations and do not
          * exist in the 'versions' repository.
          */
-        readonly isCurrent: boolean;
+        get isCurrent(): boolean;
         /** The version of this persistable instance. If a version number is set, then it will be added to the file name.
          * If not set (the default), then versioning will not be used. Any value set that is less than 1 will be push up to 1 as the
          * starting value during the save process.
          */
-        version: number;
-        private _version?;
+        get version(): number;
+        set version(v: number);
         /** An optional description for this version. */
         _versionDescription?: string;
-        readonly versionedFileName: string;
+        get versionedFileName(): string;
         constructor(versionManager: VersionManager, originalFile: VirtualFileSystem.Abstracts.File);
         /** Saves the versioning details to an object. If no object is specified, then a new empty object is created and returned. */
         saveConfigToObject<T extends ISavedPersistableObject>(target?: T & ISavedFileVersion): T & ISavedFileVersion;
@@ -3032,11 +3079,14 @@ declare namespace DS {
      */
     class Resource extends TrackableObject {
         path: string;
-        resourceID: string;
+        get resourceID(): string;
+        set resourceID(id: string);
         private _resourceID;
-        resource: IResourceSource;
+        get resource(): IResourceSource;
+        set resource(res: IResourceSource);
         private _resource;
-        type: ResourceTypes;
+        get type(): ResourceTypes;
+        set type(type: ResourceTypes);
         private _type;
         isMatch(urlPath: string): boolean;
         getValue(): Promise<any>;
@@ -3066,7 +3116,7 @@ declare namespace DS {
     }
     class UserAccess {
         private _userIDs;
-        readonly length: number;
+        get length(): number;
         /** Assigns a user ID and one or more roles. If roles already exist, the given roles are merged (existing roles are note replaced). */
         add(userID: string, ...roles: UserRoles[]): UserAccessEntry;
         /** Removes a user's access. */
@@ -3124,7 +3174,7 @@ declare namespace DS {
         firstname?: string;
         lastname?: string;
         /** Returns the current user object. */
-        static readonly current: User;
+        static get current(): User;
         /** Triggered when the current user is about to change.  If any handler returns false then the request is cancelled (such as if the current project is not saved yet). */
         static readonly onCurrentUserChanging: EventDispatcher<typeof User, (oldUser: User, newUser: User) => boolean>;
         /** Triggered when the current user has changed. This event cannot be cancelled - use the 'onCurrentUserChanging' event for that. */

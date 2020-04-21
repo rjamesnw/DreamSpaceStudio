@@ -8,8 +8,8 @@
     "noImplicitAny": true,
     "incremental": true,
     "outFile": "api.js",
-    "target": "es6",
-    "lib": [ "es6", "dom" ],
+    "target": "ES2017",
+    "lib": [ "ES2017", "dom" ],
     "types": [ "node", "request" ] // (include only types we need; prevents node types from being included)
   },
   "include": [

@@ -1,4 +1,6 @@
 namespace DS {
+    export var EOL = process.platform === 'win32' ? '\r\n' : '\n';
+
     /** The root of the website on the file system. The value defaults to the current working node directory, but the server
      * startup process should determine the web root and set it here before booting up the rest of the server.
      */
@@ -15,4 +17,16 @@ namespace DS {
         get: () => { return _contentbRoot || Path.combine(webRoot, "public"); },
         set: (val: string) => { _contentbRoot = val; }
     });
+
+    export namespace Path {
+        /**
+         * Converts the given path into an absolute path.
+         * NOTE: Make sure 'DS.webRoot' is set correctly to the current website working directory.
+         * @param {string} path The path to convert to an absolute path, based on the current working root path specified in 'DS.webRoot'.
+         * @returns The absolute path.
+         */
+        export function toAbsolute(path: string) {
+            return Path.isAbsolute(path) ? path : Path.combine(DS.webRoot, path);
+        }
+    }
 }

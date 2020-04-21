@@ -46,4 +46,30 @@ namespace DS {
             });
         }
     }
+
+    export namespace DNS {
+        export var hostToIPCache: { [i: string]: string } = {}; // (Note: this "cache" gets updated also when getIP() gets called so we can quickly resolve known IPs)
+
+        export var hostToIPFallbacks: { [i: string]: string } = { // (in case a host fails, these are the known IPs)
+        };
+
+        /** Tries to resolve an IP for a host.  It is used mainly to test if a host can be resolved, or to translate known hosts to
+         * previously known IPs upon failure. If no IP is found then an empty string is returned (no exception is thrown).
+         */
+        export function getIP(host: string): Promise<string> {
+            if (host in hostToIPCache) return Promise.resolve(hostToIPCache[host]);
+            var dns: typeof import('dns') = require('dns');
+            return new Promise<string>((res, rej) => dns.lookup(host, function (err, ip) {
+                if (err) {
+                    if (err) console.warn(`Host '${host}' failed to resolve with this error: `, err);
+                    // ... on error try to translate some known hosts ...
+                    ip = host in hostToIPFallbacks ? hostToIPFallbacks[host] || "" : "";
+                    hostToIPCache[host] = ip;
+                    return res(ip); // (failed to pull and IP for this host)
+                }
+                hostToIPCache[host] = ip;
+                res(ip);
+            }));
+        }
+    }
 }

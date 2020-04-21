@@ -165,6 +165,15 @@ namespace DS {
         export function reduceWhitespace(s: string) {
             return (typeof s != 'string' ? toString(s) : s).replace(/\s+/g, ' ');
         }
+
+        /**
+         * Returns true if string content is undefined, null, empty, or only whitespace.
+         * @param {string} value
+         */
+        export function isEmptyOrWhitespace(value: string) {
+            if (!(value ?? false)) return true;
+            return reduceWhitespace(value) == ' ';
+        }
     }
 
     // ========================================================================================================================
@@ -393,7 +402,7 @@ namespace DS {
 
         /** Simply converts '<br/>' into EOL characters and strips all the HTML tags from the given HTML. */
         export function htmlToPlainText(html: string) {
-            return replaceTags(toString(html).replace(/<br\s*\/?>/g, '\r\n'));
+            return replaceTags(StringUtils.toString(html).replace(/<br\s*\/?>/g, '\r\n'));
         }
 
         // --------------------------------------------------------------------------------------------------------------------

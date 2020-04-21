@@ -41,7 +41,7 @@ var app = express();
 // ... apply the basic templating engine ...
 
 templateEngine.apply(app);
-DS.StringUtils.toString
+
 // ... get the virtual file system ...
 
 var fm = DS.VirtualFileSystem.FileManager.current;

@@ -3,7 +3,11 @@ namespace DS {
     export interface IConfigBaseObject extends ISavedTrackableObject {
     }
 
-    /** A config-based object is one that does not contain any file contents.  The whole object is represented by a JSON config file (*.json). */
+    /** A config-based object is one that does not contain any file contents.
+     *  The whole object is represented by a JSON config file (*.json).
+     *  Normally the implementer tracks where the JSON should be loaded from or saved to, and this base object then tracks
+     *  the state of that object, including caching it to detect property changes.
+     */
     export class ConfigBaseObject extends TrackableObject {
 
         /** Determines if a property has changed by comparing the last config object for this object instance with the new one supplied.

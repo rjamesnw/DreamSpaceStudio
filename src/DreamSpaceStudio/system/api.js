@@ -1044,7 +1044,7 @@ var DS;
          * This function is typically used with non-implemented functions in abstract types.
          */
         static argumentRequired(functionNameOrTitle, argumentName, source, message) {
-            var msg = `The parameter '${argumentName}' of function '${functionNameOrTitle}' is required.` + (message ? " " + message : "");
+            var msg = `A valid value for parameter '${argumentName}' of function '${functionNameOrTitle}' is required.` + (message ? " " + message : "");
             if (DS.Diagnostics && DS.Diagnostics.log) {
                 var logItem = DS.Diagnostics.log(functionNameOrTitle, msg, DS.LogTypes.Error);
                 return new Exception(logItem, source);
@@ -1060,6 +1060,21 @@ var DS;
          */
         static argumentUndefinedOrNull(functionNameOrTitle, argumentName, source, message) {
             var msg = `The parameter '${argumentName}' of function '${functionNameOrTitle}' cannot be undefined or null.` + (message ? " " + message : "");
+            if (DS.Diagnostics && DS.Diagnostics.log) {
+                var logItem = DS.Diagnostics.log(functionNameOrTitle, msg, DS.LogTypes.Error);
+                return new Exception(logItem, source);
+            }
+            else
+                return new Exception(DS.error(functionNameOrTitle, msg, source, false, false), source);
+        }
+        /**
+         * Logs an "Argument Cannot Be Null" error message with an optional title, and returns an associated 'Exception'
+         * object for the caller to throw.
+         * The source of the exception object will be associated with the 'LogItem' object.
+         * This function is typically used with non-implemented functions in abstract types.
+         */
+        static invalidArgument(functionNameOrTitle, argumentName, source, message) {
+            var msg = `The argument given for parameter '${argumentName}' of function '${functionNameOrTitle}' is not valid.` + (message ? " " + message : "");
             if (DS.Diagnostics && DS.Diagnostics.log) {
                 var logItem = DS.Diagnostics.log(functionNameOrTitle, msg, DS.LogTypes.Error);
                 return new Exception(logItem, source);
@@ -1846,7 +1861,7 @@ var DS;
                         return;
                     this.tagName = (this.tagName || "").toLowerCase();
                     //??args = <string[]><any>arguments;
-                    if (args.length == 1 && typeof args[0] != 'undefined' && typeof args[0] != 'string' && args[0].length)
+                    if (args.length == 1 && args[0] && Array.isArray(args[0]) && args[0].length)
                         args = args[0]; // (first parameter is an array of supported type names)
                     for (var i = 0; i < args.length; i++)
                         if (this.tagName == args[i])
@@ -1859,7 +1874,7 @@ var DS;
                         return;
                     this.tagName = (this.tagName || "").toLowerCase();
                     //??args = <string[]><any>arguments;
-                    if (args.length == 1 && typeof args[0] != 'undefined' && typeof args[0] != 'string' && args[0].length)
+                    if (args.length == 1 && args[0] && Array.isArray(args[0]) && args[0].length)
                         args = args[0]; // (first parameter is an array of unsupported type names)
                     for (var i = 0; i < args.length; i++)
                         if (this.tagName == args[i])
@@ -2146,7 +2161,11 @@ var DS;
 // ############################################################################################################################################
 var DS;
 (function (DS) {
-    /** A config-based object is one that does not contain any file contents.  The whole object is represented by a JSON config file (*.json). */
+    /** A config-based object is one that does not contain any file contents.
+     *  The whole object is represented by a JSON config file (*.json).
+     *  Normally the implementer tracks where the JSON should be loaded from or saved to, and this base object then tracks
+     *  the state of that object, including caching it to detect property changes.
+     */
     class ConfigBaseObject extends DS.TrackableObject {
         /** Determines if a property has changed by comparing the last config object for this object instance with the new one supplied.
           * If no config object exists, then all properties are considered in a 'changed' (unsaved) state, because they are new.
@@ -3040,7 +3059,7 @@ var DS;
             return parts;
         }
         Path.getPathParts = getPathParts;
-        /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,).
+        /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator).
          * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
          * Examples:
          * - "/A/B/C/" => "/A/B/C"
@@ -3060,7 +3079,7 @@ var DS;
             return (i1 > 0 ? "/" : "") + parts.slice(i1, i2 + 1).join('/');
         }
         Path.getPath = getPath;
-        /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,).
+        /** Returns the filename minus the directory path.
         * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
         * Examples:
         * - "/A/B/C/" => ""
@@ -4294,6 +4313,16 @@ var DS;
             return (typeof s != 'string' ? toString(s) : s).replace(/\s+/g, ' ');
         }
         StringUtils.reduceWhitespace = reduceWhitespace;
+        /**
+         * Returns true if string content is undefined, null, empty, or only whitespace.
+         * @param {string} value
+         */
+        function isEmptyOrWhitespace(value) {
+            if (!(value !== null && value !== void 0 ? value : false))
+                return true;
+            return reduceWhitespace(value) == ' ';
+        }
+        StringUtils.isEmptyOrWhitespace = isEmptyOrWhitespace;
     })(StringUtils = DS.StringUtils || (DS.StringUtils = {}));
     // ========================================================================================================================
     let Encoding;
@@ -4506,7 +4535,7 @@ var DS;
         // --------------------------------------------------------------------------------------------------------------------
         /** Simply converts '<br/>' into EOL characters and strips all the HTML tags from the given HTML. */
         function htmlToPlainText(html) {
-            return replaceTags(toString(html).replace(/<br\s*\/?>/g, '\r\n'));
+            return replaceTags(StringUtils.toString(html).replace(/<br\s*\/?>/g, '\r\n'));
         }
         HTML.htmlToPlainText = htmlToPlainText;
         // --------------------------------------------------------------------------------------------------------------------

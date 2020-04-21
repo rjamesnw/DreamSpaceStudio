@@ -1,4 +1,4 @@
-namespace ds {
+namespace DS {
     export namespace Utilities {
         var _promisify: typeof import('util').promisify = require('util').promisify;
         /** Converts a function, that accepts a callback as the last parameter in the form "(err: Error | null, result: TResult) => void",

@@ -38,7 +38,7 @@ namespace DS {
             return parts;
         }
 
-        /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,). 
+        /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator). 
          * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
          * Examples:
          * - "/A/B/C/" => "/A/B/C"
@@ -55,7 +55,7 @@ namespace DS {
             return (i1 > 0 ? "/" : "") + parts.slice(i1, i2 + 1).join('/');
         }
 
-        /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,). 
+        /** Returns the filename minus the directory path.
         * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
         * Examples:
         * - "/A/B/C/" => ""

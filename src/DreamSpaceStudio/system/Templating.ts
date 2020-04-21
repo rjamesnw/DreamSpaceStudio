@@ -61,7 +61,7 @@
                     if (this.__disableNodeTypeValidation) return;
                     this.tagName = (this.tagName || "").toLowerCase();
                     //??args = <string[]><any>arguments;
-                    if (args.length == 1 && typeof args[0] != 'undefined' && typeof args[0] != 'string' && args[0].length)
+                    if (args.length == 1 && args[0] && Array.isArray(args[0]) && args[0].length)
                         args = <string[]><any>args[0]; // (first parameter is an array of supported type names)
                     for (var i = 0; i < args.length; i++)
                         if (this.tagName == args[i]) return true;
@@ -73,7 +73,7 @@
                     if (this.__disableNodeTypeValidation) return;
                     this.tagName = (this.tagName || "").toLowerCase();
                     //??args = <string[]><any>arguments;
-                    if (args.length == 1 && typeof args[0] != 'undefined' && typeof args[0] != 'string' && args[0].length)
+                    if (args.length == 1 && args[0] && Array.isArray(args[0]) && args[0].length)
                         args = <string[]><any>args[0]; // (first parameter is an array of unsupported type names)
                     for (var i = 0; i < args.length; i++)
                         if (this.tagName == args[i])

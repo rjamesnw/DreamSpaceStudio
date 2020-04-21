@@ -17,6 +17,7 @@
     "./ds.ts", // (make this first)
     "./_global.ts",
     "./io.ts",
+    "./Utilities.ts",
     "./**/*.ts"
   ],
   "exclude": [

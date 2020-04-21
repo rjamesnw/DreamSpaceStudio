@@ -20,7 +20,10 @@ export default class Ivona implements ITTSSAPI {
 
     async  CreateSpeech(text: string, voiceID: string, targetFilename: string) {
         try {
-            var fullPath = DS.Path.toAbsolute(targetFilename);
+            if (!DS.Path.getName(targetFilename))
+                throw DS.Exception.error("Ivona.CreateSpeech()", "A file name is missing.");
+
+            var fullFilePath = DS.Path.toAbsolute(targetFilename);
 
             let params = <AWS.Polly.SynthesizeSpeechInput>{
                 'Text': text,
@@ -28,28 +31,24 @@ export default class Ivona implements ITTSSAPI {
                 'VoiceId': voiceID
             }
 
-            var synthesizeSpeech = DS.Utilities.promisify(this.pollyClient.synthesizeSpeech);
-            var data = await synthesizeSpeech(params);
-            if (err) {
-                console.log(err.code)
-            } else if (data) {
+            var data = await this.pollyClient.synthesizeSpeech(params).promise();
+            if (data) {
                 if (data.AudioStream instanceof Buffer) {
-                    var dir = DS.Path.getPath(fullPath);
-                    if (!await fs_exists(fullPath))
-                        await fs_mkdir(fullPath);
-                    await fs_writeFile(fullPath, data.AudioStream)
+                    var dir = DS.Path.getPath(fullFilePath);
+                    if (!await fs_exists(dir))
+                        await fs_mkdir(dir);
+                    await fs_writeFile(fullFilePath, data.AudioStream)
                         .catch(function (err) {
                             if (err) {
                                 return console.log(err)
                             }
                         });
-                    console.log(`Voice has been successfully created at ${fullPath}`);
+                    console.log(`Voice has been successfully created at ${fullFilePath}`);
                 }
             }
         }
         catch (err) {
-
-            var logpath = DS.Path.getPath(fullPath);
+            var logpath = DS.Path.getPath(fullFilePath);
             var logFilename = DS.Path.combine(logpath, "ivona_error.log");
 
             await Ivona.writeErrorMessage(logFilename, DS.getErrorMessage(err));
@@ -69,38 +68,11 @@ export default class Ivona implements ITTSSAPI {
         console.log(msg);
     }
 
-    async getAvailableVoiceIDs(): string[] {
+    async getAvailableVoiceIDs(): Promise<string[]> {
         let params = <AWS.Polly.Types.DescribeVoicesInput>{
             LanguageCode: "en"
         }
-        this.pollyClient.describeVoices(params, (err, response) => {
-            return response.Voices.map(v => v.Id);
-        });
-    }
-}
-
-        private async  IvonaCreateSpeech(string text, string voiceID): byte[]
-{
-    using(var client = new AmazonPollyClient(_AWSCredentials, RegionEndpoint.USEast1))
-        {
-            var request = new SynthesizeSpeechRequest
-                {
-        Text = text,
-            VoiceId = voiceID,
-            OutputFormat = OutputFormat.Mp3
-    };
-    var response = await client.SynthesizeSpeechAsync(request);
-
-    if (response != null) {
-        using(var memoryStream = new MemoryStream())
-            {
-                response.AudioStream.CopyTo(memoryStream);
-        return memoryStream.ToArray();
-    }
-}
-
-return new byte[0];
-            }
-        }
+        var response = await this.pollyClient.describeVoices(params).promise();
+        return response?.Voices.map(v => v.Id) ?? [];
     }
 }

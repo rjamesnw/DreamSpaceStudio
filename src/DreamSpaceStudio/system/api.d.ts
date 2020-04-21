@@ -2,8 +2,8 @@ interface Array<T> {
     /** Removes the specified item and returns true if removed, or false if not found. */
     remove(item: T): boolean;
 }
-interface IndexedObject {
-    [name: string]: any;
+interface IndexedObject<T = any> {
+    [name: string]: T;
 }
 declare type Writeable<T> = {
     -readonly [P in keyof T]: T[P];
@@ -507,6 +507,13 @@ declare namespace DS {
          * This function is typically used with non-implemented functions in abstract types.
          */
         static argumentUndefinedOrNull(functionNameOrTitle: string, argumentName: string, source?: object, message?: string): Exception;
+        /**
+         * Logs an "Argument Cannot Be Null" error message with an optional title, and returns an associated 'Exception'
+         * object for the caller to throw.
+         * The source of the exception object will be associated with the 'LogItem' object.
+         * This function is typically used with non-implemented functions in abstract types.
+         */
+        static invalidArgument(functionNameOrTitle: string, argumentName: string, source?: object, message?: string): Exception;
         /** Returns this exception and any inner exceptions formatted for display (simply calls DS.getErrorMessage(this, true)). */
         toString(): string;
         valueOf(): string;
@@ -736,7 +743,7 @@ declare namespace DS {
             appendChild(child: Node): void;
             removeChild(child: Node): void;
             contains(node: Node): boolean;
-            cloneNode(): string | number | boolean | IndexedObject;
+            cloneNode(): string | number | boolean | IndexedObject<any>;
             getRootNode(): Node;
             hasChildNodes(): boolean;
             insertBefore(sibling: Node, child: Node): void;
@@ -993,7 +1000,11 @@ declare namespace DS {
 declare namespace DS {
     interface IConfigBaseObject extends ISavedTrackableObject {
     }
-    /** A config-based object is one that does not contain any file contents.  The whole object is represented by a JSON config file (*.json). */
+    /** A config-based object is one that does not contain any file contents.
+     *  The whole object is represented by a JSON config file (*.json).
+     *  Normally the implementer tracks where the JSON should be loaded from or saved to, and this base object then tracks
+     *  the state of that object, including caching it to detect property changes.
+     */
     class ConfigBaseObject extends TrackableObject {
         /** Determines if a property has changed by comparing the last config object for this object instance with the new one supplied.
           * If no config object exists, then all properties are considered in a 'changed' (unsaved) state, because they are new.
@@ -1380,7 +1391,7 @@ declare namespace DS {
         function isValidFileName(name: string): boolean;
         /** Splits and returns the path parts, validating each one and throwing an exception if any are invalid. */
         function getPathParts(path: string): string[];
-        /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,).
+        /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator).
          * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
          * Examples:
          * - "/A/B/C/" => "/A/B/C"
@@ -1390,7 +1401,7 @@ declare namespace DS {
          * - "" => ""
          */
         function getPath(filepath: string): string;
-        /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator,).
+        /** Returns the filename minus the directory path.
         * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
         * Examples:
         * - "/A/B/C/" => ""
@@ -1867,6 +1878,11 @@ declare namespace DS {
          * This helps with either presentation, or when comparing text entered by users.
          */
         function reduceWhitespace(s: string): string;
+        /**
+         * Returns true if string content is undefined, null, empty, or only whitespace.
+         * @param {string} value
+         */
+        function isEmptyOrWhitespace(value: string): boolean;
     }
     namespace Encoding {
         enum Base64Modes {

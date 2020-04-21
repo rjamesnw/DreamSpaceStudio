@@ -91,8 +91,8 @@ namespace DS {
         Video_WMV = ".wmv",
         Video_FLV = ".flv"
     }
-    (<any>ResourceExtensions)[<any>'.tpl.html'] = ResourceExtensions[<any>ResourceExtensions.Text_JQueryTemplate]; // (map to the same 'Text_JQueryTemplate' target)
-    (<any>ResourceExtensions)[<any>'.tpl'] = ResourceExtensions[<any>ResourceExtensions.Text_JQueryTemplate]; // (map to the same 'Text_JQueryTemplate' target)
+    (<IndexedObject<string>>ResourceExtensions)['.tpl.html'] = (<IndexedObject<string>>ResourceExtensions)[ResourceExtensions.Text_JQueryTemplate]; // (map to the same 'Text_JQueryTemplate' target)
+    (<IndexedObject<string>>ResourceExtensions)['.tpl'] = (<IndexedObject<string>>ResourceExtensions)[ResourceExtensions.Text_JQueryTemplate]; // (map to the same 'Text_JQueryTemplate' target)
 
     /** Return the resource (MIME) type of a given extension (with or without the period). */
     export function getResourceTypeFromExtension(ext: string): ResourceTypes;
@@ -102,7 +102,7 @@ namespace DS {
         if (ext === void 0 || ext === null) return void 0;
         var _ext = "" + ext; // (make sure it's a string)
         if (_ext.charAt(0) != '.') _ext = '.' + _ext; // (a period is required)
-        return <any>ResourceTypes[<any>ResourceExtensions[ext]];
+        return <any>(<IndexedObject<string>>ResourceTypes)[(<IndexedObject<string>>ResourceExtensions)[ext]];
     }
 
     export enum RequestStatuses {

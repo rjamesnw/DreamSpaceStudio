@@ -13,8 +13,8 @@ if (!Array.prototype.remove) // Primarily to help support conversions from C# - 
         return i > -1 ? (this.splice(i, 1), true) : false;
     };
 
-interface IndexedObject {
-    [name: string]: any;
+interface IndexedObject<T = any> {
+    [name: string]: T;
 }
 
 type Writeable<T> = {

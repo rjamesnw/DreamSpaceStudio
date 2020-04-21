@@ -1,6 +1,6 @@
 ﻿export interface IMemoryObject {
     /** The memory instance this object belongs to. */
-    Memory: Memory;
+    memory: Memory;
 }
 
 export default class Memory implements IMemoryObject {
@@ -8,7 +8,7 @@ export default class Memory implements IMemoryObject {
 
     public readonly Brain Brain;
 
-    Memory IMemoryObject.Memory { get { return this; } }
+    memory IMemoryObject.memory { get { return this; } }
 
         /// <summary>
         /// The dictionary holds both the RAW text, without context (no duplicates), and various 'DictionaryEntry' instances,

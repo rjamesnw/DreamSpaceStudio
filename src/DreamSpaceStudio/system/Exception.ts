@@ -209,7 +209,7 @@ namespace DS {
          * This function is typically used with non-implemented functions in abstract types.
          */
         static argumentRequired(functionNameOrTitle: string, argumentName: string, source?: object, message?: string): Exception {
-            var msg = `The parameter '${argumentName}' of function '${functionNameOrTitle}' is required.` + (message ? " " + message : "");
+            var msg = `A valid value for parameter '${argumentName}' of function '${functionNameOrTitle}' is required.` + (message ? " " + message : "");
             if (Diagnostics && Diagnostics.log) {
                 var logItem = Diagnostics.log(functionNameOrTitle, msg, LogTypes.Error);
                 return new Exception(logItem, source);
@@ -225,6 +225,21 @@ namespace DS {
          */
         static argumentUndefinedOrNull(functionNameOrTitle: string, argumentName: string, source?: object, message?: string): Exception {
             var msg = `The parameter '${argumentName}' of function '${functionNameOrTitle}' cannot be undefined or null.` + (message ? " " + message : "");
+            if (Diagnostics && Diagnostics.log) {
+                var logItem = Diagnostics.log(functionNameOrTitle, msg, LogTypes.Error);
+                return new Exception(logItem, source);
+            }
+            else return new Exception(error(functionNameOrTitle, msg, source, false, false), source);
+        }
+
+        /** 
+         * Logs an "Argument Cannot Be Null" error message with an optional title, and returns an associated 'Exception'
+         * object for the caller to throw.
+         * The source of the exception object will be associated with the 'LogItem' object.
+         * This function is typically used with non-implemented functions in abstract types.
+         */
+        static invalidArgument(functionNameOrTitle: string, argumentName: string, source?: object, message?: string): Exception {
+            var msg = `The argument given for parameter '${argumentName}' of function '${functionNameOrTitle}' is not valid.` + (message ? " " + message : "");
             if (Diagnostics && Diagnostics.log) {
                 var logItem = Diagnostics.log(functionNameOrTitle, msg, LogTypes.Error);
                 return new Exception(logItem, source);

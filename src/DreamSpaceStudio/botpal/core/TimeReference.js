@@ -4,87 +4,60 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /// Represents a slice of time sequence.  This value also maintains a global sequence counter that makes sure the subsequent fast calls - where
 /// the time elapsed may be 0 - are kept in order.  No two new/updated time references should ever be equal.
 /// </summary>
-class TimeReference {
-}
-exports.default = TimeReference;
-{
-    get;
-    {
-        return new TimeReference();
+let TimeReference = /** @class */ (() => {
+    class TimeReference {
+        /// <summary>
+        /// Initializes a new time reference.
+        /// </summary>
+        /// <param name="ticks">Set this to a '{DateTime}.Ticks' value, or leave out to use the current UTC date/time.</param>
+        constructor(ticks) {
+            this.Timestamp = ticks !== null && ticks !== void 0 ? ticks : Date.now();
+            this.SeqenceID = TimeReference._seqenceIDCounter++;
+        }
+        /// <summary>
+        /// Returns a new 'TimeReference' value set to the current time and next sequence count.
+        /// </summary>
+        static getCurrentTime() { return new TimeReference(); }
+        toString() {
+            return this.Timestamp.toString() + this.SeqenceID.toString();
+        }
+        //public override int GetHashCode()
+        //{
+        //    return (int)(Timestamp + SeqenceID);
+        //}
+        equals(obj) {
+            return (obj instanceof TimeReference) && obj.Timestamp == this.Timestamp && obj.SeqenceID == this.SeqenceID;
+        }
     }
-}
-/// <summary>
-/// A counter is used to maintain a global input sequence in case the time lapse is too short between requests.
-/// </summary>
-internal;
-Int64;
-_SeqenceIDCounter = 1;
-Int64;
-Timestamp;
-Int64;
-SeqenceID;
-TimeReference(long ? ticks = null : );
-{
-    Timestamp = ticks !== null && ticks !== void 0 ? ticks : DateTime.UtcNow.Ticks;
-    SeqenceID = _SeqenceIDCounter++;
-}
-override;
-string;
-ToString();
-{
-    return Timestamp.ToString() + SeqenceID.ToString();
-}
-override;
-int;
-GetHashCode();
-{
-    return (int)(Timestamp + SeqenceID);
-}
-override;
-bool;
-Equals(object, obj);
-{
-    return (obj);
-    is;
-    TimeReference;
-     && ((TimeReference));
-    obj;
-    Timestamp == Timestamp && ((TimeReference));
-    obj;
-    SeqenceID == SeqenceID;
-}
-class Comparer {
-}
-Comparer < TimeReference >
-    {
-        override, int, Compare(TimeReference, x, TimeReference, y) {
-            Int64;
-            comp = x.Timestamp - y.Timestamp;
-            if (comp < 0)
-                return -1;
-            else if (comp > 0)
-                return 1;
-            comp = x.SeqenceID - y.SeqenceID;
-            return comp < 0 ? -1 : comp > 0 ? 1 : 0;
-        }
+    /// <summary>
+    /// A counter is used to maintain a global input sequence in case the time lapse is too short between requests.
+    /// </summary>
+    TimeReference._seqenceIDCounter = 1;
+    /**
+     * Plug in this comparer function to sort in ascending order for instances of this type.
+     */
+    TimeReference.Comparer = function (x, y) {
+        var comp = x.Timestamp - y.Timestamp;
+        if (comp < 0)
+            return -1;
+        else if (comp > 0)
+            return 1;
+        comp = x.SeqenceID - y.SeqenceID;
+        return comp < 0 ? -1 : comp > 0 ? 1 : 0;
     };
-Comparer;
-DefaultComparer = new Comparer();
-class ReverseComparer {
-}
-Comparer < TimeReference >
-    {
-        override, int, Compare(TimeReference, x, TimeReference, y) {
-            Int64;
-            comp = y.Timestamp - x.Timestamp;
-            if (comp < 0)
-                return -1;
-            else if (comp > 0)
-                return 1;
-            comp = y.SeqenceID - x.SeqenceID;
-            return comp < 0 ? -1 : comp > 0 ? 1 : 0;
-        }
+    /**
+     * Plug in this comparer function to sort in descending order for instances of this type.
+     */
+    TimeReference.ReverseComparer = function (x, y) {
+        var comp = y.Timestamp - x.Timestamp;
+        if (comp < 0)
+            return -1;
+        else if (comp > 0)
+            return 1;
+        comp = y.SeqenceID - x.SeqenceID;
+        return comp < 0 ? -1 : comp > 0 ? 1 : 0;
     };
-ReverseComparer;
-DefaultReverseComparer = new ReverseComparer();
+    return TimeReference;
+})();
+exports.default = TimeReference;
 //# sourceMappingURL=TimeReference.js.map

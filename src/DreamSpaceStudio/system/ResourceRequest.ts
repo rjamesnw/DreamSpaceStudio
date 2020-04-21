@@ -687,7 +687,7 @@ namespace DS {
             if (this.status == RequestStatuses.Error) {
                 var msgs = this.messageLog.join("\r\n· ");
                 if (msgs) msgs = ":\r\n· " + msgs; else msgs = ".";
-                throw new Error("Unhandled error loading resource " + (typeof this.type == 'string' ? ResourceTypes[<any>this.type] : this.type) + " from '" + this.url + "'" + msgs + "\r\n");
+                throw new Error("Unhandled error loading resource " + (typeof this.type == 'string' ? (<IndexedObject<string>>ResourceTypes)[this.type] : this.type) + " from '" + this.url + "'" + msgs + "\r\n");
             }
         }
 

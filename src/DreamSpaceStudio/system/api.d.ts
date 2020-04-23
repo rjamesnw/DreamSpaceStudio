@@ -1039,7 +1039,7 @@ declare namespace DS {
             /** Converts a JSON string into an object with nested objects as required.
              * The given JSON string is validated first before it is parsed for security reasons. Invalid JSON will throw an exception.
             */
-            function toObject(jsonText: string): Object;
+            function toObject<T extends IndexedObject = IndexedObject>(jsonText: string): T;
             /** A more powerful version of the built-in JSON.stringify() function that uses the same function to respect the
             * built-in rules while also limiting depth and supporting cyclical references.
             */
@@ -1883,6 +1883,14 @@ declare namespace DS {
          * @param {string} value
          */
         function isEmptyOrWhitespace(value: string): boolean;
+        /**
+         * Compares two strings, ignoring case by default.
+         * If 'a' is equal to 'b' then 0 is returned.  If 'a' should come before 'b', then -1 is returned, otherwise 1 is returned.
+         * @param {string} a
+         * @param {string} b
+         * @returns
+         */
+        function compare(a: string, b: string, ignorecase?: boolean): number;
     }
     namespace Encoding {
         enum Base64Modes {

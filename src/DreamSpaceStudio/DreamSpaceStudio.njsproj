@@ -60,7 +60,6 @@
     <TypeScriptCompile Include="actions\_globals.ts" />
     <TypeScriptCompile Include="actions\_server\_globals.ts" />
     <TypeScriptCompile Include="botpal\concepts\Adverbs.ts" />
-    <TypeScriptCompile Include="botpal\concepts\Color.ts" />
     <TypeScriptCompile Include="botpal\concepts\ColorConcept.ts" />
     <TypeScriptCompile Include="botpal\concepts\CommonNounsConcept.ts" />
     <TypeScriptCompile Include="botpal\concepts\Conjunctions.ts" />

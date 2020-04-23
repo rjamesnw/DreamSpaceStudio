@@ -1,275 +1,247 @@
-using;
-BotPal.Services.TTS;
-using;
-BotPal.Utilities;
-using;
-Common;
-using;
-System;
-using;
-System.Collections.Generic;
-using;
-System.Linq;
-using;
-System.Reflection;
-using;
-System.Text;
-using;
-System.Text.RegularExpressions;
-using;
-System.Threading;
-using;
-System.Threading.Tasks;
-using;
-System.Windows;
-using;
-System.Windows.Threading;
-var BotPal;
-(function (BotPal) {
-    delegate;
-    Task;
-    ResponseHandler(Brain, brain, Response, response);
-    /// <summary>
-    /// The brain is the whole system that observes, evaluates, and decides what to do based on user inputs.
-    /// </summary>
-    class Brain {
-        constructor() {
-            // --------------------------------------------------------------------------------------------------------------------
-            this.LanguageParsingRegex = new Regex("\".*?\"|'.*?'|[A-Za-z']+|[0-9]+|\\s+|.", RegexOptions.Multiline);
-            this._Tasks = new List();
-            this._DelayedTasks = new Dictionary();
-            this._GlobalLocks = new LockableObject();
-        }
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+(brain, response) => ;
+/// <summary>
+/// The brain is the whole system that observes, evaluates, and decides what to do based on user inputs.
+/// </summary>
+class Brain {
+    constructor() {
+        // --------------------------------------------------------------------------------------------------------------------
+        this.LanguageParsingRegex = new RegExp("\".*?\"|'.*?'|[A-Za-z']+|[0-9]+|\\s+|.", 'm');
+        this._Tasks = new List();
+        this._DelayedTasks = new Dictionary();
+        this._GlobalLocks = new LockableObject();
     }
-    {
-        get;
-        {
-            lock(_Operations);
-            return _Operations.ToArray();
-        }
-    }
-    internal;
-    List < Operation > _Operations;
-    new List();
-    Locker;
-    OperationsLocker;
-    {
-        get;
-        {
-            return GetLocker("Operations", "ProcessLoop");
-        }
-    }
-    bool;
-    IsShuttingDown;
-    {
-        get;
-        internal;
-        set;
-    }
-    bool;
-    IsStopped;
-    {
-        get;
-        internal;
-        set;
-    }
-    event;
-    ResponseHandler;
-    Response;
-    virtual;
-    async;
-    Task;
-    DoResponse(Response, response);
-    {
-        if (Response != null)
-            if (_SynchronizationContext != null) {
-                var taskSource = new TaskCompletionSource();
-                _SynchronizationContext.Send(async (_) => { await Response.Invoke(this, response); taskSource.SetResult(true); }, null);
-                await taskSource.Task;
-            }
-            else
-                await Response.Invoke(this, response); // (called directly from this thread as a last resort)
-        //else
-        //{
-        //    // ... try other attempts ...
-        //    Dispatcher dispatcher = Dispatcher.FromThread(_MainThread);
-        //    if (dispatcher != null)
-        //    {
-        //        // We know the thread have a dispatcher that we can use.
-        //        dispatcher.BeginInvoke((Action)(() => Response?.Invoke(this, response)));
-        //    }
-        //    else if (Application.Current != null && !Application.Current.Dispatcher.CheckAccess())
-        //    {
-        //        Application.Current.Dispatcher.BeginInvoke((Action)(() => Response?.Invoke(this, response)));
-        //    }
-        //    else Response?.Invoke(this, response); // (called directly from this thread as a last resort)
-        //}
-    }
-    virtual;
-    Task;
-    DoResponse(string, response);
-    DoResponse(new Response(response));
-    async;
-    Task;
-    Say(string, text, string, voiceCode = null);
-    {
-        if (TTSService == null)
-            TTSService = new DefaultTTSService();
-        await TTSService.Say(text, voiceCode);
-    }
-    Brain(SynchronizationContext, synchronizationContext = null, bool, configureConcepts = true);
-    {
-        _MainThread = Thread.CurrentThread;
-        _SynchronizationContext = synchronizationContext !== null && synchronizationContext !== void 0 ? synchronizationContext : SynchronizationContext.Current; // (supported both in WinForms AND WPF!)
-        Memory = new Memory(this);
-        if (configureConcepts)
-            ConfigureDefaultConcepts();
-        var task = _ProcessOperations(null);
-    }
-    Dictionary < Type, Concept > _Concepts;
-    new Dictionary();
-    IEnumerable < Concept > BotPal.Concepts;
-    _Concepts.Values;
-    List < Exception > ConceptHandlerLoadErrors;
-    new List(); // (one place for all concepts to log errors on registration - the UI should display this on first load)
-    void ConfigureDefaultConcepts();
-    {
-        var conceptTypes = (from), t;
-         in Assembly.GetExecutingAssembly().GetTypes();
-        where;
-        t.IsClass && !t.IsGenericType && !t.IsAbstract && t.IsSubclassOf(typeof (Concept));
-        select;
-        t;
-        ;
-        foreach();
-        var concept;
-         in conceptTypes;
-        {
-            var conceptAttrib = concept.GetCustomAttribute();
-            if (conceptAttrib != null && !conceptAttrib.Enabled)
-                continue;
-            // ... iterate over the concept methods and store them for text matching later ...
-            Concept;
-            conceptInstance = (Concept);
-            Activator.CreateInstance(concept, this);
-            _Concepts[concept] = conceptInstance;
-            conceptInstance.RegisterHandlers();
-        }
-        // ... let all concepts know the core concepts are loaded and ready ...
-        foreach();
-        var concept;
-         in _Concepts.Values;
-        concept.OnAfterAllRegistered();
-    }
-    T;
-    GetConcept();
-    where;
-    T: Concept => (T);
-    _Concepts.Value(typeof (T));
-    Match < ConceptContext > [];
-    FindConceptContexts(string, text, double, threshold = 0.8);
-    {
-        var dicItems = threshold == 1 ? // (if 'threshold' is 1.0 then do a similar [near exact] match [using group keys], otherwise find close partial matches instead.
-            Memory.Dictionary.FindSimilarEntries(Memory.Brain.ToGroupKey(text)).SelectMany(i => i.ConceptContexts.Select(c => new Match(c, 1.0)))
-            : Memory.Dictionary.FindMatchingEntries(text, threshold).SelectMany(m => m.Item.ConceptContexts.Select(c => new Match(c, m.Score)));
-        return dicItems.ToArray();
-    }
-    void Stop(bool, wait = true);
-    {
-        IsShuttingDown = true;
-        if (wait) {
-            Task[];
-            tasks;
-            lock(_Tasks);
-            tasks = _Tasks.Select(t => t.Task).ToArray();
-            Task.WaitAll(tasks, 1000);
-        }
-    }
-    // --------------------------------------------------------------------------------------------------------------------
-    async;
-    Task;
-    _ProcessOperations(BrainTask, btask);
-    {
-        if (btask != null) {
-            Operation[];
-            ops;
-            Operation;
-            op;
-            using(OperationsLocker.WriteLock());
-            {
-                ops = _Operations.ToArray(); // (since the list may update, get a snapshot of the list as it is now)
-            }
-            // TODO: Get time elapsed to break out in case an operation takes too long so we can abort and until the next time (to reduce CPU usage). 
-            for (int; i = 0, n = ops.Length; i < n && !IsShuttingDown)
-                ;
-            ++i;
-            {
-                op = ops[i];
-                var completed = await op.Execute(btask);
-                using(OperationsLocker.WriteLock());
-                {
-                    if (completed)
-                        _Operations.Remove(op);
-                    if (op.IsCompletedWithErrors)
-                        await DoResponse(new Response("Hmmm. Sorry, it looks like I had an internal error with one of my operations. Please contact support and pass along the following details.", null, string.Join(Environment.NewLine, op.Errors.Select(er => Exceptions.GetFullErrorMessage(er)))));
-                    else if (op.Next != null)
-                        _Operations.Add(op.Next);
-                }
-            }
-        }
-        // ... keep triggering this every few milliseconds to batch process operations ...
-        if (!IsShuttingDown)
-            CreateTask(_ProcessOperations).Start(new TimeSpan(0, 0, 0, 0, 100), "Brain", "Operations");
-        else
-            IsStopped = true;
-    }
-    void AddOperation(Operation, op);
+}
+exports.default = Brain;
+{
+    get;
     {
         lock(_Operations);
-        if (!_Operations.Contains(op))
-            _Operations.Add(op);
+        return _Operations.ToArray();
     }
-    BrainTask;
-    CreateEmptyTask();
+}
+internal;
+List < Operation > _Operations;
+new List();
+Locker;
+OperationsLocker;
+{
+    get;
     {
-        var btask = new BrainTask(this);
-        lock(_Tasks);
-        {
-            _Tasks.Add(btask);
-        }
-        return btask;
+        return GetLocker("Operations", "ProcessLoop");
     }
-    BrainTask;
-    CreateTask(Func < BrainTask, Task > action, CancellationToken ? cancelToken = null : );
-    {
-        if (action != null) {
-            var btask = new BrainTask(this, action, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
-            lock(_Tasks);
-            {
-                _Tasks.Add(btask);
-            }
-            return btask;
+}
+bool;
+IsShuttingDown;
+{
+    get;
+    internal;
+    set;
+}
+bool;
+IsStopped;
+{
+    get;
+    internal;
+    set;
+}
+event;
+ResponseHandler;
+Response;
+virtual;
+async;
+Task;
+DoResponse(Response, response);
+{
+    if (Response != null)
+        if (_SynchronizationContext != null) {
+            var taskSource = new TaskCompletionSource();
+            _SynchronizationContext.Send(async (_) => { await Response.Invoke(this, response); taskSource.SetResult(true); }, null);
+            await taskSource.Task;
         }
         else
-            return null;
-    }
-    BrainTask < TState > CreateTask(Action < BrainTask < TState >> action, TState, state, CancellationToken ? cancelToken = null : );
+            await Response.Invoke(this, response); // (called directly from this thread as a last resort)
+    //else
+    //{
+    //    // ... try other attempts ...
+    //    Dispatcher dispatcher = Dispatcher.FromThread(_MainThread);
+    //    if (dispatcher != null)
+    //    {
+    //        // We know the thread have a dispatcher that we can use.
+    //        dispatcher.BeginInvoke((Action)(() => Response?.Invoke(this, response)));
+    //    }
+    //    else if (Application.Current != null && !Application.Current.Dispatcher.CheckAccess())
+    //    {
+    //        Application.Current.Dispatcher.BeginInvoke((Action)(() => Response?.Invoke(this, response)));
+    //    }
+    //    else Response?.Invoke(this, response); // (called directly from this thread as a last resort)
+    //}
+}
+virtual;
+Task;
+DoResponse(string, response);
+DoResponse(new Response(response));
+async;
+Task;
+Say(string, text, string, voiceCode = null);
+{
+    if (TTSService == null)
+        TTSService = new DefaultTTSService();
+    await TTSService.Say(text, voiceCode);
+}
+Brain(SynchronizationContext, synchronizationContext = null, bool, configureConcepts = true);
+{
+    _MainThread = Thread.CurrentThread;
+    _SynchronizationContext = synchronizationContext !== null && synchronizationContext !== void 0 ? synchronizationContext : SynchronizationContext.Current; // (supported both in WinForms AND WPF!)
+    Memory = new Memory(this);
+    if (configureConcepts)
+        ConfigureDefaultConcepts();
+    var task = _ProcessOperations(null);
+}
+Dictionary < Type, Concept > _Concepts;
+new Dictionary();
+IEnumerable < Concept > Concepts;
+_Concepts.Values;
+List < Exception > ConceptHandlerLoadErrors;
+new List(); // (one place for all concepts to log errors on registration - the UI should display this on first load)
+void ConfigureDefaultConcepts();
+{
+    var conceptTypes = (from), t;
+     in Assembly.GetExecutingAssembly().GetTypes();
     where;
-    TState: class {
-        if(action) { }
-    }
-     != null;
+    t.IsClass && !t.IsGenericType && !t.IsAbstract && t.IsSubclassOf(typeof (Concept));
+    select;
+    t;
+    ;
+    foreach();
+    var concept;
+     in conceptTypes;
     {
-        var btask = new BrainTask(this, action, state, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
+        var conceptAttrib = concept.GetCustomAttribute();
+        if (conceptAttrib != null && !conceptAttrib.Enabled)
+            continue;
+        // ... iterate over the concept methods and store them for text matching later ...
+        Concept;
+        conceptInstance = (Concept);
+        Activator.CreateInstance(concept, this);
+        _Concepts[concept] = conceptInstance;
+        conceptInstance.RegisterHandlers();
+    }
+    // ... let all concepts know the core concepts are loaded and ready ...
+    foreach();
+    var concept;
+     in _Concepts.Values;
+    concept.OnAfterAllRegistered();
+}
+T;
+GetConcept();
+where;
+T: Concept => (T);
+_Concepts.Value(typeof (T));
+Match < ConceptContext > [];
+FindConceptContexts(string, text, double, threshold = 0.8);
+{
+    var dicItems = threshold == 1 ? // (if 'threshold' is 1.0 then do a similar [near exact] match [using group keys], otherwise find close partial matches instead.
+        Memory.Dictionary.FindSimilarEntries(Memory.Brain.ToGroupKey(text)).SelectMany(i => i.ConceptContexts.Select(c => new Match(c, 1.0)))
+        : Memory.Dictionary.FindMatchingEntries(text, threshold).SelectMany(m => m.Item.ConceptContexts.Select(c => new Match(c, m.Score)));
+    return dicItems.ToArray();
+}
+void Stop(bool, wait = true);
+{
+    IsShuttingDown = true;
+    if (wait) {
+        Task[];
+        tasks;
+        lock(_Tasks);
+        tasks = _Tasks.Select(t => t.Task).ToArray();
+        Task.WaitAll(tasks, 1000);
+    }
+}
+// --------------------------------------------------------------------------------------------------------------------
+async;
+Task;
+_ProcessOperations(BrainTask, btask);
+{
+    if (btask != null) {
+        Operation[];
+        ops;
+        Operation;
+        op;
+        using(OperationsLocker.WriteLock());
+        {
+            ops = _Operations.ToArray(); // (since the list may update, get a snapshot of the list as it is now)
+        }
+        // TODO: Get time elapsed to break out in case an operation takes too long so we can abort and until the next time (to reduce CPU usage). 
+        for (int; i = 0, n = ops.Length; i < n && !IsShuttingDown)
+            ;
+        ++i;
+        {
+            op = ops[i];
+            var completed = await op.Execute(btask);
+            using(OperationsLocker.WriteLock());
+            {
+                if (completed)
+                    _Operations.Remove(op);
+                if (op.IsCompletedWithErrors)
+                    await DoResponse(new Response("Hmmm. Sorry, it looks like I had an internal error with one of my operations. Please contact support and pass along the following details.", null, string.Join(Environment.NewLine, op.Errors.Select(er => Exceptions.GetFullErrorMessage(er)))));
+                else if (op.Next != null)
+                    _Operations.Add(op.Next);
+            }
+        }
+    }
+    // ... keep triggering this every few milliseconds to batch process operations ...
+    if (!IsShuttingDown)
+        CreateTask(_ProcessOperations).Start(new TimeSpan(0, 0, 0, 0, 100), "Brain", "Operations");
+    else
+        IsStopped = true;
+}
+void AddOperation(Operation, op);
+{
+    lock(_Operations);
+    if (!_Operations.Contains(op))
+        _Operations.Add(op);
+}
+BrainTask;
+CreateEmptyTask();
+{
+    var btask = new BrainTask(this);
+    lock(_Tasks);
+    {
+        _Tasks.Add(btask);
+    }
+    return btask;
+}
+BrainTask;
+CreateTask(Func < BrainTask, Task > action, CancellationToken ? cancelToken = null : );
+{
+    if (action != null) {
+        var btask = new BrainTask(this, action, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
         lock(_Tasks);
         {
-            btask._Index = _Tasks.Count;
             _Tasks.Add(btask);
         }
         return btask;
     }
-    return null;
-})(BotPal || (BotPal = {}));
+    else
+        return null;
+}
+BrainTask < TState > CreateTask(Action < BrainTask < TState >> action, TState, state, CancellationToken ? cancelToken = null : );
+where;
+TState: class {
+    if(action) { }
+}
+ != null;
+{
+    var btask = new BrainTask(this, action, state, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
+    lock(_Tasks);
+    {
+        btask._Index = _Tasks.Count;
+        _Tasks.Add(btask);
+    }
+    return btask;
+}
+return null;
 BrainTask < TState > CreateTask(Action < BrainTask < TState > , TState > action, TState, state, CancellationToken ? cancelToken = null : );
 where;
 TState: class {

@@ -174,6 +174,20 @@ namespace DS {
             if (!(value ?? false)) return true;
             return reduceWhitespace(value) == ' ';
         }
+
+        /**
+         * Compares two strings, ignoring case by default.
+         * If 'a' is equal to 'b' then 0 is returned.  If 'a' should come before 'b', then -1 is returned, otherwise 1 is returned.
+         * @param {string} a
+         * @param {string} b
+         * @returns
+         */
+        export function compare(a: string, b: string, ignorecase = true): number {
+            if ((a === null || a === void 0) && (b === null || b == void 0)) return 1;
+            if (a != null && a !== void 0 && typeof a !== 'string') a = '' + a;
+            if (b != null && b !== void 0 && typeof b !== 'string') b = '' + b;
+            return a.localeCompare(b, undefined, { sensitivity: 'accent' });
+        }
     }
 
     // ========================================================================================================================

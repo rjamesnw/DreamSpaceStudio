@@ -1,261 +1,226 @@
+"use strict";
 var _a, _b, _c, _d, _e, _f, _g, _h;
-using;
-BotPal.Utilities;
-using;
-Common;
-using;
-System;
-using;
-System.Collections.Generic;
-using;
-System.Linq;
-using;
-System.Reflection;
-using;
-System.Text;
-using;
-System.Threading.Tasks;
-var BotPal;
-(function (BotPal) {
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)];
-    class ConceptAttribute {
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ConceptHandlerContext = exports.IntentHandlerAttribute = exports.ConceptHandlerAttribute = exports.ConceptAttribute = void 0;
+const Match_1 = require("./Match");
+function ConceptAttribute(classFn, enabled = true) {
+    var o = classFn;
+    o.enabled = enabled;
+}
+exports.ConceptAttribute = ConceptAttribute;
+/// <summary>
+/// Associates a method on a derived 'Concept' class with words that will trigger it.
+/// </summary>
+function ConceptHandlerAttribute(classFn, triggerWords, pattern = null) {
+    var o = classFn;
+    // (note: good tool to use to check for POS: https://foxtype.com/sentence-tree)
+    /// <param name="triggerWords">Words that will trigger this concept.  You can append a caret (^) to a word to set a part of speech (i.e. "w1^N,w2^V" makes w1 a noun and w2 a verb).</param>
+    /// <param name="pattern">(not yet supported) A pattern to use for ALL trigger words, which is just a more complex criteria that must be settled for running the handler.
+    /// To create a different pattern for different words, use multiple attributes on the same method.</param>
+    o.triggerWords = triggerWords;
+    o.pattern = pattern;
+}
+exports.ConceptHandlerAttribute = ConceptHandlerAttribute;
+/// <summary>
+/// Associates a method on a derived 'Concept' class with words that will trigger it.
+/// </summary>
+function IntentHandlerAttribute(classFn, triggerWords, pattern = null) {
+    var o = classFn;
+    // (note: good tool to use to check for POS: https://foxtype.com/sentence-tree)
+    /// <param name="pattern">(not yet supported) A pattern to use for ALL trigger words, which is just a more complex criteria that must be settled for running the handler.
+    /// To create a different pattern for different words, use multiple attributes on the same method.</param>
+    o.triggerWords = triggerWords;
+    o.pattern = pattern;
+}
+exports.IntentHandlerAttribute = IntentHandlerAttribute;
+/// <summary>
+/// Holds the score and other parameters for concepts while trying to find best concept matches.
+/// </summary>
+class ConceptMatch extends Match_1.default {
+    constructor(owner, conceptContext, score = null) {
+        super(conceptContext, score);
+        this._owner = owner;
     }
-    System.Attribute;
-    {
-        bool;
-        Enabled;
-        ConceptAttribute(bool, enabled = true);
-        {
-            Enabled = enabled;
-        }
-    }
-    /// <summary>
-    /// Associates a method on a derived 'Concept' class with words that will trigger it.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = true)];
-    class ConceptHandlerAttribute {
-    }
-    System.Attribute;
-    {
-        string;
-        TriggerWords;
-        string;
-        Pattern;
-        ConceptHandlerAttribute(string, triggerWords, string, pattern = null);
-        {
-            TriggerWords = triggerWords;
-            Pattern = pattern;
-        }
-    }
-    /// <summary>
-    /// Associates a method on a derived 'Concept' class with words that will trigger it.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = true)];
-    class IntentHandlerAttribute {
-    }
-    System.Attribute;
-    {
-        string;
-        TriggerWords;
-        string;
-        Pattern;
-        IntentHandlerAttribute(string, pattern);
-        {
-            Pattern = pattern;
-        }
-    }
-    /// <summary>
-    /// Holds the score and other parameters for concepts while trying to find best concept matches.
-    /// </summary>
-    class ConceptMatch {
-    }
-    Match < ConceptContext >
-        {
-            MatchedConcepts, Owner
-        }(conceptContext, score);
-    {
-        Owner = owner;
-    }
-})(BotPal || (BotPal = {}));
-delegate;
-Task < ConceptHandlerContext > ConceptHandler(ConceptHandlerContext, context);
-delegate;
-Task < bool > IntentHandler(ConceptHandlerContext, context);
-struct;
-ConceptHandlerContext: IMemoryObject;
+}
+exports.default = ConceptMatch;
+/// <summary>
+/// The context for the concept handler call. 
+/// This object maintains an array of concepts, starting from the left side, and growing towards the right.
+/// As the ProcessConceptsOperation instance processes combinations, it clones contexts and expands the
+/// matched concepts array to match a new combination of concepts.
+/// <para>Note that the context is shared by each handler called in the call chain, and only the 'Index' value (and resulting 'LeftHandlerContext,MatchedConcept,RightHandlerContext' references) is specific to the called handler itself.</para>
+/// </summary>
+class ConceptHandlerContext {
+}
+exports.ConceptHandlerContext = ConceptHandlerContext;
 {
-    Memory;
-    Memory;
+    get;
     {
-        get;
-        {
-            return Operation.Memory;
-        }
+        return Operation.Memory;
     }
-    ProcessConceptsOperation;
-    Operation;
-    IntentContext;
-    Context;
+}
+ProcessConceptsOperation;
+Operation;
+IntentContext;
+Context;
+double;
+Confidence;
+double;
+ConfidenceSum;
+double;
+AvergeConfidence;
+{
+    get;
+    {
+        return ConfidenceSum / (Index + 1);
+    }
+}
+List < List < Match_1.default < IntentHandler >>> ProbableIntentHandlers;
+bool;
+HasProbableIntentHandlers;
+{
+    get;
+    {
+        return (_a = ProbableIntentHandlers === null || ProbableIntentHandlers === void 0 ? void 0 : ProbableIntentHandlers.Any(i => i.Count > 0)) !== null && _a !== void 0 ? _a : false;
+    }
+}
+List < ConceptMatch > MatchedConcepts;
+int;
+Index;
+ConceptMatch;
+LeftHandlerMatch;
+{
+    get;
+    {
+        return Index > 0 && Index <= (MatchedConcepts === null || MatchedConcepts === void 0 ? void 0 : MatchedConcepts.Count) ? MatchedConcepts[Index - 1] : null;
+    }
+}
+ConceptMatch;
+CurrentMatch;
+{
+    get;
+    {
+        return Index >= 0 && Index < (MatchedConcepts === null || MatchedConcepts === void 0 ? void 0 : MatchedConcepts.Count) ? MatchedConcepts[Index] : null;
+    }
+}
+DictionaryItem;
+CurrentDictionaryItem => CurrentMatch === null || CurrentMatch === void 0 ? void 0 : CurrentMatch.Item.DictionaryItem;
+ConceptMatch;
+RightHandlerMatch;
+{
+    get;
+    {
+        return Index >= -1 && Index + 1 < (MatchedConcepts === null || MatchedConcepts === void 0 ? void 0 : MatchedConcepts.Count) ? MatchedConcepts[Index + 1] : null;
+    }
+}
+ConceptHandlerContext(ProcessConceptsOperation, operation, int, index, int ? initialMatchedConceptsCapacity = null : );
+{
+    Operation = operation !== null && operation !== void 0 ? operation : ;
+    throw new ArgumentNullException(nameof(operation));
+    Context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
+    Index = index;
+    Confidence = 0.0;
+    d;
+    ConfidenceSum = 0.0;
+    d;
+    MatchedConcepts = initialMatchedConceptsCapacity != null
+        ? new List(initialMatchedConceptsCapacity.Value) : new List();
+    ProbableIntentHandlers = new List();
+}
+ConceptHandlerContext(ProcessConceptsOperation, operation, int, index, IEnumerable < ConceptMatch > initialMatchedConcepts, IEnumerable < IEnumerable < Match_1.default < IntentHandler >>> probableIntentHandlers, null);
+{
+    Operation = operation !== null && operation !== void 0 ? operation : ;
+    throw new ArgumentNullException(nameof(operation));
+    Context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
+    Index = index;
+    Confidence = 0.0;
+    d;
+    ConfidenceSum = 0.0;
+    d;
+    MatchedConcepts = initialMatchedConcepts != null ? new List(initialMatchedConcepts) : new List();
+    ProbableIntentHandlers = probableIntentHandlers != null
+        ? new List(probableIntentHandlers.Select(h => h != null ? new List(h).SortMatches() : null))
+        : new List();
+}
+ConceptHandlerContext(ProcessConceptsOperation, operation, int, index, ConceptMatch, matchedConcept);
+{
+    Operation = operation !== null && operation !== void 0 ? operation : ;
+    throw new ArgumentNullException(nameof(operation));
+    Context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
+    Index = index;
+    Confidence = 0.0;
+    d;
+    ConfidenceSum = 0.0;
+    d;
+    MatchedConcepts = new List();
+    ProbableIntentHandlers = new List();
+    if (matchedConcept != null)
+        MatchedConcepts.Add(matchedConcept);
+}
+ConceptHandlerContext;
+Clone(int, index, ConceptMatch, matchedConcept);
+{
+    IEnumerable < ConceptMatch > matchedConceptsCopy;
+    MatchedConcepts;
+    if (matchedConcept != null)
+        matchedConceptsCopy = MatchedConcepts.Concat(new ConceptMatch[], { matchedConcept });
+    return new ConceptHandlerContext(Operation, index, matchedConceptsCopy, ProbableIntentHandlers);
+    {
+        Context = Context,
+            ConfidenceSum = ConfidenceSum; // (note: 'Confidence' is NEVER copied, as it must be 0 for each new concept handler call)
+    }
+    ;
+}
+ConceptHandlerContext;
+SetConfidence(double, confidence);
+{
+    Confidence = confidence;
+    return this;
+}
+void AddIntentHandler(IntentHandler, handler, double, confidence);
+{
+    // ... Keep added handlers at the same position of this current context index ...
+    for (var i = 0; i <= Index; ++i)
+        ProbableIntentHandlers.Add(null);
+    List < Match_1.default < IntentHandler >> handlers;
+    // ... get the sorted intent handler set, or create a new entry ...
+    if (ProbableIntentHandlers[Index] == null)
+        ProbableIntentHandlers[Index] = handlers = new List();
+    else
+        handlers = ProbableIntentHandlers[Index];
+    handlers.Add(new Match_1.default(handler, confidence));
+    //? var confidence = ProbableIntentHandlers.Sum(h => h.Score ?? 0d) / ProbableIntentHandlers.Count; // (calculates average based on all added intents for this curren context)
     double;
-    Confidence;
-    double;
-    ConfidenceSum;
-    double;
-    AvergeConfidence;
-    {
-        get;
-        {
-            return ConfidenceSum / (Index + 1);
-        }
+    topCurrentConfidence = (_b = handlers.Max(i => i.Score)) !== null && _b !== void 0 ? _b : 0;
+    d;
+    if (Confidence < topCurrentConfidence)
+        Confidence = topCurrentConfidence; // (the handler context confidence should be the highest of all intent handlers)
+}
+bool;
+IsNext(string, text, bool, exactMatch = false);
+{
+    if (RightHandlerMatch == null)
+        return string.IsNullOrWhiteSpace(text);
+    if (exactMatch) {
+        return (text !== null && text !== void 0 ? text : "") == ((_c = RightHandlerMatch === null || RightHandlerMatch === void 0 ? void 0 : RightHandlerMatch.Item.DictionaryItem.TextPart.Text) !== null && _c !== void 0 ? _c : "");
     }
-    List < List < Match < IntentHandler >>> ProbableIntentHandlers;
-    bool;
-    HasProbableIntentHandlers;
-    {
-        get;
-        {
-            return (_a = ProbableIntentHandlers === null || ProbableIntentHandlers === void 0 ? void 0 : ProbableIntentHandlers.Any(i => i.Count > 0)) !== null && _a !== void 0 ? _a : false;
-        }
+    else {
+        var grpkey = string.IsNullOrWhiteSpace(text) ? null : Memory === null || Memory === void 0 ? void 0 : Memory.Brain.ToGroupKey(text);
+        return grpkey == RightHandlerMatch.Item.DictionaryItem.TextPart.GroupKey;
     }
-    List < ConceptMatch > MatchedConcepts;
-    int;
-    Index;
-    ConceptMatch;
-    LeftHandlerMatch;
-    {
-        get;
-        {
-            return Index > 0 && Index <= (MatchedConcepts === null || MatchedConcepts === void 0 ? void 0 : MatchedConcepts.Count) ? MatchedConcepts[Index - 1] : null;
-        }
+}
+bool;
+WasPrevious(string, text, bool, exactMatch = false);
+{
+    if (LeftHandlerMatch == null)
+        return string.IsNullOrWhiteSpace(text);
+    if (exactMatch) {
+        return (text !== null && text !== void 0 ? text : "") == ((_d = LeftHandlerMatch === null || LeftHandlerMatch === void 0 ? void 0 : LeftHandlerMatch.Item.DictionaryItem.TextPart.Text) !== null && _d !== void 0 ? _d : "");
     }
-    ConceptMatch;
-    CurrentMatch;
-    {
-        get;
-        {
-            return Index >= 0 && Index < (MatchedConcepts === null || MatchedConcepts === void 0 ? void 0 : MatchedConcepts.Count) ? MatchedConcepts[Index] : null;
-        }
+    else {
+        var grpkey = string.IsNullOrWhiteSpace(text) ? null : Memory === null || Memory === void 0 ? void 0 : Memory.Brain.ToGroupKey(text);
+        return grpkey == LeftHandlerMatch.Item.DictionaryItem.TextPart.GroupKey;
     }
-    DictionaryItem;
-    CurrentDictionaryItem => CurrentMatch === null || CurrentMatch === void 0 ? void 0 : CurrentMatch.Item.DictionaryItem;
-    ConceptMatch;
-    RightHandlerMatch;
-    {
-        get;
-        {
-            return Index >= -1 && Index + 1 < (MatchedConcepts === null || MatchedConcepts === void 0 ? void 0 : MatchedConcepts.Count) ? MatchedConcepts[Index + 1] : null;
-        }
-    }
-    ConceptHandlerContext(ProcessConceptsOperation, operation, int, index, int ? initialMatchedConceptsCapacity = null : );
-    {
-        Operation = operation !== null && operation !== void 0 ? operation : ;
-        throw new ArgumentNullException(nameof(operation));
-        Context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
-        Index = index;
-        Confidence = 0.0;
-        d;
-        ConfidenceSum = 0.0;
-        d;
-        MatchedConcepts = initialMatchedConceptsCapacity != null
-            ? new List(initialMatchedConceptsCapacity.Value) : new List();
-        ProbableIntentHandlers = new List();
-    }
-    ConceptHandlerContext(ProcessConceptsOperation, operation, int, index, IEnumerable < ConceptMatch > initialMatchedConcepts, IEnumerable < IEnumerable < Match < IntentHandler >>> probableIntentHandlers, null);
-    {
-        Operation = operation !== null && operation !== void 0 ? operation : ;
-        throw new ArgumentNullException(nameof(operation));
-        Context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
-        Index = index;
-        Confidence = 0.0;
-        d;
-        ConfidenceSum = 0.0;
-        d;
-        MatchedConcepts = initialMatchedConcepts != null ? new List(initialMatchedConcepts) : new List();
-        ProbableIntentHandlers = probableIntentHandlers != null
-            ? new List(probableIntentHandlers.Select(h => h != null ? new List(h).SortMatches() : null))
-            : new List();
-    }
-    ConceptHandlerContext(ProcessConceptsOperation, operation, int, index, ConceptMatch, matchedConcept);
-    {
-        Operation = operation !== null && operation !== void 0 ? operation : ;
-        throw new ArgumentNullException(nameof(operation));
-        Context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
-        Index = index;
-        Confidence = 0.0;
-        d;
-        ConfidenceSum = 0.0;
-        d;
-        MatchedConcepts = new List();
-        ProbableIntentHandlers = new List();
-        if (matchedConcept != null)
-            MatchedConcepts.Add(matchedConcept);
-    }
-    ConceptHandlerContext;
-    Clone(int, index, ConceptMatch, matchedConcept);
-    {
-        IEnumerable < ConceptMatch > matchedConceptsCopy;
-        MatchedConcepts;
-        if (matchedConcept != null)
-            matchedConceptsCopy = MatchedConcepts.Concat(new ConceptMatch[], { matchedConcept });
-        return new ConceptHandlerContext(Operation, index, matchedConceptsCopy, ProbableIntentHandlers);
-        {
-            Context = Context,
-                ConfidenceSum = ConfidenceSum; // (note: 'Confidence' is NEVER copied, as it must be 0 for each new concept handler call)
-        }
-        ;
-    }
-    ConceptHandlerContext;
-    SetConfidence(double, confidence);
-    {
-        Confidence = confidence;
-        return this;
-    }
-    void AddIntentHandler(IntentHandler, handler, double, confidence);
-    {
-        // ... Keep added handlers at the same position of this current context index ...
-        for (var i = 0; i <= Index; ++i)
-            ProbableIntentHandlers.Add(null);
-        List < Match < IntentHandler >> handlers;
-        // ... get the sorted intent handler set, or create a new entry ...
-        if (ProbableIntentHandlers[Index] == null)
-            ProbableIntentHandlers[Index] = handlers = new List();
-        else
-            handlers = ProbableIntentHandlers[Index];
-        handlers.Add(new Match(handler, confidence));
-        //? var confidence = ProbableIntentHandlers.Sum(h => h.Score ?? 0d) / ProbableIntentHandlers.Count; // (calculates average based on all added intents for this curren context)
-        double;
-        topCurrentConfidence = (_b = handlers.Max(i => i.Score)) !== null && _b !== void 0 ? _b : 0;
-        d;
-        if (Confidence < topCurrentConfidence)
-            Confidence = topCurrentConfidence; // (the handler context confidence should be the highest of all intent handlers)
-    }
-    bool;
-    IsNext(string, text, bool, exactMatch = false);
-    {
-        if (RightHandlerMatch == null)
-            return string.IsNullOrWhiteSpace(text);
-        if (exactMatch) {
-            return (text !== null && text !== void 0 ? text : "") == ((_c = RightHandlerMatch === null || RightHandlerMatch === void 0 ? void 0 : RightHandlerMatch.Item.DictionaryItem.TextPart.Text) !== null && _c !== void 0 ? _c : "");
-        }
-        else {
-            var grpkey = string.IsNullOrWhiteSpace(text) ? null : Memory === null || Memory === void 0 ? void 0 : Memory.Brain.ToGroupKey(text);
-            return grpkey == RightHandlerMatch.Item.DictionaryItem.TextPart.GroupKey;
-        }
-    }
-    bool;
-    WasPrevious(string, text, bool, exactMatch = false);
-    {
-        if (LeftHandlerMatch == null)
-            return string.IsNullOrWhiteSpace(text);
-        if (exactMatch) {
-            return (text !== null && text !== void 0 ? text : "") == ((_d = LeftHandlerMatch === null || LeftHandlerMatch === void 0 ? void 0 : LeftHandlerMatch.Item.DictionaryItem.TextPart.Text) !== null && _d !== void 0 ? _d : "");
-        }
-        else {
-            var grpkey = string.IsNullOrWhiteSpace(text) ? null : Memory === null || Memory === void 0 ? void 0 : Memory.Brain.ToGroupKey(text);
-            return grpkey == LeftHandlerMatch.Item.DictionaryItem.TextPart.GroupKey;
-        }
-    }
-    // --------------------------------------------------------------------------------------------------------------------
 }
 /// <summary>
 /// Created when concept handlers are found that match a text part that was parsed from user input.
@@ -332,7 +297,7 @@ void Add(ConceptContext, c, double ? score = null : );
 {
     base.Add(new ConceptMatch(this, c, score));
 }
-void Add(Match < ConceptContext > match);
+void Add(Match_1.default < ConceptContext > match);
 {
     Add(match.Item, match.Score);
 }

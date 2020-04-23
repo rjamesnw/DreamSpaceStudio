@@ -1,55 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿import Concept, { concept, conceptHandlerAttribute } from "../core/Concept";
+import DictionaryItem from "../core/DictionaryItem";
+import Brain from "../core/Brain";
 
-namespace BotPal.Concepts
-{
-    /// <summary>
-    /// 
-    /// </summary>
-    [Concept]
-    public class NamesConcept : Concept
-    {
-        // --------------------------------------------------------------------------------------------------------------------
+@concept(true)
+export default class NamesConcept extends Concept {
+    // --------------------------------------------------------------------------------------------------------------------
 
-        public NamesConcept(Brain brian)
-            : base(brian)
-        {
-            Deb = Memory.Dictionary.AddTextPart("deb", POS.Noun_Person);
-            Debra = Memory.Dictionary.AddTextPart("debra", POS.Noun_Person);
-            Debohrra = Memory.Dictionary.AddTextPart("debohrra", POS.Noun_Person);
-            James = Memory.Dictionary.AddTextPart("james", POS.Noun_Person);
-        }
-
-        public readonly DictionaryItem Deb;
-        public readonly DictionaryItem Debra;
-        public readonly DictionaryItem Debohrra;
-        public readonly DictionaryItem James;
-
-        public DictionaryItem CurrentName;
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        // TODO: *** Figure out how the left side will associate with the right.  Perhaps we expect to "iterate" over all the subjects, which should only be on in this case. *** 
-        [ConceptHandler("deb,debra,debohrra,james")]
-        Task<ConceptHandlerContext> _Names(ConceptHandlerContext context)
-        {
-            if (context.WasPrevious(null))
-            {
-                ((NamesConcept)context.CurrentMatch.Item.Concept).CurrentName = context.CurrentMatch.Item.DictionaryItem;
-                context.AddIntentHandler(_Name_Intent, context.Operation.MinConfidence);
-            }
-            return Task.FromResult(context);
-        }
-
-        async Task<bool> _Name_Intent(ConceptHandlerContext context) // (must always provide an intent to fall-back to if a better one isn't found)
-        {
-            await Brain.DoResponse("Yes, please continue.");
-            return true;
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
+    constructor(brian: Brain) {
+        super(brian)
+        this.Deb = this.Memory.Dictionary.AddTextPart("deb", POS.Noun_Person);
+        this.Debra = this.Memory.Dictionary.AddTextPart("debra", POS.Noun_Person);
+        this.Debohrra = this.Memory.Dictionary.AddTextPart("debohrra", POS.Noun_Person);
+        this.James = this.Memory.Dictionary.AddTextPart("james", POS.Noun_Person);
     }
+
+    readonly Deb: DictionaryItem;
+    readonly Debra: DictionaryItem;
+    readonly Debohrra: DictionaryItem;
+    readonly James: DictionaryItem;
+
+    CurrentName: DictionaryItem;
+
+    // --------------------------------------------------------------------------------------------------------------------
+
+    // TODO: *** Figure out how the left side will associate with the right.  Perhaps we expect to "iterate" over all the subjects, which should only be on in this case. *** 
+    @conceptHandlerAttribute("deb,debra,debohrra,james")
+    _Names(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        if (context.WasPrevious(null)) {
+            ((NamesConcept)context.CurrentMatch.Item.Concept).CurrentName = context.CurrentMatch.Item.DictionaryItem;
+            context.AddIntentHandler(_Name_Intent, context.Operation.MinConfidence);
+        }
+        return Promise.resolve(context);
+    }
+
+    async  _Name_Intent(context: ConceptHandlerContext): Promise<bool> // (must always provide an intent to fall-back to if a better one isn't found)
+    {
+        await Brain.DoResponse("Yes, please continue.");
+        return true;
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------
 }

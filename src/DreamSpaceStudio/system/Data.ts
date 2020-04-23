@@ -25,7 +25,7 @@ namespace DS {
             /** Converts a JSON string into an object with nested objects as required.
              * The given JSON string is validated first before it is parsed for security reasons. Invalid JSON will throw an exception.
             */
-            export function toObject(jsonText: string): Object {
+            export function toObject<T extends IndexedObject = IndexedObject>(jsonText: string): T {
                 if (typeof jsonText !== "string" || !jsonText)
                     return null;
 

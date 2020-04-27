@@ -4,7 +4,7 @@
     user (though they may be related).
 
     Each thought graph acts like a logical container to isolate the main subjects, and related details, from other
-    thoughts. The parent of a thought graph is usually the sentence of a thought in brackets. Nesting occurs when nested
+    thoughts. The parent of a thought graph is usually the sentence outside a thought placed in brackets. Nesting occurs when nested
     brackets (parenthesis, square, curly, angled, or similar) are discovered. Doing this keeps sub-thoughts away from
     the main thought.
  

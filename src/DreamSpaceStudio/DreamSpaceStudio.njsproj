@@ -156,9 +156,20 @@
       <Link>README.md</Link>
     </Content>
     <Content Include="actions\IDE\Monaco\Monaco.json" />
+    <Content Include="botpal\contexts\ActionContext.ts" />
+    <Content Include="botpal\contexts\AttributeContext.ts" />
+    <Content Include="botpal\contexts\ColorContext.ts" />
+    <Content Include="botpal\contexts\FrequencyContext.ts" />
+    <Content Include="botpal\contexts\GroupContext.ts" />
+    <Content Include="botpal\contexts\IntentContext.ts" />
+    <Content Include="botpal\contexts\ModifierContext.ts" />
+    <Content Include="botpal\contexts\PositionalContext.ts" />
+    <Content Include="botpal\contexts\QuestionContext.ts" />
+    <Content Include="botpal\contexts\SubjectContext.ts" />
     <Content Include="botpal\core\Brain.ts" />
     <Content Include="botpal\concepts\Adjectives.ts" />
     <Content Include="botpal\core\Concept.ts" />
+    <Content Include="botpal\core\Context.ts" />
     <Content Include="botpal\core\Dictionary.ts" />
     <Content Include="botpal\core\Enums.ts" />
     <Content Include="botpal\core\Memory.ts" />
@@ -225,6 +236,7 @@
     <Folder Include="actions\_client\" />
     <Folder Include="actions\_server\" />
     <Folder Include="botpal\concepts\" />
+    <Folder Include="botpal\contexts\" />
     <Folder Include="botpal\core\" />
     <Folder Include="botpal\db\" />
     <Folder Include="botpal\tts\" />

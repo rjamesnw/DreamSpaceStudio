@@ -1,4 +1,4 @@
-﻿import Concept, { concept, conceptHandlerAttribute } from "../core/Concept";
+﻿import Concept, { concept, conceptHandler } from "../core/Concept";
 import DictionaryItem from "../core/DictionaryItem";
 import Brain from "../core/Brain";
 
@@ -24,7 +24,7 @@ export default class NamesConcept extends Concept {
     // --------------------------------------------------------------------------------------------------------------------
 
     // TODO: *** Figure out how the left side will associate with the right.  Perhaps we expect to "iterate" over all the subjects, which should only be on in this case. *** 
-    @conceptHandlerAttribute("deb,debra,debohrra,james")
+    @conceptHandler("deb,debra,debohrra,james")
     _Names(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null)) {
             ((NamesConcept)context.CurrentMatch.Item.Concept).CurrentName = context.CurrentMatch.Item.DictionaryItem;

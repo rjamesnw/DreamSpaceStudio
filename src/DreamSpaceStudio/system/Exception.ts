@@ -203,13 +203,13 @@ namespace DS {
         }
 
         /** 
-         * Logs an "Argument Required" error message with an optional title, and returns an associated 'Exception'
+         * Logs a "Valid argument required" error message with an optional title, and returns an associated 'Exception'
          * object for the caller to throw.
          * The source of the exception object will be associated with the 'LogItem' object.
          * This function is typically used with non-implemented functions in abstract types.
          */
         static argumentRequired(functionNameOrTitle: string, argumentName: string, source?: object, message?: string): Exception {
-            var msg = `A valid value for parameter '${argumentName}' of function '${functionNameOrTitle}' is required.` + (message ? " " + message : "");
+            var msg = `A valid argument value for parameter '${argumentName}' of function '${functionNameOrTitle}' is required.` + (message ? " " + message : "");
             if (Diagnostics && Diagnostics.log) {
                 var logItem = Diagnostics.log(functionNameOrTitle, msg, LogTypes.Error);
                 return new Exception(logItem, source);
@@ -218,7 +218,7 @@ namespace DS {
         }
 
         /** 
-         * Logs an "Argument Cannot Be Null" error message with an optional title, and returns an associated 'Exception'
+         * Logs an "Argument Cannot Be undefined or null" error message with an optional title, and returns an associated 'Exception'
          * object for the caller to throw.
          * The source of the exception object will be associated with the 'LogItem' object.
          * This function is typically used with non-implemented functions in abstract types.
@@ -233,7 +233,7 @@ namespace DS {
         }
 
         /** 
-         * Logs an "Argument Cannot Be Null" error message with an optional title, and returns an associated 'Exception'
+         * Logs an "Argument is not valid" error message with an optional title, and returns an associated 'Exception'
          * object for the caller to throw.
          * The source of the exception object will be associated with the 'LogItem' object.
          * This function is typically used with non-implemented functions in abstract types.

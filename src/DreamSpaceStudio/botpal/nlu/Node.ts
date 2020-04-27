@@ -8,9 +8,8 @@ export default class MultiNode<T extends MultiNode<any>>
     // --------------------------------------------------------------------------------------------------------------------
 
     /// <summary> The parent nodes. </summary>
-    get parent(): T { return this.#_parent; }
-    private set _parent(value: T) { this.#_parent = value; }
-    #_parent: T;
+    get parent(): T { return this._parent; }
+    protected _parent: T;
 
     /// <summary> The child nodes. </summary>
     children: T[];
@@ -22,13 +21,13 @@ export default class MultiNode<T extends MultiNode<any>>
     /// </summary>
     siblings: T[];
 
-    get HasSiblings(): boolean { return this.siblings?.length > 0; }
+    get hasSiblings(): boolean { return this.siblings?.length > 0; }
 
     /// <summary>
     /// Returns the node at the top left most side of the parent hierarchy.
     /// <para>Note: If the current node is already the top left most, then itself is returned. </para>
     /// </summary>
-    get root(): MultiNode<any> { return this.#_parent?.root ?? this; }
+    get root(): T { return this._parent?.root ?? this; }
 
     // --------------------------------------------------------------------------------------------------------------------
 
@@ -63,10 +62,10 @@ export default class MultiNode<T extends MultiNode<any>>
     /// </param>
     /// <returns> Returns the type 'T' instance. </returns>
     RemoveParent(includeChild = true): this {
-        if (this.#_parent != null) {
+        if (this._parent != null) {
             if (includeChild)
-                this.#_parent.RemoveChild(this, false);
-            this.#_parent = null;
+                this._parent.RemoveChild(this, false);
+            this._parent = null;
         }
         return this;
     }
@@ -88,9 +87,9 @@ export default class MultiNode<T extends MultiNode<any>>
     /// </summary>
     /// <returns> Returns the type 'T' instance. </returns>
     Detach(): this {
-        this.#_parent?.RemoveChild(this, false);
-        this.#_parent?.RemoveSibling(this, false);
-        this.#_parent = null;
+        this._parent?.RemoveChild(this, false);
+        this._parent?.RemoveSibling(this, false);
+        this._parent = null;
         return this;
     }
 
@@ -113,7 +112,7 @@ export default class MultiNode<T extends MultiNode<any>>
         else if (!this.children.includes(node))
             this.children.push(node);
 
-        node.#_parent = this;
+        node._parent = this;
 
         return node;
     }
@@ -128,7 +127,7 @@ export default class MultiNode<T extends MultiNode<any>>
         if (node == null)
             throw DS.Exception.argumentUndefinedOrNull('MultiNode.addSibling()', 'node');
 
-        if (node.#_parent != null && node.#_parent != this)
+        if (node._parent != null && node._parent != this)
             node.Detach();
 
         if (this.siblings == null)
@@ -136,7 +135,7 @@ export default class MultiNode<T extends MultiNode<any>>
         else if (!this.siblings.includes(node))
             this.siblings.push(node);
 
-        node.#_parent = this;
+        node._parent = this;
 
         return node;
     }
@@ -155,7 +154,7 @@ export default class MultiNode<T extends MultiNode<any>>
 
         // ... copy over current parent and children to the new node ...
 
-        this.#_parent?.Attach(node);
+        this._parent?.Attach(node);
 
         for (var i = 0, n = this.children?.length ?? 0; i < n; ++i)
             node.Attach(this.children[i]);

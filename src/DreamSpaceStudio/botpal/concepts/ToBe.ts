@@ -1,4 +1,4 @@
-﻿import { concept, conceptHandlerAttribute } from "../core/Concept"
+﻿import { concept, conceptHandler } from "../core/Concept"
 
 @concept
 export default class ToBeConcept extends Concept {
@@ -11,7 +11,7 @@ export default class ToBeConcept extends Concept {
     // --------------------------------------------------------------------------------------------------------------------
 
     // TODO: *** Figure out how the left side will associate with the right.  Perhaps we expect to "iterate" over all the subjects, which should only be on in this case. *** 
-    @conceptHandlerAttribute("is")
+    @conceptHandler("is")
     _Is(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious("how"))
             context.AddIntentHandler(_How_Is_Intent, context.Operation.MinConfidence);

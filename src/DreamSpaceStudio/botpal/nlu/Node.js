@@ -1,18 +1,4 @@
 "use strict";
-var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
-    if (!privateMap.has(receiver)) {
-        throw new TypeError("attempted to get private field on non-instance");
-    }
-    return privateMap.get(receiver);
-};
-var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
-    if (!privateMap.has(receiver)) {
-        throw new TypeError("attempted to set private field on non-instance");
-    }
-    privateMap.set(receiver, value);
-    return value;
-};
-var __parent;
 Object.defineProperty(exports, "__esModule", { value: true });
 /// <summary>
 /// A multi-node is a node that has multiple children and siblings.
@@ -20,20 +6,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /// </summary>
 /// <typeparam name="T"></typeparam>
 class MultiNode {
-    constructor() {
-        // --------------------------------------------------------------------------------------------------------------------
-        __parent.set(this, void 0);
-        // --------------------------------------------------------------------------------------------------------------------
-    }
+    // --------------------------------------------------------------------------------------------------------------------
     /// <summary> The parent nodes. </summary>
-    get parent() { return __classPrivateFieldGet(this, __parent); }
-    set _parent(value) { __classPrivateFieldSet(this, __parent, value); }
-    get HasSiblings() { var _a; return ((_a = this.siblings) === null || _a === void 0 ? void 0 : _a.length) > 0; }
+    get parent() { return this._parent; }
+    get hasSiblings() { var _a; return ((_a = this.siblings) === null || _a === void 0 ? void 0 : _a.length) > 0; }
     /// <summary>
     /// Returns the node at the top left most side of the parent hierarchy.
     /// <para>Note: If the current node is already the top left most, then itself is returned. </para>
     /// </summary>
-    get root() { var _a, _b; return (_b = (_a = __classPrivateFieldGet(this, __parent)) === null || _a === void 0 ? void 0 : _a.root) !== null && _b !== void 0 ? _b : this; }
+    get root() { var _a, _b; return (_b = (_a = this._parent) === null || _a === void 0 ? void 0 : _a.root) !== null && _b !== void 0 ? _b : this; }
     // --------------------------------------------------------------------------------------------------------------------
     /// <summary> Removes the given node from the children (if exists) then returns the node. </summary>
     /// <param name="node"> . </param>
@@ -66,10 +47,10 @@ class MultiNode {
     /// </param>
     /// <returns> Returns the type 'T' instance. </returns>
     RemoveParent(includeChild = true) {
-        if (__classPrivateFieldGet(this, __parent) != null) {
+        if (this._parent != null) {
             if (includeChild)
-                __classPrivateFieldGet(this, __parent).RemoveChild(this, false);
-            __classPrivateFieldSet(this, __parent, null);
+                this._parent.RemoveChild(this, false);
+            this._parent = null;
         }
         return this;
     }
@@ -89,9 +70,9 @@ class MultiNode {
     /// <returns> Returns the type 'T' instance. </returns>
     Detach() {
         var _a, _b;
-        (_a = __classPrivateFieldGet(this, __parent)) === null || _a === void 0 ? void 0 : _a.RemoveChild(this, false);
-        (_b = __classPrivateFieldGet(this, __parent)) === null || _b === void 0 ? void 0 : _b.RemoveSibling(this, false);
-        __classPrivateFieldSet(this, __parent, null);
+        (_a = this._parent) === null || _a === void 0 ? void 0 : _a.RemoveChild(this, false);
+        (_b = this._parent) === null || _b === void 0 ? void 0 : _b.RemoveSibling(this, false);
+        this._parent = null;
         return this;
     }
     /// <summary>
@@ -110,7 +91,7 @@ class MultiNode {
             this.children = [node];
         else if (!this.children.includes(node))
             this.children.push(node);
-        __classPrivateFieldSet(node, __parent, this);
+        node._parent = this;
         return node;
     }
     /// <summary>
@@ -122,13 +103,13 @@ class MultiNode {
     AddSibling(node) {
         if (node == null)
             throw DS.Exception.argumentUndefinedOrNull('MultiNode.addSibling()', 'node');
-        if (__classPrivateFieldGet(node, __parent) != null && __classPrivateFieldGet(node, __parent) != this)
+        if (node._parent != null && node._parent != this)
             node.Detach();
         if (this.siblings == null)
             this.siblings = [node];
         else if (!this.siblings.includes(node))
             this.siblings.push(node);
-        __classPrivateFieldSet(node, __parent, this);
+        node._parent = this;
         return node;
     }
     // --------------------------------------------------------------------------------------------------------------------
@@ -142,7 +123,7 @@ class MultiNode {
             throw DS.Exception.argumentUndefinedOrNull('MultiNode.replace()', 'node');
         node.Detach();
         // ... copy over current parent and children to the new node ...
-        (_a = __classPrivateFieldGet(this, __parent)) === null || _a === void 0 ? void 0 : _a.Attach(node);
+        (_a = this._parent) === null || _a === void 0 ? void 0 : _a.Attach(node);
         for (var i = 0, n = (_c = (_b = this.children) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 0; i < n; ++i)
             node.Attach(this.children[i]);
         // ... detach the current node from its parents ...
@@ -152,5 +133,4 @@ class MultiNode {
     }
 }
 exports.default = MultiNode;
-__parent = new WeakMap();
 //# sourceMappingURL=Node.js.map

@@ -14,6 +14,13 @@ if (!Array.prototype.remove) // Primarily to help support conversions from C# - 
         var i = this.indexOf(this);
         return i > -1 ? (this.splice(i, 1), true) : false;
     };
+if (!String.prototype.trimRightChar) // Primarily to help support conversions from C# - also, this should exist anyhow!
+    String.prototype.trimRightChar = function (char) {
+        var s = this;
+        while (s[s.length - 1] === char)
+            s = s.substr(0, this.length - 1);
+        return s;
+    };
 var isNode = typeof global == 'object' && !!global.process && !!global.process.versions && !!global.process.versions.node;
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
  * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.
@@ -1038,13 +1045,13 @@ var DS;
                 return new Exception(DS.error(functionNameOrTitle, msg, source, false, false), source);
         }
         /**
-         * Logs an "Argument Required" error message with an optional title, and returns an associated 'Exception'
+         * Logs a "Valid argument required" error message with an optional title, and returns an associated 'Exception'
          * object for the caller to throw.
          * The source of the exception object will be associated with the 'LogItem' object.
          * This function is typically used with non-implemented functions in abstract types.
          */
         static argumentRequired(functionNameOrTitle, argumentName, source, message) {
-            var msg = `A valid value for parameter '${argumentName}' of function '${functionNameOrTitle}' is required.` + (message ? " " + message : "");
+            var msg = `A valid argument value for parameter '${argumentName}' of function '${functionNameOrTitle}' is required.` + (message ? " " + message : "");
             if (DS.Diagnostics && DS.Diagnostics.log) {
                 var logItem = DS.Diagnostics.log(functionNameOrTitle, msg, DS.LogTypes.Error);
                 return new Exception(logItem, source);
@@ -1053,7 +1060,7 @@ var DS;
                 return new Exception(DS.error(functionNameOrTitle, msg, source, false, false), source);
         }
         /**
-         * Logs an "Argument Cannot Be Null" error message with an optional title, and returns an associated 'Exception'
+         * Logs an "Argument Cannot Be undefined or null" error message with an optional title, and returns an associated 'Exception'
          * object for the caller to throw.
          * The source of the exception object will be associated with the 'LogItem' object.
          * This function is typically used with non-implemented functions in abstract types.
@@ -1068,7 +1075,7 @@ var DS;
                 return new Exception(DS.error(functionNameOrTitle, msg, source, false, false), source);
         }
         /**
-         * Logs an "Argument Cannot Be Null" error message with an optional title, and returns an associated 'Exception'
+         * Logs an "Argument is not valid" error message with an optional title, and returns an associated 'Exception'
          * object for the caller to throw.
          * The source of the exception object will be associated with the 'LogItem' object.
          * This function is typically used with non-implemented functions in abstract types.

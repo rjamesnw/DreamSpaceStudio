@@ -13,6 +13,19 @@ if (!Array.prototype.remove) // Primarily to help support conversions from C# - 
         return i > -1 ? (this.splice(i, 1), true) : false;
     };
 
+interface String {
+    /** Trims the given character from the end of the string and returns the new string. */
+    trimRightChar(char: string);
+}
+if (!String.prototype.trimRightChar) // Primarily to help support conversions from C# - also, this should exist anyhow!
+    String.prototype.trimRightChar = function (this: String, char: string) {
+        var s = this;
+        while (s[s.length - 1] === char)
+            s = s.substr(0, this.length - 1);
+        return s;
+    };
+
+
 interface IndexedObject<T = any> {
     [name: string]: T;
 }

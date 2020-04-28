@@ -2,6 +2,10 @@ interface Array<T> {
     /** Removes the specified item and returns true if removed, or false if not found. */
     remove(item: T): boolean;
 }
+interface String {
+    /** Trims the given character from the end of the string and returns the new string. */
+    trimRightChar(char: string): any;
+}
 interface IndexedObject<T = any> {
     [name: string]: T;
 }
@@ -494,21 +498,21 @@ declare namespace DS {
          */
         static notImplemented(functionNameOrTitle: string, source?: object, message?: string): Exception;
         /**
-         * Logs an "Argument Required" error message with an optional title, and returns an associated 'Exception'
+         * Logs a "Valid argument required" error message with an optional title, and returns an associated 'Exception'
          * object for the caller to throw.
          * The source of the exception object will be associated with the 'LogItem' object.
          * This function is typically used with non-implemented functions in abstract types.
          */
         static argumentRequired(functionNameOrTitle: string, argumentName: string, source?: object, message?: string): Exception;
         /**
-         * Logs an "Argument Cannot Be Null" error message with an optional title, and returns an associated 'Exception'
+         * Logs an "Argument Cannot Be undefined or null" error message with an optional title, and returns an associated 'Exception'
          * object for the caller to throw.
          * The source of the exception object will be associated with the 'LogItem' object.
          * This function is typically used with non-implemented functions in abstract types.
          */
         static argumentUndefinedOrNull(functionNameOrTitle: string, argumentName: string, source?: object, message?: string): Exception;
         /**
-         * Logs an "Argument Cannot Be Null" error message with an optional title, and returns an associated 'Exception'
+         * Logs an "Argument is not valid" error message with an optional title, and returns an associated 'Exception'
          * object for the caller to throw.
          * The source of the exception object will be associated with the 'LogItem' object.
          * This function is typically used with non-implemented functions in abstract types.
@@ -2338,7 +2342,7 @@ declare namespace DS {
             NotExtended = 510,
             /** (RFC 6585) The client needs to authenticate to gain network access. Intended for use by intercepting proxies used to control access to the network (e.g., "captive portals" used to require agreement to Terms of Service before granting full Internet access via a Wi-Fi hotspot).[20] */
             NetworkAuthenticationRequired = 511,
-            /**  This status code is not specified in any RFC and is returned by certain services, for instance Microsoft Azure and CloudFlare servers: "The 520 error is essentially a �catch-all� response for when the origin server returns something unexpected or something that is not tolerated/interpreted (protocol violation or empty response)."[34] */
+            /**  This status code is not specified in any RFC and is returned by certain services, for instance Microsoft Azure and CloudFlare servers: "The 520 error is essentially a “catch-all” response for when the origin server returns something unexpected or something that is not tolerated/interpreted (protocol violation or empty response)."[34] */
             UnknownError = 520,
             /**  This status code is not specified in any RFCs, but is used by CloudFlare's reverse proxies to signal that a server connection timed out. */
             OriginConnectionTimeout = 522,
@@ -2387,6 +2391,11 @@ declare namespace DS {
         function getFiles(path: string): Promise<string[]>;
         /** Lists the contents of a directory. */
         function getDirectories(path: string): Promise<string[]>;
+        /**
+         * Returns true if the given file or directory path exists.
+         * @param path
+         */
+        function exists(path: string, readAccess?: boolean, writeAccess?: boolean): Promise<boolean>;
     }
 }
 declare namespace DS {

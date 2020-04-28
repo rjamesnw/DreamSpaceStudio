@@ -2,6 +2,7 @@
 import Memory, { IMemoryObject } from "./Memory";
 import DictionaryItem from "./DictionaryItem";
 import TimeReferencedObject from "./TimeReferencedObject";
+import Brain from "./Brain";
 
 /** An array of all concept types registered by applying the '@concept()' decorator to register them. */
 export const conceptTypes: IType<Concept>[] = [];
@@ -398,7 +399,7 @@ export default abstract class Concept extends TimeReferencedObject implements IM
 
     readonly Brain: Brain;
 
-    get Memory(): Memory { return this.Brain.Memory; }
+    get memory(): Memory { return this.Brain.Memory; }
 
     // --------------------------------------------------------------------------------------------------------------------
 

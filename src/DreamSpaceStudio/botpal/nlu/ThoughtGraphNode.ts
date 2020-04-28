@@ -7,12 +7,12 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
 {
     // --------------------------------------------------------------------------------------------------------------------
 
-    static get CreateTempDictionaryItem(pos: PartOfSpeech, part: TextPart = null) { return new DictionaryItem(null, part, pos); }
-    static get CreateSubjectGroupDictionaryItem(part: TextPart = null) { return this.CreateTempDictionaryItem(POS.Group_Subject, part); }
-    static get CreateQuestiontGroupDictionaryItem(part: TextPart = null) { return this.CreateTempDictionaryItem(POS.Group_Question, part); }
-    static get CreateAttributeGroupDictionaryItem(part: TextPart = null) { return this.CreateTempDictionaryItem(POS.Group_Attribute, part); }
-    static get CreateModifierGroupDictionaryItem(part: TextPart = null) { return this.CreateTempDictionaryItem(POS.Group_Modifier, part); }
-    static get CreateSubjectGroup(part: TextPart = null) { return new ThoughtGraphNode(this.CreateSubjectGroupDictionaryItem(part)); }
+    static CreateTempDictionaryItem(pos: PartOfSpeech, part: TextPart = null) { return new DictionaryItem(null, part, pos); }
+    static CreateSubjectGroupDictionaryItem(part: TextPart = null) { return this.CreateTempDictionaryItem(POS.Group_Subject, part); }
+    static CreateQuestiontGroupDictionaryItem(part: TextPart = null) { return this.CreateTempDictionaryItem(POS.Group_Question, part); }
+    static CreateAttributeGroupDictionaryItem(part: TextPart = null) { return this.CreateTempDictionaryItem(POS.Group_Attribute, part); }
+    static CreateModifierGroupDictionaryItem(part: TextPart = null) { return this.CreateTempDictionaryItem(POS.Group_Modifier, part); }
+    static CreateSubjectGroup(part: TextPart = null) { return new ThoughtGraphNode(this.CreateSubjectGroupDictionaryItem(part)); }
 
     // --------------------------------------------------------------------------------------------------------------------
 
@@ -22,32 +22,33 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     /// A word (or symbol or other text) that is the subject of this node in the graph.
     /// This is set to the detected "word" in the user's request.
     /// </summary>
-    Word: DictionaryItem;
+    word: DictionaryItem;
 
     /// <summary>
     ///     The part of speech that this node classifies under.  This is a generalization that may be different than the
     ///     associated word (such as for groups).
     /// </summary>
-    get GeneralPOS(): PartOfSpeech { return this.#_GeneralPOS ?? Word?.POS; }
-    set GeneralPOS(value: PartOfSpeech) { this.#_GeneralPOS = value; }
-    #_GeneralPOS: PartOfSpeech;
+    get generalPOS(): PartOfSpeech { return this.#_generalPOS ?? this.word?.pos; }
+    set generalPOS(value: PartOfSpeech) { this.#_generalPOS = value; }
+    #_generalPOS: PartOfSpeech;
 
-    get IsEmpty() { return this.Word?.TextPart == null && !this.IsGroup; }
+    get isEmpty() { return (!this.word || this.word.textPart.equals(null)) && !this.isGroup; }
 
-    get IsGroup() { return this.GeneralPOS?.ClassOf(POS.Group) ?? false; }
+    get isGroup() { return this.generalPOS?.classOf(POS.Group) ?? false; }
 
-    get IsQuestion() { return this.GeneralPOS?.Classification == POS.Adverb_Question.Classification; }// (all classifications for question have the same name)
+    get isQuestion() { return this.generalPOS?.classification == POS.Adverb_Question.classification; }// (all classifications for question have the same name)
 
-    get IsSubject() { return this.GeneralPOS == POS.Group_Subject; }
+    get isSubject() { return this.generalPOS == POS.Group_Subject; }
 
-    get IsAttribute() { return this.GeneralPOS == POS.Group_Attribute; }
+    get isAttribute() { return this.generalPOS == POS.Group_Attribute; }
 
-    get IsModifier() { return this.GeneralPOS == POS.Group_Modifier; }
+    get isModifier() { return this.generalPOS == POS.Group_Modifier; }
 
-    /// <summary>
-    /// Searches do no cross conjunction barriers (such as when "and" joins two parts).
-    /// </summary>
-    get IsConjunction() { return this.GeneralPOS == POS.Conjunction; }
+    /**
+     * Searches do no cross conjunction barriers (such as when "and" joins two parts).
+     * @returns
+     */
+    get isConjunction() { return this.generalPOS == POS.Conjunction; }
 
     /// <summary>
     ///     Associations are boundaries where verbs (such as "is/are") connect a subject to another area of the thought graph.
@@ -60,28 +61,29 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     ///     where either side are the subjects "Peter" and "Car". </para>
     /// </summary>
     /// <value> A true or false value. </value>
-    get IsAssociation() {
-        if (GeneralPOS == POS.Verb) return true;
-        if (GeneralPOS == POS.Preposition) return true;
-        if (GeneralPOS == POS.Conjunction) return true;
+    get isAssociation() {
+        if (this.#_generalPOS.equals(POS.Verb)) return true;
+        if (this.#_generalPOS.equals(POS.Preposition)) return true;
+        if (this.#_generalPOS.equals(POS.Conjunction)) return true;
         return false;
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
     constructor(word: DictionaryItem, pos: PartOfSpeech = null) {
-        this.Word = word;
-        this.#_GeneralPOS = this.Generalize(pos ?? Word?.POS);
+        super();
+        this.word = word;
+        this.#_generalPOS = this.generalize(pos ?? this.word?.pos);
     }
 
-    /// <summary>
-    /// Generalizes similar parts of speech (such as grouping all question types into one idea: question).
-    /// </summary>
-    /// <param name="pos"></param>
-    /// <returns></returns>
-    Generalize(pos: PartOfSpeech): PartOfSpeech {
+    /**
+     * Generalizes similar parts of speech (such as grouping all question types into one idea: question).
+     * @param {PartOfSpeech} pos
+     * @returns
+     */
+    generalize(pos: PartOfSpeech): PartOfSpeech {
         if (pos == null) return null;
-        if (pos?.Classification == POS.Adverb_Question.Classification)
+        if (pos?.classification == POS.Adverb_Question.classification)
             return POS.Group_Question;
         //x if (pos?.ClassOf(POS.Noun) ?? false)
         //x    return POS.Group_Subject;
@@ -96,8 +98,8 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     /// </summary>
     /// <param name="word"> . </param>
     /// <returns> The new <see cref="ThoughtGraphNode"/> added. </returns>
-    Attach(word: DictionaryItem): ThoughtGraphNode {
-        return super.Attach(new ThoughtGraphNode(word));
+    attach(word: DictionaryItem): ThoughtGraphNode {
+        return super.attach(new ThoughtGraphNode(word));
     }
 
     /// <summary>
@@ -106,7 +108,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     /// </summary>
     /// <param name="word"> . </param>
     /// <returns> The new <see cref="ThoughtGraphNode"/> created. </returns>
-    AttachAsParent(word: DictionaryItem): ThoughtGraphNode {
+    attachAsParent(word: DictionaryItem): ThoughtGraphNode {
         // ... detach the current node from its parents, if any ...
 
         var parent = this.parent; // (save the parent reference before we lose it)
@@ -120,7 +122,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
 
         // ... attach this node under the new node (parent) ...
 
-        newNode.Attach(this); // (this node will now be a child of the new node)
+        newNode.attach(this); // (this node will now be a child of the new node)
 
         return newNode;
     }
@@ -136,60 +138,60 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     /// <returns> A ThoughtGraphNode. </returns>
     Add(word: DictionaryItem): ThoughtGraphNode {
         // ... check the question FIRST, since we are ignoring the POS class here ...
-        if (word.POS?.Classification == POS.Adverb_Question.Classification) // (all questions have the same classification text)
-            return _AddQuestion(word);
+        if (word.pos?.Classification == POS.Adverb_Question.classification) // (all questions have the same classification text)
+            return this._AddQuestion(word);
 
-        return _CheckConjunction(word)._Add(word);
+        return this._CheckConjunction(word)._Add(word);
     }
 
     _Add(word: DictionaryItem): ThoughtGraphNode {
-        if (word.ClassOf(POS.Determiner))
-            return _AddDeterminer(word);
+        if (word.classOf(POS.Determiner))
+            return this._AddDeterminer(word);
 
-        if (word.ClassOf(POS.Noun))
-            return _AddNoun(word);
+        if (word.classOf(POS.Noun))
+            return this._AddNoun(word);
 
-        if (word.ClassOf(POS.Pronoun))
-            return _AddPronoun(word);
+        if (word.classOf(POS.Pronoun))
+            return this._AddPronoun(word);
 
-        if (word.ClassOf(POS.Conjunction))
-            return _AddConjunction(word);
+        if (word.classOf(POS.Conjunction))
+            return this._AddConjunction(word);
 
-        if (word.ClassOf(POS.Preposition))
-            return _AddPreposition(word);
+        if (word.classOf(POS.Preposition))
+            return this._AddPreposition(word);
 
-        if (word.ClassOf(POS.Verb_Is))
-            return _AddIs(word); // (or 'are')
+        if (word.classOf(POS.Verb_Is))
+            return this._AddIs(word); // (or 'are')
 
-        return _AddUnkown(word);
+        return this._AddUnkown(word);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
     _requireSubject(): ThoughtGraphNode {
-        var subject = FindTopFirst(POS.Group_Subject, true);
+        var subject = this.FindTopFirst(POS.Group_Subject, true);
         if (subject != null)
             return subject;
 
-        if (Root.IsQuestion)
-            return Root.Attach(CreateSubjectGroupDictionaryItem()); // (the subject should come under the question, if one exists)
+        if (this.root.isQuestion)
+            return this.root.attach(ThoughtGraphNode.CreateSubjectGroupDictionaryItem()); // (the subject should come under the question, if one exists)
         else
-            return Root.AttachAsParent(CreateSubjectGroupDictionaryItem());
+            return this.root.attachAsParent(ThoughtGraphNode.CreateSubjectGroupDictionaryItem());
     }
 
     _requireQuestion(): ThoughtGraphNode {
-        var qgroup = FindTopFirst(POS.Group_Question, true);
+        var qgroup = this.FindTopFirst(POS.Group_Question, true);
         if (qgroup != null)
             return qgroup;
-        return _requireSubject().AttachAsParent(CreateQuestiontGroupDictionaryItem());
+        return this._requireSubject().attachAsParent(ThoughtGraphNode.CreateQuestiontGroupDictionaryItem());
     }
 
     _requireAttribute(): ThoughtGraphNode {
-        var attrGroup = FindBottomFirst(POS.Group_Attribute, true); // (usually attributes are in the children, so search there first)
+        var attrGroup = this.FindBottomFirst(POS.Group_Attribute, true); // (usually attributes are in the children, so search there first)
         if (attrGroup == null) {
             // ... this is the first attribute, so create a new group, attached to the current subject, and return it ...
-            var subject = _requireSubject(); // (first find the subject within this area)
-            attrGroup = subject.Attach(CreateAttributeGroupDictionaryItem());
+            var subject = this._requireSubject(); // (first find the subject within this area)
+            attrGroup = subject.attach(ThoughtGraphNode.CreateAttributeGroupDictionaryItem());
         }
         return attrGroup;
     }
@@ -199,7 +201,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
         if (modGroup == null) {
             // ... this is the first attribute, so create a new group, attached to the current subject, and return it ...
             var verb = this.FindBottomFirst(POS.Verb, true); // (first find the subject within this area)
-            modGroup = (verb ?? this).Attach(CreateModifierGroupDictionaryItem());
+            modGroup = (verb ?? this).attach(ThoughtGraphNode.CreateModifierGroupDictionaryItem());
         }
         return modGroup;
     }
@@ -207,7 +209,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     // --------------------------------------------------------------------------------------------------------------------
 
     _AddUnkown(text: DictionaryItem): ThoughtGraphNode {
-        return Attach(text); // (in the case that we don't know what to do with this we just attach it and stay on the current node)
+        return this.attach(text); // (in the case that we don't know what to do with this we just attach it and stay on the current node)
         //? return this;
     }
 
@@ -219,34 +221,34 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
 
     _AddDeterminer(det: DictionaryItem): ThoughtGraphNode {
         var subject = this._requireSubject();
-        subject.Attach(det);
+        subject.attach(det);
         return subject;
     }
 
     _AddSubjectAssociation(assoc: DictionaryItem): ThoughtGraphNode {
         var subject = this._requireSubject();
-        return subject.Attach(assoc); // (the "is" or "are" will act as a connector, and will become the new 'current' node [by returning it]; this also creates a barrier [all associations are subject ])
+        return subject.attach(assoc); // (the "is" or "are" will act as a connector, and will become the new 'current' node [by returning it]; this also creates a barrier [all associations are subject ])
     }
 
-    _AddIs(isOrAre: DictionaryItem): ThoughtGraphNode { return _AddSubjectAssociation(isOrAre); }
-    _AddPreposition(prepos: DictionaryItem): ThoughtGraphNode { return _AddSubjectAssociation(prepos); }
+    _AddIs(isOrAre: DictionaryItem): ThoughtGraphNode { return this._AddSubjectAssociation(isOrAre); }
+    _AddPreposition(prepos: DictionaryItem): ThoughtGraphNode { return this._AddSubjectAssociation(prepos); }
 
     _AddConjunction(conj: DictionaryItem): ThoughtGraphNode  // TODO: Need to make sure "&" is also considered somehow.
     {
         // ... if a duplicate, ignore and stay here ...
-        if (this.Word == conj) return this;
+        if (this.word.equals(conj)) return this;
         // ... certain conjunctions will tag on the end of the current node and then returned as current until we know what comes next ...
-        if (conj == "and" || conj == "or")
-            return this.Attach(conj);
+        if (conj.equals("and") || conj.equals("or"))
+            return this.attach(conj);
         else
-            return this._requireSubject().Attach(conj); // (all others we will attach to the subject right away)
+            return this._requireSubject().attach(conj); // (all others we will attach to the subject right away)
     }
 
     _CheckConjunction(nextWord: DictionaryItem): ThoughtGraphNode // (repositions the conjunction based on the next word; returns where to add the next word)
     {
-        if (!this.IsConjunction) return this;
+        if (!this.isConjunction) return this;
 
-        if (this.parent?.GeneralPOS == nextWord.POS) {
+        if (this.parent?.generalPOS?.equals(nextWord.pos)) {
             // TODO: Convert to a group to combine them 
             // TOTEST: john is red and blue
 
@@ -255,7 +257,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
             return parent;
         }
 
-        if (nextWord.POS?.Classification == POS.Adverb_Question.Classification) {
+        if (nextWord.pos?.classification == POS.Adverb_Question.classification) {
             var q = this._requireQuestion();
             this.Detach();
             return q;
@@ -345,27 +347,27 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
         if (item instanceof DictionaryItem) {
             if (exclude == this) return null;
 
-            if (includeThis && this.Word.equals(item))
+            if (includeThis && this.word.equals(item))
                 return this;
 
             if (includeSiblings)
                 for (var i = 0, n = this.siblings?.length ?? 0; i < n; ++i)
                     this.siblings[i].FindInParents(item, true, true, includeConjunctions, 0, exclude);
 
-            if (!includeConjunctions && this.IsConjunction) return null; // (this is a subject area barrier)
+            if (!includeConjunctions && this.isConjunction) return null; // (this is a subject area barrier)
 
             return (depth < 0 || depth > 0) ? this.parent?.FindInParents(item, true, includeSiblings, includeConjunctions, depth - 1, exclude) : null;
         } else {
             if (exclude == this) return null;
 
-            if (includeThis && this.#_GeneralPOS.equals(item))
+            if (includeThis && this.#_generalPOS?.equals(item))
                 return this;
 
             if (includeSiblings)
                 for (var i = 0, n = this.siblings?.length ?? 0; i < n; ++i)
                     this.siblings[i].FindInParents(item, true, true, includeConjunctions, 0, exclude);
 
-            if (!includeConjunctions && this.IsConjunction) return null; // (this is a subject area barrier)
+            if (!includeConjunctions && this.isConjunction) return null; // (this is a subject area barrier)
 
             return (depth < 0 || depth > 0) ? this.parent?.FindInParents(item, true, includeSiblings, includeConjunctions, depth - 1, exclude) : null;
         }
@@ -415,14 +417,14 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
         if (item instanceof DictionaryItem) {
             if (exclude == this) return null;
 
-            if (includeThis && this.Word == item)
+            if (includeThis && this.word?.equals(item))
                 return this;
 
             if (includeSiblings)
                 for (var i = 0, n = this.siblings?.length ?? 0; i < n; ++i)
                     this.siblings[i].FindInChildren(item, true, true, includeConjunctions, 0, exclude);
 
-            if (!includeConjunctions && this.IsConjunction) return null; // (this is a subject area barrier)
+            if (!includeConjunctions && this.isConjunction) return null; // (this is a subject area barrier)
 
             if (depth < 0 || depth > 0)
                 for (var i = 0, n = this.children?.length ?? 0; i < n; ++i) {
@@ -435,14 +437,14 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
         } else {
             if (exclude == this) return null;
 
-            if (includeThis && this.#_GeneralPOS.equals(item))
+            if (includeThis && this.#_generalPOS?.equals(item))
                 return this;
 
             if (includeSiblings)
                 for (var i = 0, n = this.siblings?.length ?? 0; i < n; ++i)
                     this.siblings[i].FindInChildren(item, true, true, includeConjunctions, 0, exclude);
 
-            if (!includeConjunctions && this.IsConjunction) return null; // (this is a subject area barrier)
+            if (!includeConjunctions && this.isConjunction) return null; // (this is a subject area barrier)
 
             if (depth < 0 || depth > 0)
                 for (var i = 0, n = this.children?.length ?? 0; i < n; ++i) {

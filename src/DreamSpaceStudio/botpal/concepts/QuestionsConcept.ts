@@ -7,16 +7,16 @@ export default class QuestionsConcept extends Concept {
 
     constructor(brian: Brain) {
         super(brian)
-        this.Who = this.Memory.Dictionary.AddTextPart("who", this.POS.Pronoun_Subject);
-        this.What = this.Memory.Dictionary.AddTextPart("what", this.POS.Pronoun_Subject);
-        this.When = this.Memory.Dictionary.AddTextPart("when", this.POS.Adverb);
-        this.Where = this.Memory.Dictionary.AddTextPart("where", this.POS.Adverb);
-        this.Why = this.Memory.Dictionary.AddTextPart("why", this.POS.Adverb);
-        this.How = this.Memory.Dictionary.AddTextPart("how", this.POS.Adverb);
-        this.Are = this.Memory.Dictionary.AddTextPart("are", this.POS.Verb_Is);
-        this.Is = this.Memory.Dictionary.AddTextPart("is", this.POS.Verb_Is);
-        this.If = this.Memory.Dictionary.AddTextPart("if", this.POS.Conjunction);
-        this.Can = this.Memory.Dictionary.AddTextPart("can", this.POS.Verb_AbleToOrPermitted);
+        this.Who = this.memory.Dictionary.AddTextPart("who", this.POS.Pronoun_Subject);
+        this.What = this.memory.Dictionary.AddTextPart("what", this.POS.Pronoun_Subject);
+        this.When = this.memory.Dictionary.AddTextPart("when", this.POS.Adverb);
+        this.Where = this.memory.Dictionary.AddTextPart("where", this.POS.Adverb);
+        this.Why = this.memory.Dictionary.AddTextPart("why", this.POS.Adverb);
+        this.How = this.memory.Dictionary.AddTextPart("how", this.POS.Adverb);
+        this.Are = this.memory.Dictionary.AddTextPart("are", this.POS.Verb_Is);
+        this.Is = this.memory.Dictionary.AddTextPart("is", this.POS.Verb_Is);
+        this.If = this.memory.Dictionary.AddTextPart("if", this.POS.Conjunction);
+        this.Can = this.memory.Dictionary.AddTextPart("can", this.POS.Verb_AbleToOrPermitted);
     }
 
     // --------------------------------------------------------------------------------------------------------------------

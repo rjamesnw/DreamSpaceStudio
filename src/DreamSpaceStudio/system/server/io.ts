@@ -45,6 +45,17 @@ namespace DS {
                 });
             });
         }
+
+        IO.exists = async function (path: string, readAccess = false, writeAccess = false): Promise<boolean> {
+            return new Promise<any>((resolve, reject) => {
+                var fs: typeof import("fs") = require("fs");
+                var mode = fs.constants.F_OK | (readAccess && writeAccess ? fs.constants.R_OK | fs.constants.W_OK : readAccess ? fs.constants.R_OK : writeAccess ? fs.constants.W_OK : 0);
+                fs.access(path, mode, (err) => {
+                    if (err) return reject(false);
+                    resolve(true);
+                });
+            });
+        }
     }
 
     export namespace DNS {

@@ -8,6 +8,7 @@ import { PartOfSpeech } from "./POS";
 import { TenseTypes, Plurality } from "./Enums";
 import { bool } from "aws-sdk/clients/signer";
 import { IEquality } from "./Comparer";
+import { ConceptHandler } from "./Concept";
 
 /**
  A dictionary item is a map of text to its use in some context.
@@ -198,7 +199,7 @@ export default class DictionaryItem extends TimeReferencedObject implements IMem
     /// <returns></returns>
     addConceptHandler(handler: ConceptHandler): ConceptContext {
         var i = this.indexOfConceptContext(handler);
-        ConceptContext cctx;
+        var cctx: ConceptContext;
 
         if (i == -1) {
             cctx = new ConceptContext(this, handler);
@@ -225,14 +226,13 @@ export default class DictionaryItem extends TimeReferencedObject implements IMem
         Returns true if this entry matches an entry reference with the same context properties.
         WARNING: If compared with a string of text only, this will not take parts of speech into account (nouns, verbs, etc.).
     */
-    equals(obj: object): boolean {
-        var de = obj as DictionaryItem;
+    equals(obj: DictionaryItem | TextPart | string): boolean {
         if (obj == this) return true;
-        if (typeof obj == 'string') return true;
-        if (de == null) return false;
-        return this.key == de.key && (this.pos?.equals(de.pos) ?? false)
-            && this.tenseType == de.tenseType
-            && this.plurality == de.plurality;
+        if (typeof obj == 'string' && this.textPart.equals(obj)) return true;
+        if (!(obj instanceof DictionaryItem)) return false;
+        return this.key == obj.key && (this.pos?.equals(obj.pos) ?? false)
+            && this.tenseType == obj.tenseType
+            && this.plurality == obj.plurality;
     }
 
     toString(): string { return this.#_textPart?.text + ": " + this.pos + ", " + this.tenseType + ", " + this.plurality; }

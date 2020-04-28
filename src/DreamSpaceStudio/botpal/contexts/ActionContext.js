@@ -1,31 +1,12 @@
-using;
-System;
-using;
-System.Collections.Generic;
-using;
-System.Linq;
-using;
-System.Text;
-var BotPal;
-(function (BotPal) {
-    /// <summary>
-    /// </summary>
-    class ActionContext {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const Context_1 = require("../core/Context");
+class ActionContext extends Context_1.default {
+    // --------------------------------------------------------------------------------------------------------------------
+    constructor(concept, actionName, parent = null) {
+        super(concept.memory, concept, parent);
+        this.Name = actionName;
     }
-    Context;
-    {
-        DictionaryItem;
-        Name;
-        ActionContext(Memory, memory, Concept, concept, DictionaryItem, actionName, Context, parent = null);
-        base(memory, concept, parent);
-        {
-            Name = actionName;
-        }
-        ActionContext(Concept, concept, DictionaryItem, actionName, Context, parent = null);
-        this(concept.Memory, concept, actionName, parent);
-        {
-        }
-        // --------------------------------------------------------------------------------------------------------------------
-    }
-})(BotPal || (BotPal = {}));
+}
+exports.default = ActionContext;
 //# sourceMappingURL=ActionContext.js.map

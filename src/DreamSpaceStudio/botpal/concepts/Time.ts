@@ -10,7 +10,7 @@ export default class TimeConcept extends Concept {
         super(brian)
         // (https://foxtype.com/sentence-tree)
 
-        this.time = this.Memory.Dictionary.AddTextPart("time", this.POS.Noun_Temporal);
+        this.time = this.memory.Dictionary.AddTextPart("time", this.POS.Noun_Temporal);
     }
 
     // --------------------------------------------------------------------------------------------------------------------

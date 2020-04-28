@@ -1,9 +1,13 @@
-﻿
+﻿import Memory from "./Memory";
+import { Worker } from "cluster";
+
 export interface ResponseHandler(brain: Brain, response: Response): Promise<void>;
 
-/// <summary>
-/// The brain is the whole system that observes, evaluates, and decides what to do based on user inputs.
-/// </summary>
+export class Thread {
+    target: Worker | typeof globalThis;
+}
+
+/** The brain is the whole system that observes, evaluates, and decides what to do based on user inputs. */
 export default class Brain {
     // --------------------------------------------------------------------------------------------------------------------
 
@@ -22,16 +26,14 @@ export default class Brain {
 
     //? public Thought Thought; // (this should never be null when a brain is loaded, as thoughts are historical; otherwise this is a brand new brain, and this can be null)
 
-    internal List<BrainTask> _Tasks = new List<BrainTask>();
-    internal Dictionary<string, BrainTask> _DelayedTasks = new Dictionary<string, BrainTask>();
-
-    internal LockableObject _GlobalLocks = new LockableObject();
+    protected _Tasks = new Array<BrainTask>();
+    protected _DelayedTasks = new Map<string, BrainTask>();
 
     /// <summary>
     /// The thread that the brain instance was created on.  This is always assumed as the main thread, and helps with dispatching
     /// events to the host, preventing the need for the host to handle dispatching calls to it's own main thread.
     /// </summary>
-    readonly Thread _MainThread;
+    readonly _MainThread: Thread;
 
     /// <summary>
     /// Set when the brain instance is created in order to synchronize events with the main thread (if used).

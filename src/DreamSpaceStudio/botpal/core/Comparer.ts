@@ -6,7 +6,7 @@ export interface Comparer<T = any> {
 }
 
 export interface IEquality {
-    equals(value: object): boolean;
+    equals(value: any): boolean;
 }
 
 //export interface IComparer<T = any> {

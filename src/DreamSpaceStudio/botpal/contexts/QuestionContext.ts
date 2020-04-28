@@ -1,44 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿/// <summary>
+/// Holds details about a question.
 
-namespace BotPal
-{
-    /// <summary>
-    /// Holds details about a question.
-    /// </summary>
-    public class QuestionContext : Context
-    {
-        // --------------------------------------------------------------------------------------------------------------------
+import Context from "../core/Context";
+import DictionaryItem from "../core/DictionaryItem";
+import Concept from "../core/Concept";
 
-        /// <summary> If the user's context is a question, this is the question type (who, what, when, where, why, etc.). </summary>
-        public DictionaryItem Question;
+/// </summary>
+export default class QuestionContext extends Context {
+    // --------------------------------------------------------------------------------------------------------------------
 
-        /** Returns true if 'Question' was set. */
-        public bool IsQuestion => Question != (object)null;
+    /** If the user's context is a question, this is the question type (who, what, when, where, why, etc.). */
+    question: DictionaryItem;
 
-        public bool IsWhoQuestion => Question == "who";
-        public bool IsWhatQuestion => Question == "what";
-        public bool IsWhenQuestion => Question == "when";
-        public bool IsWhereQuestion => Question == "where";
-        public bool IsWhyQuestion => Question == "why";
-        public bool IsHowQuestion => Question == "how";
-        public bool IsAreQuestion => Question == "are";
-        public bool IsCanQuestion => Question == "can";
-        public bool IsIfQuestion => Question == "if";
+    /** Returns true if 'Question' was set. */
+    get IsQuestion() { return !!this.question; }
 
-        // --------------------------------------------------------------------------------------------------------------------
+    get IsWhoQuestion() { return this.question?.equals("who") ?? false; }
+    get IsWhatQuestion() { return this.question?.equals("what") ?? false; }
+    get IsWhenQuestion() { return this.question?.equals("when") ?? false; }
+    get IsWhereQuestion() { return this.question?.equals("where") ?? false; }
+    get IsWhyQuestion() { return this.question?.equals("why") ?? false; }
+    get IsHowQuestion() { return this.question?.equals("how") ?? false; }
+    get IsAreQuestion() { return this.question?.equals("are") ?? false; }
+    get IsCanQuestion() { return this.question?.equals("can") ?? false; }
+    get IsIfQuestion() { return this.question?.equals("if") ?? false; }
 
-        public QuestionContext(Memory memory, Concept concept, DictionaryItem question, Context parent = null) : base(memory, concept, parent)
-        {
-            Question = question;
-        }
+    // --------------------------------------------------------------------------------------------------------------------
 
-        public QuestionContext(Concept concept, DictionaryItem question, Context parent = null) : this(concept.Memory, concept, question, parent)
-        {
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
+    constructor(concept: Concept, question: DictionaryItem, parent: Context = null) {
+        super(concept.memory, concept, parent)
+        this.question = question;
     }
+
+    // --------------------------------------------------------------------------------------------------------------------
 }

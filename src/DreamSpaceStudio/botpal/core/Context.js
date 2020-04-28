@@ -1,35 +1,33 @@
-﻿import TimeReferencedObject, { ITimeReferencedObject } from "./TimeReferencedObject";
-import Memory, { IMemoryObject } from "./Memory";
-import Concept from "./Concept";
-import DictionaryItem from "./DictionaryItem";
-import ActionContext from "../contexts/ActionContext";
-import AttributeContext from "../contexts/AttributeContext";
-import ModifierContext from "../contexts/ModifierContext";
-import QuestionContext from "../contexts/QuestionContext";
-import GroupContext from "../contexts/GroupContext";
-
-export class ContextCollection<T extends Context> extends Array<T>
-{
-    /// <summary>
-    /// The context that owns this collection.
-    /// </summary>
-    readonly owner: Context;
-
-    #_contextType: IType<T>;
-
-    get hasItems(): boolean { return this.length > 0; }
-
-    constructor(contextType: IType<T>, owner: Context);
-    /**
-     * Constructs a new collection from another by copying only types that match the new collection's type.
-     * @param contextCollection Collection of contexts by base reference.
-     */
-    constructor(contextType: IType<T>, contextCollection: ContextCollection<Context>);
-    constructor(contextType: IType<T>, obj: Context | ContextCollection<Context>) {
+"use strict";
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to set private field on non-instance");
+    }
+    privateMap.set(receiver, value);
+    return value;
+};
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to get private field on non-instance");
+    }
+    return privateMap.get(receiver);
+};
+var __contextType, __ContextMap, __contexts, __Attributes, __Modifiers, __Questions;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ContextCollection = void 0;
+const TimeReferencedObject_1 = require("./TimeReferencedObject");
+const ActionContext_1 = require("../contexts/ActionContext");
+const AttributeContext_1 = require("../contexts/AttributeContext");
+const ModifierContext_1 = require("../contexts/ModifierContext");
+const QuestionContext_1 = require("../contexts/QuestionContext");
+const GroupContext_1 = require("../contexts/GroupContext");
+class ContextCollection extends Array {
+    constructor(contextType, obj) {
         super();
+        __contextType.set(this, void 0);
         if (!obj)
             throw DS.Exception.invalidArgument('ContextCollection()', 'owner or contextCollection', obj);
-        this.#_contextType = contextType;
+        __classPrivateFieldSet(this, __contextType, contextType);
         if (obj instanceof Context)
             this.owner = obj;
         else
@@ -37,226 +35,168 @@ export class ContextCollection<T extends Context> extends Array<T>
                 if (ctx instanceof contextType)
                     this.add(ctx);
     }
-
+    get hasItems() { return this.length > 0; }
     /// <summary>
     /// Searches the for a context of the requested type, or null if nothing was found.
     /// </summary>
-    getContexts<TContext extends Context>(type: IType<TContext>): TContext[] {
-        return <TContext[]><any>this.filter(a => a.contextType == type);
+    getContexts(type) {
+        return this.filter(a => a.contextType == type);
     }
-
-    add(context: T) {
-        if (context?.parent?.remove)
+    add(context) {
+        var _a;
+        if ((_a = context === null || context === void 0 ? void 0 : context.parent) === null || _a === void 0 ? void 0 : _a.remove)
             context.remove(context.parent);
         if (context) {
-            (<Writeable<Context>>context).parent = this.owner;
+            context.parent = this.owner;
             this.push(context);
         }
     }
-
-    remove(context: T): boolean {
+    remove(context) {
         if (super.remove(context)) {
             if (context instanceof Context)
-                (<Writeable<Context>>context).parent = null;
+                context.parent = null;
             return true;
         }
-        else return false;
+        else
+            return false;
     }
-
-    /**
-     * Removes one or more contexts.
-     * @param contexts
-     */
-    RemoveContexts(...contexts: T[]): void;
-
-    /**
-     * Removes one or more contexts of the given type.
-     * @param {TContext[]} ...contextTypes
-     * @returns
-     */
-    RemoveContexts<TContext extends IType<T>>(...contextTypes: TContext[]): boolean | void;
-
-    RemoveContexts(...items: (T | IType<T>)[]): boolean | void {
+    RemoveContexts(...items) {
         for (var item of items)
             if (item instanceof Context)
-                this.remove(<any>item);
+                this.remove(item);
             else
                 this.RemoveContexts(...this.getContexts(item));
     }
 }
-
+exports.ContextCollection = ContextCollection;
+__contextType = new WeakMap();
 ///// <summary> This just serves as a method to register contexts that are alike (using a shared type name). </summary>
 ///// <typeparam name="T"> A context type. </typeparam>
 //x export interface IContext implements ITimeReferencedObject {
 //    Parent: Context;
 //    contextType: IType<Context>;
 //}
-
-
 /// <summary>
 /// The context around a given concept.
 /// When concepts are triggered, contexts are built up in order to establish the content and intent of the user's input.
 /// </summary>
-export default class Context extends TimeReferencedObject implements IMemoryObject {
+class Context extends TimeReferencedObject_1.default {
     // --------------------------------------------------------------------------------------------------------------------
-
-    /// <summary>
-    /// Keeps a reference of the parent context connections that relates to this context, if any. This allows nesting contexts under other contexts using relationships.
-    /// A parent context can have many child contexts, which is a context tree that represents a potential engram of data content to store later.
-    /// </summary>
-    readonly parent: Context;
-
-    /// <summary>
-    /// The type if this context.
-    /// </summary>
-    readonly contextType: IType<Context>;
-
-    /// <summary>
-    /// The concept responsible for creating this context, if any.
-    /// </summary>
-    readonly concept: Concept;
-
-    readonly memory: Memory;
-
-    // --------------------------------------------------------------------------------------------------------------------
-
-    /** A mapping of Context types to a collection of context instances of the same type. */
-    #_ContextMap: Map<IType<Context>, ContextCollection<Context>> = new Map<IType<Context>, ContextCollection<Context>>();
-
-    #_contexts: Context[];
-
+    constructor(memory, concept, parent = null) {
+        super();
+        // --------------------------------------------------------------------------------------------------------------------
+        /** A mapping of Context types to a collection of context instances of the same type. */
+        __ContextMap.set(this, new Map());
+        __contexts.set(this, void 0);
+        __Attributes.set(this, void 0);
+        __Modifiers.set(this, void 0);
+        __Questions.set(this, void 0);
+        if (!memory)
+            throw DS.Exception.argumentRequired('Context()', 'memory', memory);
+        this.contextType = this.constructor;
+        this.memory = memory;
+        //? Concept = concept ?? throw new ArgumentNullException(nameof(concept));
+        this.parent = parent;
+    }
     /**
      * Returns a copy of the internal contexts in order of addition.  The first item is the first context added to this current
      * context, and the last item is the most recent context that was added.
      */
-    getContexts() { return this.#_contexts.slice(0); }
-
+    getContexts() { return __classPrivateFieldGet(this, __contexts).slice(0); }
     // --------------------------------------------------------------------------------------------------------------------
-
     ///// <summary>
     ///// Get the current instance or a parent instance that is a subject context (<see cref="SubjectContext"/> instance).
     ///// </summary>
     //x public bool IsSubjectContext => this is SubjectContext;
-
     ///// <summary> Returns true if this object is question context (<see cref="QuestionContext"/> instance). </summary>
     ///// <value> A true or false value. </value>
     //x public bool IsQuestionContext => this is QuestionContext;
-
     /// <summary> 
     /// The action (verbs) of a statement in regards to the subjects. For example, "is" or "are" is a claim one or more
     /// things is like something else (i.e. John is nice), or as part of a question (who are they? what time is it?). 
     /// Other examples may be "John *drove* away" or "Pat *ran* to the store.".
     /// </summary>
-    get Actions(): Iterable<ActionContext> { return this.get(ActionContext); }
-
+    get Actions() { return this.get(ActionContext_1.default); }
     /// <summary>
     /// True if this context has actions (typically because of verbs).
     /// </summary>
-    get HasActions(): boolean { return this.get(ActionContext)?.hasItems ?? false; }
-
+    get HasActions() { var _a, _b; return (_b = (_a = this.get(ActionContext_1.default)) === null || _a === void 0 ? void 0 : _a.hasItems) !== null && _b !== void 0 ? _b : false; }
     /// <summary>
     /// Associates descriptive attributes for this context.
     /// These contexts typically determine how something is like another.
     /// </summary>
-    get Attributes() { return this.#_Attributes; };
-    #_Attributes: Iterable<AttributeContext>;
-
+    get Attributes() { return __classPrivateFieldGet(this, __Attributes); }
+    ;
     /// <summary>
     /// True if this context has attributes (typically because of adjectives).
     /// </summary>
-    get HasAttributes(): boolean { return this.get(AttributeContext)?.hasItems ?? false; }
-
+    get HasAttributes() { var _a, _b; return (_b = (_a = this.get(AttributeContext_1.default)) === null || _a === void 0 ? void 0 : _a.hasItems) !== null && _b !== void 0 ? _b : false; }
     /// <summary>
     /// Associates contexts that modify this context (such as frequency, time constraints, speed, etc.).
     /// The most common is the frequency context, which use used with the determiner concept (i.e. "the" or "a", etc.).
     /// </summary>
-    get Modifiers() { return this.#_Modifiers; }
-    #_Modifiers: Iterable<ModifierContext>;
-
+    get Modifiers() { return __classPrivateFieldGet(this, __Modifiers); }
     /// <summary>
     /// True if this context has modifiers (typically because of adverbs).
     /// </summary>
-    get HasModifiers(): boolean { return this.get(ModifierContext)?.hasItems ?? false; }
-
+    get HasModifiers() { var _a, _b; return (_b = (_a = this.get(ModifierContext_1.default)) === null || _a === void 0 ? void 0 : _a.hasItems) !== null && _b !== void 0 ? _b : false; }
     /// <summary>
     /// Associates contexts that modify this context (such as frequency, time constraints, speed, etc.).
     /// The most common is the frequency context, which use used with the determiner concept (i.e. "the" or "a", etc.).
     /// </summary>
-    get Questions() { return this.#_Questions; }
-    #_Questions: Iterable<ModifierContext>;
-
+    get Questions() { return __classPrivateFieldGet(this, __Questions); }
     /// <summary>
     /// True if this context has modifiers (typically because of adverbs).
     /// </summary>
-    get HasQuestions(): boolean { return this.get(QuestionContext)?.hasItems ?? false; }
-
+    get HasQuestions() { var _a, _b; return (_b = (_a = this.get(QuestionContext_1.default)) === null || _a === void 0 ? void 0 : _a.hasItems) !== null && _b !== void 0 ? _b : false; }
     /// <summary> Determines if there is a question context associated with the given question word. </summary>
     /// <param name="question"> The question word to check for. </param>
     /// <returns> True if the question is in the context, and false if not. </returns>
-    HasQuestion(question: DictionaryItem): boolean {
-        var questions = this.get(QuestionContext);
+    HasQuestion(question) {
+        var _a;
+        var questions = this.get(QuestionContext_1.default);
         if (questions != null)
             for (var q of questions)
-                if (q.question?.equals(question))
+                if ((_a = q.question) === null || _a === void 0 ? void 0 : _a.equals(question))
                     return true;
         return false;
     }
-
     // --------------------------------------------------------------------------------------------------------------------
-
-    constructor(memory: Memory, concept: Concept, parent: Context = null) {
-        super();
-        if (!memory) throw DS.Exception.argumentRequired('Context()', 'memory', memory);
-        this.contextType = <any>this.constructor;
-        this.memory = memory;
-        //? Concept = concept ?? throw new ArgumentNullException(nameof(concept));
-        this.parent = parent;
-    }
-
-    // --------------------------------------------------------------------------------------------------------------------
-
-    add(ctx: Context): this {
+    add(ctx) {
         if (ctx != null) {
             var type = ctx.contextType;
-            if (!this.#_ContextMap.has(type))
-                this.#_ContextMap.set(type, new ContextCollection<Context>(type, this));
-            this.#_ContextMap.get(type).add(ctx);
-            if (this.#_contexts == null)
-                this.#_contexts = [];
-            this.#_contexts.push(ctx);
+            if (!__classPrivateFieldGet(this, __ContextMap).has(type))
+                __classPrivateFieldGet(this, __ContextMap).set(type, new ContextCollection(type, this));
+            __classPrivateFieldGet(this, __ContextMap).get(type).add(ctx);
+            if (__classPrivateFieldGet(this, __contexts) == null)
+                __classPrivateFieldSet(this, __contexts, []);
+            __classPrivateFieldGet(this, __contexts).push(ctx);
         }
         return this;
     }
-
     /// <summary> Enumerates the contexts of a given type and returns them in a new collection object. </summary>
     /// <param name="contextType"> The context type to find. </param>
     /// <returns> An enumerator that allows enumerating over the matched items. </returns>
-    get<T extends Context>(contextType: IType<T>): ContextCollection<T> {
-        var existingCollection = this.#_ContextMap.get(contextType);
-        return existingCollection ? new ContextCollection<T>(contextType, existingCollection) : null;
+    get(contextType) {
+        var existingCollection = __classPrivateFieldGet(this, __ContextMap).get(contextType);
+        return existingCollection ? new ContextCollection(contextType, existingCollection) : null;
     }
-
     // --------------------------------------------------------------------------------------------------------------------
-
     /// <summary> Enumerates this collection for all contexts of type <typeparamref name="T"/>. </summary>
     /// <typeparam name="T"> The context types to include in the enumeration. </typeparam>
     /// <param name="includeGroups"> (Optional) True to include grouped contexts in the search. </param>
     /// <returns> An enumeration of all contexts found matching type <typeparamref name="T"/>. </returns>
-    *Flatten<T extends Context>(type: IType<T>, includeGroups = true): Iterable<T> {
+    *Flatten(type, includeGroups = true) {
         var subjects = this.get(type);
         yield* subjects;
-
-        var subjectGroups = this.get<GroupContext<T>>(GroupContext);
+        var subjectGroups = this.get(GroupContext_1.default);
         for (var sg of subjectGroups)
             yield* sg.contexts;
-
         //if (Parent != null)
         //    foreach (var s in Parent.FlattenSubjects())
         //        yield return s;
     }
-
     // --------------------------------------------------------------------------------------------------------------------
-
     ///// <summary>
     ///// Get the current instance or a parent instance that is a context of the requested type, or null if nothing was found.
     ///// </summary>
@@ -264,7 +204,6 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
     //{
     //    return (this is T) ? (T)this : Parent?.GetContext<T>();
     //}
-
     ///// <summary>
     ///// Ignores the current instance and looks for a parent instance that is a context of the requested type, or null if nothing was found.
     ///// </summary>
@@ -272,42 +211,34 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
     //{
     //    return Parent?.GetContext<T>();
     //}
-
     // --------------------------------------------------------------------------------------------------------------------
-
     ///// <summary>
     ///// Create a split point from this scene to process separately, but in relation to this one.
     ///// </summary>
     //? public virtual Context Fork()
     //{
     //    var s = new Context(Memory, this);
-
     //    // Forked contexts are blank, but allow associating sub-contexts with a related parent context.
     //    // Example: The dog [the one I saw yesterday] was black)
     //    // In the above case, "the one" refers to the parent context subject "the dog". As such, contexts can back reference subjects in parent scopes.
-
     //    return s;
     //}
-
     // --------------------------------------------------------------------------------------------------------------------
-
     /// <summary>
     /// Attempts to detect and remove the given context object from any of the context collections it should belong to.
     /// </summary>
-    remove(context: Context): boolean {
-        if (context == null) return false;
-
+    remove(context) {
+        if (context == null)
+            return false;
         var removed = false;
-
-        for (var item of this.#_ContextMap)
+        for (var item of __classPrivateFieldGet(this, __ContextMap))
             if (item[1].remove(context))
                 removed = true;
-
-        if (this.#_contexts && this.#_contexts.remove(context))
+        if (__classPrivateFieldGet(this, __contexts) && __classPrivateFieldGet(this, __contexts).remove(context))
             removed = true;
-
         return removed;
     }
-
-    // --------------------------------------------------------------------------------------------------------------------
 }
+exports.default = Context;
+__ContextMap = new WeakMap(), __contexts = new WeakMap(), __Attributes = new WeakMap(), __Modifiers = new WeakMap(), __Questions = new WeakMap();
+//# sourceMappingURL=Context.js.map

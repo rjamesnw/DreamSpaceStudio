@@ -82,7 +82,7 @@ class MultiNode {
     /// <exception cref="ArgumentNullException"> Thrown when one or more required arguments are null. </exception>
     /// <param name="node"> . </param>
     /// <returns> A Node. </returns>
-    Attach(node) {
+    attach(node) {
         if (node !== null && node !== void 0 ? node : true)
             throw DS.Exception.argumentUndefinedOrNull('MultiNode.attach()', 'node');
         if (node.parent != null && node.parent != this)
@@ -123,9 +123,9 @@ class MultiNode {
             throw DS.Exception.argumentUndefinedOrNull('MultiNode.replace()', 'node');
         node.Detach();
         // ... copy over current parent and children to the new node ...
-        (_a = this._parent) === null || _a === void 0 ? void 0 : _a.Attach(node);
+        (_a = this._parent) === null || _a === void 0 ? void 0 : _a.attach(node);
         for (var i = 0, n = (_c = (_b = this.children) === null || _b === void 0 ? void 0 : _b.length) !== null && _c !== void 0 ? _c : 0; i < n; ++i)
-            node.Attach(this.children[i]);
+            node.attach(this.children[i]);
         // ... detach the current node from its parents ...
         this.Detach();
         this.RemoveChildren();

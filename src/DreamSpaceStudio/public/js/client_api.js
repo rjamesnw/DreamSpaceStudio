@@ -1574,6 +1574,14 @@ var DS;
                 });
             });
         };
+        IO.exists = function (path, readAccess = true, writeAccess = true) {
+            return __awaiter(this, void 0, void 0, function* () {
+                return new Promise((resolve, reject) => {
+                    if (!hasStorageSupport("IO.exists()", path, reject))
+                        return;
+                });
+            });
+        };
         // --------------------------------------------------------------------------------------------------------------------
     })(IO = DS.IO || (DS.IO = {}));
     // ========================================================================================================================

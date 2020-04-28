@@ -253,6 +253,12 @@ namespace DS {
 
         /** Lists the contents of a directory. */
         export declare function getDirectories(path: string): Promise<string[]>;
+
+        /**
+         * Returns true if the given file or directory path exists.
+         * @param path
+         */
+        export declare function exists(path: string, readAccess = false, writeAccess = false): Promise<boolean>;
     }
 }
 

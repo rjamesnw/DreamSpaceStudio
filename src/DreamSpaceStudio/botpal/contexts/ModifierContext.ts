@@ -1,32 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿import DictionaryItem from "../core/DictionaryItem";
+import Context from "../core/Context";
+import Concept from "../core/Concept";
 
-namespace BotPal
-{
-    /// <summary>
-    /// </summary>
-    public class ModifierContext : Context
-    {
-        // --------------------------------------------------------------------------------------------------------------------
+export default class ModifierContext extends Context {
+    // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// The name of this modifier, which is usually taken from adverbs.
-        /// </summary>
-        public DictionaryItem Name;
+    /**
+     * The name of this modifier, which is usually taken from adverbs.
+     * @param Memory memory
+     * @param Concept concept
+     * @param DictionaryItem attributeName
+     * @param Context parent = null
+     */
+    name: DictionaryItem;
 
-        // --------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------
 
-        public ModifierContext(Memory memory, Concept concept, DictionaryItem attributeName, Context parent = null) : base(memory, concept, parent)
-        {
-            Name = attributeName;
-        }
-
-        public ModifierContext(Concept concept, DictionaryItem attributeName, Context parent = null) : this(concept.Memory, concept, attributeName, parent)
-        {
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
+    /**
+     * Constructs a new modifier instance.
+     * @param {Concept} concept The concept that created this context.
+     * @param {DictionaryItem} name The name for the modifier.  This is usually an attribute name, such as "fast" that modifies a verb (such as "running").
+     * @param {Context = null} parent An optional parent context, of applicable.
+     */
+    constructor(concept: Concept, name: DictionaryItem, parent: Context = null) {
+        super(concept.memory, concept, parent)
+        this.name = name;
     }
+
+    // --------------------------------------------------------------------------------------------------------------------
 }

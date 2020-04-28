@@ -74,8 +74,30 @@ export default class TextPart extends TimeReferencedObject implements IMemoryObj
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    equals(value: object | string): boolean {
+    /**
+     * Returns true if the given text part or string is an exact match to the underlying text for this text part.
+     * @param {TextPart | string} value
+     * @returns
+     */
+    equals(value: TextPart | string): boolean {
         if (value == this) return true;
+        if (value instanceof TextPart) return value.key == this.key;
+        if (!this && value == null) return true;
+        if (!this || value == null) return false; // (if any is null, then the other isn't, so this fails also)
+        if (typeof value !== 'string') return false;
+        var tp = new TextPart(this.memory, value);
+        return this.key == tp.key;
+    }
+
+    /**
+     * Returns true if the given text part or string is a close match to the underlying text for this text part.
+     * This comparison uses the group key, which is used for grouping texts that are different only by letter case.
+     * @param {TextPart | string} value
+     * @returns
+     */
+    similar(value: TextPart | string): boolean {
+        if (value == this) return true;
+        if (value instanceof TextPart) return value.groupKey == this.groupKey;
         if (!this && value == null) return true;
         if (!this || value == null) return false; // (if any is null, then the other isn't, so this fails also)
         if (typeof value !== 'string') return false;

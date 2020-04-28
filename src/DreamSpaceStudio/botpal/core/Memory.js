@@ -1,33 +1,22 @@
 "use strict";
 var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
+const Dictionary_1 = require("./Dictionary");
 class Memory {
+    get memory() { return this; }
+    ///// <summary>
+    ///// A list of all neural nodes in the memory.
+    ///// </summary>
+    //? public readonly SortedSet<NeuralNode> NeuralNodes = new SortedSet<NeuralNode>(TimeReferencedObject.DefaultComparer);
+    // --------------------------------------------------------------------------------------------------------------------
+    Memory(brain) {
+        this.Brain = brain;
+        this.Dictionary = new Dictionary_1.default(this);
+    }
+    GetCombinationCount(IList, , Match, , DictionaryItem) { }
 }
 exports.default = Memory;
-{
-    get;
-    {
-        return this;
-    }
-}
-Dictionary;
-Dictionary;
-{
-    get;
-    {
-        return _Dictionary;
-    }
-}
-internal;
-Dictionary;
-_Dictionary;
-Memory(Brain, brain);
-{
-    Brain = brain;
-    _Dictionary = new Dictionary(this);
-}
-int;
-GetCombinationCount(IList < Match < DictionaryItem > [] > matchesList); //?
+ > [] > matchesList;
 {
     if (matchesList == null || matchesList.Count == 0)
         return 0;

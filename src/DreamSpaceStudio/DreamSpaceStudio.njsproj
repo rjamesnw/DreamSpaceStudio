@@ -183,9 +183,11 @@
     <Content Include="botpal\core\POS.ts" />
     <Content Include="botpal\core\Response.ts" />
     <Content Include="botpal\core\TextPart.ts" />
+    <Content Include="botpal\services\tts\ITTSService.ts" />
+    <Content Include="botpal\services\tts\TTSService.ts" />
     <Content Include="botpal\tsconfig.json" />
-    <Content Include="botpal\tts\ITTSSAPI.ts" />
-    <Content Include="botpal\tts\Ivona.ts" />
+    <Content Include="botpal\services\apis\tts\ITTSSAPI.ts" />
+    <Content Include="botpal\services\apis\tts\Ivona.ts" />
     <Content Include="system\!readme.txt" />
     <Content Include="system\abstracts\!readme.txt" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\project_1.json" />
@@ -239,8 +241,11 @@
     <Folder Include="botpal\contexts\" />
     <Folder Include="botpal\core\" />
     <Folder Include="botpal\db\" />
-    <Folder Include="botpal\tts\" />
+    <Folder Include="botpal\services\" />
     <Folder Include="botpal\nlu\" />
+    <Folder Include="botpal\services\apis\" />
+    <Folder Include="botpal\services\apis\tts\" />
+    <Folder Include="botpal\services\tts\" />
     <Folder Include="features\ide\editor\" />
     <Folder Include="features\ide\_modules_\" />
     <Folder Include="actions\" />

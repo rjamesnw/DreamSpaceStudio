@@ -1,5 +1,10 @@
+"use strict";
 // ========================================================================================================================
-var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", { value: true });
+const Memory_1 = require("./Memory");
+const TextPart_1 = require("./TextPart");
+const DictionaryItem_1 = require("./DictionaryItem");
+const Enums_1 = require("./Enums");
 /// <summary>
 /// The dictionary holds both the RAW text, without context (no duplicates), and various 'DictionaryEntry' instances,
 /// which both link to the raw text, along with some contextual parameters for the text.  'DictionaryEntry' items CAN
@@ -10,162 +15,131 @@ var _a, _b, _c;
 /// (though it may never be the same as before, since the system dynamically changes).</para>
 /// </summary>
 class Dictionary {
-}
-IMemoryObject;
-{
-    Memory;
-    Memory;
-    Memory;
-    IMemoryObject.Memory;
-    {
-        get;
-        {
-            return Memory;
-        }
-    }
-    /// <summary>
-    /// The raw texts, as originally entered by users. The key IS case sensitive, which is '{TextPart}.Key'. That said, this only stores text
-    /// exactly as entered by a user. Normally casing is always determined in context at output to user.
-    /// </summary>
-    Dictionary < string, TextPart > _Texts;
-    new Dictionary();
-    /// <summary>
-    /// An index of all texts by their first letter (always lower casing). This can help to quickly speed up/shortcut word analysis.
-    /// </summary>
-    Dictionary < char, List < TextPart >> _TextIndexByFirstLetter;
-    new Dictionary(); // TODO: Consider restricting on max word length as well.
-    /// <summary>
-    /// Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity. This list holds those references.
-    /// This can help to quickly speed up/shortcut text input analysis.
-    /// </summary>
-    Dictionary < string, List < TextPart >> _SimilarTexts;
-    new Dictionary();
-    /// <summary>
-    /// All words or phrases in this dictionary, based on group keys, and other specific word context parameters (POS, Tense, Plurality, etc.).
-    /// This servers as a quick index, which can be rebuilt or updated as needed.
-    /// By default, the lexicon will contain entries used to split text for grammar trees.
-    /// </summary>
-    Dictionary < string, DictionaryItem > _Entries;
-    new Dictionary();
-    DictionaryItem;
-    GlobalEntry => _Entries[String.Empty];
-    /// <summary>
-    /// Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity. 
-    /// This list holds those references, as it relates to dictionary entries.
-    /// This can help to quickly speed up/shortcut text input analysis, taking away the need to know context parameters (POS, Tense, Plurality, etc.).
-    /// </summary>
-    Dictionary < string, List < DictionaryItem >> _SimilarEntries;
-    new Dictionary();
-    /// <summary>
-    /// An index of all words by their first letter (always lower casing). This can help to quickly speed up/shortcut word analysis.
-    /// </summary>
-    Dictionary < char, List < DictionaryItem >> _IndexByFirstLetter;
-    new Dictionary(); // TODO: Consider restricting on max word length as well.
-    /// <summary>
-    /// An index of all words by their string length. This can help to quickly speed up/shortcut word analysis.
-    /// </summary>
-    Dictionary < int, List < DictionaryItem >> _IndexByLength;
-    new Dictionary(); // TODO: Consider restricting on max word length as well.
-    Dictionary(Memory, memory);
-    {
-        Memory = memory;
-        _Entries.Add(String.Empty, new DictionaryItem(this, null)); // (this is a global placeholder for "match unknown" concepts)
+    // --------------------------------------------------------------------------------------------------------------------
+    constructor(memory) {
+        /// <summary>
+        /// The raw texts, as originally entered by users. The key IS case sensitive, which is '{TextPart}.Key'. That said, this only stores text
+        /// exactly as entered by a user. Normally casing is always determined in context at output to user.
+        /// </summary>
+        this._Texts = new Map();
+        /// <summary>
+        /// An index of all texts by their first letter (always lower casing). This can help to quickly speed up/shortcut word analysis.
+        /// </summary>
+        this._TextIndexByFirstLetter = new Map(); // TODO: Consider restricting on max word length as well.
+        /// <summary>
+        /// Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity. This list holds those references.
+        /// This can help to quickly speed up/shortcut text input analysis.
+        /// </summary>
+        this._SimilarTexts = new Map();
+        /// <summary>
+        /// All words or phrases in this dictionary, based on group keys, and other specific word context parameters (POS, Tense, Plurality, etc.).
+        /// This servers as a quick index, which can be rebuilt or updated as needed.
+        /// By default, the lexicon will contain entries used to split text for grammar trees.
+        /// </summary>
+        this._Entries = new Map();
+        /// <summary>
+        /// Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity. 
+        /// This list holds those references, as it relates to dictionary entries.
+        /// This can help to quickly speed up/shortcut text input analysis, taking away the need to know context parameters (POS, Tense, Plurality, etc.).
+        /// </summary>
+        this._SimilarEntries = new Map();
+        /// <summary>
+        /// An index of all words by their first letter (always lower casing). This can help to quickly speed up/shortcut word analysis.
+        /// </summary>
+        this._IndexByFirstLetter = new Map(); // TODO: Consider restricting on max word length as well.
+        /// <summary>
+        /// An index of all words by their string length. This can help to quickly speed up/shortcut word analysis.
+        /// </summary>
+        this._IndexByLength = new Map(); // TODO: Consider restricting on max word length as well.
+        this.memory = memory;
+        this._Entries.set('', new DictionaryItem_1.default(this, null)); // (this is a global placeholder for "match unknown" concepts)
         // (NOTE: Synonyms, in this case, are more like word GROUPS, and less an actual list of strict synonyms; this helps the AI to know related words)
         // TODO: Consider keeping strict synonyms, and instead have a map to other "related" words.
     }
-    DictionaryItem;
-    AddTextPart(TextPart, textPart, PartOfSpeech, pos = null, TenseTypes, tense = TenseTypes.Unspecified, Plurality, plurality = Plurality.Unspecified);
-    {
-        var entry = new DictionaryItem(this, AddText(textPart), pos, tense, plurality); // (this wraps the details so we can generate a key that represents the entry, then see if one already exists)
-        return AddEntry(entry);
+    /// <summary>
+    /// This references the dictionary entry that has a blank key, and is used to store global data, such as concepts that should run if no other concepts are found.
+    /// </summary>
+    get GlobalEntry() { return this._Entries.get(''); }
+    AddTextPart(textPart, pos = null, tense = Enums_1.TenseTypes.Unspecified, plurality = Enums_1.Plurality.Unspecified) {
+        if (textPart instanceof TextPart_1.default) {
+            var entry = new DictionaryItem_1.default(this, this.AddText(textPart), pos, tense, plurality); // (this wraps the details so we can generate a key that represents the entry, then see if one already exists)
+            return this.AddEntry(entry);
+        }
+        else {
+            var entry = new DictionaryItem_1.default(this, this.AddText(textPart), pos, tense, plurality); // (this wraps the details so we can generate a key that represents the entry, then see if one already exists)
+            return this.AddEntry(entry);
+        }
     }
-    DictionaryItem;
-    AddTextPart(string, textPart, PartOfSpeech, pos = null, TenseTypes, tense = TenseTypes.Unspecified, Plurality, plurality = Plurality.Unspecified);
-    {
-        var entry = new DictionaryItem(this, AddText(textPart), pos, tense, plurality); // (this wraps the details so we can generate a key that represents the entry, then see if one already exists)
-        return AddEntry(entry);
-    }
-    DictionaryItem;
-    AddEntry(DictionaryItem, entry);
-    {
-        if (entry == (object))
-            null;
-        throw new ArgumentNullException("entry");
-        var entryKey = entry.Key;
-        var tp = entry.TextPart;
-        DictionaryItem;
-        existingEntry;
-        lock(_Entries);
-        existingEntry = _Entries.Value(entryKey);
-        if (existingEntry != (object))
-            null;
-        return existingEntry;
+    /// <summary>
+    /// Attempts to add the given entry, returning any existing entry instead if one already exists.
+    /// </summary>
+    AddEntry(entry) {
+        if (!entry)
+            throw DS.Exception.argumentRequired("Dictionary.AddEntry()", "entry");
+        var entryKey = entry.key;
+        var tp = entry.textPart;
+        var existingEntry = this._Entries.get(entryKey);
+        if (existingEntry) // (if the entry already exists, it was already processed, so ignore)
+            return existingEntry;
         // ... first register the underlying text of the text part (if not already added) ...
-        AddText(tp);
-        lock(_Entries);
-        {
-            // ... register the dictionary entry by the lowercase first character of the phrase group key ...
-            // (note: the entry key is NOT used, as it contains entry data with the key, and is less like the original text)
-            var grpkey = tp.GroupKey; // (a key used for grouping text that looks similar - we need to process this all using the key in lower case, etc., to properly index the text as it may look to the user, and by ordinal comparisons)
+        this.AddText(tp);
+        // ... register the dictionary entry by the lowercase first character of the phrase group key ...
+        // (note: the entry key is NOT used, as it contains entry data with the key, and is less like the original text)
+        var grpkey = tp.groupKey; // (a key used for grouping text that looks similar - we need to process this all using the key in lower case, etc., to properly index the text as it may look to the user, and by ordinal comparisons)
+        var charIndex = grpkey[0];
+        var indexedWords = this._IndexByFirstLetter.get(charIndex);
+        if (!indexedWords)
+            this._IndexByFirstLetter.set(charIndex, indexedWords = []);
+        indexedWords.push(entry);
+        // ... register the dictionary entry by the length of the phrase group key ...
+        // (note: the key has the white spaces removed so they don't through this off)
+        var lenIndex = grpkey.length;
+        var indexedWordsByLen = this._IndexByLength.get(lenIndex);
+        if (!indexedWordsByLen)
+            this._IndexByLength.set(lenIndex, indexedWordsByLen = []);
+        indexedWordsByLen.push(entry);
+        // ... finally add the entry to the entry lists ...
+        var similarEntries = this._SimilarEntries.get(grpkey);
+        if (!similarEntries)
+            this._SimilarEntries.set(grpkey, similarEntries = []);
+        similarEntries.push(entry);
+        this._Entries.set(entryKey, entry);
+        return entry;
+    }
+    AddText(text) {
+        if (typeof text == 'string')
+            return this.AddText(new TextPart_1.default(this, text));
+        if (text === undefined || text === null)
+            throw DS.Exception.argumentUndefinedOrNull("Dictionary.AddEntry()", "entry");
+        var key = text.key;
+        var txt = this._Texts.get(key);
+        if (txt == null) {
+            // ... adding it for the first time ...
+            this._Texts.set(key, txt = text);
+            // ... also add to the group of similar texts ...
+            var grpkey = text.groupKey;
+            var stexts = this._SimilarTexts.get(grpkey);
+            if (!stexts)
+                this._SimilarTexts.set(grpkey, stexts = []);
+            stexts.push(text);
+            // ... finally index the text by the first character ...
             var charIndex = grpkey[0];
-            var indexedWords = _IndexByFirstLetter.Value(charIndex);
-            if (indexedWords == null)
-                _IndexByFirstLetter[charIndex] = indexedWords = new List();
-            indexedWords.Add(entry);
-            // ... register the dictionary entry by the length of the phrase group key ...
-            // (note: the key has the white spaces removed so they don't through this off)
-            var lenIndex = grpkey.Length;
-            var indexedWordsByLen = _IndexByLength.Value(lenIndex);
-            if (indexedWordsByLen == null)
-                _IndexByLength[lenIndex] = indexedWordsByLen = new List();
-            indexedWordsByLen.Add(entry);
-            // ... finally add the entry to the entry lists ...
-            var similarEntries = _SimilarEntries.Value(grpkey);
-            if (similarEntries == null)
-                _SimilarEntries[grpkey] = similarEntries = new List();
-            similarEntries.Add(entry);
-            return _Entries[entryKey] = entry;
+            var indexedTexts = this._TextIndexByFirstLetter.get(charIndex);
+            if (!indexedTexts)
+                this._TextIndexByFirstLetter.set(charIndex, indexedTexts = []);
+            indexedTexts.push(text);
         }
+        return txt;
     }
-    TextPart;
-    AddText(TextPart, text);
-    {
-        lock(_Texts);
-        {
-            if (text == null)
-                throw new ArgumentNullException("text");
-            var key = text.Key;
-            var txt = _Texts.Value(key);
-            if (txt == null) {
-                // ... adding it for the first time ...
-                _Texts[key] = txt = text;
-                // ... also add to the group of similar texts ...
-                var grpkey = text.GroupKey;
-                var stexts = _SimilarTexts.Value(grpkey);
-                if (stexts == null)
-                    _SimilarTexts[grpkey] = stexts = new List();
-                stexts.Add(text);
-                // ... finally index the text by the first character ...
-                var charIndex = grpkey[0];
-                var indexedTexts = _TextIndexByFirstLetter.Value(charIndex);
-                if (indexedTexts == null)
-                    _TextIndexByFirstLetter[charIndex] = indexedTexts = new List();
-                indexedTexts.Add(text);
-            }
-            return txt;
-        }
-    }
-    TextPart;
-    AddText(string, text);
-    {
-        return AddText(new TextPart(this, text));
-    }
-    void UpdateUsageFactor(bool, force = false);
-    {
+    /** Queues an event to update word usage factor on all dictionary entries based on usage counts.
+      * Warning: This requires two passes (one for totals, and another for factor calculations);  If forcing the call, do it sparingly.
+      * @param {boolean} force If false (default), the request is scheduled to run asynchronously (which allows for multiple calls without stacking). If true, the call is synchronous.
+      */
+    UpdateUsageFactor(force = false) {
         if (!force) {
             // ... schedule a refresh; if already scheduled, this will cancel the existing one and start a new one ...
-            Memory.Brain.CreateTask((bt) => {
-                UpdateUsageFactor(true);
+            this.memory.Brain.CreateTask((bt) => {
+                this.UpdateUsageFactor(true);
                 return Task.CompletedTask;
             }).Start(TimeSpan.FromSeconds(1), "Dictionary", "UpdateUsageFactor");
         }
@@ -188,40 +162,33 @@ IMemoryObject;
             entry._Usages.Count / totalCount;
         }
     }
-    DictionaryItem;
-    GetEntry(string, key);
-    {
+    GetEntry(string, key) {
         lock(_Entries);
         return _Entries.Value(key);
     }
-    DictionaryItem;
-    GetEntry(string, groupkey, PartOfSpeech, pos, TenseTypes, tense = TenseTypes.NA, Plurality, plurality = Plurality.NA);
-    {
-        var key = DictionaryItem.CreateKey(groupkey, pos, tense, plurality);
+    GetEntry(string, groupkey, PartOfSpeech, pos, TenseTypes, tense = TenseTypes.NA, Plurality, plurality = Plurality.NA) {
+        var key = DictionaryItem_1.default.CreateKey(groupkey, pos, tense, plurality);
         lock(_Entries);
         return _Entries.Value(key);
     }
-    DictionaryItem[];
-    FindSimilarEntries(string, groupkey);
-    {
+    FindSimilarEntries(string, groupkey) {
+        var _a;
         lock(_Entries);
         return (_a = _SimilarEntries.Value(groupkey)) === null || _a === void 0 ? void 0 : _a.ToArray();
     }
-    DictionaryItem[];
-    GetEntriesByFirstLetter(char, letter);
-    {
+    GetEntriesByFirstLetter(char, letter) {
+        var _a;
         lock(_Entries);
-        return (_b = _IndexByFirstLetter.Value(letter)) === null || _b === void 0 ? void 0 : _b.ToArray();
+        return (_a = _IndexByFirstLetter.Value(letter)) === null || _a === void 0 ? void 0 : _a.ToArray();
     }
-    Match < DictionaryItem > [];
-    FindMatchingEntries(string, textpart, double, threshold = 0.8, bool, quickSearch = true);
-    {
+    FindMatchingEntries(string, textpart, double, threshold = 0.8, bool, quickSearch = true) {
+        var _a;
         if (textpart == null)
             throw new ArgumentNullException(textpart);
         var matches = new List();
         if (!string.IsNullOrWhiteSpace(textpart)) {
             if (quickSearch) {
-                var groupkey = Memory.Brain.ToGroupKey(textpart);
+                var groupkey = Memory_1.default.Brain.ToGroupKey(textpart);
                 var entries = FindSimilarEntries(groupkey);
                 if (entries != null)
                     foreach();
@@ -238,7 +205,7 @@ IMemoryObject;
                     // ... store all matched texts into an array that will be used to break down into group keys, then dictionary entries ...
                     for (var i = 0; i < indexedItems.Count; ++i) { // (check each word of the same first letter for a % match)
                         var item = indexedItems[i];
-                        var score = CompareText(textpart, (_c = item.TextPart) === null || _c === void 0 ? void 0 : _c.Text);
+                        var score = CompareText(textpart, (_a = item.TextPart) === null || _a === void 0 ? void 0 : _a.Text);
                         if (score >= threshold)
                             matches.Add(new Match(item, score));
                     }
@@ -249,9 +216,7 @@ IMemoryObject;
         matches.Sort(Match(DefaultComparer));
         return matches.ToArray();
     }
-    Exception;
-    LoadDefaultWords(string, filename = "dictionary.json", string, body = null);
-    {
+    LoadDefaultWords(string, filename = "dictionary.json", string, body = null) {
         if (string.IsNullOrWhiteSpace(body)) {
             var libPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase), filename);
             if (File.Exists(libPath))
@@ -275,33 +240,25 @@ IMemoryObject;
         }
         return new InvalidDataException("No data is available to be parsed - the body content may be empty.");
     }
-    string;
-    NormalizeText(string, text, Regex, optionalTextRemovalRegex = null);
-    {
+    NormalizeText(string, text, Regex, optionalTextRemovalRegex = null) {
         if (text == null)
             text = "";
         if (optionalTextRemovalRegex != null)
             text = optionalTextRemovalRegex.Replace(text, "");
         return text.ToLower().Replace("n't", " not"); // TODO: Think more about "'s", which is complicated to deal with, and may be context based.
     }
-    string;
-    FixWord(string, word); // TODO: This can be optimized.
-    {
+    FixWord(string, word) {
         return new Regex();
         Replace(new Regex());
         Replace(word !== null && word !== void 0 ? word : "", " "), "";
         ToLower();
     }
-    double;
-    CompareWords(string, word1, string, word2);
-    {
+    CompareWords(string, word1, string, word2) {
         word1 = FixWord(word1);
         word2 = FixWord(word2);
         return CompareText(word1, word2);
     }
-    double;
-    CompareText(string, txt1, string, txt2);
-    {
+    CompareText(string, txt1, string, txt2) {
         if ((txt1 !== null && txt1 !== void 0 ? txt1 : "") == "" || (txt2 !== null && txt2 !== void 0 ? txt2 : "") == "")
             return 1;
         d; // exact match
@@ -385,75 +342,6 @@ IMemoryObject;
         }
         return totalMatch * txt1CharsLen / txt2CharsLen; // (make the word size difference modify the final match % by weight based on difference in length of words)
     }
-    //public WordArrayMatch compareWordArrays(words1: string[], words2: string[])
-    //{ //? compares words and positions
-    //    if (words1 === words2) return new WordArrayMatch(1, [], [words1, words2]);
-    //    if (words1 == void 0 || !("length" in words1)) return new WordArrayMatch(0, [], [words1, words2]);
-    //    if (words2 == void 0 || !("length" in words2)) return new WordArrayMatch(0, [], [words1, words2]);
-    //    // ... make the first array the largest array ...
-    //    var words1IsOpenStarted = words1[0] == "*";
-    //    var words1IsOpenEnded = words1[words1.length - 1] == "*";
-    //    var words2IsOpenStarted = words2[0] == "*";
-    //    var words2IsOpenEnded = words2[words2.length - 1] == "*";
-    //    if (words1IsOpenStarted || words1IsOpenEnded)
-    //    {
-    //        var i1 = words1IsOpenStarted ? 1 : 0, i2 = words1.length - (words1IsOpenEnded ? 1 : 0);
-    //        words1 = words1.slice(i1, i2); // (removed any wildcard symbols)
-    //    }
-    //    if (words2IsOpenStarted || words2IsOpenEnded)
-    //    {
-    //        var i1 = words2IsOpenStarted ? 1 : 0, i2 = words2.length - (words2IsOpenEnded ? 1 : 0);
-    //        words2 = words2.slice(i1, i2); // (removed any wildcard symbols)
-    //    }
-    //    var wordLists = [words1, words2]; // (this should never be reversed)
-    //    if (words1.length == 0) return new WordArrayMatch(+(words2.length == 0), [], wordLists);
-    //    var scoreIndex1 = 0, scoreIndex2 = 1; // (need to return the scores in the order of the words given in the parameters)
-    //    if ((words2IsOpenStarted || words2IsOpenEnded) && words2.length < words1.length // (keep smaller on bottom in this case)
-    //        || (!words1IsOpenStarted && !words1IsOpenEnded) && words1.length < words2.length)
-    //    { // (keep smaller on top in this case)
-    //        var tmp: any = words1;
-    //        words1 = words2;
-    //        words2 = tmp;
-    //        tmp = words1IsOpenStarted;
-    //        words1IsOpenStarted = words2IsOpenStarted;
-    //        words2IsOpenStarted = tmp;
-    //        tmp = words1IsOpenEnded;
-    //        words1IsOpenEnded = words2IsOpenEnded;
-    //        words1IsOpenEnded = tmp;
-    //        scoreIndex1 = 1;
-    //        scoreIndex2 = 0;
-    //    }
-    //    var scores: any[][] = [[], []]; // (attach a score list to each word list to be analyzed later if needed)
-    //    var match = 0, wordCount = 0, compareOffset = 0, findStartIndex = words1IsOpenStarted;
-    //    for (var w1i = 0; w1i < words1.length; ++w1i)
-    //    {
-    //        var bestW2MatchIndex = -1, bestMatch = 0, distance: number;
-    //        ++wordCount;
-    //        for (var w2i = 0; w2i < words2.length; ++w2i)
-    //        {
-    //            var distance = findStartIndex ? 0 : Math.abs(w1i - (w2i + compareOffset)),
-    //                wordMatch = this.compareWords(words1[w1i], words2[w2i]);
-    //            wordMatch = wordMatch / Math.pow(2, distance);
-    //            if (wordMatch > bestMatch)
-    //            {
-    //                bestMatch = wordMatch;
-    //                bestW2MatchIndex = w2i;
-    //                if (bestMatch == 1)
-    //                    break; // (perfect match, add now and skip to next word)
-    //            }
-    //        }
-    //        scores[scoreIndex1][w1i] = bestMatch;
-    //        if (bestW2MatchIndex >= 0)
-    //            scores[scoreIndex2][bestW2MatchIndex] = bestMatch;
-    //        if (findStartIndex && bestMatch > 0)
-    //        {
-    //            compareOffset = -bestW2MatchIndex;
-    //            findStartIndex = false;
-    //        }
-    //        match += bestMatch;
-    //    }
-    //    return new WordArrayMatch((match / wordCount), scores, wordLists); //? + words2.length / words1.length) / 2; // (make the word count difference modify the final match %)
-    //}
-    // --------------------------------------------------------------------------------------------------------------------
 }
+exports.default = Dictionary;
 //# sourceMappingURL=Dictionary.js.map

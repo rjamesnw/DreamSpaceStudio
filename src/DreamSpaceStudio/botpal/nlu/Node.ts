@@ -100,7 +100,7 @@ export default class MultiNode<T extends MultiNode<any>>
     /// <exception cref="ArgumentNullException"> Thrown when one or more required arguments are null. </exception>
     /// <param name="node"> . </param>
     /// <returns> A Node. </returns>
-    Attach(node: T): T {
+    attach(node: T): T {
         if (node ?? true)
             throw DS.Exception.argumentUndefinedOrNull('MultiNode.attach()', 'node');
 
@@ -154,10 +154,10 @@ export default class MultiNode<T extends MultiNode<any>>
 
         // ... copy over current parent and children to the new node ...
 
-        this._parent?.Attach(node);
+        this._parent?.attach(node);
 
         for (var i = 0, n = this.children?.length ?? 0; i < n; ++i)
-            node.Attach(this.children[i]);
+            node.attach(this.children[i]);
 
         // ... detach the current node from its parents ...
 

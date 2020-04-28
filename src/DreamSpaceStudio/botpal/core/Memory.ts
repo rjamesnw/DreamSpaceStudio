@@ -1,4 +1,7 @@
-﻿export interface IMemoryObject {
+﻿import Dictionary from "./Dictionary";
+import Brain from "./Brain";
+
+export interface IMemoryObject {
     /** The memory instance this object belongs to. */
     memory: Memory;
 }
@@ -6,39 +9,37 @@
 export default class Memory implements IMemoryObject {
     // --------------------------------------------------------------------------------------------------------------------
 
-    public readonly Brain Brain;
+    public readonly Brain: Brain;
 
-    memory IMemoryObject.memory { get { return this; } }
+    get memory() { return this; }
 
-        /// <summary>
-        /// The dictionary holds both the RAW text, without context (no duplicates), and various 'DictionaryEntry' instances,
-        /// which both link to the raw text, along with some contextual parameters for the text ('DictionaryEntry' items CAN
-        /// reference the same text among them).
-        /// </summary>
-        public Dictionary Dictionary { get { return _Dictionary; } }
-internal Dictionary _Dictionary;
+    /// <summary>
+    /// The dictionary holds both the RAW text, without context (no duplicates), and various 'DictionaryEntry' instances,
+    /// which both link to the raw text, along with some contextual parameters for the text ('DictionaryEntry' items CAN
+    /// reference the same text among them).
+    /// </summary>
+    readonly Dictionary: Dictionary;
 
-        ///// <summary>
-        ///// A list of all neural nodes in the memory.
-        ///// </summary>
-        //? public readonly SortedSet<NeuralNode> NeuralNodes = new SortedSet<NeuralNode>(TimeReferencedObject.DefaultComparer);
+    ///// <summary>
+    ///// A list of all neural nodes in the memory.
+    ///// </summary>
+    //? public readonly SortedSet<NeuralNode> NeuralNodes = new SortedSet<NeuralNode>(TimeReferencedObject.DefaultComparer);
 
-        // --------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------
 
-        public Memory(Brain brain)
-{
-    Brain = brain;
-    _Dictionary = new Dictionary(this);
-}
+    public Memory(brain: Brain) {
+        this.Brain = brain;
+        (<Writeable<Memory>>this).Dictionary = new Dictionary(this);
+    }
 
-        // --------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// Returns a count of all possible combinations 
-        /// </summary>
-        /// <param name="matchesList"></param>
-        /// <returns></returns>
-        public int GetCombinationCount(IList < Match < DictionaryItem > [] > matchesList) //?
+    /// <summary>
+    /// Returns a count of all possible combinations 
+    /// </summary>
+    /// <param name="matchesList"></param>
+    /// <returns></returns>
+    public int GetCombinationCount(IList <Match <DictionaryItem > [] > matchesList) //?
 {
     if (matchesList == null || matchesList.Count == 0) return 0;
     var count = 1;

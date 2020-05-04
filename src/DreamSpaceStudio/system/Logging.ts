@@ -31,7 +31,7 @@ namespace DS {
       * @param {boolean} throwOnError If true (the default) then an exception with the message is thrown.
       * @param {boolean} useLogger If true (default) then 'System.Diagnostics.log()' is also called in addition to the console output.
       */
-    export function log(title: string, message: string, type: LogTypes = LogTypes.Normal, source?: object, throwOnError = true, useLogger = true): string {
+    export function log(title: string, message: string, type: LogTypes = LogTypes.Normal, source?: any, throwOnError = true, useLogger = true): string {
         if (title === null && message === null) return null;
         if (title !== null) title = ('' + title).trim();
         if (message !== null) message = ('' + message).trim();
@@ -97,8 +97,38 @@ namespace DS {
       * @param {boolean} throwException If true (the default) then an exception with the message is thrown.
       * @param {boolean} useLogger If true (default) then 'System.Diagnostics.log()' is also called in addition to the console output.
       */
-    export function error(title: string, message: string, source?: object, throwException = true, useLogger = true): string {
+    export function error(title: string, message: string, source?: any, throwException = true, useLogger = true): string {
         return log(title, message, LogTypes.Error, source, throwException, useLogger);
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Logs and rejects a promise upon error.
+     * @param rej The Promise rejection callback.
+     * @param reason The reason for the rejection.  This is also logged if 'logmsg' is undefined/null/empty.
+     * @param logmsg The message to log (using console.error()). This defaults to 'reason' if undefined/null/empty.
+     */
+    export function reject(rej: (reason?: any) => void, reason: any, logmsg?: string): string {
+        if (logmsg === void 0 || logmsg === null || logmsg === "")
+            logmsg = JSON.stringify(reason);
+        error('Promise rejected', logmsg);
+        rej && rej(reason);
+        return logmsg; // (returning this is not important; it is here mainly to allow using 'return' to allowing exiting more cleanly)
+    }
+
+    /**
+     * Logs and rejects a promise upon error.
+     * @param res The Promise resolve callback.
+     * @param value The value for the resolution.  This is also logged if 'logmsg' is undefined/null/empty.
+     * @param logmsg The message to log (using console.error()). This defaults to 'reason' if undefined/null/empty.
+     */
+    export function resolve(res: (value?: any) => void, value: any, logmsg?: string): string {
+        if (logmsg === void 0 || logmsg === null || logmsg === "")
+            logmsg = JSON.stringify(value);
+        log('Promise resolved', logmsg);
+        res && res(value);
+        return logmsg; // (returning this is not important; it is here mainly to allow using 'return' to allowing exiting more cleanly)
     }
 
     // ------------------------------------------------------------------------------------------------------------------------

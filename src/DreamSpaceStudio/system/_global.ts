@@ -267,7 +267,7 @@ namespace DS {
     /** A reference to the host's global environment (convenient for nested TypeScript code, or when using strict mode [where this=undefined]).
     * This provides a faster, cleaner, consistent, and reliable method of referencing the global environment scope without having to resort to workarounds.
     */
-    export var global: IStaticGlobals = (function () { }.constructor("return this || global"))(); // (note: this is named as 'global' to support the NodeJS "global" object as well [for compatibility, or to ease portability])
+    export var global: IStaticGlobals = typeof globalThis != 'undefined' ? globalThis : (function () { }.constructor("return this || global"))(); // (note: this is named as 'global' to support the NodeJS "global" object as well [for compatibility, or to ease portability])
 
     // ========================================================================================================================
 

@@ -11,13 +11,15 @@
     "outFile": "server_api.js",
     "target": "ES2017",
     "lib": [ "ES2017", "dom" ],
-    "types": [ "node" ] // (include only types we need; prevents node types from being included)
+    "module": "commonjs",
+    "types": [ "node", "mysql", "mssql" ] // (include only types we need; prevents node types from being included)
   },
   "include": [
     "./ds.ts", // (make this first)
     "./_global.ts",
     "./io.ts",
     "./Utilities.ts",
+    "./db/dbutilities.ts",
     "./**/*.ts"
   ],
   "exclude": [

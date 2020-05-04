@@ -180,7 +180,7 @@ namespace DS {
          * Logs an error with a title and message, and returns an associated 'Exception' object for the caller to throw.
          * The source of the exception object will be associated with the 'LogItem' object (if 'System.Diagnostics' is loaded).
          */
-        static error(title: string, message: string, source?: object): Exception {
+        static error(title: string, message: string, source?: any): Exception {
             if (Diagnostics && Diagnostics.log) {
                 var logItem = Diagnostics.log(title, message, LogTypes.Error);
                 return new Exception(logItem, source);

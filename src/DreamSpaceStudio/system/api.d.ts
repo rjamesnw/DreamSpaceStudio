@@ -440,7 +440,7 @@ declare namespace DS {
       * @param {boolean} throwOnError If true (the default) then an exception with the message is thrown.
       * @param {boolean} useLogger If true (default) then 'System.Diagnostics.log()' is also called in addition to the console output.
       */
-    function log(title: string, message: string, type?: LogTypes, source?: object, throwOnError?: boolean, useLogger?: boolean): string;
+    function log(title: string, message: string, type?: LogTypes, source?: any, throwOnError?: boolean, useLogger?: boolean): string;
     /** Logs the error message to the console (if available) and throws the error.
       *  By default errors are thrown instead of being returned.  Set 'throwException' to false to return logged error messages.
       * @param {string} title A title for this log message.
@@ -449,7 +449,21 @@ declare namespace DS {
       * @param {boolean} throwException If true (the default) then an exception with the message is thrown.
       * @param {boolean} useLogger If true (default) then 'System.Diagnostics.log()' is also called in addition to the console output.
       */
-    function error(title: string, message: string, source?: object, throwException?: boolean, useLogger?: boolean): string;
+    function error(title: string, message: string, source?: any, throwException?: boolean, useLogger?: boolean): string;
+    /**
+     * Logs and rejects a promise upon error.
+     * @param rej The Promise rejection callback.
+     * @param reason The reason for the rejection.  This is also logged if 'logmsg' is undefined/null/empty.
+     * @param logmsg The message to log (using console.error()). This defaults to 'reason' if undefined/null/empty.
+     */
+    function reject(rej: (reason?: any) => void, reason: any, logmsg?: string): string;
+    /**
+     * Logs and rejects a promise upon error.
+     * @param res The Promise resolve callback.
+     * @param value The value for the resolution.  This is also logged if 'logmsg' is undefined/null/empty.
+     * @param logmsg The message to log (using console.error()). This defaults to 'reason' if undefined/null/empty.
+     */
+    function resolve(res: (value?: any) => void, value: any, logmsg?: string): string;
 }
 declare namespace DS {
     /** Returns the message of the specified error source by returning either 'errorSource' if it's a string, a formatted LogItem object,
@@ -490,7 +504,7 @@ declare namespace DS {
          * Logs an error with a title and message, and returns an associated 'Exception' object for the caller to throw.
          * The source of the exception object will be associated with the 'LogItem' object (if 'System.Diagnostics' is loaded).
          */
-        static error(title: string, message: string, source?: object): Exception;
+        static error(title: string, message: string, source?: any): Exception;
         /**
          * Logs a "Not Implemented" error message with an optional title, and returns an associated 'Exception' object for the caller to throw.
          * The source of the exception object will be associated with the 'LogItem' object.
@@ -2342,7 +2356,7 @@ declare namespace DS {
             NotExtended = 510,
             /** (RFC 6585) The client needs to authenticate to gain network access. Intended for use by intercepting proxies used to control access to the network (e.g., "captive portals" used to require agreement to Terms of Service before granting full Internet access via a Wi-Fi hotspot).[20] */
             NetworkAuthenticationRequired = 511,
-            /**  This status code is not specified in any RFC and is returned by certain services, for instance Microsoft Azure and CloudFlare servers: "The 520 error is essentially a “catch-all” response for when the origin server returns something unexpected or something that is not tolerated/interpreted (protocol violation or empty response)."[34] */
+            /**  This status code is not specified in any RFC and is returned by certain services, for instance Microsoft Azure and CloudFlare servers: "The 520 error is essentially a �catch-all� response for when the origin server returns something unexpected or something that is not tolerated/interpreted (protocol violation or empty response)."[34] */
             UnknownError = 520,
             /**  This status code is not specified in any RFCs, but is used by CloudFlare's reverse proxies to signal that a server connection timed out. */
             OriginConnectionTimeout = 522,
@@ -2808,6 +2822,225 @@ declare namespace DS {
          */
         validate(errorList?: ComponentError[]): ComponentError[];
         execute(): Promise<void>;
+    }
+}
+declare namespace DS {
+    /** Database types and abstracts. */
+    namespace DB {
+        /** Defines the format of mapping from object properties to table columns.
+         * A function is supported so the name mapped to can be dynamic if need be.
+         */
+        interface IColumnTranslations {
+            [name: string]: string | {
+                (name?: string): string;
+            };
+        }
+        /** When matched against a property, the associated function will be passed the current value,
+         * and any non-undefined value returned will be used instead.
+         * Note: The name index is the name of the target table column (the name translated to, if translation is used). */
+        interface ICalculatedColumns {
+            [name: string]: {
+                (value?: any): any;
+            };
+        }
+        interface IColumnInfo {
+            Field: string;
+            Type: string;
+            Null: string;
+            Key: string;
+            Default: string;
+            Extra: string;
+        }
+        /** A set of column names and the column details as queried from a database. */
+        interface IColumnInfoMap {
+            [name: string]: IColumnInfo;
+        }
+        /** Associates some value with a column. */
+        interface IColumnValue {
+            columnName: string;
+            value: any;
+        }
+        interface IQueryResult<T = any> {
+            /** The response from the executed query. */
+            response?: T;
+        }
+        interface ISelectQueryResult<T extends IRecordSet = IRecordSet> extends IQueryResult<T> {
+        }
+        interface IInsertResult {
+            /** The number of rows changed by the query. */
+            changedRows: number;
+            /** The ID of the last record inserted, if auto numbers are used with a single primary key.
+             * Warning: The ID returned may not be from the target table if stored procedures are involved that insert into other tables.
+             */
+            insertId: number;
+        }
+        interface IInsertQueryResult<T extends IInsertResult = IInsertResult> extends IQueryResult<T> {
+        }
+        interface IUpdateResult {
+            changedRows: number;
+        }
+        interface IUpdaeQueryResult<T extends IUpdateResult = IUpdateResult> extends IQueryResult<T> {
+        }
+        interface IRecordSet<T = any> extends Array<T> {
+        }
+        /** The keys typically returned from or used in an insert or update operation. */
+        interface IKeys {
+            [name: string]: any;
+        }
+        interface IModifyTableResult {
+            /** All operations require an query builder to construct a query based on some data and keys. */
+            builder: QueryBuilder;
+            /** True if an query succeeded. False if not - for instance, if an update could not find any records. On SQL errors, an exception is thrown instead. */
+            success: boolean;
+            /** A success message, or error message is 'success' is false. Because SQL errors trigger exceptions, this will not be set in such case. */
+            message: string;
+        }
+        /** A base class to help support various databases. */
+        abstract class DBAdapter<TConfig = any> {
+            configuration: TConfig;
+            constructor(config: TConfig);
+            abstract createConnection(): Promise<DBConnection>;
+            /** Returns a basic error message. Override this to provide a more detailed error message for the database type. */
+            getSQLErrorMessage(err: any): string;
+        }
+        abstract class DBConnection<TConnection = any> {
+            readonly adapter: DBAdapter;
+            readonly connection: TConnection;
+            constructor(adapter: DBAdapter, connection: TConnection);
+            /** Attempts to make a connection. If already connected the function should execute immediately.*/
+            abstract connect(callback?: (err: any, ...args: any[]) => void): void;
+            abstract query(statement: string, values?: any): Promise<IQueryResult>;
+            abstract getColumnDetails(tableName: string): Promise<IColumnInfo[]>;
+            abstract end(callbackInCaseOfErrors?: (err: any, ...args: any[]) => void): void;
+            /**
+             * Constructs the columns and values from a JSON object, table name, and optional translation array.
+             * This is used in building the final statement, such as 'insert', or 'update'.
+             * @param json The JSON to insert.
+             * @param tableName The destination table to insert into.
+             * @param columnTranslations An optional object whose properties are JSON property names set to the names of the table columns they map to. If a property doesn't get mapped, a warning is logged.
+             */
+            buildQueryInfo(json: string | IndexedObject, tableName: string, columnTranslations?: IColumnTranslations): Promise<QueryBuilder>;
+            updateOrInsert(data: string | IndexedObject, tableName: string, onQueryBuilderReady: {
+                (q: QueryBuilder): void;
+            }, columnTranslations?: IColumnTranslations, calculatedColumns?: ICalculatedColumns): Promise<IModifyTableResult>;
+            /** Only performs an update of existing data. If no data exists, null is returned. */
+            update(data: string | IndexedObject, tableName: string, onQueryBuilderReady: {
+                (q: QueryBuilder): void;
+            }, columnTranslations?: IColumnTranslations, calculatedColumns?: ICalculatedColumns): Promise<IModifyTableResult>;
+        }
+        /** Holds values for building a query statement. */
+        class QueryBuilder {
+            readonly connection: DBConnection;
+            /** The table name to build a query for. */
+            tableName: string;
+            /** A mapping of values by column name. The values should be stored by the table column name (which is the translated name
+             * if translations are used). */
+            values: IColumnValue[];
+            /** If exists, this references existing table data (one level only, no nested arrays or objects).
+             * Existing table data should be provided before calling 'updateCalculcatedColumns()'.
+             */
+            existingTableData?: IndexedObject;
+            /** The columns, in order, for the table.  Usually this is read from the current table schema. */
+            columnInfo: IColumnInfoMap;
+            /** The statement that is built when calling one of the 'get[Insert|Update|Select]Statement()' functions. */
+            statement?: string;
+            /** If set, these will be the key names that override the existing primary keys.
+             * This is helpful when a table has an internal primary key, and also contains a unique external ID.
+             */
+            alternateKeys: string[];
+            /** Set to true to force case sensitive matches. */
+            caseSensitive?: boolean;
+            constructor(connection: DBConnection, tableName: string, columnInfo?: IColumnInfoMap);
+            private _match;
+            private _indexOf;
+            /** Returns the index of the table column name from the list of column values. */
+            columnValueIndex(tableColumnName: string): number;
+            /** Sets a value on the query builder, which is typically used as argument values to query parameters. */
+            setValue(tableColumnName: string, value: string): this;
+            hasValueColumn(tableColumnName: string): boolean;
+            /** Returns a value that was set on the query builder.
+             * If a set value is not found, and existing table data exists, the current table value is returned. */
+            getValue(tableColumnName: string): any;
+            /** Returns an existing table value, or if not specified/undefined, a value that was set on the query builder.
+             * This is the reverse of 'getValue()'. */
+            getExistingValue(tableColumnName: string): any;
+            /** Returns a list of columns pulled from the query values, in order of the values added.
+             * These are the columns that will be used to construct the final query statement.
+             */
+            getColumns(includeAutoIncKeys?: boolean): string[];
+            /** Returns a list of values pulled from the query values, in order of the values added.
+             * Each value is converted as required based on the target column info (by calling 'getColumnInfo(value.columnName)' and passing
+             * it to 'valueToStr()'). If no column info is found, then conversion checking is skipped and the value is returned as is.
+             * These are the values that will be passed to the final query statement parameters (in the same order as the columns
+             * returned from 'getColumns()').
+             */
+            getValues(): any[];
+            /** Returns the names of the primary keys for the table, as described by the underlying table schema (i.e. ignoring 'alternateKeys'). */
+            getPrimaryKeys(): string[];
+            /** Returns the names of the keys for the query builder.
+             * 'alternateKeys' is returned if exists, otherwise the value from 'getPrimaryKeys()' is returned.
+             */
+            getKeys(): string[];
+            /** Returns the column information for a column by name, if it exists, or 'undefined' otherwise.
+             */
+            getColumnInfo(name: string): IColumnInfo;
+            /** Returns true if the specified name is recognized as a unique column for the table. */
+            isKey(name: string): boolean;
+            /** Returns true if the specified name is recognized as a primary key that auto increments.
+             * This can only work if the table schema was already pulled for reference.
+             * This function ignores the alternate keys, since alternate keys are rarely primary keys that also auto increment.
+             */
+            isAutoIncKey(name: string): boolean;
+            /** Returns a '{ name: value, ... }' object based on the primary keys and values in the query builder, or 'undefined' if there are no keys.
+             * Note: The value of the key returned is taken from the first non-undefined value, starting with the existing
+             * table data, then the current values being set (since keys are rarely, if ever, updated).
+             */
+            getKeyValues(): IKeys;
+            /** Returns an array of 'keyName=keyValue' strings that can be joined for query statements, or an empty array if no keys can be determined.
+             * Note: The value of the key returned is taken from the first non-undefined value, starting with the existing
+             * table data, then the current values being set (since keys are rarely, if ever, updated).
+             */
+            getKeyNameValues(): string[];
+            /** Goes through the query builder values and applies the dynamic updates to matching columns.
+              * This is usually called just before an insert or update query needs to be built.
+              * The function returns the same IQueryBuilderInfo instance passed in.
+              * @param existingTableData This is usually a SINGLE previous select-query result entry to include in the calculations (flat properties and values only).  Only use this parameter if you didn't already set the 'existingTableData' property on the query builder.
+              */
+            updateCalculcatedColumns(calculatedColumns?: ICalculatedColumns, existingTableData?: IndexedObject): this;
+            /** Returns the internal values as strings ready to be placed into an SQL statement.
+             * The order is the sames as the 'values' array. Primary keys are ignored.
+             * @param includeKeys True to include primary keys, and false otherwise.  When false, the 'includeAutoIncKey' parameter is ignored.
+             * @param includeAutoIncKey When 'includeKeys' is true, pass true to include primary keys, and false otherwise.  When false, the 'includeAutoIncKey' parameter is ignored.
+             */
+            getSQLReadyValues(includeKeys?: boolean, includeAutoIncKey?: boolean): IColumnValue[];
+            /**
+             * Constructs an 'insert' statement from the given query information.
+             */
+            getInsertStatement(): string;
+            /**
+             * Constructs an 'update' statement from the given query information.
+             * @param where A 'where' clause that usually selects a record by unique value(s) for updating.
+             * If this is not specified, then the primary key(s) values will be used, if they exist, otherwise an error will be thrown.
+              * @param existingTableData This is usually a SINGLE previous select-query result entry to include in the calculations (flat properties and values only).  Only use this parameter if you didn't already set the 'existingTableData' property on the query builder.
+             */
+            getUpdateStatement(where?: string, existingTableData?: IndexedObject): string;
+            /**
+             * Constructs a 'select' statement from the given query information.
+             * To query all columns override the columns with '["*"]'.
+             * Note 1: Only columns with values are included in the select. When no values exist, '*' is assumed.
+             * Note 2: No 'where' clause is added. This allows the caller to construct one based on the IQueryBuilderInfo supplied.
+             * @param columns An override to specify which columns to include in the query.
+             */
+            getSelectStatement(columns?: string[]): string;
+        }
+        /**
+         * Converts a value to a string based on column information.
+         * @param {any} val
+         * @param {IColumnInfo} colInfo
+         * @returns
+         */
+        function valueToStr(val: any, colInfo: IColumnInfo): any;
+        function getMySQLUTCDate(): string;
     }
 }
 declare namespace DS {

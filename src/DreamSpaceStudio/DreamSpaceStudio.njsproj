@@ -79,6 +79,7 @@
     <TypeScriptCompile Include="botpal\core\Comparer.ts" />
     <TypeScriptCompile Include="botpal\core\DictionaryItem.ts" />
     <TypeScriptCompile Include="botpal\core\Match.ts" />
+    <TypeScriptCompile Include="system\abstracts\DBAdapter.ts" />
     <TypeScriptCompile Include="system\client\Utilities.ts" />
     <TypeScriptCompile Include="system\client\Views.ts" />
     <TypeScriptCompile Include="features\_globals.ts" />
@@ -105,6 +106,8 @@
     <TypeScriptCompile Include="system\Exception.ts" />
     <TypeScriptCompile Include="system\client\navigation.ts" />
     <TypeScriptCompile Include="system\HTMLReader.ts" />
+    <TypeScriptCompile Include="system\server\db\MSSQLAdapter.ts" />
+    <TypeScriptCompile Include="system\server\db\MySQLAdapter.ts" />
     <TypeScriptCompile Include="system\server\ds.ts" />
     <TypeScriptCompile Include="system\server\extended_abstracts\Page.ts" />
     <TypeScriptCompile Include="system\server\extended_abstracts\Project.ts" />
@@ -251,6 +254,7 @@
     <Folder Include="actions\" />
     <Folder Include="botpal\" />
     <Folder Include="solutions\" />
+    <Folder Include="system\server\db\" />
     <Folder Include="versions\" />
     <Folder Include="sessions\" />
     <Folder Include="sessions\CA33027B6BC64585833A1C14FEA1C2BF\" />

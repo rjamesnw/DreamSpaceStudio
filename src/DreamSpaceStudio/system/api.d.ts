@@ -1,10 +1,16 @@
 interface Array<T> {
     /** Removes the specified item and returns true if removed, or false if not found. */
     remove(item: T): boolean;
+    /**
+     * Returns the maximum value found using comparison function, or default primitive comparison if not supplied. Undefined items are ignored.
+     * The predicate function should return -1 if 'a' is less than 'b', 0 if equal, and 1 if 'a' is greater than 'b'.
+     * @returns The result as an array, where the first item is the maximum value found, and the second is the index where it was found (or -1 if not found).
+     */
+    max(predicate?: (a: T, b: T, aIndex: number, bIndex: number) => number): [T, number];
 }
 interface String {
     /** Trims the given character from the end of the string and returns the new string. */
-    trimRightChar(char: string): any;
+    trimRightChar(char: string): string;
 }
 interface IndexedObject<T = any> {
     [name: string]: T;
@@ -463,7 +469,7 @@ declare namespace DS {
      * @param value The value for the resolution.  This is also logged if 'logmsg' is undefined/null/empty.
      * @param logmsg The message to log (using console.error()). This defaults to 'reason' if undefined/null/empty.
      */
-    function resolve(res: (value?: any) => void, value: any, logmsg?: string): string;
+    function resolve(res: (value?: any) => void, value?: any, logmsg?: string): string;
 }
 declare namespace DS {
     /** Returns the message of the specified error source by returning either 'errorSource' if it's a string, a formatted LogItem object,
@@ -2908,10 +2914,10 @@ declare namespace DS {
             readonly connection: TConnection;
             constructor(adapter: DBAdapter, connection: TConnection);
             /** Attempts to make a connection. If already connected the function should execute immediately.*/
-            abstract connect(callback?: (err: any, ...args: any[]) => void): void;
+            abstract connect(): Promise<void>;
             abstract query(statement: string, values?: any): Promise<IQueryResult>;
             abstract getColumnDetails(tableName: string): Promise<IColumnInfo[]>;
-            abstract end(callbackInCaseOfErrors?: (err: any, ...args: any[]) => void): void;
+            abstract end(): Promise<void>;
             /**
              * Constructs the columns and values from a JSON object, table name, and optional translation array.
              * This is used in building the final statement, such as 'insert', or 'update'.

@@ -1,28 +1,15 @@
-using;
-System;
-using;
-System.Collections.Generic;
-using;
-System.Linq;
-using;
-System.Text;
-var BotPal;
-(function (BotPal) {
-    var Concepts;
-    (function (Concepts) {
-        /// <summary>
-        /// Handles common known nouns.
-        /// </summary>
-        class CommonNounsConcept {
-        }
-        Concept;
-        {
-            CommonNounsConcept(Brain, brian);
-            base(brian);
-            {
-            }
-            // --------------------------------------------------------------------------------------------------------------------
-        }
-    })(Concepts = BotPal.Concepts || (BotPal.Concepts = {}));
-})(BotPal || (BotPal = {}));
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const Concept_1 = require("../core/Concept");
+/**
+ * Handles common known nouns.
+ * @param {Brain} brian
+ */
+class CommonNounsConcept extends Concept_1.default {
+    // --------------------------------------------------------------------------------------------------------------------
+    constructor(brian) {
+        super(brian);
+    }
+}
+exports.default = CommonNounsConcept;
 //# sourceMappingURL=CommonNounsConcept.js.map

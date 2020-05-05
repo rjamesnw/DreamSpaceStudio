@@ -9,52 +9,52 @@ namespace BotPal.Concepts
     /// <summary>
     /// Adds rules to help determine colors.
     /// </summary>
-    public class SalutationConcept : Concept
+    export default class SalutationConcept extends Concept
     {
         // --------------------------------------------------------------------------------------------------------------------
 
-        public SalutationConcept(Brain brian)
+        public SalutationConcept(brian: Brain)
             : base(brian)
         {
         }
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        [ConceptHandler("Hi")]
-        Task<ConceptHandlerContext> _Hi(ConceptHandlerContext context)
+        @conceptHandler("Hi")
+        (): Promise<ConceptHandlerContext> _Hi(context: ConceptHandlerContext )
         {
             if (context.WasPrevious(null) && context.IsNext(null))
                 context.AddIntentHandler(_Hi_Intent, 1d);
             else if (context.WasPrevious("say"))
                 context.AddIntentHandler(_SayHi_Intent, 1d);
-            return Task.FromResult(context.SetConfidence(1d));
+            return Promise.resolve(context.SetConfidence(1d));
         }
 
-        async Task<bool> _Hi_Intent(ConceptHandlerContext context)
+        async Task<bool> _Hi_Intent(context: ConceptHandlerContext )
         {
             await Brain.DoResponse("Hello.");
             return true;
         }
 
-        async Task<bool> _SayHi_Intent(ConceptHandlerContext context)
+        async Task<bool> _SayHi_Intent(context: ConceptHandlerContext )
         {
             string name = "";
-            var c = Brain.GetConcept<NamesConcept>();
+            var c = Brain.GetConcept<NamesConcept>;
             if (c?.CurrentName?.TextPart != null)
                 name = " " + c.CurrentName.TextPart.Text;
             await Brain.DoResponse("Hi" + name + ".");
             return true;
         }
 
-        [ConceptHandler("Hello")]
-        Task<ConceptHandlerContext> _Hello(ConceptHandlerContext context)
+        @conceptHandler("Hello")
+         _Hello_Intent(context: ConceptHandlerContext ): Promise<ConceptHandlerContext> _Hello(context: ConceptHandlerContext )
         {
             if (context.WasPrevious(null) && context.IsNext(null))
                 context.AddIntentHandler(_Hello_Intent, 1d);
-            return Task.FromResult(context.SetConfidence(1d));
+            return Promise.resolve(context.SetConfidence(1d));
         }
 
-        async Task<bool> _Hello_Intent(ConceptHandlerContext context)
+        async Task<bool>
         {
             await Brain.DoResponse("Hi there.");
             return true;

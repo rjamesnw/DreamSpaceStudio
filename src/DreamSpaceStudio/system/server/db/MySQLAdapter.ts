@@ -88,13 +88,14 @@ namespace DS.DB.MySQL {
             super(adapter, connection);
         }
 
-        connect(callback?: (err: any, ...args: any[]) => void): void {
+        async connect() {
             if (this.connection) {
-                if (this.connection.state != 'connected' && this.connection.state != 'authenticated')
-                    this.connection.connect(callback);
-                else callback(void 0);
+                if (this.connection.state != 'connected' && this.connection.state != 'authenticated') {
+                    await new Promise<void>((res, rej) => this.connection.connect((err) => { if (err) reject(rej, err); else resolve(res); }));
+                }
+                else return Promise.resolve();
             }
-            else callback && callback("No connection exists.");
+            else throw DS.Exception.error("MSSQLConnection.connect()", "No connection reference was set.");
         }
 
         query(statement: string, values?: any): Promise<IQueryResult> {
@@ -122,6 +123,9 @@ namespace DS.DB.MySQL {
             });
         }
 
-        end(callbackInCaseOfErrors?: (err: MysqlError, ...args: any[]) => void) { this.connection && this.connection.end(callbackInCaseOfErrors); }
+        async end() {
+            if (this.connection)
+                await new Promise((res, rej) => this.connection.end((err) => { if (err) reject(rej, err); else resolve(res); }));
+        }
     }
 }

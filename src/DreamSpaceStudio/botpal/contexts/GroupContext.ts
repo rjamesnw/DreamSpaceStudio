@@ -1,26 +1,26 @@
 ﻿import Context, { ContextCollection } from "../core/Context";
 import Concept from "../core/Concept";
 
-///**
-// * Creates a type that defines the underlying context type. This is used as a common key between groups of types and a single type.
-// */
-///// <typeparam name="T"> Generic type parameter. </typeparam>
-//x export interface IUnderlyingContext<T extends Context> extends Context {
-//    contexts: Iterable<T>;
+/**
+ * Creates a type that defines the underlying context type. This is used as a common key between groups of types and a single type.
+ */
+/// <typeparam name="T"> Generic type parameter. </typeparam>
+export interface IUnderlyingContext<T extends Context> extends Context {
+    contexts: Iterable<T>;
 
-//    /// <summary>
-//    /// True if this context has any items.
-//    /// </summary>
-//    hasItems: boolean;
+    /// <summary>
+    /// True if this context has any items.
+    /// </summary>
+    hasItems: boolean;
 
-//    /// <summary> Returns the first context in the list. </summary>
-//    /// <value> The first context. </value>
-//    first: T;
+    /// <summary> Returns the first context in the list. </summary>
+    /// <value> The first context. </value>
+    first: T;
 
-//    /// <summary> Returns the last context in the list. The last context is the most recent context. </summary>
-//    /// <value> The last (most recent) context. </value>
-//    last: T;
-//}
+    /// <summary> Returns the last context in the list. The last context is the most recent context. </summary>
+    /// <value> The last (most recent) context. </value>
+    last: T;
+}
 
 /** Manages a specific collection of the same contexts. */
 export default class GroupContext<T extends Context> extends Context //x implements IUnderlyingContext<T>
@@ -60,7 +60,7 @@ export default class GroupContext<T extends Context> extends Context //x impleme
     // --------------------------------------------------------------------------------------------------------------------
 
     constructor(concept: Concept, contextType: IType<T>, parent: Context = null) {
-        super(concept.memory, concept, parent)
+        super(concept, parent)
         this.contexts = new ContextCollection<T>(contextType, this);
     }
 

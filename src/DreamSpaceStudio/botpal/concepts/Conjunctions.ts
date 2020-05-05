@@ -9,7 +9,7 @@ namespace BotPal.Concepts
     /// A concept to understand and handle pronouns.
     /// </summary>
     [Concept]
-    public class ConjunctionConcept : Concept
+    export default class ConjunctionConcept extends Concept
     {
         // --------------------------------------------------------------------------------------------------------------------
 
@@ -20,8 +20,8 @@ namespace BotPal.Concepts
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        [ConceptHandler("* and^C *")]
-        [ConceptHandler("* that^C *")] // (ex: "she said that she was satisfied" [statement or hypothesis] / "oh that he could be restored to health" [wish or regret])
+        @conceptHandler("* and^C *")
+        @conceptHandler("* that^C *") // (ex: "she said that she was satisfied" [statement or hypothesis] / "oh that he could be restored to health" [wish or regret])
         DictionaryItem[] _Conjunction(Scene scene, Context leftCtx, Context rightCtx)
         {
         }

@@ -216,8 +216,8 @@ export class ConceptHandlerContext implements IMemoryObject {
     /// Provides a convenient way to return a context with a modified confidence value.
     /// </summary>
     /// <param name="confidence">The new confidence value.</param>
-    public ConceptHandlerContext SetConfidence(double confidence) {
-        Confidence = confidence;
+    SetConfidence(confidence: number): ConceptHandlerContext {
+        this.Confidence = confidence;
         return this;
     }
 
@@ -229,26 +229,26 @@ export class ConceptHandlerContext implements IMemoryObject {
     /// </summary>
     /// <param name="handler">The intent callback to execute to handle the meaning of the input given by the user.</param>
     /// <param name="confidence">How much confidence that this registered handler can handle the user's meaning.</param>
-    public void AddIntentHandler(IntentHandler handler, double confidence) {
+    AddIntentHandler(handler: IntentHandler, confidence: number) {
         // ... Keep added handlers at the same position of this current context index ...
 
-        for (var i = 0; i <= Index; ++i)
-            ProbableIntentHandlers.Add(null);
+        for (var i = 0; i <= this.Index; ++i)
+            this.ProbableIntentHandlers.push(null);
 
-        List < Match < IntentHandler >> handlers;
+        var handlers: Array<Match<IntentHandler>>;
 
         // ... get the sorted intent handler set, or create a new entry ...
 
-        if (ProbableIntentHandlers[Index] == null)
-            ProbableIntentHandlers[Index] = handlers = new List<Match<IntentHandler>>();
+        if (this.ProbableIntentHandlers[this.Index] == null)
+            this.ProbableIntentHandlers[this.Index] = handlers = [];
         else
-            handlers = ProbableIntentHandlers[Index];
+            handlers = this.ProbableIntentHandlers[this.Index];
 
-        handlers.Add(new Match<IntentHandler>(handler, confidence));
+        handlers.push(new Match<IntentHandler>(handler, confidence));
 
         //? var confidence = ProbableIntentHandlers.Sum(h => h.Score ?? 0d) / ProbableIntentHandlers.Count; // (calculates average based on all added intents for this curren context)
-        double topCurrentConfidence = handlers.Max(i => i.Score) ?? 0d;
-        if (Confidence < topCurrentConfidence) Confidence = topCurrentConfidence; // (the handler context confidence should be the highest of all intent handlers)
+        var topCurrentConfidence = handlers.max((a, b) => a.score > b.score ? 1 : 0)[0]?.score ?? 0;
+        if (this.Confidence < topCurrentConfidence) this.Confidence = topCurrentConfidence; // (the handler context confidence should be the highest of all intent handlers)
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -260,14 +260,15 @@ export class ConceptHandlerContext implements IMemoryObject {
     /// <param name="text">The text to look for.</param>
     /// <param name="exactMatch">If false (default) then a group key is used to match similar text (such as removing letter casing and reducing spaces, etc.).</param>
     /// <returns></returns>
-    public bool IsNext(string text, bool exactMatch = false) {
-        if (RightHandlerMatch == null) return string.IsNullOrWhiteSpace(text);
+    IsNext(text: string, exactMatch = false): boolean {
+        if (this.RightHandlerMatch == null)
+            return DS.StringUtils.isEmptyOrWhitespace(text);
         if (exactMatch) {
-            return (text ?? "") == (RightHandlerMatch?.Item.DictionaryItem.TextPart.Text ?? "");
+            return (text ?? "") == (this.RightHandlerMatch?.item.DictionaryItem.TextPart.Text ?? "");
         }
         else {
-            var grpkey = string.IsNullOrWhiteSpace(text) ? null : Memory?.Brain.ToGroupKey(text);
-            return grpkey == RightHandlerMatch.Item.DictionaryItem.TextPart.GroupKey;
+            var grpkey = DS.StringUtils.isEmptyOrWhitespace(text) ? null : this.memory?.Brain.ToGroupKey(text);
+            return grpkey == this.RightHandlerMatch.item.DictionaryItem.TextPart.GroupKey;
         }
     }
 

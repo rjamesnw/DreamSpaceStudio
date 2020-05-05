@@ -25,23 +25,23 @@ var BotPal;
             {
             }
             // --------------------------------------------------------------------------------------------------------------------
-            [ConceptHandler("Hi")];
-            Task < ConceptHandlerContext > _Hi(ConceptHandlerContext, context);
+            [ConceptHandler("Hi")]();
+            Promise < ConceptHandlerContext > _Hi(context, ConceptHandlerContext);
             {
                 if (context.WasPrevious(null) && context.IsNext(null))
                     context.AddIntentHandler(_Hi_Intent, 1, d);
                 else if (context.WasPrevious("say"))
                     context.AddIntentHandler(_SayHi_Intent, 1, d);
-                return Task.FromResult(context.SetConfidence(1, d));
+                return Promise.resolve(context.SetConfidence(1, d));
             }
             async;
-            Task < bool > _Hi_Intent(ConceptHandlerContext, context);
+            Task < bool > _Hi_Intent(context, ConceptHandlerContext);
             {
                 await Brain.DoResponse("Hello.");
                 return true;
             }
             async;
-            Task < bool > _SayHi_Intent(ConceptHandlerContext, context);
+            Task < bool > _SayHi_Intent(context, ConceptHandlerContext);
             {
                 string;
                 name = "";
@@ -52,18 +52,19 @@ var BotPal;
                 return true;
             }
             [ConceptHandler("Hello")];
-            Task < ConceptHandlerContext > _Hello(ConceptHandlerContext, context);
+            _Hello_Intent(context, ConceptHandlerContext);
+            Promise < ConceptHandlerContext > _Hello(context, ConceptHandlerContext);
             {
                 if (context.WasPrevious(null) && context.IsNext(null))
                     context.AddIntentHandler(_Hello_Intent, 1, d);
-                return Task.FromResult(context.SetConfidence(1, d));
+                return Promise.resolve(context.SetConfidence(1, d));
             }
             async;
-            Task < bool > _Hello_Intent(ConceptHandlerContext, context);
-            {
-                await Brain.DoResponse("Hi there.");
-                return true;
-            }
+            Task < bool >
+                {
+                    await, Brain, : .DoResponse("Hi there."),
+                    return: true
+                };
             // --------------------------------------------------------------------------------------------------------------------
         }
     })(Concepts = BotPal.Concepts || (BotPal.Concepts = {}));

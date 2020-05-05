@@ -1,22 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿import Concept from "../core/Concept";
+import Brain from "../core/Brain";
 
-namespace BotPal.Concepts
-{
-    /// <summary>
-    /// Handles common known nouns.
-    /// </summary>
-    public class CommonNounsConcept : Concept
-    {
-        // --------------------------------------------------------------------------------------------------------------------
+/**
+ * Handles common known nouns.
+ * @param {Brain} brian
+ */
+export default class CommonNounsConcept extends Concept {
+    // --------------------------------------------------------------------------------------------------------------------
 
-        public CommonNounsConcept(Brain brian)
-            : base(brian)
-        {
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
+    public constructor(brian: Brain) {
+        super(brian)
     }
+
+    // --------------------------------------------------------------------------------------------------------------------
 }

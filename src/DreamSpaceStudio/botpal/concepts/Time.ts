@@ -19,23 +19,24 @@ export default class TimeConcept extends Concept {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    //[ConceptHandler("what^D time^N is^V it^PN")]
-    //[ConceptHandler("what^D is^V the^D time^N")]
-    //Task<ConceptHandlerContext> _GetTime(ConceptHandlerContext context)
+    //@conceptHandler("what^D time^N is^V it^PN")
+    //@conceptHandler("what^D is^V the^D time^N")
+    // _GetTime(context: ConceptHandlerContext ): Promise<ConceptHandlerContext>
     //{
-    //    return Task.FromResult(context);
+    //    return Promise.resolve(context);
     //}
 
-    //[ConceptHandler("it^PN is^V time^N")]
-    //Task<ConceptHandlerContext> _IsTime(ConceptHandlerContext context)
+    //@conceptHandler("it^PN is^V time^N")
+    // _IsTime(context: ConceptHandlerContext ): Promise<ConceptHandlerContext>
     //{
-    //    return Task.FromResult(context);
+    //    return Promise.resolve(context);
     //}
 
-    //[ConceptHandler("it^PN is^V time^N to^")]
-    //Task<ConceptHandlerContext> _IsTimeTo(ConceptHandlerContext context)
+    //@conceptHandler("it^PN is^V time^N to^")
+    // {
+        await Brain.DoResponse("I don't know what time."): Promise<ConceptHandlerContext> _IsTimeTo(context: ConceptHandlerContext )
     //{
-    //    return Task.FromResult(context);
+    //    return Promise.resolve(context);
     //}
 
     @conceptHandler("Time", "time")
@@ -47,8 +48,7 @@ export default class TimeConcept extends Concept {
         return Promise.resolve(context);
     }
 
-    async  _Time_Intent(context: ConceptHandlerContext): Promise<bool> {
-        await Brain.DoResponse("I don't know what time.");
+    async  _Time_Intent(context: ConceptHandlerContext): Promise<bool>;
         return true;
     }
 

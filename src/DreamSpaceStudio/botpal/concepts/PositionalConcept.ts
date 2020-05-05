@@ -10,11 +10,11 @@ namespace BotPal.Concepts
     /// 
     /// </summary>
     [Concept]
-    public class PositionalConcept : Concept
+    export default class PositionalConcept extends Concept
     {
         // --------------------------------------------------------------------------------------------------------------------
 
-        public PositionalConcept(Brain brian)
+        public PositionalConcept(brian: Brain)
             : base(brian)
         {
             Here = Memory.Dictionary.AddTextPart("here", POS.Preposition_Spatial);
@@ -24,15 +24,15 @@ namespace BotPal.Concepts
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        [ConceptHandler("here")]
-        Task<ConceptHandlerContext> _NameIsHere(ConceptHandlerContext context)
+        @conceptHandler("here")
+         _NameIsHere_Intent(context: ConceptHandlerContext ): Promise<ConceptHandlerContext> _NameIsHere(context: ConceptHandlerContext )
         {
             if (context.WasPrevious("is"))
                 context.AddIntentHandler(_NameIsHere_Intent, 0.9d);
-            return Task.FromResult(context);
+            return Promise.resolve(context);
         }
 
-        async Task<bool> _NameIsHere_Intent(ConceptHandlerContext context)
+        async Task<bool>
         {
             await Brain.DoResponse("Ok.");
             return true;

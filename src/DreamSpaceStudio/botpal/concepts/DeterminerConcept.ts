@@ -1,115 +1,106 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// ========================================================================================================================
 
-namespace BotPal.Concepts
-{
-    // ========================================================================================================================
+import Concept, { ConceptHandlerContext, conceptHandler } from "../core/Concept";
+import Brain from "../core/Brain";
+import FrequencyContext, { RelationshipTypes } from "../contexts/FrequencyContext";
 
-    public class DeterminerConcept : Concept
-    {
-        // --------------------------------------------------------------------------------------------------------------------
+export default class DeterminerConcept extends Concept {
+    // --------------------------------------------------------------------------------------------------------------------
 
-        public DeterminerConcept(Brain brian)
-            : base(brian)
-        {
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        [ConceptHandler("A^DI", " * A^DI *")] // (indefinite determiner, any such thing)
-        Task<ConceptHandlerContext> _A(ConceptHandlerContext context)
-        {
-            var currentContext = context.Context; // (get the current context)
-            var timeContext = new FrequencyContext(this, currentContext) { RelationshipType = RelationshipTypes.One };
-            currentContext.Add(timeContext);
-            return Task.FromResult(context);
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        [ConceptHandler("The", "* The^D *")] // (definite determiner, a specific/known thing)
-        Task<ConceptHandlerContext> _The(ConceptHandlerContext context)
-        {
-            var currentContext = context.Context; // (get the current context)
-            var timeContext = new FrequencyContext(this, currentContext) { RelationshipType = RelationshipTypes.One };
-            currentContext.Add(timeContext);
-            return Task.FromResult(context);
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        [ConceptHandler("My^D", "* My^D *")]
-        Task<ConceptHandlerContext> _My(ConceptHandlerContext context)
-        {
-            var currentContext = context.Context; // (get the current context)
-            var timeContext = new FrequencyContext(this, currentContext) { RelationshipType = RelationshipTypes.One };
-            currentContext.Add(timeContext);
-            return Task.FromResult(context);
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        [ConceptHandler("them^DI", " * them^DI *")] // (ex: "Them that do", anyone)
-        Task<ConceptHandlerContext> _Them_Any(ConceptHandlerContext context)
-        {
-            return Task.FromResult(context);
-        }
-
-        [ConceptHandler("them^D,that^D", "* them^D|that^D *")] // (ex: "look at them eyes" / "Look at that man there")
-        Task<ConceptHandlerContext> _Them_That_Specific_Subject(ConceptHandlerContext context)
-        {
-            return Task.FromResult(context);
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        [ConceptHandler("those^D", " * those^D *")]
-        Task<ConceptHandlerContext> _Those(ConceptHandlerContext context)
-        {
-            var currentContext = context.Context; // (get the current context)
-            var timeContext = new FrequencyContext(this, currentContext) { RelationshipType = RelationshipTypes.Many };
-            currentContext.Add(timeContext);
-            return Task.FromResult(context);
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        [ConceptHandler("these^D", " * these^D *")]
-        Task<ConceptHandlerContext> _These(ConceptHandlerContext context)
-        {
-            var currentContext = context.Context; // (get the current context)
-            var timeContext = new FrequencyContext(this, currentContext) { RelationshipType = RelationshipTypes.Many };
-            currentContext.Add(timeContext);
-            return Task.FromResult(context);
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        [ConceptHandler("every^DI", " * every^DI *")]
-        Task<ConceptHandlerContext> _Every(ConceptHandlerContext context)
-        {
-            var currentContext = context.Context; // (get the current context)
-            var timeContext = new FrequencyContext(this, currentContext) { RelationshipType = RelationshipTypes.Many };
-            currentContext.Add(timeContext);
-            return Task.FromResult(context);
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        [ConceptHandler("all^DI", " * all^DI *")]
-        Task<ConceptHandlerContext> _All(ConceptHandlerContext context)
-        {
-            var currentContext = context.Context; // (get the current context)
-            var timeContext = new FrequencyContext(this, currentContext) { RelationshipType = RelationshipTypes.Many };
-            currentContext.Add(timeContext);
-            return Task.FromResult(context);
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
+    constructor(brian: Brain) {
+        super(brian);
     }
 
-    // ========================================================================================================================
+    // --------------------------------------------------------------------------------------------------------------------
+
+    @conceptHandler("A^DI", " * A^DI *") // (indefinite determiner, any such thing)
+    _A(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        var currentContext = context.Context; // (get the current context)
+        var timeContext = new FrequencyContext(this, currentContext);
+        timeContext.relationshipType = RelationshipTypes.One;
+        currentContext.Add(timeContext);
+        return Promise.resolve(context);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------
+
+    @conceptHandler("The", "* The^D *") // (definite determiner, a specific/known thing)
+    _The(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        var currentContext = context.Context; // (get the current context)
+        var timeContext = new FrequencyContext(this, currentContext);
+        timeContext.relationshipType = RelationshipTypes.One;
+        currentContext.Add(timeContext);
+        return Promise.resolve(context);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------
+
+    @conceptHandler("My^D", "* My^D *")
+    _My(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        var currentContext = context.Context; // (get the current context)
+        var timeContext = new FrequencyContext(this, currentContext);
+        timeContext.relationshipType = RelationshipTypes.One;
+        currentContext.Add(timeContext);
+        return Promise.resolve(context);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------
+
+    @conceptHandler("them^DI", " * them^DI *") // (ex: "Them that do", anyone)
+    _Them_Any(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        return Promise.resolve(context);
+    }
+
+    @conceptHandler("them^D,that^D", "* them^D|that^D *") // (ex: "look at them eyes" / "Look at that man there")
+    _Them_That_Specific_Subject(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        return Promise.resolve(context);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------
+
+    @conceptHandler("those^D", " * those^D *")
+    _Those(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        var currentContext = context.Context; // (get the current context)
+        var timeContext = new FrequencyContext(this, currentContext);
+        timeContext.relationshipType = RelationshipTypes.Many;
+        currentContext.Add(timeContext);
+        return Promise.resolve(context);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------
+
+    @conceptHandler("these^D", " * these^D *")
+    _These(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        var currentContext = context.Context; // (get the current context)
+        var timeContext = new FrequencyContext(this, currentContext);
+        timeContext.relationshipType = RelationshipTypes.Many;
+        currentContext.Add(timeContext);
+        return Promise.resolve(context);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------
+
+    @conceptHandler("every^DI", " * every^DI *")
+    _Every(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        var currentContext = context.Context; // (get the current context)
+        var timeContext = new FrequencyContext(this, currentContext);
+        timeContext.relationshipType = RelationshipTypes.Many;
+        currentContext.Add(timeContext);
+        return Promise.resolve(context);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------
+
+    @conceptHandler("all^DI", " * all^DI *")
+    _All(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        var currentContext = context.Context; // (get the current context)
+        var timeContext = new FrequencyContext(this, currentContext);
+        timeContext.relationshipType = RelationshipTypes.Many;
+        currentContext.Add(timeContext);
+        return Promise.resolve(context);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------
 }
+
+    // ========================================================================================================================

@@ -1,16 +1,19 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-(brain, response) => ;
-/// <summary>
-/// The brain is the whole system that observes, evaluates, and decides what to do based on user inputs.
-/// </summary>
+exports.Thread = void 0;
+const Memory_1 = require("./Memory");
+const Response_1 = require("../core/Response");
+class Thread {
+}
+exports.Thread = Thread;
+/** The brain is the whole system that observes, evaluates, and decides what to do based on user inputs. */
 class Brain {
     constructor() {
         // --------------------------------------------------------------------------------------------------------------------
         this.LanguageParsingRegex = new RegExp("\".*?\"|'.*?'|[A-Za-z']+|[0-9]+|\\s+|.", 'm');
-        this._Tasks = new List();
-        this._DelayedTasks = new Dictionary();
-        this._GlobalLocks = new LockableObject();
+        //? public Thought Thought; // (this should never be null when a brain is loaded, as thoughts are historical; otherwise this is a brand new brain, and this can be null)
+        this._Tasks = new Array();
+        this._DelayedTasks = new Map();
     }
 }
 exports.default = Brain;
@@ -48,20 +51,20 @@ IsStopped;
 }
 event;
 ResponseHandler;
-Response;
+Response_1.default;
 virtual;
 async;
 Task;
-DoResponse(Response, response);
+DoResponse(Response_1.default, response);
 {
-    if (Response != null)
+    if (Response_1.default != null)
         if (_SynchronizationContext != null) {
             var taskSource = new TaskCompletionSource();
-            _SynchronizationContext.Send(async (_) => { await Response.Invoke(this, response); taskSource.SetResult(true); }, null);
+            _SynchronizationContext.Send(async (_) => { await Response_1.default.Invoke(this, response); taskSource.SetResult(true); }, null);
             await taskSource.Task;
         }
         else
-            await Response.Invoke(this, response); // (called directly from this thread as a last resort)
+            await Response_1.default.Invoke(this, response); // (called directly from this thread as a last resort)
     //else
     //{
     //    // ... try other attempts ...
@@ -81,7 +84,7 @@ DoResponse(Response, response);
 virtual;
 Task;
 DoResponse(string, response);
-DoResponse(new Response(response));
+DoResponse(new Response_1.default(response));
 async;
 Task;
 Say(string, text, string, voiceCode = null);
@@ -94,7 +97,7 @@ Brain(SynchronizationContext, synchronizationContext = null, bool, configureConc
 {
     _MainThread = Thread.CurrentThread;
     _SynchronizationContext = synchronizationContext !== null && synchronizationContext !== void 0 ? synchronizationContext : SynchronizationContext.Current; // (supported both in WinForms AND WPF!)
-    Memory = new Memory(this);
+    Memory_1.default = new Memory_1.default(this);
     if (configureConcepts)
         ConfigureDefaultConcepts();
     var task = _ProcessOperations(null);
@@ -143,8 +146,8 @@ Match < ConceptContext > [];
 FindConceptContexts(string, text, double, threshold = 0.8);
 {
     var dicItems = threshold == 1 ? // (if 'threshold' is 1.0 then do a similar [near exact] match [using group keys], otherwise find close partial matches instead.
-        Memory.Dictionary.FindSimilarEntries(Memory.Brain.ToGroupKey(text)).SelectMany(i => i.ConceptContexts.Select(c => new Match(c, 1.0)))
-        : Memory.Dictionary.FindMatchingEntries(text, threshold).SelectMany(m => m.Item.ConceptContexts.Select(c => new Match(c, m.Score)));
+        Memory_1.default.Dictionary.FindSimilarEntries(Memory_1.default.Brain.ToGroupKey(text)).SelectMany(i => i.ConceptContexts.Select(c => new Match(c, 1.0)))
+        : Memory_1.default.Dictionary.FindMatchingEntries(text, threshold).SelectMany(m => m.Item.ConceptContexts.Select(c => new Match(c, m.Score)));
     return dicItems.ToArray();
 }
 void Stop(bool, wait = true);
@@ -184,7 +187,7 @@ _ProcessOperations(BrainTask, btask);
                 if (completed)
                     _Operations.Remove(op);
                 if (op.IsCompletedWithErrors)
-                    await DoResponse(new Response("Hmmm. Sorry, it looks like I had an internal error with one of my operations. Please contact support and pass along the following details.", null, string.Join(Environment.NewLine, op.Errors.Select(er => Exceptions.GetFullErrorMessage(er)))));
+                    await DoResponse(new Response_1.default("Hmmm. Sorry, it looks like I had an internal error with one of my operations. Please contact support and pass along the following details.", null, string.Join(Environment.NewLine, op.Errors.Select(er => Exceptions.GetFullErrorMessage(er)))));
                 else if (op.Next != null)
                     _Operations.Add(op.Next);
             }
@@ -226,7 +229,9 @@ CreateTask(Func < BrainTask, Task > action, CancellationToken ? cancelToken = nu
     else
         return null;
 }
-BrainTask < TState > CreateTask(Action < BrainTask < TState >> action, TState, state, CancellationToken ? cancelToken = null : );
+BrainTask < TState > Create;
+i;
+Promise(Action < BrainTask < TState >> action, TState, state, CancellationToken ? cancelToken = null : );
 where;
 TState: class {
     if(action) { }
@@ -266,11 +271,11 @@ RemoveTask(BrainTask, btask);
             // ... swap with the end task in the list and delete from the end, which is faster ...
             int;
             i = btask._Index, i2 = _Tasks.Count - 1;
-            if (i2 > i) {
-                _Tasks[i] = _Tasks[i2];
-                _Tasks[i]._Index = i;
-            }
-            _Tasks.RemoveAt(i2);
+            if (i2 > {
+                _Tasks, [i]:  = _Tasks[i2],
+                _Tasks, [i]: ._Index = i
+            })
+                _Tasks.RemoveAt(i2);
             btask._Index = -1;
             // ... also remove from the delayed list if this is a delayed task ...
             if (btask.IsDelayed)

@@ -85,10 +85,10 @@
         export abstract class DBConnection<TConnection = any> {
             constructor(public readonly adapter: DBAdapter, public readonly connection: TConnection) { }
             /** Attempts to make a connection. If already connected the function should execute immediately.*/
-            abstract connect(callback?: (err: any, ...args: any[]) => void): void;
+            abstract connect(): Promise<void>;
             abstract query(statement: string, values?: any): Promise<IQueryResult>;
             abstract getColumnDetails(tableName: string): Promise<IColumnInfo[]>;
-            abstract end(callbackInCaseOfErrors?: (err: any, ...args: any[]) => void): void;
+            abstract end(): Promise<void>;
 
             /**
              * Constructs the columns and values from a JSON object, table name, and optional translation array.

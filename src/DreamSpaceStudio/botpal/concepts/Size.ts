@@ -10,7 +10,7 @@ namespace BotPal
     /// <summary>
     /// Changes the color of a scene object.
     /// </summary>
-    public class SizeConcept : Concept
+    export default class SizeConcept extends Concept
     {
         // --------------------------------------------------------------------------------------------------------------------
 

@@ -29,18 +29,19 @@ var BotPal;
             Here;
             // --------------------------------------------------------------------------------------------------------------------
             [ConceptHandler("here")];
-            Task < ConceptHandlerContext > _NameIsHere(ConceptHandlerContext, context);
+            _NameIsHere_Intent(context, ConceptHandlerContext);
+            Promise < ConceptHandlerContext > _NameIsHere(context, ConceptHandlerContext);
             {
                 if (context.WasPrevious("is"))
                     context.AddIntentHandler(_NameIsHere_Intent, 0.9, d);
-                return Task.FromResult(context);
+                return Promise.resolve(context);
             }
             async;
-            Task < bool > _NameIsHere_Intent(ConceptHandlerContext, context);
-            {
-                await Brain.DoResponse("Ok.");
-                return true;
-            }
+            Task < bool >
+                {
+                    await, Brain, : .DoResponse("Ok."),
+                    return: true
+                };
             // --------------------------------------------------------------------------------------------------------------------
         }
     })(Concepts = BotPal.Concepts || (BotPal.Concepts = {}));

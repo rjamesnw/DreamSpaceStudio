@@ -23,7 +23,7 @@ namespace BotPal
     /// Holds connection and relationship information between concepts.
     /// </summary>
     [Concept]
-    public class PossessionsConcept : Concept
+    export default class PossessionsConcept extends Concept
     {
         /// <summary>
         /// The subject that is the end point of this frequency modifier, which as such, is related to the source subject.
@@ -40,13 +40,13 @@ namespace BotPal
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        [ConceptHandler("* has|have *")]
+        @conceptHandler("* has|have *")
         DictionaryItem[] _ToHave(Scene scene, Context leftCtx, Context rightCtx)
         {
             PossessionType = PossessionTypes.ToHave;
         }
 
-        [ConceptHandler("* had *")]
+        @conceptHandler("* had *")
         DictionaryItem[] _Had(Scene scene, Context leftCtx, Context rightCtx)
         {
             TenseType = TenseTypes.Past;
@@ -55,13 +55,13 @@ namespace BotPal
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        [ConceptHandler("* owns|own *")]
+        @conceptHandler("* owns|own *")
         DictionaryItem[] _ToOwn(Scene scene, Context leftCtx, Context rightCtx)
         {
             PossessionType = PossessionTypes.ToOwn;
         }
 
-        [ConceptHandler("* had *")]
+        @conceptHandler("* had *")
         DictionaryItem[] _Owned(Scene scene, Context leftCtx, Context rightCtx)
         {
             TenseType = TenseTypes.Past;

@@ -12,7 +12,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     }
     return privateMap.get(receiver);
 };
-var __contextType, __ContextMap, __contexts, __Attributes, __Modifiers, __Questions;
+var __contextType, __contextMap, __contexts, __Attributes, __Modifiers, __Questions;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ContextCollection = void 0;
 const TimeReferencedObject_1 = require("./TimeReferencedObject");
@@ -82,22 +82,23 @@ __contextType = new WeakMap();
 /// </summary>
 class Context extends TimeReferencedObject_1.default {
     // --------------------------------------------------------------------------------------------------------------------
-    constructor(memory, concept, parent = null) {
+    constructor(concept, parent = null) {
         super();
         // --------------------------------------------------------------------------------------------------------------------
         /** A mapping of Context types to a collection of context instances of the same type. */
-        __ContextMap.set(this, new Map());
+        __contextMap.set(this, new Map());
         __contexts.set(this, void 0);
         __Attributes.set(this, void 0);
         __Modifiers.set(this, void 0);
         __Questions.set(this, void 0);
-        if (!memory)
-            throw DS.Exception.argumentRequired('Context()', 'memory', memory);
+        if (!concept)
+            throw DS.Exception.argumentRequired('Context()', 'concept', this);
+        this.concept = concept;
         this.contextType = this.constructor;
-        this.memory = memory;
         //? Concept = concept ?? throw new ArgumentNullException(nameof(concept));
         this.parent = parent;
     }
+    get memory() { return this.concept.memory; }
     /**
      * Returns a copy of the internal contexts in order of addition.  The first item is the first context added to this current
      * context, and the last item is the most recent context that was added.
@@ -165,9 +166,9 @@ class Context extends TimeReferencedObject_1.default {
     add(ctx) {
         if (ctx != null) {
             var type = ctx.contextType;
-            if (!__classPrivateFieldGet(this, __ContextMap).has(type))
-                __classPrivateFieldGet(this, __ContextMap).set(type, new ContextCollection(type, this));
-            __classPrivateFieldGet(this, __ContextMap).get(type).add(ctx);
+            if (!__classPrivateFieldGet(this, __contextMap).has(type))
+                __classPrivateFieldGet(this, __contextMap).set(type, new ContextCollection(type, this));
+            __classPrivateFieldGet(this, __contextMap).get(type).add(ctx);
             if (__classPrivateFieldGet(this, __contexts) == null)
                 __classPrivateFieldSet(this, __contexts, []);
             __classPrivateFieldGet(this, __contexts).push(ctx);
@@ -178,7 +179,7 @@ class Context extends TimeReferencedObject_1.default {
     /// <param name="contextType"> The context type to find. </param>
     /// <returns> An enumerator that allows enumerating over the matched items. </returns>
     get(contextType) {
-        var existingCollection = __classPrivateFieldGet(this, __ContextMap).get(contextType);
+        var existingCollection = __classPrivateFieldGet(this, __contextMap).get(contextType);
         return existingCollection ? new ContextCollection(contextType, existingCollection) : null;
     }
     // --------------------------------------------------------------------------------------------------------------------
@@ -231,7 +232,7 @@ class Context extends TimeReferencedObject_1.default {
         if (context == null)
             return false;
         var removed = false;
-        for (var item of __classPrivateFieldGet(this, __ContextMap))
+        for (var item of __classPrivateFieldGet(this, __contextMap))
             if (item[1].remove(context))
                 removed = true;
         if (__classPrivateFieldGet(this, __contexts) && __classPrivateFieldGet(this, __contexts).remove(context))
@@ -240,5 +241,5 @@ class Context extends TimeReferencedObject_1.default {
     }
 }
 exports.default = Context;
-__ContextMap = new WeakMap(), __contexts = new WeakMap(), __Attributes = new WeakMap(), __Modifiers = new WeakMap(), __Questions = new WeakMap();
+__contextMap = new WeakMap(), __contexts = new WeakMap(), __Attributes = new WeakMap(), __Modifiers = new WeakMap(), __Questions = new WeakMap();
 //# sourceMappingURL=Context.js.map

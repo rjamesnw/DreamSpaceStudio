@@ -1,23 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Context_1 = require("../core/Context");
-///**
-// * Creates a type that defines the underlying context type. This is used as a common key between groups of types and a single type.
-// */
-///// <typeparam name="T"> Generic type parameter. </typeparam>
-//x export interface IUnderlyingContext<T extends Context> extends Context {
-//    contexts: Iterable<T>;
-//    /// <summary>
-//    /// True if this context has any items.
-//    /// </summary>
-//    hasItems: boolean;
-//    /// <summary> Returns the first context in the list. </summary>
-//    /// <value> The first context. </value>
-//    first: T;
-//    /// <summary> Returns the last context in the list. The last context is the most recent context. </summary>
-//    /// <value> The last (most recent) context. </value>
-//    last: T;
-//}
 /** Manages a specific collection of the same contexts. */
 class GroupContext extends Context_1.default //x implements IUnderlyingContext<T>
  {
@@ -30,7 +13,7 @@ class GroupContext extends Context_1.default //x implements IUnderlyingContext<T
     //x public Context SubjectRootContext { get { return HasItems ? this : Parent == null ? this : Parent.SubjectRootContext; } }
     // --------------------------------------------------------------------------------------------------------------------
     constructor(concept, contextType, parent = null) {
-        super(concept.memory, concept, parent);
+        super(concept, parent);
         this.contexts = new Context_1.ContextCollection(contextType, this);
     }
     /// <summary> Returns the first context in the list. </summary>

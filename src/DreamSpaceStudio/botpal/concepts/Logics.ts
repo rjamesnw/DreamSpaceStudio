@@ -10,21 +10,21 @@ namespace BotPal.Concepts
     /// 
     /// </summary>
     [Concept]
-    public class LogicConcept : Concept
+    export default class LogicConcept extends Concept
     {
         // --------------------------------------------------------------------------------------------------------------------
 
-        public LogicConcept(Brain brian)
+        public LogicConcept(brian: Brain)
             : base(brian)
         {
         }
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        [ConceptHandler("when", "when^AV ^N/^PN ^V ^V/^T/^N/^PP ^V")]
-        Task<ConceptHandlerContext> _FindWhen(ConceptHandlerContext context)
+        @conceptHandler("when", "when^AV ^N/^PN ^V ^V/^T/^N/^PP ^V")
+         _FindWhen(context: ConceptHandlerContext ): Promise<ConceptHandlerContext>
         {
-            return Task.FromResult(context);
+            return Promise.resolve(context);
         }
 
         // --------------------------------------------------------------------------------------------------------------------

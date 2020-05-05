@@ -14,6 +14,21 @@ if (!Array.prototype.remove) // Primarily to help support conversions from C# - 
         var i = this.indexOf(this);
         return i > -1 ? (this.splice(i, 1), true) : false;
     };
+if (!Array.prototype.max) // Primarily to help support conversions from C# - also, this should exist anyhow!
+    Array.prototype.max = function (predicate) {
+        var maxValue = void 0, lastIndex = -1;
+        for (var i = 0, n = this.length; i < n; ++i)
+            var v = this[i];
+        if (v !== void 0) {
+            var result = maxValue === void 0 ? 1 // (if max value is undefined, it is greater by default since it exists)
+                : typeof predicate == 'function' ? predicate(maxValue, v, lastIndex, i) : v < maxValue ? -1 : v > maxValue ? 1 : 0;
+            if (result > 0) {
+                maxValue = v;
+                lastIndex = i;
+            }
+        }
+        return [maxValue, lastIndex];
+    };
 if (!String.prototype.trimRightChar) // Primarily to help support conversions from C# - also, this should exist anyhow!
     String.prototype.trimRightChar = function (char) {
         var s = this;
@@ -798,7 +813,7 @@ var DS;
      * @param logmsg The message to log (using console.error()). This defaults to 'reason' if undefined/null/empty.
      */
     function resolve(res, value, logmsg) {
-        if (logmsg === void 0 || logmsg === null || logmsg === "")
+        if ((logmsg === void 0 || logmsg === null || logmsg === "") && value !== void 0)
             logmsg = JSON.stringify(value);
         log('Promise resolved', logmsg);
         res && res(value);

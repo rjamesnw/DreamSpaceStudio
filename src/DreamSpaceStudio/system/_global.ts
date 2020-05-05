@@ -6,19 +6,40 @@
 interface Array<T> {
     /** Removes the specified item and returns true if removed, or false if not found. */
     remove(item: T): boolean;
+    /** 
+     * Returns the maximum value found using comparison function, or default primitive comparison if not supplied. Undefined items are ignored. 
+     * The predicate function should return -1 if 'a' is less than 'b', 0 if equal, and 1 if 'a' is greater than 'b'.
+     * @returns The result as an array, where the first item is the maximum value found, and the second is the index where it was found (or -1 if not found).
+     */
+    max(predicate?: (a: T, b: T, aIndex: number, bIndex: number) => number): [T, number];
 }
 if (!Array.prototype.remove) // Primarily to help support conversions from C# - also, this should exist anyhow!
     Array.prototype.remove = function (this: Array<any>, item: any) {
         var i = this.indexOf(this);
         return i > -1 ? (this.splice(i, 1), true) : false;
     };
+if (!Array.prototype.max) // Primarily to help support conversions from C# - also, this should exist anyhow!
+    Array.prototype.max = function (this: Array<any>, predicate?: (a: any, b: any, aIndex: number, bIndex: number) => number) {
+        var maxValue: any = void 0, lastIndex = -1;
+        for (var i = 0, n = this.length; i < n; ++i)
+            var v = this[i];
+        if (v !== void 0) {
+            var result = maxValue === void 0 ? 1 // (if max value is undefined, it is greater by default since it exists)
+                : typeof predicate == 'function' ? predicate(maxValue, v, lastIndex, i) : v < maxValue ? -1 : v > maxValue ? 1 : 0;
+            if (result > 0) {
+                maxValue = v;
+                lastIndex = i;
+            }
+        }
+        return [maxValue, lastIndex];
+    };
 
 interface String {
     /** Trims the given character from the end of the string and returns the new string. */
-    trimRightChar(char: string);
+    trimRightChar(char: string): string;
 }
 if (!String.prototype.trimRightChar) // Primarily to help support conversions from C# - also, this should exist anyhow!
-    String.prototype.trimRightChar = function (this: String, char: string) {
+    String.prototype.trimRightChar = function (this: string, char: string) {
         var s = this;
         while (s[s.length - 1] === char)
             s = s.substr(0, this.length - 1);

@@ -1,7 +1,9 @@
 ﻿import Memory from "./Memory";
 import { Worker } from "cluster";
+import Response from "../core/Response";
+import ITTSService from "../services/tts/ITTSService";
 
-export interface ResponseHandler(brain: Brain, response: Response): Promise<void>;
+export interface ResponseHandler { (brain: Brain, response: Response): Promise<void>; }
 
 export class Thread {
     target: Worker | typeof globalThis;
@@ -26,7 +28,7 @@ export default class Brain {
 
     //? public Thought Thought; // (this should never be null when a brain is loaded, as thoughts are historical; otherwise this is a brand new brain, and this can be null)
 
-    protected _Tasks = new Array<BrainTask>();
+    protected _Tasks: BrainTask[] = [];
     protected _DelayedTasks = new Map<string, BrainTask>();
 
     /// <summary>
@@ -35,11 +37,6 @@ export default class Brain {
     /// </summary>
     readonly _MainThread: Thread;
 
-    /// <summary>
-    /// Set when the brain instance is created in order to synchronize events with the main thread (if used).
-    /// </summary>
-    readonly SynchronizationContext _SynchronizationContext;
-
     // --------------------------------------------------------------------------------------------------------------------
 
     /// <summary>
@@ -47,60 +44,59 @@ export default class Brain {
     /// <para>Note: because the operations are executed in a thread, you must used the locker returned from 'OperationsLocker'.
     /// If any operation instance is in a "completed" state however, no locking is required.</para>
     /// </summary>
-    public Operation[] Operations { get { lock(_Operations) return _Operations.ToArray(); } }
-internal List < Operation > _Operations = new List<Operation>();
+    get Operations(): Operation[] { return this.#_operations; }
+    #_operations: Operation[] = [];
 
-        public Locker OperationsLocker { get { return GetLocker("Operations", "ProcessLoop"); } }
+    /// <summary>
+    /// Set to true internally when 'Stop()' is called.
+    /// </summary>
+    get IsShuttingDown() { return this.#_isShuttingDown; }
+    #_isShuttingDown: boolean;
 
-        /// <summary>
-        /// Set to true internally when 'Stop()' is called.
-        /// </summary>
-        public bool IsShuttingDown { get; internal set; }
+    /// <summary>
+    /// Set to true internally after 'Stop()' is called and the brain has completed the shutdown process.
+    /// </summary>
+    get IsStopped() { return this.#_isStopped; }
+    #_isStopped: boolean;
 
-        /// <summary>
-        /// Set to true internally after 'Stop()' is called and the brain has completed the shutdown process.
-        /// </summary>
-        public bool IsStopped { get; internal set; }
+    // --------------------------------------------------------------------------------------------------------------------
 
-        // --------------------------------------------------------------------------------------------------------------------
+    /// <summary>
+    /// The response event is a hook for host handlers to receive output responses from previously processed user input.
+    /// <para>Note: THIS IS CALLED IN A DIFFERENT THREAD. For many UI frameworks you most likely need to execute responses
+    /// on the MAIN thread. Make sure on the host side you use either "Invoke()" or "BeingInvoke()", or similar, on your
+    /// WinForms control, or WPF "Dispatcher" reference.</para>
+    /// </summary>
+    public event ResponseHandler Response;
 
-        /// <summary>
-        /// The response event is a hook for host handlers to receive output responses from previously processed user input.
-        /// <para>Note: THIS IS CALLED IN A DIFFERENT THREAD. For many UI frameworks you most likely need to execute responses
-        /// on the MAIN thread. Make sure on the host side you use either "Invoke()" or "BeingInvoke()", or similar, on your
-        /// WinForms control, or WPF "Dispatcher" reference.</para>
-        /// </summary>
-        public event ResponseHandler Response;
+    /** Make the bot respond with some text.  Keep in mind this simply pushes a response to the listening host, and the bot will not know about it. */
+    public virtual async Task DoResponse(Response response) {
+        if (Response != null)
+            if (_SynchronizationContext != null) {
+                var taskSource = new TaskCompletionSource<bool>();
+                _SynchronizationContext.Send(async _ => { await Response.Invoke(this, response); taskSource.SetResult(true); }, null);
+                await taskSource.Task;
+            }
+            else
+                await Response.Invoke(this, response); // (called directly from this thread as a last resort)
 
-        /** Make the bot respond with some text.  Keep in mind this simply pushes a response to the listening host, and the bot will not know about it. */
-        public virtual async Task DoResponse(Response response)
-{
-    if (Response != null)
-        if (_SynchronizationContext != null) {
-            var taskSource = new TaskCompletionSource<bool>();
-            _SynchronizationContext.Send(async _ => { await Response.Invoke(this, response); taskSource.SetResult(true); }, null);
-            await taskSource.Task;
-        }
-        else
-            await Response.Invoke(this, response); // (called directly from this thread as a last resort)
-
-    //else
-    //{
-    //    // ... try other attempts ...
-    //    Dispatcher dispatcher = Dispatcher.FromThread(_MainThread);
-    //    if (dispatcher != null)
-    //    {
-    //        // We know the thread have a dispatcher that we can use.
-    //        dispatcher.BeginInvoke((Action)(() => Response?.Invoke(this, response)));
-    //    }
-    //    else if (Application.Current != null && !Application.Current.Dispatcher.CheckAccess())
-    //    {
-    //        Application.Current.Dispatcher.BeginInvoke((Action)(() => Response?.Invoke(this, response)));
-    //    }
-    //    else Response?.Invoke(this, response); // (called directly from this thread as a last resort)
-    //}
-}
-        public virtual Task DoResponse(string response) => DoResponse(new Response(response));
+        //else
+        //{
+        //    // ... try other attempts ...
+        //    Dispatcher dispatcher = Dispatcher.FromThread(_MainThread);
+        //    if (dispatcher != null)
+        //    {
+        //        // We know the thread have a dispatcher that we can use.
+        //        dispatcher.BeginInvoke((Action)(() => Response?.Invoke(this, response)));
+        //    }
+        //    else if (Application.Current != null && !Application.Current.Dispatcher.CheckAccess())
+        //    {
+        //        Application.Current.Dispatcher.BeginInvoke((Action)(() => Response?.Invoke(this, response)));
+        //    }
+        //    else Response?.Invoke(this, response); // (called directly from this thread as a last resort)
+        //}
+    }
+    public virtual Task DoResponse(string response) => DoResponse(new Response(response));
 
         public async Task Say(string text, string voiceCode = null)
 {
@@ -330,7 +326,7 @@ async Task _ProcessOperations(BrainTask btask)
         /// <summary>
         /// Runs the given action as another task, which may be another thread.
         /// </summary>
-        public BrainTask < TState > CreateTask<TState>(Action < BrainTask < TState >> action, TState state, CancellationToken ? cancelToken = null) where TState: class {
+        public BrainTask < TState > Create i): Promise<TState>(Action < BrainTask < TState >> action, TState state, CancellationToken ? cancelToken = null) where TState: class {
     if(action != null)
 {
     var btask = new BrainTask<TState>(this, action, state, cancelToken ?? new CancellationToken());
@@ -371,7 +367,7 @@ async Task _ProcessOperations(BrainTask btask)
         if (btask._Index >= 0) {
             // ... swap with the end task in the list and delete from the end, which is faster ...
             int i = btask._Index, i2 = _Tasks.Count - 1;
-            if (i2 > i) {
+            if (i2 > {
                 _Tasks[i] = _Tasks[i2];
                 _Tasks[i]._Index = i;
             }

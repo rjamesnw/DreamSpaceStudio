@@ -64,47 +64,6 @@ namespace DS.DB.MSSQL {
         }
     }
 
-    export async function disconnect() {
-        if (connectionPool) {
-            if (connectionPool.connected || connectionPool.connecting)
-                await connectionPool.close();
-            connectionPool = null;
-        }
-    }
-
-    export async function executeQuery<T = any>(sql: string, parameters?: Object & IndexedObject) {
-        try {
-            var pool = await getMSSQLConnection();
-            await log('executeQuery()', sql, void 0, parameters);
-
-            var request = pool.request();
-
-            // ... add the inputs to the request ...
-
-            if (typeof parameters == 'object') {
-                let fields: string[] = [], params: string[] = [], assignments: string[] = [];
-                for (var p in parameters)
-                    if (parameters.hasOwnProperty(p)) {
-                        fields.push(p);
-                        params.push('@' + p);
-                        assignments.push(p + '=@' + p);
-                        request = request.input(p, parameters[p]);
-                    }
-
-                // ... replace special tokens, if any ...
-
-                sql = sql.split('{fields}').join(fields.join(', '));
-                sql = sql.split('{parameters}').join(params.join(', '));
-                sql = sql.split('{assignments}').join(assignments.join(', '));
-            }
-
-            return await request.query<T>(sql);
-        }
-        catch (err) {
-            throw await error('executeQuery(): Failed to execute query.', err, sql);
-        }
-    }
-
     export class MSSQLAdapter extends DBAdapter<ConnectionConfig> {
         async createConnection() {
             return new MSSQLConnection(this, await getMSSQLConnection(this.configuration)); // (create from the default pool)
@@ -137,41 +96,75 @@ namespace DS.DB.MSSQL {
             super(adapter, connection);
         }
 
-        connect(callback?: (err: any, ...args: any[]) => void): void {
+        async connect() {
             if (this.connection) {
-                if (this.connection.state != 'connected' && this.connection.state != 'authenticated')
-                    this.connection.connect(callback);
-                else callback(void 0);
-            }
-            else callback && callback("No connection exists.");
-        }
-
-        query(statement: string, values?: any): Promise<IQueryResult> {
-            return new Promise<any>((res, rej) => {
-                if (values !== void 0)
-                    return this.connection.query(statement, values, (err, result, fields) => {
-                        if (err) rej(err);
-                        else res(<ISelectQueryResult>{ response: result, fields: fields });
-                    });
+                if (!this.connection.connecting && !this.connection.connected)
+                    await this.connection.connect();
                 else
-                    return this.connection.query(statement, (err, result, fields) => {
-                        if (err) rej(err);
-                        else res(<ISelectQueryResult>{ response: result, fields: fields });
-                    });
-            });
+                    return Promise.resolve();
+            }
+            else throw DS.Exception.error("MSSQLConnection.connect()", "No connection pool reference was set.");
         }
 
-        getColumnDetails(tableName: string): Promise<IColumnInfo[]> {
-            return new Promise<IColumnInfo[]>((res, rej) => {
-                this.query('SHOW COLUMNS FROM ' + tableName).then((result: ISelectQueryResult) => {
-                    resolve(res, result.response, `Column details received for table '${tableName}': ${JSON.stringify(result)}`);
-                }, (err) => {
-                    reject(rej, err, `Failed to get column details for table '${tableName}'.`);
-                });
-            });
+        async query(statement: string, parameters?: Object & IndexedObject): Promise<IQueryResult> {
+
+            try {
+                await log('MSSQLConnection.query()', statement, void 0, parameters);
+
+                var request = this.connection.request();
+
+                // ... add the inputs to the request ...
+
+                if (typeof parameters == 'object') {
+                    let fields: string[] = [], params: string[] = [], assignments: string[] = [];
+                    for (var p in parameters)
+                        if (parameters.hasOwnProperty(p)) {
+                            fields.push(p);
+                            params.push('@' + p);
+                            assignments.push(p + '=@' + p);
+                            request = request.input(p, parameters[p]);
+                        }
+
+                    // ... replace special tokens, if any ...
+
+                    var sql = statement.split('{fields}').join(fields.join(', '));
+                    sql = sql.split('{parameters}').join(params.join(', '));
+                    sql = sql.split('{assignments}').join(assignments.join(', '));
+                }
+
+                var queryResult = await request.query(sql);
+                return <ISelectQueryResult>{ response: queryResult.recordset, fields: queryResult.recordset.columns };
+            }
+            catch (err) {
+                throw await error('executeQuery(): Failed to execute query.', err, sql);
+            }
         }
 
-        end(callbackInCaseOfErrors?: (err: RequestError, ...args: any[]) => void) { this.connection && this.connection.end(callbackInCaseOfErrors); }
+        async getColumnDetails(tableName: string): Promise<IColumnInfo[]> {
+            try {
+                var result = await this.query("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'" + tableName + "'");
+                log('getColumnDetails(()', `Column details received for table '${tableName}': ${JSON.stringify(result)}`);
+                var colInfo: Object & IColumnMetadata = result.response, columns: IColumnInfo[] = [];
+                for (var p in colInfo)
+                    if (colInfo.hasOwnProperty(p)) {
+                        var col = colInfo[p];
+                        columns.push({ Field: col.name, Key: '' + col.identity, Null: '' + col.nullable, Type: '' + col.type, Default: void 0, Extra: void 0 });
+                    }
+
+                return columns;
+            }
+            catch (err) {
+                throw Exception.error('getColumnDetails(()', `Failed to get column details for table '${tableName}'.`, this);
+            }
+        }
+
+        async end() {
+            if (connectionPool) {
+                if (connectionPool.connected || connectionPool.connecting)
+                    await connectionPool.close();
+                connectionPool = null;
+            }
+        }
     }
 
     //async function insertError(msh_id: string, mrn: string, accountnum: string, firstname: string, lastname: string, errordate: string, adtmessage: string, HISInternalID: string, IsPending: boolean, fixederror: number, lastupdated: string): Promise<number> {

@@ -38,20 +38,20 @@ export default class QuestionsConcept extends Concept {
     _Who(context: conceptHandlerContext): Promise<conceptHandlerContext> {
         if (context.WasPrevious(null))
             context.Context.Add(new QuestionContext(this, Who));
-        return Task.FromResult(context);
+        return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
     @conceptHandler("name", "what^PN is^V ^PN name")
     _GetName(context: conceptHandlerContext): Promise<conceptHandlerContext> {
-        return Task.FromResult(context);
+        return Promise.resolve(context);
     }
 
     @conceptHandler("What!?")
     _What_Exclamation(context: conceptHandlerContext): Promise<conceptHandlerContext> {
         context.AddIntentHandler(_What_Excl_Intent, 1d);
-        return Task.FromResult(context);
+        return Promise.resolve(context);
     }
     async  _What_Excl_Intent(context: conceptHandlerContext): Promise<bool> {
         await Brain.DoResponse("Why so surprised?");
@@ -64,7 +64,7 @@ export default class QuestionsConcept extends Concept {
             context.Context.Add(new QuestionContext(this, What));
             context.AddIntentHandler(_What_Intent, context.Operation.MinConfidence); // (this is like a fall-back plan if nothing else better is found)
         }
-        return Task.FromResult(context);
+        return Promise.resolve(context);
     }
 
     async  _What_Intent(context: conceptHandlerContext): Promise<bool> {
@@ -78,7 +78,7 @@ export default class QuestionsConcept extends Concept {
     _When(context: conceptHandlerContext): Promise<conceptHandlerContext> {
         if (context.WasPrevious(null))
             context.Context.Add(new QuestionContext(this, When));
-        return Task.FromResult(context);
+        return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ export default class QuestionsConcept extends Concept {
     _Where(context: conceptHandlerContext): Promise<conceptHandlerContext> {
         if (context.WasPrevious(null))
             context.Context.Add(new QuestionContext(this, Where));
-        return Task.FromResult(context);
+        return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -96,7 +96,7 @@ export default class QuestionsConcept extends Concept {
     _Why(context: conceptHandlerContext): Promise<conceptHandlerContext> {
         if (context.WasPrevious(null))
             context.Context.Add(new QuestionContext(this, Why));
-        return Task.FromResult(context);
+        return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -107,7 +107,7 @@ export default class QuestionsConcept extends Concept {
             context.Context.Add(new QuestionContext(this, How));
             context.AddIntentHandler(_How_Intent, context.Operation.MinConfidence);
         }
-        return Task.FromResult(context);
+        return Promise.resolve(context);
     }
 
     @intentHandler("How")
@@ -123,7 +123,7 @@ export default class QuestionsConcept extends Concept {
     _Can(context: conceptHandlerContext): Promise<conceptHandlerContext> {
         if (context.WasPrevious(null))
             context.Context.Add(new QuestionContext(this, Can));
-        return Task.FromResult(context);
+        return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -132,14 +132,14 @@ export default class QuestionsConcept extends Concept {
     _Is(context: conceptHandlerContext): Promise<conceptHandlerContext> {
         if (context.WasPrevious(null))
             context.Context.Add(new QuestionContext(this, Is));
-        return Task.FromResult(context);
+        return Promise.resolve(context);
     }
 
     @conceptHandler("Are", "Are *")
     _Are(context: conceptHandlerContext): Promise<conceptHandlerContext> {
         if (context.WasPrevious(null))
             context.Context.Add(new QuestionContext(this, Are));
-        return Task.FromResult(context);
+        return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -148,7 +148,7 @@ export default class QuestionsConcept extends Concept {
     _If(context: conceptHandlerContext): Promise<conceptHandlerContext> {
         if (context.WasPrevious(null))
             context.Context.Add(new QuestionContext(this, If));
-        return Task.FromResult(context);
+        return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------

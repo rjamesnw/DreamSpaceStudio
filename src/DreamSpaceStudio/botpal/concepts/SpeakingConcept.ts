@@ -10,11 +10,11 @@ namespace BotPal.Concepts
     /// 
     /// </summary>
     [Concept]
-    public class SpeakingConcept : Concept
+    export default class SpeakingConcept extends Concept
     {
         // --------------------------------------------------------------------------------------------------------------------
 
-        public SpeakingConcept(Brain brian)
+        public SpeakingConcept(brian: Brain)
             : base(brian)
         {
             Say = Memory.Dictionary.AddTextPart("say", POS.Noun_Person);
@@ -25,15 +25,15 @@ namespace BotPal.Concepts
         // --------------------------------------------------------------------------------------------------------------------
 
         // TODO: *** Figure out how the left side will associate with the right.  Perhaps we expect to "iterate" over all the subjects, which should only be on in this case. *** 
-        [ConceptHandler("say")]
-        Task<ConceptHandlerContext> _Names(ConceptHandlerContext context)
+        @conceptHandler("say")
+         _Say_Intent(context: ConceptHandlerContext ): Promise<ConceptHandlerContext> _Names(context: ConceptHandlerContext )
         {
             if (context.WasPrevious(null))
                 context.AddIntentHandler(_Say_Intent, context.Operation.MinConfidence);
-            return Task.FromResult(context);
+            return Promise.resolve(context);
         }
 
-        async Task<bool> _Say_Intent(ConceptHandlerContext context) // (must always provide an intent to fall-back to if a better one isn't found)
+        async Task<bool> // (must always provide an intent to fall-back to if a better one isn't found)
         {
             await Brain.DoResponse("Say what.");
             return true;

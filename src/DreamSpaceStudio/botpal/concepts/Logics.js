@@ -26,10 +26,11 @@ var BotPal;
             }
             // --------------------------------------------------------------------------------------------------------------------
             [ConceptHandler("when", "when^AV ^N/^PN ^V ^V/^T/^N/^PP ^V")];
-            Task < ConceptHandlerContext > _FindWhen(ConceptHandlerContext, context);
-            {
-                return Task.FromResult(context);
-            }
+            _FindWhen(context, ConceptHandlerContext);
+            Promise < ConceptHandlerContext >
+                {
+                    return: Promise.resolve(context)
+                };
             // --------------------------------------------------------------------------------------------------------------------
         }
     })(Concepts = BotPal.Concepts || (BotPal.Concepts = {}));

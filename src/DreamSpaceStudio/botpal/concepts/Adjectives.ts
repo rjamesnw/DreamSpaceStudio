@@ -1,31 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿import Concept, { conceptHandler, ConceptHandlerContext } from "../core/Concept";
+import Brain from "../core/Brain";
 
-namespace BotPal.Concepts
-{
-    /// <summary>
-    /// 
-    /// </summary>
-    public class AdjectiveConcept : Concept
-    {
-        // --------------------------------------------------------------------------------------------------------------------
+export default class AdjectiveConcept extends Concept {
+    // --------------------------------------------------------------------------------------------------------------------
 
-        public AdjectiveConcept(Brain brian)
-            : base(brian)
-        {
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        [ConceptHandler(null, "* ^AD ^N *")] // (ex: "I would not go that far")
-        Task<ConceptHandlerContext> _Adjective(ConceptHandlerContext context)
-        {
-            return Task.FromResult(context);
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
+    constructor(brian: Brain) {
+        super(brian);
     }
+
+    // --------------------------------------------------------------------------------------------------------------------
+
+    @conceptHandler(null, "* ^AD ^N *") // (ex: "I would not go that far")
+    _Adjective(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        return Promise.resolve(context);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------
 }

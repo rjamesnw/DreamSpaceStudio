@@ -37,23 +37,23 @@ export default class ToBeConcept extends Concept {
         //        var subjects = ctx.AllSubjects(); // (try right side for 
         //    }
         //}
-        return Task.FromResult(context);
+        return Promise.resolve(context);
     }
 
-    async Task<bool> _How_Is_Intent(ConceptHandlerContext context) {
+    async  _Is_What_Intent(context: ConceptHandlerContext ): Promise<bool> _How_Is_Intent(context: ConceptHandlerContext ) {
         await Brain.DoResponse("How is what?");
         return true;
     }
 
-    async Task<bool> _Is_What_Intent(ConceptHandlerContext context) {
+    async Task<bool> {
         await Brain.DoResponse("Is what?");
         return true;
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    //[ConceptHandler("How are")]
-    //ConceptHandlerContext _How_are(ConceptHandlerContext context)
+    //@conceptHandler("How are")
+    //ConceptHandlerContext _How_are(context: ConceptHandlerContext )
     //{
     //    if (context.WasPrevious(null))
     //        context.AddIntentHandler(_How_Intent, context.Operation.MinConfidence);
@@ -61,7 +61,7 @@ export default class ToBeConcept extends Concept {
     //}
 
     //[IntentHandler("How are [subject]")]
-    //bool _How_are_Intent(ConceptHandlerContext context)
+    //bool _How_are_Intent(context: ConceptHandlerContext )
     //{
     //    Brain.DoResponse("How are what?");
     //    return true;
@@ -70,14 +70,14 @@ export default class ToBeConcept extends Concept {
     // --------------------------------------------------------------------------------------------------------------------
 
     // TODO: *** Figure out how the left side will associate with the right.  Perhaps we expect to "iterate" over all the subjects, and assigned attributes from the right side. *** 
-    [ConceptHandler("are")]
-    Task<ConceptHandlerContext> _Are(ConceptHandlerContext context) {
+    @conceptHandler("are")
+     _How_Are_Intent(context: ConceptHandlerContext ): Promise<ConceptHandlerContext> _Are(context: ConceptHandlerContext ) {
         if (context.WasPrevious("how"))
             context.AddIntentHandler(_How_Are_Intent, 0.5d);
-        return Task.FromResult(context);
+        return Promise.resolve(context);
     }
 
-    async Task<bool> _How_Are_Intent(ConceptHandlerContext context) {
+    async Task<bool> {
         await Brain.DoResponse("How are what?");
         return true;
     }

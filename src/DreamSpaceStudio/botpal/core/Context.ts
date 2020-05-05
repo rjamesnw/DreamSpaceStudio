@@ -116,12 +116,12 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
     /// </summary>
     readonly concept: Concept;
 
-    readonly memory: Memory;
+    get memory() { return this.concept.memory; }
 
     // --------------------------------------------------------------------------------------------------------------------
 
     /** A mapping of Context types to a collection of context instances of the same type. */
-    #_ContextMap: Map<IType<Context>, ContextCollection<Context>> = new Map<IType<Context>, ContextCollection<Context>>();
+    #_contextMap: Map<IType<Context>, ContextCollection<Context>> = new Map<IType<Context>, ContextCollection<Context>>();
 
     #_contexts: Context[];
 
@@ -204,11 +204,11 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    constructor(memory: Memory, concept: Concept, parent: Context = null) {
+    constructor(concept: Concept, parent: Context = null) {
         super();
-        if (!memory) throw DS.Exception.argumentRequired('Context()', 'memory', memory);
+        if (!concept) throw DS.Exception.argumentRequired('Context()', 'concept', this);
+        this.concept = concept;
         this.contextType = <any>this.constructor;
-        this.memory = memory;
         //? Concept = concept ?? throw new ArgumentNullException(nameof(concept));
         this.parent = parent;
     }
@@ -218,9 +218,9 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
     add(ctx: Context): this {
         if (ctx != null) {
             var type = ctx.contextType;
-            if (!this.#_ContextMap.has(type))
-                this.#_ContextMap.set(type, new ContextCollection<Context>(type, this));
-            this.#_ContextMap.get(type).add(ctx);
+            if (!this.#_contextMap.has(type))
+                this.#_contextMap.set(type, new ContextCollection<Context>(type, this));
+            this.#_contextMap.get(type).add(ctx);
             if (this.#_contexts == null)
                 this.#_contexts = [];
             this.#_contexts.push(ctx);
@@ -232,7 +232,7 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
     /// <param name="contextType"> The context type to find. </param>
     /// <returns> An enumerator that allows enumerating over the matched items. </returns>
     get<T extends Context>(contextType: IType<T>): ContextCollection<T> {
-        var existingCollection = this.#_ContextMap.get(contextType);
+        var existingCollection = this.#_contextMap.get(contextType);
         return existingCollection ? new ContextCollection<T>(contextType, existingCollection) : null;
     }
 
@@ -299,7 +299,7 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
 
         var removed = false;
 
-        for (var item of this.#_ContextMap)
+        for (var item of this.#_contextMap)
             if (item[1].remove(context))
                 removed = true;
 

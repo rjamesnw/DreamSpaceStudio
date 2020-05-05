@@ -1,31 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿import Concept, { conceptHandler, ConceptHandlerContext } from "../core/Concept";
+import Brain from "../core/Brain";
 
-namespace BotPal.Concepts
-{
-    /// <summary>
-    /// 
-    /// </summary>
-    public class AdverbConcept : Concept
-    {
-        // --------------------------------------------------------------------------------------------------------------------
+export default class AdverbConcept extends Concept {
+    // --------------------------------------------------------------------------------------------------------------------
 
-        public AdverbConcept(Brain brian)
-            : base(brian)
-        {
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        [ConceptHandler("that", " * that^AV *")] // (ex: "I would not go that far")
-        Task<ConceptHandlerContext> _Adverb(ConceptHandlerContext context)
-        {
-            return Task.FromResult(context);
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
+    constructor(brian: Brain) {
+        super(brian);
     }
+
+    // --------------------------------------------------------------------------------------------------------------------
+
+    @conceptHandler("that", " * that^AV *") // (ex: "I would not go that far")
+    _Adverb(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        return Promise.resolve(context);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------
 }

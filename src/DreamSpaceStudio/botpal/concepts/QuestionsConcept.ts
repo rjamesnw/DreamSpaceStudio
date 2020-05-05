@@ -53,7 +53,7 @@ export default class QuestionsConcept extends Concept {
         context.AddIntentHandler(_What_Excl_Intent, 1d);
         return Promise.resolve(context);
     }
-    async  _What_Excl_Intent(context: conceptHandlerContext): Promise<bool> {
+    async  _What_Excl_Intent(context: conceptHandlerContext): Promise<boolean> {
         await Brain.DoResponse("Why so surprised?");
         return true;
     }
@@ -67,7 +67,7 @@ export default class QuestionsConcept extends Concept {
         return Promise.resolve(context);
     }
 
-    async  _What_Intent(context: conceptHandlerContext): Promise<bool> {
+    async  _What_Intent(context: conceptHandlerContext): Promise<boolean> {
         await Brain.DoResponse("What about what?");
         return true;
     }
@@ -111,7 +111,7 @@ export default class QuestionsConcept extends Concept {
     }
 
     @intentHandler("How")
-    async  _How_Intent(context: conceptHandlerContext): Promise<bool> {
+    async  _How_Intent(context: conceptHandlerContext): Promise<boolean> {
         if (context.WasPrevious(null))
             await Brain.DoResponse("How what?");
         return true;

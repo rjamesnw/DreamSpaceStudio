@@ -32,7 +32,7 @@ namespace BotPal.Concepts
             return Promise.resolve(context);
         }
 
-        async Task<bool>
+        async Task<boolean>
         {
             await Brain.DoResponse("Ok.");
             return true;

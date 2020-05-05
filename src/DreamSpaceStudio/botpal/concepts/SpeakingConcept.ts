@@ -33,7 +33,7 @@ namespace BotPal.Concepts
             return Promise.resolve(context);
         }
 
-        async Task<bool> // (must always provide an intent to fall-back to if a better one isn't found)
+        async Task<boolean> // (must always provide an intent to fall-back to if a better one isn't found)
         {
             await Brain.DoResponse("Say what.");
             return true;

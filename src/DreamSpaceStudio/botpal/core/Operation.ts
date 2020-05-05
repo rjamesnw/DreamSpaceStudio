@@ -5,6 +5,7 @@ import { Intents } from "./Enums";
 import Brain from "./Brain";
 import Concept from "./Concept";
 import Context from "./Context";
+import BrainTask from "./Tasks";
 
 /**
  * An operation is a threaded task that needs to be completed in the "brain".
@@ -81,6 +82,7 @@ export default abstract class Operation extends TimeReferencedObject implements 
     readonly Arguments: Intents[];
 
     constructor(brain: Brain, commandCode: Intents) {
+        super();
         this.Brain = brain;
         this.Parent = null;
         this.Intent = commandCode;
@@ -92,27 +94,25 @@ export default abstract class Operation extends TimeReferencedObject implements 
     */
     /// <param name="btask">The brain task that is executing this operation, if any. If null, this is being called on the main thread. 
     /// This is provided so that the task's 'IsCancellationRequested' property can be monitored, allowing to gracefully abort current operations.</param>
-    async  OnExecute(task: BrainTask= null): Promise<bool> Execute(BrainTask btask = null) {
+    async  Execute(btask: BrainTask = null): Promise<boolean> {
         try {
-            Completed = await OnExecute(btask);
+            this.#_Completed = await this.OnExecute(btask);
         }
-        catch (Exception ex)
-        {
-            Completed = true; // (this should only be false if the task needs to be called again later - usually because details are missing that may be given at a later time)
-            _AddError(ex);
+        catch (ex) {
+            this.#_Completed = true; // (this should only be false if the task needs to be called again later - usually because details are missing that may be given at a later time)
+            this._AddError(ex);
             // ('Completed' is not forced to false here to allow implementers to fire off exceptions to abort operations and complete at the same time; though the error will be set).
         }
-        return Completed;
+        return this.Completed;
     }
 
-    protected Exception _AddError(Exception error) {
-        if (Errors == null)
-            Errors = new List<Exception>();
-        if (!Errors.Contains(error))
-            Errors.Add(error);
+    protected _AddError(error: DS.Exception): DS.Exception {
+        if (!this.#_errors)
+            this.#_errors = [];
+        if (this.#_errors.indexOf(error) < 0)
+            this.#_errors.push(error);
         return error;
     }
 
-    public abstract Task<bool>;
-}
+    abstract OnExecute(task?: BrainTask): Promise<boolean>;
 }

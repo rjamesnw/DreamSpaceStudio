@@ -43,15 +43,16 @@ class Brain {
      *  Set to true internally after 'Stop()' is called and the brain has completed the shutdown process.
     */
     get IsStopped() { return __classPrivateFieldGet(this, __isStopped); }
-    DoResponse(Response, response) {
-        if (Response != null)
+    /** Make the bot respond with some text.  Keep in mind this simply pushes a response to the listening host, and the bot will not know about it. */
+    async DoResponse(response) {
+        if (this.Response != null)
             if (_SynchronizationContext != null) {
                 var taskSource = new TaskCompletionSource();
-                _SynchronizationContext.Send(async (_) => { await Response.Invoke(this, response); taskSource.SetResult(true); }, null);
+                _SynchronizationContext.Send(async (_) => { await Response_1.default.Invoke(this, response); taskSource.SetResult(true); }, null);
                 await taskSource.Task;
             }
             else
-                await Response.Invoke(this, response); // (called directly from this thread as a last resort)
+                await Response_1.default.Invoke(this, response); // (called directly from this thread as a last resort)
         //else
         //{
         //    // ... try other attempts ...

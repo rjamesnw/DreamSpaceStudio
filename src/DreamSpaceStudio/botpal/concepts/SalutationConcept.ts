@@ -30,13 +30,13 @@ namespace BotPal.Concepts
             return Promise.resolve(context.SetConfidence(1d));
         }
 
-        async Task<bool> _Hi_Intent(context: ConceptHandlerContext )
+        async Task<boolean> _Hi_Intent(context: ConceptHandlerContext )
         {
             await Brain.DoResponse("Hello.");
             return true;
         }
 
-        async Task<bool> _SayHi_Intent(context: ConceptHandlerContext )
+        async Task<boolean> _SayHi_Intent(context: ConceptHandlerContext )
         {
             string name = "";
             var c = Brain.GetConcept<NamesConcept>;
@@ -54,7 +54,7 @@ namespace BotPal.Concepts
             return Promise.resolve(context.SetConfidence(1d));
         }
 
-        async Task<bool>
+        async Task<boolean>
         {
             await Brain.DoResponse("Hi there.");
             return true;

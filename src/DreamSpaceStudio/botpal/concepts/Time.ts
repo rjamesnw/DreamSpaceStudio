@@ -48,7 +48,7 @@ export default class TimeConcept extends Concept {
         return Promise.resolve(context);
     }
 
-    async  _Time_Intent(context: ConceptHandlerContext): Promise<bool>;
+    async  _Time_Intent(context: ConceptHandlerContext): Promise<boolean>;
         return true;
     }
 

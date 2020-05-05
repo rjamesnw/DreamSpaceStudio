@@ -72,10 +72,10 @@ export default class Brain {
     Response: ResponseHandler; //event
 
     /** Make the bot respond with some text.  Keep in mind this simply pushes a response to the listening host, and the bot will not know about it. */
-    public virtual async Task DoResponse(Response response) {
-        if (Response != null)
+    async DoResponse(response: Response): Promise<void> {
+        if (this.Response != null)
             if (_SynchronizationContext != null) {
-                var taskSource = new TaskCompletionSource<bool>();
+                var taskSource = new TaskCompletionSource<boolean>();
                 _SynchronizationContext.Send(async _ => { await Response.Invoke(this, response); taskSource.SetResult(true); }, null);
                 await taskSource.Task;
             }

@@ -41,7 +41,7 @@ namespace BotPal.Concepts
             return Promise.resolve(context);
         }
 
-        async Task<bool>
+        async Task<boolean>
         {
             await Brain.DoResponse("I'm doing great, thanks.");
             return true;
@@ -67,7 +67,7 @@ namespace BotPal.Concepts
             }
             return Promise.resolve(context);
         }
-        async Task<bool>
+        async Task<boolean>
         {
             await Brain.DoResponse("The time is " + DateTime.Now.ToShortTimeString());
             return true;

@@ -33,7 +33,7 @@ export default class NamesConcept extends Concept {
         return Promise.resolve(context);
     }
 
-    async  _Name_Intent(context: ConceptHandlerContext): Promise<bool> // (must always provide an intent to fall-back to if a better one isn't found)
+    async  _Name_Intent(context: ConceptHandlerContext): Promise<boolean> // (must always provide an intent to fall-back to if a better one isn't found)
     {
         await Brain.DoResponse("Yes, please continue.");
         return true;

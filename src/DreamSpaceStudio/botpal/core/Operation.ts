@@ -18,81 +18,81 @@ import Context from "./Context";
  * All these operations are asynchronously connected thoughts that required various operations to execute over time.
  */
 export default abstract class Operation extends TimeReferencedObject implements IMemoryObject {
-    /// <summary>
-    /// The brain this operation belongs to.
-    /// </summary>
+    /**
+     *  The brain this operation belongs to.
+    */
     readonly Brain: Brain;
 
     get memory(): Memory { return this.Brain.Memory; }
 
-    /// <summary>
-    /// The parent operation that must precede this operation before it can execute.
-    /// </summary>
+    /**
+     *  The parent operation that must precede this operation before it can execute.
+    */
     Parent: Operation;
 
-    /// <summary>
-    /// The next operation to execute once this one completes.
-    /// </summary>
+    /**
+     *  The next operation to execute once this one completes.
+    */
     Next: Operation;
 
-    /// <summary>
-    /// The gets/sets the last operation to execute in a nested sequence.
-    /// </summary>
+    /**
+     *  The gets/sets the last operation to execute in a nested sequence.
+    */
     get Last(): Operation { return this.Next?.Last ?? this; }
     set Last(value) { this.Last.Next = value; }
 
-    /// <summary>
-    /// Fixed core functionality intents, such as splitting incoming text to be processed. 
-    /// </summary>
+    /**
+     *  Fixed core functionality intents, such as splitting incoming text to be processed. 
+    */
     readonly Intent: Intents;
 
-    /// <summary>
-    /// A context that this operation applies to, if any.
-    /// </summary>
+    /**
+     *  A context that this operation applies to, if any.
+    */
     Context: Context;
 
-    /// <summary>
-    /// A concept that this operation applies to, if any.
-    /// </summary>
+    /**
+     *  A concept that this operation applies to, if any.
+    */
     Concept: Concept;
 
-    /// <summary>
-    /// Should be set to true when the operation completes successfully.
-    /// </summary>
+    /**
+     *  Should be set to true when the operation completes successfully.
+    */
     get Completed() { return this.#_Completed; }
     #_Completed: boolean;
 
     get Errors() { return this.#_errors; }
     #_errors: DS.Exception[];
 
-    /// <summary>
-    /// Will be true if the operation completed successfully, but there were errors in the process.
-    /// </summary>
+    /**
+     *  Will be true if the operation completed successfully, but there were errors in the process.
+    */
     get IsCompletedWithErrors() { return this.Completed && this?.Errors?.length > 0; }
 
-    /// <summary>
-    /// A list of commands to execute for this command, if any.
-    /// </summary>
+    /**
+     *  A list of commands to execute for this command, if any.
+    */
     readonly Commands: Intents[];
 
-    /// <summary>
-    /// A list of commands that need to complete in order for this command to execute.
-    /// </summary>
-    public readonly List<Intents> Arguments;
+    /**
+     *  A list of commands that need to complete in order for this command to execute.
+    */
+    readonly Arguments: Intents[];
 
-    public Operation(Brain brain, Intents commandCode) {
-        Brain = brain;
-        Parent = null;
-        Intent = commandCode;
+    constructor(brain: Brain, commandCode: Intents) {
+        this.Brain = brain;
+        this.Parent = null;
+        this.Intent = commandCode;
     }
 
-    /// <summary>
-    /// Execute the operation. If true is returned, the instruction can be removed, otherwise it must be left, and the next instruction executed.
-    /// This occurs in a cycle, keeping all operations "alive" until they are all completed.
-    /// </summary>
+    /**
+     *  Execute the operation. If true is returned, the instruction can be removed, otherwise it must be left, and the next instruction executed.
+     *  This occurs in a cycle, keeping all operations "alive" until they are all completed.
+    */
     /// <param name="btask">The brain task that is executing this operation, if any. If null, this is being called on the main thread. 
     /// This is provided so that the task's 'IsCancellationRequested' property can be monitored, allowing to gracefully abort current operations.</param>
-    public async  OnExecute(BrainTask task = null): Promise<bool> Execute(BrainTask btask = null) {
+    async  OnExecute(task: BrainTask= null): Promise<bool> Execute(BrainTask btask = null) {
         try {
             Completed = await OnExecute(btask);
         }

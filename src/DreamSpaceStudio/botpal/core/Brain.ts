@@ -2,6 +2,8 @@
 import { Worker } from "cluster";
 import Response from "../core/Response";
 import ITTSService from "../services/tts/ITTSService";
+import BrainTask from "./Tasks";
+import Operation from "./Operation";
 
 export interface ResponseHandler { (brain: Brain, response: Response): Promise<void>; }
 
@@ -15,15 +17,15 @@ export default class Brain {
 
     LanguageParsingRegex = new RegExp("\".*?\"|'.*?'|[A-Za-z']+|[0-9]+|\\s+|.", 'm');
 
-    /// <summary>
-    /// The memory instance, which also contains the core dictionary for quick lookups.
-    /// </summary>
+    /**
+     *  The memory instance, which also contains the core dictionary for quick lookups.
+    */
     readonly Memory: Memory;
 
-    /// <summary>
-    /// A Text-To-Speech plugin object to use when calling "Brain.Say()".
-    /// If null, upon calling the method, the default "Ivona" TTS service is used.
-    /// </summary>
+    /**
+     *  A Text-To-Speech plugin object to use when calling "Brain.Say()".
+     *  If null, upon calling the method, the default "Ivona" TTS service is used.
+    */
     TTSService: ITTSService;
 
     //? public Thought Thought; // (this should never be null when a brain is loaded, as thoughts are historical; otherwise this is a brand new brain, and this can be null)
@@ -31,43 +33,43 @@ export default class Brain {
     protected _Tasks: BrainTask[] = [];
     protected _DelayedTasks = new Map<string, BrainTask>();
 
-    /// <summary>
-    /// The thread that the brain instance was created on.  This is always assumed as the main thread, and helps with dispatching
-    /// events to the host, preventing the need for the host to handle dispatching calls to it's own main thread.
-    /// </summary>
+    /**
+     *  The thread that the brain instance was created on.  This is always assumed as the main thread, and helps with dispatching
+     *  events to the host, preventing the need for the host to handle dispatching calls to it's own main thread.
+    */
     readonly _MainThread: Thread;
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Root operations to run in parallel; however, each operation can have chained operations, which are sequential.
-    /// <para>Note: because the operations are executed in a thread, you must used the locker returned from 'OperationsLocker'.
-    /// If any operation instance is in a "completed" state however, no locking is required.</para>
-    /// </summary>
+    /**
+     *  Root operations to run in parallel; however, each operation can have chained operations, which are sequential.
+     *  <para>Note: because the operations are executed in a thread, you must used the locker returned from 'OperationsLocker'.
+     *  If any operation instance is in a "completed" state however, no locking is required.</para>
+    */
     get Operations(): Operation[] { return this.#_operations; }
     #_operations: Operation[] = [];
 
-    /// <summary>
-    /// Set to true internally when 'Stop()' is called.
-    /// </summary>
+    /**
+     *  Set to true internally when 'Stop()' is called.
+    */
     get IsShuttingDown() { return this.#_isShuttingDown; }
     #_isShuttingDown: boolean;
 
-    /// <summary>
-    /// Set to true internally after 'Stop()' is called and the brain has completed the shutdown process.
-    /// </summary>
+    /**
+     *  Set to true internally after 'Stop()' is called and the brain has completed the shutdown process.
+    */
     get IsStopped() { return this.#_isStopped; }
     #_isStopped: boolean;
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// The response event is a hook for host handlers to receive output responses from previously processed user input.
-    /// <para>Note: THIS IS CALLED IN A DIFFERENT THREAD. For many UI frameworks you most likely need to execute responses
-    /// on the MAIN thread. Make sure on the host side you use either "Invoke()" or "BeingInvoke()", or similar, on your
-    /// WinForms control, or WPF "Dispatcher" reference.</para>
-    /// </summary>
-    public event ResponseHandler Response;
+    /**
+     *  The response event is a hook for host handlers to receive output responses from previously processed user input.
+     *  <para>Note: THIS IS CALLED IN A DIFFERENT THREAD. For many UI frameworks you most likely need to execute responses
+     *  on the MAIN thread. Make sure on the host side you use either "Invoke()" or "BeingInvoke()", or similar, on your
+     *  WinForms control, or WPF "Dispatcher" reference.</para>
+    */
+    Response: ResponseHandler; //event
 
     /** Make the bot respond with some text.  Keep in mind this simply pushes a response to the listening host, and the bot will not know about it. */
     public virtual async Task DoResponse(Response response) {
@@ -106,16 +108,16 @@ export default class Brain {
     await TTSService.Say(text, voiceCode);
 }
 
-        // --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// Creates a new brain.
-        /// </summary>
-        /// <param name="synchronizationContext">A SynchronizationContext instance to use to allow the Brain to synchronize events in context with the main thread.
-        /// This should be available for both WinForms and WPF.  If not specified, and it cannot be detected, the events will be called directly from worker threads.
-        /// <para>Note: Auto-detection reads from 'SynchronizationContext.Current', which means, if used, the constructor must be called on the main UI thread.</para></param>
-        /// <param name="configureConcepts">If true (default), then all concepts defined in this assembly are added to the brain.</param>
-        public Brain(SynchronizationContext synchronizationContext = null, bool configureConcepts = true)
+/**
+ *  Creates a new brain.
+*/
+/// <param name="synchronizationContext">A SynchronizationContext instance to use to allow the Brain to synchronize events in context with the main thread.
+/// This should be available for both WinForms and WPF.  If not specified, and it cannot be detected, the events will be called directly from worker threads.
+/// <para>Note: Auto-detection reads from 'SynchronizationContext.Current', which means, if used, the constructor must be called on the main UI thread.</para></param>
+/// <param name="configureConcepts">If true (default), then all concepts defined in this assembly are added to the brain.</param>
+constructor(synchronizationContext : Worker = null, configureConcepts = true)
 {
     _MainThread = Thread.CurrentThread;
     _SynchronizationContext = synchronizationContext ?? SynchronizationContext.Current; // (supported both in WinForms AND WPF!)
@@ -130,11 +132,11 @@ export default class Brain {
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// Concepts are registered here as singletons so they can be referenced by other concepts.
-        /// This is required so that each concept can register and expose the words it recognizes,
-        /// complete with lexical details about the word (or text/phrase).
-        /// </summary>
+        /**
+         *  Concepts are registered here as singletons so they can be referenced by other concepts.
+         *  This is required so that each concept can register and expose the words it recognizes,
+         *  complete with lexical details about the word (or text/phrase).
+        */
         readonly Dictionary < Type, Concept > _Concepts = new Dictionary<Type, Concept>();
         public IEnumerable < Concept > Concepts => _Concepts.Values;
 
@@ -143,9 +145,9 @@ export default class Brain {
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// Scans the current assembly for supported concepts and loads an instance of each one into the brain.
-        /// </summary>
+        /**
+         *  Scans the current assembly for supported concepts and loads an instance of each one into the brain.
+        */
         public void ConfigureDefaultConcepts()
 {
     var conceptTypes = (from t in Assembly.GetExecutingAssembly().GetTypes() where t.IsClass && !t.IsGenericType && !t.IsAbstract && t.IsSubclassOf(typeof (Concept)) select t);
@@ -171,9 +173,9 @@ export default class Brain {
          */
         public T GetConcept<T>() where T: Concept => (T)_Concepts.Value(typeof (T));
 
-        ///// <summary>
-        ///// Registers a concept for given text to watch for, and also creates and returns the dictionary word that will be associated with the watched text.
-        ///// </summary>
+        ///**
+         * // Registers a concept for given text to watch for, and also creates and returns the dictionary word that will be associated with the watched text.
+        //*/
         ///// <param name="concept">The concept to register.</param>
         ///// <param name="textpart">The text that will trigger the concept.</param>
         ///// <param name="pos">The part of speech for the text (usually for words).</param>
@@ -209,20 +211,20 @@ export default class Brain {
         //    return dicItem;
         //}
 
-        ///// <summary>
-        ///// Find and return an array of concepts that match the given text part.
-        ///// The 'textpart' text is normalized as needed to return a list of concepts the seem to match the visual look of the text, and not necessarily the specific characters themselves.
-        ///// </summary>
-        //public Concept[] GetConcepts(string textpart)
-        //{
-        //    var grpKey = TextPart.ToGroupKey(textpart);
-        //    var concepts = _Concepts.Value(grpKey);
-        //    return concepts.ToArray();
-        //}
+        ///**
+         * // Find and return an array of concepts that match the given text part.
+    // *  The 'textpart' text is normalized as needed to return a list of concepts the seem to match the visual look of the text, and not necessarily the specific characters themselves.
+    //*/
+    //public Concept[] GetConcepts(string textpart)
+    //{
+    //    var grpKey = TextPart.ToGroupKey(textpart);
+    //    var concepts = _Concepts.Value(grpKey);
+    //    return concepts.ToArray();
+    //}
 
-        // --------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------
 
-        public Match < ConceptContext > [] FindConceptContexts(string text, double threshold = 0.8)
+    public Match < ConceptContext > [] FindConceptContexts(string text, double threshold = 0.8)
 {
     var dicItems = threshold == 1 ? // (if 'threshold' is 1.0 then do a similar [near exact] match [using group keys], otherwise find close partial matches instead.
         Memory.Dictionary.FindSimilarEntries(Memory.Brain.ToGroupKey(text)).SelectMany(i => i.ConceptContexts.Select(c => new Match<ConceptContext>(c, 1.0)))
@@ -293,10 +295,10 @@ async Task _ProcessOperations(BrainTask btask)
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// Returns a task that completes immediately when started.
-        /// It is used when there is nothing to do, but following tasks may also become added as part of normal operations.
-        /// </summary>
+        /**
+         *  Returns a task that completes immediately when started.
+         *  It is used when there is nothing to do, but following tasks may also become added as part of normal operations.
+        */
         public BrainTask CreateEmptyTask()
 {
     var btask = new BrainTask(this);
@@ -307,9 +309,9 @@ async Task _ProcessOperations(BrainTask btask)
     return btask;
 }
 
-        /// <summary>
-        /// Runs the given action as another task, which may be another thread.
-        /// </summary>
+        /**
+         *  Runs the given action as another task, which may be another thread.
+        */
         public BrainTask CreateTask(Func < BrainTask, Task > action, CancellationToken ? cancelToken = null)
 {
     if (action != null) {
@@ -323,9 +325,9 @@ async Task _ProcessOperations(BrainTask btask)
     else return null;
 }
 
-        /// <summary>
-        /// Runs the given action as another task, which may be another thread.
-        /// </summary>
+        /**
+         *  Runs the given action as another task, which may be another thread.
+        */
         public BrainTask < TState > Create i): Promise<TState>(Action < BrainTask < TState >> action, TState state, CancellationToken ? cancelToken = null) where TState: class {
     if(action != null)
 {
@@ -340,9 +342,9 @@ async Task _ProcessOperations(BrainTask btask)
             else return null;
         }
 
-        /// <summary>
-        /// Runs the given action as another task, which may be another thread.
-        /// </summary>
+        /**
+         *  Runs the given action as another task, which may be another thread.
+        */
         public BrainTask < TState > CreateTask<TState>(Action < BrainTask < TState >, TState > action, TState state, CancellationToken ? cancelToken = null) where TState: class {
     if(action != null)
 {
@@ -356,9 +358,9 @@ async Task _ProcessOperations(BrainTask btask)
             else return null;
         }
 
-        /// <summary>
-        /// Remove a given task.  This is called automatically during task cleanup after a task completes.
-        /// </summary>
+        /**
+         *  Remove a given task.  This is called automatically during task cleanup after a task completes.
+        */
         /// <param name="btask">The task to remove.  The task is not stopped, only removed from the brain's task list.</param>
         public BrainTask RemoveTask(BrainTask btask)
 {
@@ -382,17 +384,17 @@ async Task _ProcessOperations(BrainTask btask)
     return btask;
 }
 
-        /// <summary>
-        /// Find and return a task given its category and name.
-        /// </summary>
+        /**
+         *  Find and return a task given its category and name.
+        */
         public BrainTask GetTask(string category, string name)
 {
     lock(_DelayedTasks) return _DelayedTasks.Value((category ?? "") + "_" + name);
 }
 
-        /// <summary>
-        /// Find and cancel a task given its category and name. If found, the task is also returned.
-        /// </summary>
+        /**
+         *  Find and cancel a task given its category and name. If found, the task is also returned.
+        */
         /// <param name="ignoreIfCannotBeCanceled">If true, and the task cannot be canceled, the request is ignored, otherwise an exception is thrown.</param>
         public BrainTask CancelTask(string category, string name, bool ignoreIfCannotBeCanceled = false)
 {
@@ -404,10 +406,10 @@ async Task _ProcessOperations(BrainTask btask)
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// Parses a given input string.
-        /// This method calls 'CleanupWhitespaceParts()' automatically.
-        /// </summary>
+        /**
+         *  Parses a given input string.
+         *  This method calls 'CleanupWhitespaceParts()' automatically.
+        */
         /// <param name="text">The text to parse.</param>
         /// <param name="language">An optional language name used to override the default language.</param>
         /// <returns>The text parts split by the language regex.</returns>
@@ -431,9 +433,9 @@ async Task _ProcessOperations(BrainTask btask)
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// Replaces any whitespace entries with a single space character.
-        /// </summary>
+        /**
+         *  Replaces any whitespace entries with a single space character.
+        */
         /// <returns>The same parts array passed in.</returns>
         public string[] CleanupWhitespaceParts(string[] parts)
 {
@@ -447,10 +449,10 @@ async Task _ProcessOperations(BrainTask btask)
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// Returns a valid key based on given text.
-        /// This is used for looking up text from dictionaries/indexes using text as the key.
-        /// </summary>
+        /**
+         *  Returns a valid key based on given text.
+         *  This is used for looking up text from dictionaries/indexes using text as the key.
+        */
         /// <param name="parts">The text parts split into word/number/symbol/etc groups using a language parser.  Any grouped
         /// whitespace entries in the array should already be replaced by a SINGLE 'space' character.</param>
         /// <returns></returns>
@@ -464,10 +466,10 @@ async Task _ProcessOperations(BrainTask btask)
     return keyText; // (create a key from the current text, which is always the case sensitive to represent the exact text entered by the user, without the whitespace)
 }
 
-        /// <summary>
-        /// Returns a valid key based on given text.
-        /// This is used for looking up text from dictionaries/indexes using text as the key.
-        /// </summary>
+        /**
+         *  Returns a valid key based on given text.
+         *  This is used for looking up text from dictionaries/indexes using text as the key.
+        */
         public string GetKeyFromText(string text)
 {
     if (string.IsNullOrWhiteSpace(text))
@@ -476,9 +478,9 @@ async Task _ProcessOperations(BrainTask btask)
     return GetKeyFromTextParts(parts);
 }
 
-        /// <summary>
-        /// Converts a normal text key (i.e. from 'GetKeyFromTextParts()', or '{TextParet}.Key') to a more *generic* grouping key.
-        /// </summary>
+        /**
+         *  Converts a normal text key (i.e. from 'GetKeyFromTextParts()', or '{TextParet}.Key') to a more *generic* grouping key.
+        */
         public string KeyToGroupKey(string key)
 {
     if (key == null)
@@ -487,9 +489,9 @@ async Task _ProcessOperations(BrainTask btask)
     return key.ToLower();
 }
 
-        /// <summary>
-        /// Converts a text part, and returns a generic grouping key that can be used to search for similar text.
-        /// </summary>
+        /**
+         *  Converts a text part, and returns a generic grouping key that can be used to search for similar text.
+        */
         public string ToGroupKey(string textpart)
 {
     var key = GetKeyFromText(textpart);
@@ -514,11 +516,11 @@ async Task _ProcessOperations(BrainTask btask)
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// Returns a locker object that can be used to lock threaded operations on global data or resources (such as files, 
-        /// DB access, external API calls, or even simply Brain or system properties, etc.). API call locks are very useful to
-        /// allow multiple calls at once, but limiting how many "reads" can happen at once.
-        /// </summary>
+        /**
+         *  Returns a locker object that can be used to lock threaded operations on global data or resources (such as files, 
+         *  DB access, external API calls, or even simply Brain or system properties, etc.). API call locks are very useful to
+         *  allow multiple calls at once, but limiting how many "reads" can happen at once.
+        */
         /// <param name="category">Category and name are both used to generate a key that represents the lock.</param>
         /// <param name="name">Category and name are both used to generate a key that represents the lock.</param>
         /// <returns>A disposable lock object.  The object should be disposed when finished with.</returns>

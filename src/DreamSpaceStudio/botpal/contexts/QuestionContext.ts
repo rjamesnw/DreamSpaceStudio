@@ -1,11 +1,11 @@
-﻿/// <summary>
-/// Holds details about a question.
+﻿/**
+ *  Holds details about a question.
 
 import Context from "../core/Context";
 import DictionaryItem from "../core/DictionaryItem";
 import Concept from "../core/Concept";
 
-/// </summary>
+*/
 export default class QuestionContext extends Context {
     // --------------------------------------------------------------------------------------------------------------------
 

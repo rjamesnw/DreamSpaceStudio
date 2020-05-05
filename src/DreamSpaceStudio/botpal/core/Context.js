@@ -36,9 +36,9 @@ class ContextCollection extends Array {
                     this.add(ctx);
     }
     get hasItems() { return this.length > 0; }
-    /// <summary>
-    /// Searches the for a context of the requested type, or null if nothing was found.
-    /// </summary>
+    /**
+     *  Searches the for a context of the requested type, or null if nothing was found.
+    */
     getContexts(type) {
         return this.filter(a => a.contextType == type);
     }
@@ -70,16 +70,16 @@ class ContextCollection extends Array {
 }
 exports.ContextCollection = ContextCollection;
 __contextType = new WeakMap();
-///// <summary> This just serves as a method to register contexts that are alike (using a shared type name). </summary>
+///** This just serves as a method to register contexts that are alike (using a shared type name). */
 ///// <typeparam name="T"> A context type. </typeparam>
 //x export interface IContext implements ITimeReferencedObject {
 //    Parent: Context;
 //    contextType: IType<Context>;
 //}
-/// <summary>
-/// The context around a given concept.
-/// When concepts are triggered, contexts are built up in order to establish the content and intent of the user's input.
-/// </summary>
+/**
+ *  The context around a given concept.
+ *  When concepts are triggered, contexts are built up in order to establish the content and intent of the user's input.
+*/
 class Context extends TimeReferencedObject_1.default {
     // --------------------------------------------------------------------------------------------------------------------
     constructor(concept, parent = null) {
@@ -105,52 +105,53 @@ class Context extends TimeReferencedObject_1.default {
      */
     getContexts() { return __classPrivateFieldGet(this, __contexts).slice(0); }
     // --------------------------------------------------------------------------------------------------------------------
-    ///// <summary>
-    ///// Get the current instance or a parent instance that is a subject context (<see cref="SubjectContext"/> instance).
-    ///// </summary>
+    ///**
+    * // Get the current instance or a parent instance that is a subject context (<see cref="SubjectContext"/> instance).
+    //*/
     //x public bool IsSubjectContext => this is SubjectContext;
-    ///// <summary> Returns true if this object is question context (<see cref="QuestionContext"/> instance). </summary>
+    ///** Returns true if this object is question context (<see cref="QuestionContext"/> instance). */
     ///// <value> A true or false value. </value>
     //x public bool IsQuestionContext => this is QuestionContext;
-    /// <summary> 
-    /// The action (verbs) of a statement in regards to the subjects. For example, "is" or "are" is a claim one or more
-    /// things is like something else (i.e. John is nice), or as part of a question (who are they? what time is it?). 
-    /// Other examples may be "John *drove* away" or "Pat *ran* to the store.".
-    /// </summary>
-    get Actions() { return this.get(ActionContext_1.default); }
-    /// <summary>
-    /// True if this context has actions (typically because of verbs).
-    /// </summary>
+    /**
+     *  The action (verbs) of a statement in regards to the subjects. For example, "is" or "are" is a claim one or more
+     *  things is like something else (i.e. John is nice), or as part of a question (who are they? what time is it?).
+     *  Other examples may be "John *drove* away" or "Pat *ran* to the store.".
+    */
+    get() { }
+    Actions() { return this.get(ActionContext_1.default); }
+    /**
+     *  True if this context has actions (typically because of verbs).
+    */
     get HasActions() { var _a, _b; return (_b = (_a = this.get(ActionContext_1.default)) === null || _a === void 0 ? void 0 : _a.hasItems) !== null && _b !== void 0 ? _b : false; }
-    /// <summary>
-    /// Associates descriptive attributes for this context.
-    /// These contexts typically determine how something is like another.
-    /// </summary>
+    /**
+     *  Associates descriptive attributes for this context.
+     *  These contexts typically determine how something is like another.
+    */
     get Attributes() { return __classPrivateFieldGet(this, __Attributes); }
     ;
-    /// <summary>
-    /// True if this context has attributes (typically because of adjectives).
-    /// </summary>
+    /**
+     *  True if this context has attributes (typically because of adjectives).
+    */
     get HasAttributes() { var _a, _b; return (_b = (_a = this.get(AttributeContext_1.default)) === null || _a === void 0 ? void 0 : _a.hasItems) !== null && _b !== void 0 ? _b : false; }
-    /// <summary>
-    /// Associates contexts that modify this context (such as frequency, time constraints, speed, etc.).
-    /// The most common is the frequency context, which use used with the determiner concept (i.e. "the" or "a", etc.).
-    /// </summary>
+    /**
+     *  Associates contexts that modify this context (such as frequency, time constraints, speed, etc.).
+     *  The most common is the frequency context, which use used with the determiner concept (i.e. "the" or "a", etc.).
+    */
     get Modifiers() { return __classPrivateFieldGet(this, __Modifiers); }
-    /// <summary>
-    /// True if this context has modifiers (typically because of adverbs).
-    /// </summary>
+    /**
+     *  True if this context has modifiers (typically because of adverbs).
+    */
     get HasModifiers() { var _a, _b; return (_b = (_a = this.get(ModifierContext_1.default)) === null || _a === void 0 ? void 0 : _a.hasItems) !== null && _b !== void 0 ? _b : false; }
-    /// <summary>
-    /// Associates contexts that modify this context (such as frequency, time constraints, speed, etc.).
-    /// The most common is the frequency context, which use used with the determiner concept (i.e. "the" or "a", etc.).
-    /// </summary>
+    /**
+     *  Associates contexts that modify this context (such as frequency, time constraints, speed, etc.).
+     *  The most common is the frequency context, which use used with the determiner concept (i.e. "the" or "a", etc.).
+    */
     get Questions() { return __classPrivateFieldGet(this, __Questions); }
-    /// <summary>
-    /// True if this context has modifiers (typically because of adverbs).
-    /// </summary>
+    /**
+     *  True if this context has modifiers (typically because of adverbs).
+    */
     get HasQuestions() { var _a, _b; return (_b = (_a = this.get(QuestionContext_1.default)) === null || _a === void 0 ? void 0 : _a.hasItems) !== null && _b !== void 0 ? _b : false; }
-    /// <summary> Determines if there is a question context associated with the given question word. </summary>
+    /** Determines if there is a question context associated with the given question word. */
     /// <param name="question"> The question word to check for. </param>
     /// <returns> True if the question is in the context, and false if not. </returns>
     HasQuestion(question) {
@@ -175,7 +176,7 @@ class Context extends TimeReferencedObject_1.default {
         }
         return this;
     }
-    /// <summary> Enumerates the contexts of a given type and returns them in a new collection object. </summary>
+    /** Enumerates the contexts of a given type and returns them in a new collection object. */
     /// <param name="contextType"> The context type to find. </param>
     /// <returns> An enumerator that allows enumerating over the matched items. </returns>
     get(contextType) {
@@ -183,7 +184,7 @@ class Context extends TimeReferencedObject_1.default {
         return existingCollection ? new ContextCollection(contextType, existingCollection) : null;
     }
     // --------------------------------------------------------------------------------------------------------------------
-    /// <summary> Enumerates this collection for all contexts of type <typeparamref name="T"/>. </summary>
+    /** Enumerates this collection for all contexts of type <typeparamref name="T"/>. */
     /// <typeparam name="T"> The context types to include in the enumeration. </typeparam>
     /// <param name="includeGroups"> (Optional) True to include grouped contexts in the search. </param>
     /// <returns> An enumeration of all contexts found matching type <typeparamref name="T"/>. </returns>
@@ -197,25 +198,15 @@ class Context extends TimeReferencedObject_1.default {
         //    foreach (var s in Parent.FlattenSubjects())
         //        yield return s;
     }
-    // --------------------------------------------------------------------------------------------------------------------
-    ///// <summary>
-    ///// Get the current instance or a parent instance that is a context of the requested type, or null if nothing was found.
-    ///// </summary>
-    //public T GetContext<T>() where T : Context
-    //{
-    //    return (this is T) ? (T)this : Parent?.GetContext<T>();
-    //}
-    ///// <summary>
-    ///// Ignores the current instance and looks for a parent instance that is a context of the requested type, or null if nothing was found.
-    ///// </summary>
+    //*/
     //public T GetParentContext<T>() where T : Context
     //{
     //    return Parent?.GetContext<T>();
     //}
     // --------------------------------------------------------------------------------------------------------------------
-    ///// <summary>
-    ///// Create a split point from this scene to process separately, but in relation to this one.
-    ///// </summary>
+    ///**
+    * // Create a split point from this scene to process separately, but in relation to this one.
+    //*/
     //? public virtual Context Fork()
     //{
     //    var s = new Context(Memory, this);
@@ -225,9 +216,9 @@ class Context extends TimeReferencedObject_1.default {
     //    return s;
     //}
     // --------------------------------------------------------------------------------------------------------------------
-    /// <summary>
-    /// Attempts to detect and remove the given context object from any of the context collections it should belong to.
-    /// </summary>
+    /**
+     *  Attempts to detect and remove the given context object from any of the context collections it should belong to.
+    */
     remove(context) {
         if (context == null)
             return false;

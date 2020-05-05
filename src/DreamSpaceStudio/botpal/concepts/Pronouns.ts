@@ -5,9 +5,9 @@ using System.Text;
 
 namespace BotPal.Concepts
 {
-    /// <summary>
-    /// A concept to understand and handle pronouns.
-    /// </summary>
+    /**
+     *  A concept to understand and handle pronouns.
+    */
     [Concept]
     export default class PronounsConcept extends Concept
     {

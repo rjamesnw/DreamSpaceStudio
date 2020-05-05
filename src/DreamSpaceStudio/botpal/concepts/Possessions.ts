@@ -9,25 +9,25 @@ namespace BotPal
     public enum PossessionTypes
     {
         Unspecified,
-        /// <summary>
-        /// The subject(s) HAS something.
-        /// </summary>
+        /**
+         *  The subject(s) HAS something.
+        */
         ToHave,
-        /// <summary>
-        /// The subject(s) OWN something.
-        /// </summary>
+        /**
+         *  The subject(s) OWN something.
+        */
         ToOwn
     }
 
-    /// <summary>
-    /// Holds connection and relationship information between concepts.
-    /// </summary>
+    /**
+     *  Holds connection and relationship information between concepts.
+    */
     [Concept]
     export default class PossessionsConcept extends Concept
     {
-        /// <summary>
-        /// The subject that is the end point of this frequency modifier, which as such, is related to the source subject.
-        /// </summary>
+        /**
+         *  The subject that is the end point of this frequency modifier, which as such, is related to the source subject.
+        */
         public readonly Concept Target;
 
         public PossessionTypes PossessionType;

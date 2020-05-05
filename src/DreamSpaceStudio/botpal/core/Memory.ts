@@ -13,16 +13,16 @@ export default class Memory implements IMemoryObject {
 
     get memory() { return this; }
 
-    /// <summary>
-    /// The dictionary holds both the RAW text, without context (no duplicates), and various 'DictionaryEntry' instances,
-    /// which both link to the raw text, along with some contextual parameters for the text ('DictionaryEntry' items CAN
-    /// reference the same text among them).
-    /// </summary>
+    /**
+     *  The dictionary holds both the RAW text, without context (no duplicates), and various 'DictionaryEntry' instances,
+     *  which both link to the raw text, along with some contextual parameters for the text ('DictionaryEntry' items CAN
+     *  reference the same text among them).
+    */
     readonly Dictionary: Dictionary;
 
-    ///// <summary>
-    ///// A list of all neural nodes in the memory.
-    ///// </summary>
+    ///**
+     * // A list of all neural nodes in the memory.
+    //*/
     //? public readonly SortedSet<NeuralNode> NeuralNodes = new SortedSet<NeuralNode>(TimeReferencedObject.DefaultComparer);
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -34,9 +34,9 @@ export default class Memory implements IMemoryObject {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Returns a count of all possible combinations 
-    /// </summary>
+    /**
+     *  Returns a count of all possible combinations 
+    */
     /// <param name="matchesList"></param>
     /// <returns></returns>
     public int GetCombinationCount(IList <Match <DictionaryItem > [] > matchesList) //?
@@ -48,10 +48,10 @@ export default class Memory implements IMemoryObject {
     return count;
 }
 
-        /// <summary>
-        /// Uses a yield-return method to return the best combinations first, allowing the caller to stop at any point when 
-        /// enough is received, or enough time has elapsed.
-        /// </summary>
+        /**
+         *  Uses a yield-return method to return the best combinations first, allowing the caller to stop at any point when 
+         *  enough is received, or enough time has elapsed.
+        */
         /// <param name="matchesList">A list of matches for each text part the user entered.  Each match array item in the list
         /// corresponds to the same text part (usually from user input), but different possible dictionary item (context) matches.</param>
         public IEnumerable < Match < DictionaryItem > [] > GetCombinations(IList < Match < DictionaryItem > [] > matchesList) // TODO: There is error in this logic!!!

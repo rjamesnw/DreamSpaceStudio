@@ -1,36 +1,36 @@
 ﻿import { IEquality, Comparer } from "./Comparer";
 import { bool } from "aws-sdk/clients/signer";
 
-/// <summary>
-/// Represents a slice of time sequence.  This value also maintains a global sequence counter that makes sure the subsequent fast calls - where
-/// the time elapsed may be 0 - are kept in order.  No two new/updated time references should ever be equal.
-/// </summary>
+/**
+ *  Represents a slice of time sequence.  This value also maintains a global sequence counter that makes sure the subsequent fast calls - where
+ *  the time elapsed may be 0 - are kept in order.  No two new/updated time references should ever be equal.
+*/
 export default class TimeReference implements IEquality {
-    /// <summary>
-    /// Returns a new 'TimeReference' value set to the current time and next sequence count.
-    /// </summary>
+    /**
+     *  Returns a new 'TimeReference' value set to the current time and next sequence count.
+    */
     static getCurrentTime(): TimeReference { return new TimeReference(); }
 
-    /// <summary>
-    /// A counter is used to maintain a global input sequence in case the time lapse is too short between requests.
-    /// </summary>
+    /**
+     *  A counter is used to maintain a global input sequence in case the time lapse is too short between requests.
+    */
     static readonly _seqenceIDCounter = 1;
 
-    /// <summary>
-    /// Each neuron carries a time stamp (sense of time) for its relation to each other, and to tell how "old" it is.
-    /// This can help with sorting through them in effort to quickly pull information more pertinent to the current time, then working backwards.
-    /// </summary>
+    /**
+     *  Each neuron carries a time stamp (sense of time) for its relation to each other, and to tell how "old" it is.
+     *  This can help with sorting through them in effort to quickly pull information more pertinent to the current time, then working backwards.
+    */
     public readonly Timestamp: number;
 
-    /// <summary>
-    /// In relation to the time stamp, each neuron also stores a sequence ID in effort to make sure the right storage order is kept.
-    /// This is required when a "burst" of information, such as a text string, is supplied, where any sense of time is not available.
-    /// </summary>
+    /**
+     *  In relation to the time stamp, each neuron also stores a sequence ID in effort to make sure the right storage order is kept.
+     *  This is required when a "burst" of information, such as a text string, is supplied, where any sense of time is not available.
+    */
     public readonly SeqenceID: number;
 
-    /// <summary>
-    /// Initializes a new time reference.
-    /// </summary>
+    /**
+     *  Initializes a new time reference.
+    */
     /// <param name="ticks">Set this to a '{DateTime}.Ticks' value, or leave out to use the current UTC date/time.</param>
     constructor(ticks?: number) {
         this.Timestamp = ticks ?? Date.now();

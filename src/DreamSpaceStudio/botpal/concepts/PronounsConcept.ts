@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace BotPal.Concepts
 {
-    /// <summary>
-    /// Handles common known nouns.
-    /// </summary>
+    /**
+     *  Handles common known nouns.
+    */
     export default class PronounsConceptConcept extends Concept
     {
         // --------------------------------------------------------------------------------------------------------------------

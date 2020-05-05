@@ -35,10 +35,10 @@ class ThoughtGraphNode extends Node_1.default {
     static CreateSubjectGroup(part = null) { return new ThoughtGraphNode(this.CreateSubjectGroupDictionaryItem(part)); }
     // --------------------------------------------------------------------------------------------------------------------
     get root() { return super.root; }
-    /// <summary>
-    ///     The part of speech that this node classifies under.  This is a generalization that may be different than the
-    ///     associated word (such as for groups).
-    /// </summary>
+    /**
+     *      The part of speech that this node classifies under.  This is a generalization that may be different than the
+     *      associated word (such as for groups).
+    */
     get generalPOS() { var _a, _b; return (_a = __classPrivateFieldGet(this, __generalPOS)) !== null && _a !== void 0 ? _a : (_b = this.word) === null || _b === void 0 ? void 0 : _b.pos; }
     set generalPOS(value) { __classPrivateFieldSet(this, __generalPOS, value); }
     get isEmpty() { return (!this.word || this.word.textPart.equals(null)) && !this.isGroup; }
@@ -52,16 +52,16 @@ class ThoughtGraphNode extends Node_1.default {
      * @returns
      */
     get isConjunction() { return this.generalPOS == POS_1.default.Conjunction; }
-    /// <summary>
-    ///     Associations are boundaries where verbs (such as "is/are") connect a subject to another area of the thought graph.
-    ///     These "areas" may each have their own subjects, and as such, a subject search with each area should only return the
-    ///     subject for that area.
-    ///     <para>Example 1: For a sentence such as "John has brown eyes and Jane has blue eyes", "and" is the association
-    ///     (conjunction), and either side of it are the subjects "John" and "Jane". </para>
-    ///     <para>Example 2: For a sentence such as "Peter has a car, above which a bird flies.", "above" is the association
-    ///     (preposition), and either side of it are the subjects "Car" and "Bird"; however, "has" is ALSO an association,
-    ///     where either side are the subjects "Peter" and "Car". </para>
-    /// </summary>
+    /**
+     *      Associations are boundaries where verbs (such as "is/are") connect a subject to another area of the thought graph.
+     *      These "areas" may each have their own subjects, and as such, a subject search with each area should only return the
+     *      subject for that area.
+     *      <para>Example 1: For a sentence such as "John has brown eyes and Jane has blue eyes", "and" is the association
+     *      (conjunction), and either side of it are the subjects "John" and "Jane". </para>
+     *      <para>Example 2: For a sentence such as "Peter has a car, above which a bird flies.", "above" is the association
+     *      (preposition), and either side of it are the subjects "Car" and "Bird"; however, "has" is ALSO an association,
+     *      where either side are the subjects "Peter" and "Car". </para>
+    */
     /// <value> A true or false value. </value>
     get isAssociation() {
         if (__classPrivateFieldGet(this, __generalPOS).equals(POS_1.default.Verb))
@@ -87,19 +87,19 @@ class ThoughtGraphNode extends Node_1.default {
         return pos;
     }
     // --------------------------------------------------------------------------------------------------------------------
-    /// <summary>
-    ///     Attaches the word as a child to this node. Note: This forces an attachment.  No check is performed, so it is assumed
-    ///     the caller knows what they are doing.
-    /// </summary>
+    /**
+     *      Attaches the word as a child to this node. Note: This forces an attachment.  No check is performed, so it is assumed
+     *      the caller knows what they are doing.
+    */
     /// <param name="word"> . </param>
     /// <returns> The new <see cref="ThoughtGraphNode"/> added. </returns>
     attach(word) {
         return super.attach(new ThoughtGraphNode(word));
     }
-    /// <summary>
-    ///     Replaces this node with the given node and attaches the current node as a child to the new parent node. Note: This
-    ///     forces an attachment.  No check is performed, so it is assumed the caller knows what they are doing.
-    /// </summary>
+    /**
+     *      Replaces this node with the given node and attaches the current node as a child to the new parent node. Note: This
+     *      forces an attachment.  No check is performed, so it is assumed the caller knows what they are doing.
+    */
     /// <param name="word"> . </param>
     /// <returns> The new <see cref="ThoughtGraphNode"/> created. </returns>
     attachAsParent(word) {
@@ -117,11 +117,11 @@ class ThoughtGraphNode extends Node_1.default {
         return newNode;
     }
     // --------------------------------------------------------------------------------------------------------------------
-    /// <summary>
-    ///     Finds the best place to add the given word (or symbol). This method determines if this node is the best place.  For
-    ///     example, if an adjective is given, and the current node represents a determiner, then a subject will be searched for
-    ///     instead. The returned node is the node the word was actually added to (which of course may not be the current node).
-    /// </summary>
+    /**
+     *      Finds the best place to add the given word (or symbol). This method determines if this node is the best place.  For
+     *      example, if an adjective is given, and the current node represents a determiner, then a subject will be searched for
+     *      instead. The returned node is the node the word was actually added to (which of course may not be the current node).
+    */
     /// <param name="word"> The dictionary item to search for. </param>
     /// <returns> A ThoughtGraphNode. </returns>
     Add(word) {
@@ -269,7 +269,7 @@ class ThoughtGraphNode extends Node_1.default {
             return (depth < 0 || depth > 0) ? (_g = this.parent) === null || _g === void 0 ? void 0 : _g.FindInParents(item, true, includeSiblings, includeConjunctions, depth - 1, exclude) : null;
         }
     }
-    /// <summary> Searches the child nodes for a match to the given dictionary word item. </summary>
+    /** Searches the child nodes for a match to the given dictionary word item. */
     /// <param name="word"> The dictionary item to search for. </param>
     /// <param name="includeThis"> (Optional) If true, then the current instance is included (default is false). </param>
     /// <param name="includeSiblings">

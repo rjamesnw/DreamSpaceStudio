@@ -18,16 +18,16 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
 
     get root(): ThoughtGraphNode { return super.root; }
 
-    /// <summary>
-    /// A word (or symbol or other text) that is the subject of this node in the graph.
-    /// This is set to the detected "word" in the user's request.
-    /// </summary>
+    /**
+     *  A word (or symbol or other text) that is the subject of this node in the graph.
+     *  This is set to the detected "word" in the user's request.
+    */
     word: DictionaryItem;
 
-    /// <summary>
-    ///     The part of speech that this node classifies under.  This is a generalization that may be different than the
-    ///     associated word (such as for groups).
-    /// </summary>
+    /**
+     *      The part of speech that this node classifies under.  This is a generalization that may be different than the
+     *      associated word (such as for groups).
+    */
     get generalPOS(): PartOfSpeech { return this.#_generalPOS ?? this.word?.pos; }
     set generalPOS(value: PartOfSpeech) { this.#_generalPOS = value; }
     #_generalPOS: PartOfSpeech;
@@ -50,16 +50,16 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
      */
     get isConjunction() { return this.generalPOS == POS.Conjunction; }
 
-    /// <summary>
-    ///     Associations are boundaries where verbs (such as "is/are") connect a subject to another area of the thought graph.
-    ///     These "areas" may each have their own subjects, and as such, a subject search with each area should only return the
-    ///     subject for that area.
-    ///     <para>Example 1: For a sentence such as "John has brown eyes and Jane has blue eyes", "and" is the association
-    ///     (conjunction), and either side of it are the subjects "John" and "Jane". </para>
-    ///     <para>Example 2: For a sentence such as "Peter has a car, above which a bird flies.", "above" is the association
-    ///     (preposition), and either side of it are the subjects "Car" and "Bird"; however, "has" is ALSO an association,
-    ///     where either side are the subjects "Peter" and "Car". </para>
-    /// </summary>
+    /**
+     *      Associations are boundaries where verbs (such as "is/are") connect a subject to another area of the thought graph.
+     *      These "areas" may each have their own subjects, and as such, a subject search with each area should only return the
+     *      subject for that area.
+     *      <para>Example 1: For a sentence such as "John has brown eyes and Jane has blue eyes", "and" is the association
+     *      (conjunction), and either side of it are the subjects "John" and "Jane". </para>
+     *      <para>Example 2: For a sentence such as "Peter has a car, above which a bird flies.", "above" is the association
+     *      (preposition), and either side of it are the subjects "Car" and "Bird"; however, "has" is ALSO an association,
+     *      where either side are the subjects "Peter" and "Car". </para>
+    */
     /// <value> A true or false value. </value>
     get isAssociation() {
         if (this.#_generalPOS.equals(POS.Verb)) return true;
@@ -92,20 +92,20 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    ///     Attaches the word as a child to this node. Note: This forces an attachment.  No check is performed, so it is assumed
-    ///     the caller knows what they are doing.
-    /// </summary>
+    /**
+     *      Attaches the word as a child to this node. Note: This forces an attachment.  No check is performed, so it is assumed
+     *      the caller knows what they are doing.
+    */
     /// <param name="word"> . </param>
     /// <returns> The new <see cref="ThoughtGraphNode"/> added. </returns>
     attach(word: DictionaryItem): ThoughtGraphNode {
         return super.attach(new ThoughtGraphNode(word));
     }
 
-    /// <summary>
-    ///     Replaces this node with the given node and attaches the current node as a child to the new parent node. Note: This
-    ///     forces an attachment.  No check is performed, so it is assumed the caller knows what they are doing.
-    /// </summary>
+    /**
+     *      Replaces this node with the given node and attaches the current node as a child to the new parent node. Note: This
+     *      forces an attachment.  No check is performed, so it is assumed the caller knows what they are doing.
+    */
     /// <param name="word"> . </param>
     /// <returns> The new <see cref="ThoughtGraphNode"/> created. </returns>
     attachAsParent(word: DictionaryItem): ThoughtGraphNode {
@@ -129,11 +129,11 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    ///     Finds the best place to add the given word (or symbol). This method determines if this node is the best place.  For
-    ///     example, if an adjective is given, and the current node represents a determiner, then a subject will be searched for
-    ///     instead. The returned node is the node the word was actually added to (which of course may not be the current node).
-    /// </summary>
+    /**
+     *      Finds the best place to add the given word (or symbol). This method determines if this node is the best place.  For
+     *      example, if an adjective is given, and the current node represents a determiner, then a subject will be searched for
+     *      instead. The returned node is the node the word was actually added to (which of course may not be the current node).
+    */
     /// <param name="word"> The dictionary item to search for. </param>
     /// <returns> A ThoughtGraphNode. </returns>
     Add(word: DictionaryItem): ThoughtGraphNode {
@@ -284,10 +284,10 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    ///// <summary>
-    /////     Converts the current node to a group, if not already a group, by making sure the parent is a group node, and then
-    /////     adds the given node.
-    ///// </summary>
+    ///**
+     * //     Converts the current node to a group, if not already a group, by making sure the parent is a group node, and then
+    // *      adds the given node.
+    //*/
     ///// <param name="groupPOS"> The group position. </param>
     ///// <param name="newNode"> . </param>
     ///// <returns> The current node, or if converted to a group, the group node. </returns>
@@ -308,7 +308,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary> Searches the parent nodes for a match to the given dictionary word item. </summary>
+    /** Searches the parent nodes for a match to the given dictionary word item. */
     /// <param name="word"> The dictionary item to search for. </param>
     /// <param name="includeThis"> (Optional) If true, then the current instance is included (default is false). </param>
     /// <param name="includeSiblings">
@@ -324,10 +324,10 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     /// <returns> The found in parents. </returns>
     FindInParents(word: DictionaryItem, includeThis: boolean, includeSiblings: boolean, includeConjunctions: boolean, depth: number, exclude?: ThoughtGraphNode): ThoughtGraphNode;
 
-    /// <summary>
-    ///     Searches the parent nodes for a match to the given part of speech classification.
-    ///     <para>Warning: Tense type and plurality is not considered.</para>
-    /// </summary>
+    /**
+     *      Searches the parent nodes for a match to the given part of speech classification.
+     *      <para>Warning: Tense type and plurality is not considered.</para>
+    */
     /// <param name="pos"> The type of node (word classification) to search for. </param>
     /// <param name="includeThis"> (Optional) If true, then the current instance is included (default is false). </param>
     /// <param name="includeSiblings">
@@ -373,7 +373,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
         }
     }
 
-    /// <summary> Searches the child nodes for a match to the given dictionary word item. </summary>
+    /** Searches the child nodes for a match to the given dictionary word item. */
     /// <param name="word"> The dictionary item to search for. </param>
     /// <param name="includeThis"> (Optional) If true, then the current instance is included (default is false). </param>
     /// <param name="includeSiblings">
@@ -389,17 +389,17 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     /// <returns> The found in children. </returns>
     FindInChildren(word: DictionaryItem, includeThis?: boolean, includeSiblings?: boolean, includeConjunctions?: boolean, depth?: number, exclude?: ThoughtGraphNode): ThoughtGraphNode;
 
-    /// <summary>
-    ///     Searches the child nodes for a match to the given part of speech classification.
-    ///     <para>Warning: Tense type and plurality is not considered.</para>
-    /// </summary>
+    /**
+     *      Searches the child nodes for a match to the given part of speech classification.
+     *      <para>Warning: Tense type and plurality is not considered.</para>
+    */
     /// <param name="pos"> The type of node (word classification) to search for. </param>
     /// <param name="includeThis"> (Optional) If true, then the current instance is included (default is false). </param>
     /// <param name="depth"> (Optional) How many children deep to run the search. Enabled if value is > 0. </param>
     /// <returns> The found in children. </returns>
     FindInChildren(pos: PartOfSpeech, includeThis?: boolean, includeSiblings?: boolean, includeConjunctions?: boolean, depth?: number, exclude?: ThoughtGraphNode): ThoughtGraphNode;
 
-    /// <summary> Searches the child nodes for a match to the given dictionary word item. </summary>
+    /** Searches the child nodes for a match to the given dictionary word item. */
     /// <param name="word"> The dictionary item to search for. </param>
     /// <param name="includeThis"> (Optional) If true, then the current instance is included (default is false). </param>
     /// <param name="includeSiblings">
@@ -457,10 +457,10 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
         }
     }
 
-    /// <summary>
-    ///     Searches the parent AND child nodes (in that order) for a match to the given part of speech classification.
-    ///     <para>Warning: Tense type and plurality is not considered.</para>
-    /// </summary>
+    /**
+     *      Searches the parent AND child nodes (in that order) for a match to the given part of speech classification.
+     *      <para>Warning: Tense type and plurality is not considered.</para>
+    */
     /// <param name="generalPOS"> The type of node (word classification) to search for. </param>
     /// <param name="includeThis"> (Optional) If true, then the current instance is included (default is false). </param>
     /// <param name="includeSiblings">
@@ -476,7 +476,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     /// <returns> The found in children. </returns>
     FindTopFirst(generalPOS: PartOfSpeech, includeThis?: boolean, includeSiblings?: boolean, includeConjunctions?: boolean, depth?: number): ThoughtGraphNode;
 
-    /// <summary> Searches the parent AND child nodes (in that order) for a match to the given dictionary word item. </summary>
+    /** Searches the parent AND child nodes (in that order) for a match to the given dictionary word item. */
     /// <param name="word"> The dictionary item to search for. </param>
     /// <param name="includeThis"> (Optional) If true, then the current instance is included (default is false). </param>
     /// <param name="includeSiblings">
@@ -501,7 +501,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     }
 
 
-    /// <summary> Searches the child nodes AND parent (in that order) for a match to the given dictionary word item. </summary>
+    /** Searches the child nodes AND parent (in that order) for a match to the given dictionary word item. */
     /// <param name="word"> The dictionary item to search for. </param>
     /// <param name="includeThis"> (Optional) If true, then the current instance is included (default is false). </param>
     /// <param name="includeSiblings">
@@ -517,10 +517,10 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     /// <returns> The found in children. </returns>
     FindBottomFirst(word: DictionaryItem, includeThis?: boolean, includeSiblings?: boolean, includeConjunctions?: boolean, depth?: number): ThoughtGraphNode;
 
-    /// <summary>
-    ///     Searches the child nodes AND parent (in that order) for a match to the given part of speech classification.
-    ///     <para>Warning: Tense type and plurality is not considered.</para>
-    /// </summary>
+    /**
+     *      Searches the child nodes AND parent (in that order) for a match to the given part of speech classification.
+     *      <para>Warning: Tense type and plurality is not considered.</para>
+    */
     /// <param name="generalPOS"> The type of node (word classification) to search for. </param>
     /// <param name="includeThis"> (Optional) If true, then the current instance is included (default is false). </param>
     /// <param name="includeSiblings">

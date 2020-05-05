@@ -1,8 +1,18 @@
 "use strict";
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to get private field on non-instance");
+    }
+    return privateMap.get(receiver);
+};
+var __operations, __isShuttingDown, __isStopped;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Thread = void 0;
 const Memory_1 = require("./Memory");
+const cluster_1 = require("cluster");
 const Response_1 = require("../core/Response");
+const Tasks_1 = require("./Tasks");
+const Operation_1 = require("./Operation");
 class Thread {
 }
 exports.Thread = Thread;
@@ -12,79 +22,59 @@ class Brain {
         // --------------------------------------------------------------------------------------------------------------------
         this.LanguageParsingRegex = new RegExp("\".*?\"|'.*?'|[A-Za-z']+|[0-9]+|\\s+|.", 'm');
         //? public Thought Thought; // (this should never be null when a brain is loaded, as thoughts are historical; otherwise this is a brand new brain, and this can be null)
-        this._Tasks = new Array();
+        this._Tasks = [];
         this._DelayedTasks = new Map();
+        __operations.set(this, []);
+        __isShuttingDown.set(this, void 0);
+        __isStopped.set(this, void 0);
     }
+    // --------------------------------------------------------------------------------------------------------------------
+    /**
+     *  Root operations to run in parallel; however, each operation can have chained operations, which are sequential.
+     *  <para>Note: because the operations are executed in a thread, you must used the locker returned from 'OperationsLocker'.
+     *  If any operation instance is in a "completed" state however, no locking is required.</para>
+    */
+    get Operations() { return __classPrivateFieldGet(this, __operations); }
+    /**
+     *  Set to true internally when 'Stop()' is called.
+    */
+    get IsShuttingDown() { return __classPrivateFieldGet(this, __isShuttingDown); }
+    /**
+     *  Set to true internally after 'Stop()' is called and the brain has completed the shutdown process.
+    */
+    get IsStopped() { return __classPrivateFieldGet(this, __isStopped); }
+    DoResponse(Response, response) {
+        if (Response != null)
+            if (_SynchronizationContext != null) {
+                var taskSource = new TaskCompletionSource();
+                _SynchronizationContext.Send(async (_) => { await Response.Invoke(this, response); taskSource.SetResult(true); }, null);
+                await taskSource.Task;
+            }
+            else
+                await Response.Invoke(this, response); // (called directly from this thread as a last resort)
+        //else
+        //{
+        //    // ... try other attempts ...
+        //    Dispatcher dispatcher = Dispatcher.FromThread(_MainThread);
+        //    if (dispatcher != null)
+        //    {
+        //        // We know the thread have a dispatcher that we can use.
+        //        dispatcher.BeginInvoke((Action)(() => Response?.Invoke(this, response)));
+        //    }
+        //    else if (Application.Current != null && !Application.Current.Dispatcher.CheckAccess())
+        //    {
+        //        Application.Current.Dispatcher.BeginInvoke((Action)(() => Response?.Invoke(this, response)));
+        //    }
+        //    else Response?.Invoke(this, response); // (called directly from this thread as a last resort)
+        //}
+    }
+    DoResponse(string, response) { }
+    DoResponse(, Response) { }
 }
 exports.default = Brain;
-{
-    get;
-    {
-        lock(_Operations);
-        return _Operations.ToArray();
-    }
-}
-internal;
-List < Operation > _Operations;
-new List();
-Locker;
-OperationsLocker;
-{
-    get;
-    {
-        return GetLocker("Operations", "ProcessLoop");
-    }
-}
-bool;
-IsShuttingDown;
-{
-    get;
-    internal;
-    set;
-}
-bool;
-IsStopped;
-{
-    get;
-    internal;
-    set;
-}
-event;
-ResponseHandler;
-Response_1.default;
-virtual;
-async;
-Task;
-DoResponse(Response_1.default, response);
-{
-    if (Response_1.default != null)
-        if (_SynchronizationContext != null) {
-            var taskSource = new TaskCompletionSource();
-            _SynchronizationContext.Send(async (_) => { await Response_1.default.Invoke(this, response); taskSource.SetResult(true); }, null);
-            await taskSource.Task;
-        }
-        else
-            await Response_1.default.Invoke(this, response); // (called directly from this thread as a last resort)
-    //else
-    //{
-    //    // ... try other attempts ...
-    //    Dispatcher dispatcher = Dispatcher.FromThread(_MainThread);
-    //    if (dispatcher != null)
-    //    {
-    //        // We know the thread have a dispatcher that we can use.
-    //        dispatcher.BeginInvoke((Action)(() => Response?.Invoke(this, response)));
-    //    }
-    //    else if (Application.Current != null && !Application.Current.Dispatcher.CheckAccess())
-    //    {
-    //        Application.Current.Dispatcher.BeginInvoke((Action)(() => Response?.Invoke(this, response)));
-    //    }
-    //    else Response?.Invoke(this, response); // (called directly from this thread as a last resort)
-    //}
-}
-virtual;
-Task;
-DoResponse(string, response);
-DoResponse(new Response_1.default(response));
+__operations = new WeakMap(), __isShuttingDown = new WeakMap(), __isStopped = new WeakMap();
+(response);
+;
 async;
 Task;
 Say(string, text, string, voiceCode = null);
@@ -93,7 +83,15 @@ Say(string, text, string, voiceCode = null);
         TTSService = new DefaultTTSService();
     await TTSService.Say(text, voiceCode);
 }
-Brain(SynchronizationContext, synchronizationContext = null, bool, configureConcepts = true);
+// --------------------------------------------------------------------------------------------------------------------
+/**
+ *  Creates a new brain.
+*/
+/// <param name="synchronizationContext">A SynchronizationContext instance to use to allow the Brain to synchronize events in context with the main thread.
+/// This should be available for both WinForms and WPF.  If not specified, and it cannot be detected, the events will be called directly from worker threads.
+/// <para>Note: Auto-detection reads from 'SynchronizationContext.Current', which means, if used, the constructor must be called on the main UI thread.</para></param>
+/// <param name="configureConcepts">If true (default), then all concepts defined in this assembly are added to the brain.</param>
+constructor(synchronizationContext, cluster_1.Worker = null, configureConcepts = true);
 {
     _MainThread = Thread.CurrentThread;
     _SynchronizationContext = synchronizationContext !== null && synchronizationContext !== void 0 ? synchronizationContext : SynchronizationContext.Current; // (supported both in WinForms AND WPF!)
@@ -142,6 +140,51 @@ GetConcept();
 where;
 T: Concept => (T);
 _Concepts.Value(typeof (T));
+///**
+    *
+// Registers a concept for given text to watch for, and also creates and returns the dictionary word that will be associated with the watched text.
+    //*/
+    ///// <param name="concept">The concept to register.</param>
+    ///// <param name="textpart">The text that will trigger the concept.</param>
+    ///// <param name="pos">The part of speech for the text (usually for words).</param>
+    ///// <param name="tense">The tense for the text (usually for words).</param>
+    ///// <param name="plurality">The plurality of the text (usually for words).</param>
+    //internal DictionaryItem _RegisterConcept(Concept concept, string textpart, PartOfSpeech pos, TenseTypes tense = TenseTypes.NA, Plurality plurality = Plurality.NA)
+    //{
+    //    string grpKey = TextPart.ToGroupKey(textpart);
+    //    DictionaryItem dicItem = null;
+    //    if (!string.IsNullOrEmpty(textpart))
+    //    {
+    //        dicItem = FindEntry(grpKey, pos, tense, plurality) ?? AddTextPart(textpart, pos, tense, plurality);
+    //        if (!dicItem._Concepts.Contains(concept))
+    //            dicItem._Concepts.Add(concept);
+    //    }
+    //    var concepts = _Concepts.Value(grpKey);
+    //    if (concepts == null)
+    //    {
+    //        _Concepts[grpKey] = concepts = new List<Concept>();
+    //        concepts.Add(concept);
+    //        dicItem?._Concepts.Add(concept);
+    //    }
+    //    else if (!concepts.Contains(concept))
+    //    {
+    //        concepts.Add(concept);
+    //        dicItem?._Concepts.Add(concept);
+    //    }
+    //    return dicItem;
+    //}
+    ///**
+    * // Find and return an array of concepts that match the given text part.
+        // *  The 'textpart' text is normalized as needed to return a list of concepts the seem to match the visual look of the text, and not necessarily the specific characters themselves.
+        //*/
+        //public Concept[] GetConcepts(string textpart)
+        //{
+        //    var grpKey = TextPart.ToGroupKey(textpart);
+        //    var concepts = _Concepts.Value(grpKey);
+        //    return concepts.ToArray();
+        //}
+        // --------------------------------------------------------------------------------------------------------------------
+        public;
 Match < ConceptContext > [];
 FindConceptContexts(string, text, double, threshold = 0.8);
 {
@@ -164,12 +207,12 @@ void Stop(bool, wait = true);
 // --------------------------------------------------------------------------------------------------------------------
 async;
 Task;
-_ProcessOperations(BrainTask, btask);
+_ProcessOperations(Tasks_1.default, btask);
 {
     if (btask != null) {
-        Operation[];
+        Operation_1.default[];
         ops;
-        Operation;
+        Operation_1.default;
         op;
         using(OperationsLocker.WriteLock());
         {
@@ -199,27 +242,27 @@ _ProcessOperations(BrainTask, btask);
     else
         IsStopped = true;
 }
-void AddOperation(Operation, op);
+void AddOperation(Operation_1.default, op);
 {
     lock(_Operations);
     if (!_Operations.Contains(op))
         _Operations.Add(op);
 }
-BrainTask;
+Tasks_1.default;
 CreateEmptyTask();
 {
-    var btask = new BrainTask(this);
+    var btask = new Tasks_1.default(this);
     lock(_Tasks);
     {
         _Tasks.Add(btask);
     }
     return btask;
 }
-BrainTask;
-CreateTask(Func < BrainTask, Task > action, CancellationToken ? cancelToken = null : );
+Tasks_1.default;
+CreateTask(Func < Tasks_1.default, Task > action, CancellationToken ? cancelToken = null : );
 {
     if (action != null) {
-        var btask = new BrainTask(this, action, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
+        var btask = new Tasks_1.default(this, action, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
         lock(_Tasks);
         {
             _Tasks.Add(btask);
@@ -229,16 +272,16 @@ CreateTask(Func < BrainTask, Task > action, CancellationToken ? cancelToken = nu
     else
         return null;
 }
-BrainTask < TState > Create;
+Tasks_1.default < TState > Create;
 i;
-Promise(Action < BrainTask < TState >> action, TState, state, CancellationToken ? cancelToken = null : );
+Promise(Action < Tasks_1.default < TState >> action, TState, state, CancellationToken ? cancelToken = null : );
 where;
 TState: class {
     if(action) { }
 }
  != null;
 {
-    var btask = new BrainTask(this, action, state, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
+    var btask = new Tasks_1.default(this, action, state, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
     lock(_Tasks);
     {
         btask._Index = _Tasks.Count;
@@ -247,14 +290,14 @@ TState: class {
     return btask;
 }
 return null;
-BrainTask < TState > CreateTask(Action < BrainTask < TState > , TState > action, TState, state, CancellationToken ? cancelToken = null : );
+Tasks_1.default < TState > CreateTask(Action < Tasks_1.default < TState > , TState > action, TState, state, CancellationToken ? cancelToken = null : );
 where;
 TState: class {
     if(action) { }
 }
  != null;
 {
-    var btask = new BrainTask(this, action, state, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
+    var btask = new Tasks_1.default(this, action, state, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
     lock(_Tasks);
     {
         _Tasks.Add(btask);
@@ -262,8 +305,8 @@ TState: class {
     return btask;
 }
 return null;
-BrainTask;
-RemoveTask(BrainTask, btask);
+Tasks_1.default;
+RemoveTask(Tasks_1.default, btask);
 {
     lock(_Tasks);
     {
@@ -285,13 +328,13 @@ RemoveTask(BrainTask, btask);
     }
     return btask;
 }
-BrainTask;
+Tasks_1.default;
 GetTask(string, category, string, name);
 {
     lock(_DelayedTasks);
     return _DelayedTasks.Value((category !== null && category !== void 0 ? category : "") + "_" + name);
 }
-BrainTask;
+Tasks_1.default;
 CancelTask(string, category, string, name, bool, ignoreIfCannotBeCanceled = false);
 {
     var btask = GetTask(category, name);

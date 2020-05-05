@@ -12,9 +12,9 @@ export class DefaultTTSService implements ITTSService {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Plays the given MP3 file.
-    /// </summary>
+    /**
+     *  Plays the given MP3 file.
+    */
     /// <param name="filepath">The MP3 file to play.</param>
     PlayMP3File(filepath: string) {
         var reader = new Mp3FileReader(filepath);
@@ -30,10 +30,10 @@ export class DefaultTTSService implements ITTSService {
         return parts;
     }
 
-    /// <summary>
-    /// Gets and plays the audio file associated with the given text and voice code.
-    /// If the voice code is not supplied, or null, then the default 'ivona' TTS engine is assumed.
-    /// </summary>
+    /**
+     *  Gets and plays the audio file associated with the given text and voice code.
+     *  If the voice code is not supplied, or null, then the default 'ivona' TTS engine is assumed.
+    */
     /// <param name="text">The text to get a voice audio file for.</param>
     /// <param name="voiceCode">The voice code for the expected audio.</param>
     async Say(text: string, voiceCode = "ivona"): Promise<void> {
@@ -50,10 +50,10 @@ export class DefaultTTSService implements ITTSService {
         return this._BotPalDB.TTSFiles.filter(f => f.text.ToLower() == text && f.voice_code == voiceCode)[0];
     }
 
-    /// <summary>
-    /// Gets a cached audio file, or creates a new one.
-    /// If the voice code is not supplied, or null, then the default 'ivona' TTS engine is assumed.
-    /// </summary>
+    /**
+     *  Gets a cached audio file, or creates a new one.
+     *  If the voice code is not supplied, or null, then the default 'ivona' TTS engine is assumed.
+    */
     /// <param name="text">The text to get an audio file for.</param>
     /// <param name="voiceCode">The voice code is used to select a supported TTS engine and voice profile to use when generating the audio.
     /// <para>The format is '{TTS Engine Type}-{Voice Name/Code/ID}'; where second value after the hyphen is optional (so a default voice profile should be used). </para>
@@ -151,9 +151,9 @@ export class DefaultTTSService implements ITTSService {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Generates a path and filename for the given text and voice code that will be used to created the final MP3 audio file.
-    /// </summary>
+    /**
+     *  Generates a path and filename for the given text and voice code that will be used to created the final MP3 audio file.
+    */
     /// <param name="text">The text that represents the contents of the audio file.</param>
     /// <param name="voiceID">The voice profile identifier used by the TTS engine to generate the audio data (typically this is the name of the voice actor selected).</param>
     /// <returns></returns>
@@ -169,9 +169,9 @@ export class DefaultTTSService implements ITTSService {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Converts a given memory stream, representing a WAV file, into an MP3 file.
-    /// </summary>
+    /**
+     *  Converts a given memory stream, representing a WAV file, into an MP3 file.
+    */
     /// <param name="ms">The WAV memory stream to convert.</param>
     /// <param name="savetofilename">The output path and filename for the resulting MP4 file.</param>
     async ConvertWavStreamToMp3File(stream: Buffer, savetofilename: string): Promise<void> {

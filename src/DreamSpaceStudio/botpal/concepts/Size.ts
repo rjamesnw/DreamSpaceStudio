@@ -7,17 +7,17 @@ using System.Text;
 
 namespace BotPal
 {
-    /// <summary>
-    /// Changes the color of a scene object.
-    /// </summary>
+    /**
+     *  Changes the color of a scene object.
+    */
     export default class SizeConcept extends Concept
     {
         // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        /// A size to apply (in meters).  If null, then no specific size was given, though one might seem to be implied somehow.
-        /// The length, width, and height are stored as Z, X, and Y.
-        /// </summary>
+        /**
+         *  A size to apply (in meters).  If null, then no specific size was given, though one might seem to be implied somehow.
+         *  The length, width, and height are stored as Z, X, and Y.
+        */
         public Point3D? Size;
 
         // --------------------------------------------------------------------------------------------------------------------

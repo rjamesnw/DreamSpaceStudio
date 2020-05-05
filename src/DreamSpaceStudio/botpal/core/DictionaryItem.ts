@@ -191,8 +191,8 @@ export default class DictionaryItem extends TimeReferencedObject implements IMem
     // --------------------------------------------------------------------------------------------------------------------
 
     /**
-    /// Add a concept handler that should be associated with this dictionary item. When user input is parsed, any text parts
-    /// matching this dictionary item will cause the associated handlers to be trigger to handle it.
+     *  Add a concept handler that should be associated with this dictionary item. When user input is parsed, any text parts
+     *  matching this dictionary item will cause the associated handlers to be trigger to handle it.
     */
     /// <param name="handler">A concept handler delegate to store for this dictionary item.  The delegate reference also
     /// holds a target reference to the concept singleton, which is why it is not required for this method.</param>
@@ -211,7 +211,7 @@ export default class DictionaryItem extends TimeReferencedObject implements IMem
     }
 
     /**
-    /// Find the index of a concept context given the concept and a handler delegate on that context.
+     *  Find the index of a concept context given the concept and a handler delegate on that context.
     */
     indexOfConceptContext(handler: ConceptHandler): number {
         for (var i = 0, n = this._ConceptContexts.length; i < n; ++i)

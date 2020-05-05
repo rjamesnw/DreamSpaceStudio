@@ -4,11 +4,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Dictionary_1 = require("./Dictionary");
 class Memory {
     get memory() { return this; }
-    ///// <summary>
-    ///// A list of all neural nodes in the memory.
-    ///// </summary>
+    ///**
+    * // A list of all neural nodes in the memory.
+    //*/
     //? public readonly SortedSet<NeuralNode> NeuralNodes = new SortedSet<NeuralNode>(TimeReferencedObject.DefaultComparer);
     // --------------------------------------------------------------------------------------------------------------------
+    public() { }
     Memory(brain) {
         this.Brain = brain;
         this.Dictionary = new Dictionary_1.default(this);

@@ -15,39 +15,39 @@ export enum FrequencyTypes {
 }
 
 export enum RelationshipTypes {
-    /// <summary>
-    /// A count of 0 will exist when the relationship
-    /// </summary>
+    /**
+     *  A count of 0 will exist when the relationship
+    */
     Unspecified,
-    /// <summary>
-    /// 0 items were specifically set.
-    /// </summary>
+    /**
+     *  0 items were specifically set.
+    */
     None,
-    /// <summary>
-    /// One article or subject.
-    /// </summary>
+    /**
+     *  One article or subject.
+    */
     One,
-    /// <summary>
-    /// One specific article or subject ("The dog").
-    /// </summary>
+    /**
+     *  One specific article or subject ("The dog").
+    */
     OneSpecific,
-    /// <summary>
-    /// One unspecific article or subject ("A dog").
-    /// </summary>
+    /**
+     *  One unspecific article or subject ("A dog").
+    */
     OneNonSpecific,
-    /// <summary>
-    /// Many articles or subjects, but not all of them.
-    /// </summary>
+    /**
+     *  Many articles or subjects, but not all of them.
+    */
     Many,
-    /// <summary>
-    /// All such articles or subjects.
-    /// </summary>
+    /**
+     *  All such articles or subjects.
+    */
     All
 }
 
-/// <summary>
-/// Holds frequency type relational information.
-/// </summary>
+/**
+ *  Holds frequency type relational information.
+*/
 export default class FrequencyContext extends ModifierContext {
     STRENGTH_STEP = 0.01;
 
@@ -76,21 +76,21 @@ export default class FrequencyContext extends ModifierContext {
      */
     frequencyGenerality: number; // TODO: Consider ways to make this more dynamic and not fixed based on FrequencyType.
 
-    /// <summary>
-    /// If a specified time period should be referenced, or elapse.
-    /// </summary>
+    /**
+     *  If a specified time period should be referenced, or elapse.
+    */
     frequencyTimer: DS.TimeSpan;
 
-    /// <summary>
-    /// A specific time for something.
-    /// </summary>
+    /**
+     *  A specific time for something.
+    */
     frequencyTime: Date;
 
     #_relationshipType: RelationshipTypes;
 
-    /// <summary>
-    /// Type of relationship (one time, many times - or "Count" may also be specified along with, or instead)
-    /// </summary>
+    /**
+     *  Type of relationship (one time, many times - or "Count" may also be specified along with, or instead)
+    */
     get relationshipType() { return this.#_relationshipType; }
     set relationshipType(value) {
         if (this.#_relationshipType != value) {
@@ -115,22 +115,22 @@ export default class FrequencyContext extends ModifierContext {
         return value == RelationshipTypes.One || value == RelationshipTypes.OneSpecific || value == RelationshipTypes.OneNonSpecific;
     }
 
-    /// <summary>
-    /// True if the relationship type is either one, a specific one, or an unspecific one ("One dog", "The dog", "A dog").
-    /// </summary>
+    /**
+     *  True if the relationship type is either one, a specific one, or an unspecific one ("One dog", "The dog", "A dog").
+    */
     isOne(): boolean { return FrequencyContext._isOne(this.#_relationshipType); }
-    /// <summary>
-    /// True if the relationship type is one specific article or subject ("The dog").
-    /// </summary>
+    /**
+     *  True if the relationship type is one specific article or subject ("The dog").
+    */
     isSpecificOne(): boolean { return this.#_relationshipType == RelationshipTypes.OneSpecific; }
-    /// <summary>
-    /// True if the relationship type is a non-specific article or subject ("A dog").
-    /// </summary>
+    /**
+     *  True if the relationship type is a non-specific article or subject ("A dog").
+    */
     isNonSpecificOne(): boolean { return this.#_relationshipType == RelationshipTypes.OneNonSpecific; }
 
-    /// <summary>
-    /// The count frequency of the related context when used as an attribute.
-    /// </summary>
+    /**
+     *  The count frequency of the related context when used as an attribute.
+    */
     get count() { return this._count; }
     set count(value) {
         if (this._count != value) {
@@ -148,10 +148,10 @@ export default class FrequencyContext extends ModifierContext {
 
     _count: number;
 
-    /// <summary>
-    /// The strength of this connection between data elements, between 0 and 1.
-    /// <para>All new connections start with a small strength value, which increases as the connection is reinforced.</para>
-    /// </summary>
+    /**
+     *  The strength of this connection between data elements, between 0 and 1.
+     *  <para>All new connections start with a small strength value, which increases as the connection is reinforced.</para>
+    */
     strength: number;
 
     constructor(concept: Concept, parent: Context = null) {

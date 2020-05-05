@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace BotPal.Concepts
 {
-    /// <summary>
-    /// 
-    /// </summary>
+    /**
+     *  
+    */
     [Concept]
     export default class LogicConcept extends Concept
     {

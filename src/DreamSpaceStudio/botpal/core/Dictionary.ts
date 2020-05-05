@@ -6,64 +6,64 @@ import DictionaryItem from "./DictionaryItem";
 import { PartOfSpeech } from "./POS";
 import { TenseTypes, Plurality } from "./Enums";
 
-/// <summary>
-/// The dictionary holds both the RAW text, without context (no duplicates), and various 'DictionaryEntry' instances,
-/// which both link to the raw text, along with some contextual parameters for the text.  'DictionaryEntry' items CAN
-/// reference the same text among them, but there should only ever be one context entry based on contextual parameters,
-/// such as Part Of Speech, Tense, Plurality, etc.
-/// <para>The main purpose of the dictionary is as an index for quick text lookups when parsing user text inputs.   
-/// It can be purged and refreshed from the default dictionary words, and the loaded and parsed memory of user inputs 
-/// (though it may never be the same as before, since the system dynamically changes).</para>
-/// </summary>
+/**
+ *  The dictionary holds both the RAW text, without context (no duplicates), and various 'DictionaryEntry' instances,
+ *  which both link to the raw text, along with some contextual parameters for the text.  'DictionaryEntry' items CAN
+ *  reference the same text among them, but there should only ever be one context entry based on contextual parameters,
+ *  such as Part Of Speech, Tense, Plurality, etc.
+ *  <para>The main purpose of the dictionary is as an index for quick text lookups when parsing user text inputs.   
+ *  It can be purged and refreshed from the default dictionary words, and the loaded and parsed memory of user inputs 
+ *  (though it may never be the same as before, since the system dynamically changes).</para>
+*/
 export default class Dictionary implements IMemoryObject {
     // --------------------------------------------------------------------------------------------------------------------
 
     readonly memory: Memory;
 
-    /// <summary>
-    /// The raw texts, as originally entered by users. The key IS case sensitive, which is '{TextPart}.Key'. That said, this only stores text
-    /// exactly as entered by a user. Normally casing is always determined in context at output to user.
-    /// </summary>
+    /**
+     *  The raw texts, as originally entered by users. The key IS case sensitive, which is '{TextPart}.Key'. That said, this only stores text
+     *  exactly as entered by a user. Normally casing is always determined in context at output to user.
+    */
     _Texts: Map<string, TextPart> = new Map<string, TextPart>();
 
-    /// <summary>
-    /// An index of all texts by their first letter (always lower casing). This can help to quickly speed up/shortcut word analysis.
-    /// </summary>
+    /**
+     *  An index of all texts by their first letter (always lower casing). This can help to quickly speed up/shortcut word analysis.
+    */
     _TextIndexByFirstLetter: Map<string, TextPart[]> = new Map<string, TextPart[]>(); // TODO: Consider restricting on max word length as well.
 
-    /// <summary>
-    /// Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity. This list holds those references.
-    /// This can help to quickly speed up/shortcut text input analysis.
-    /// </summary>
+    /**
+     *  Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity. This list holds those references.
+     *  This can help to quickly speed up/shortcut text input analysis.
+    */
     _SimilarTexts: Map<string, TextPart[]> = new Map<string, TextPart[]>();
 
-    /// <summary>
-    /// All words or phrases in this dictionary, based on group keys, and other specific word context parameters (POS, Tense, Plurality, etc.).
-    /// This servers as a quick index, which can be rebuilt or updated as needed.
-    /// By default, the lexicon will contain entries used to split text for grammar trees.
-    /// </summary>
+    /**
+     *  All words or phrases in this dictionary, based on group keys, and other specific word context parameters (POS, Tense, Plurality, etc.).
+     *  This servers as a quick index, which can be rebuilt or updated as needed.
+     *  By default, the lexicon will contain entries used to split text for grammar trees.
+    */
     _Entries: Map<string, DictionaryItem> = new Map<string, DictionaryItem>();
 
-    /// <summary>
-    /// This references the dictionary entry that has a blank key, and is used to store global data, such as concepts that should run if no other concepts are found.
-    /// </summary>
+    /**
+     *  This references the dictionary entry that has a blank key, and is used to store global data, such as concepts that should run if no other concepts are found.
+    */
     get GlobalEntry(): DictionaryItem { return this._Entries.get(''); }
 
-    /// <summary>
-    /// Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity. 
-    /// This list holds those references, as it relates to dictionary entries.
-    /// This can help to quickly speed up/shortcut text input analysis, taking away the need to know context parameters (POS, Tense, Plurality, etc.).
-    /// </summary>
+    /**
+     *  Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity. 
+     *  This list holds those references, as it relates to dictionary entries.
+     *  This can help to quickly speed up/shortcut text input analysis, taking away the need to know context parameters (POS, Tense, Plurality, etc.).
+    */
     readonly _SimilarEntries = new Map<string, DictionaryItem[]>();
 
-    /// <summary>
-    /// An index of all words by their first letter (always lower casing). This can help to quickly speed up/shortcut word analysis.
-    /// </summary>
+    /**
+     *  An index of all words by their first letter (always lower casing). This can help to quickly speed up/shortcut word analysis.
+    */
     _IndexByFirstLetter = new Map<string, DictionaryItem[]>(); // TODO: Consider restricting on max word length as well.
 
-    /// <summary>
-    /// An index of all words by their string length. This can help to quickly speed up/shortcut word analysis.
-    /// </summary>
+    /**
+     *  An index of all words by their string length. This can help to quickly speed up/shortcut word analysis.
+    */
     _IndexByLength = new Map<number, DictionaryItem[]>(); // TODO: Consider restricting on max word length as well.
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -108,9 +108,9 @@ export default class Dictionary implements IMemoryObject {
         }
     }
 
-    /// <summary>
-    /// Attempts to add the given entry, returning any existing entry instead if one already exists.
-    /// </summary>
+    /**
+     *  Attempts to add the given entry, returning any existing entry instead if one already exists.
+    */
     AddEntry(entry: DictionaryItem): DictionaryItem {
         if (!entry)
             throw DS.Exception.argumentRequired("Dictionary.AddEntry()", "entry");
@@ -235,46 +235,46 @@ export default class Dictionary implements IMemoryObject {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Returns the dictionary entry for the given text part key (i.e. 'TextPart.Key').
-    /// The key should be a specific dictionary entry key.  Typically it is taken from 'Brain.GetKeyFromTextParts()'.
-    /// </summary>
+    /**
+     *  Returns the dictionary entry for the given text part key (i.e. 'TextPart.Key').
+     *  The key should be a specific dictionary entry key.  Typically it is taken from 'Brain.GetKeyFromTextParts()'.
+    */
     public DictionaryItem GetEntry(string key) {
         lock(_Entries) return _Entries.Value(key);
     }
 
-    /// <summary>
-    /// Returns the dictionary entry for the given group key, parts of speech (POS), and other parameters.
-    /// The group key should be a specific group key typically returned via 'TextPart.ToGroupKey()'.
-    /// The match is precise, which means all parameters much 
-    /// </summary>
+    /**
+     *  Returns the dictionary entry for the given group key, parts of speech (POS), and other parameters.
+     *  The group key should be a specific group key typically returned via 'TextPart.ToGroupKey()'.
+     *  The match is precise, which means all parameters much 
+    */
     public DictionaryItem GetEntry(string groupkey, PartOfSpeech pos, TenseTypes tense = TenseTypes.NA, Plurality plurality = Plurality.NA) {
         var key = DictionaryItem.CreateKey(groupkey, pos, tense, plurality);
         lock(_Entries) return _Entries.Value(key);
     }
 
-    /// <summary>
-    /// Returns the dictionary entries that are similar using a group key.
-    /// A group key is a special lowercase and translated version of a normal key that is made more generic based on "looks".
-    /// It is best to wrap the text in an instance of 'Text' and call the 'GroupKey' property, or use the static method 'TextPart.ToGroupKey()'.
-    /// </summary>
+    /**
+     *  Returns the dictionary entries that are similar using a group key.
+     *  A group key is a special lowercase and translated version of a normal key that is made more generic based on "looks".
+     *  It is best to wrap the text in an instance of 'Text' and call the 'GroupKey' property, or use the static method 'TextPart.ToGroupKey()'.
+    */
     public DictionaryItem[] FindSimilarEntries(string groupkey) {
         lock(_Entries) return _SimilarEntries.Value(groupkey)?.ToArray();
     }
 
-    /// <summary>
-    /// Returns the dictionary word information list for the given letter, or first letter of any given word.
-    /// This serves as a shortcut to help locating words a bit more quickly.
-    /// </summary>
+    /**
+     *  Returns the dictionary word information list for the given letter, or first letter of any given word.
+     *  This serves as a shortcut to help locating words a bit more quickly.
+    */
     public DictionaryItem[] GetEntriesByFirstLetter(char letter) {
         lock(_Entries) return _IndexByFirstLetter.Value(letter)?.ToArray();
     }
 
-    /// <summary>
-    /// Returns a list of words that have similar characters in similar positions to the given part of text.
-    /// The first letter is used as a shortcut to speed up the search.
-    /// The returns list is sorted so the higher score is first.
-    /// </summary>
+    /**
+     *  Returns a list of words that have similar characters in similar positions to the given part of text.
+     *  The first letter is used as a shortcut to speed up the search.
+     *  The returns list is sorted so the higher score is first.
+    */
     /// <param name="textpart">The text to look for.</param>
     /// <param name="threshold">Only include matches equal or greater to this threshold.</param>
     /// <param name="quickSearch">If true (default) then exact matches by key indexes are done first before scanning all texts. If matches are found, no other text is considered.
@@ -326,9 +326,9 @@ export default class Dictionary implements IMemoryObject {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Loads the default "dictionary.json" file, so the text is populated with known English texts, which can help with user input errors starting out.
-    /// </summary>
+    /**
+     *  Loads the default "dictionary.json" file, so the text is populated with known English texts, which can help with user input errors starting out.
+    */
     /// <param name="filename">The name of the dictionary file. By default this is "dictionary.json".</param>
     /// <param name="body">The dictionary JSON contents if the file is already loaded, otherwise leave this null to load the contents.</param>
     /// <returns>'null' if the dictionary file was loaded successfully, or an error otherwise.</returns>
@@ -519,18 +519,18 @@ export default class Dictionary implements IMemoryObject {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Calculates and returns a % match between two given words. It is assume the given strings are words, and not text with any white space.
-    /// </summary>
+    /**
+     *  Calculates and returns a % match between two given words. It is assume the given strings are words, and not text with any white space.
+    */
     public double CompareWords(string word1, string word2) {
         word1 = FixWord(word1);
         word2 = FixWord(word2);
         return CompareText(word1, word2);
     }
 
-    /// <summary>
-    /// Calculates and returns a % match between two given texts.
-    /// </summary>
+    /**
+     *  Calculates and returns a % match between two given texts.
+    */
     public double CompareText(string txt1, string txt2) {
         if ((txt1 ?? "") == "" || (txt2 ?? "") == "")
             return 1d; // exact match

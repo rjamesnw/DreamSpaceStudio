@@ -15,9 +15,9 @@ export function concept(enabled = true) {
     };
 }
 
-/// <summary>
-/// Associates a method on a derived 'Concept' class with words that will trigger it.
-/// </summary>
+/**
+ *  Associates a method on a derived 'Concept' class with words that will trigger it.
+*/
 export function conceptHandler(triggerWords: string, pattern: string = null) {
     return (target: IndexedObject, propertyName: string, descriptor: PropertyDescriptor): any => { // (target: Either the constructor function of the class for a static member, or the prototype of the class for an instance member.)
         const originalFunction = descriptor.value;
@@ -30,9 +30,9 @@ export function conceptHandler(triggerWords: string, pattern: string = null) {
     };
 }
 
-/// <summary>
-/// Associates a method on a derived 'Concept' class with words that will trigger it.
-/// </summary>
+/**
+ *  Associates a method on a derived 'Concept' class with words that will trigger it.
+*/
 export function intentHandler(triggerWords: string, pattern: string = null) {
     return (target: IndexedObject, propertyName: string, descriptor: PropertyDescriptor): any => { // (target: Either the constructor function of the class for a static member, or the prototype of the class for an instance member.)
         const originalFunction = descriptor.value;
@@ -44,9 +44,9 @@ export function intentHandler(triggerWords: string, pattern: string = null) {
     };
 }
 
-/// <summary>
-/// Holds the score and other parameters for concepts while trying to find best concept matches.
-/// </summary>
+/**
+ *  Holds the score and other parameters for concepts while trying to find best concept matches.
+*/
 export class ConceptMatch extends Match<ConceptContext>
 {
     readonly _owner: MatchedConcepts; // (the concepts set that owns this concept match)
@@ -57,99 +57,99 @@ export class ConceptMatch extends Match<ConceptContext>
 }
 
 //? public delegate Context TextPartHandler(HandlerContext context);
-/// <summary>
-/// A method on a concept that will handle given key words.
-/// </summary>
+/**
+ *  A method on a concept that will handle given key words.
+*/
 /// <param name="context">A context struct to hold the context for a handler call.</param>
 /// <returns>The return should be the same or updated copy of the given context.</returns>
 export interface ConceptHandler { (context: ConceptHandlerContext): Promise<ConceptHandlerContext> }
 
-/// <summary>
-/// A handler to execute on a concept to process the most likely intent that was detected.
-/// If the intent handler encounters issues with understanding the data, it can either spawn questions and return true, or give up and return false.
-/// Returning false causes the next best handler, if any, to execute.
-/// </summary>
+/**
+ *  A handler to execute on a concept to process the most likely intent that was detected.
+ *  If the intent handler encounters issues with understanding the data, it can either spawn questions and return true, or give up and return false.
+ *  Returning false causes the next best handler, if any, to execute.
+*/
 /// <param name="context">After all input is processed and concept handlers are run, the intent with the best score is executed.</param>
 /// <returns>True if the intent was handled. If for some reason the intent cannot be handled, false can be returned to cause the next handler (if any) to execute instead.</returns>
 export interface IntentHandler { (context: ConceptHandlerContext): Promise<boolean> }
 
-/// <summary>
-/// The context for the concept handler call. 
-/// This object maintains an array of concepts, starting from the left side, and growing towards the right.
-/// As the ProcessConceptsOperation instance processes combinations, it clones contexts and expands the
-/// matched concepts array to match a new combination of concepts.
-/// <para>Note that the context is shared by each handler called in the call chain, and only the 'Index' value (and resulting 'LeftHandlerContext,MatchedConcept,RightHandlerContext' references) is specific to the called handler itself.</para>
-/// </summary>
+/**
+ *  The context for the concept handler call. 
+ *  This object maintains an array of concepts, starting from the left side, and growing towards the right.
+ *  As the ProcessConceptsOperation instance processes combinations, it clones contexts and expands the
+ *  matched concepts array to match a new combination of concepts.
+ *  <para>Note that the context is shared by each handler called in the call chain, and only the 'Index' value (and resulting 'LeftHandlerContext,MatchedConcept,RightHandlerContext' references) is specific to the called handler itself.</para>
+*/
 export class ConceptHandlerContext implements IMemoryObject {
     // --------------------------------------------------------------------------------------------------------------------
 
     get memory(): Memory { return this.Operation.Memory; }
     #_memory: Memory;
 
-    /// <summary>
-    /// The current brain task operation that is processing the concepts.
-    /// </summary>
+    /**
+     *  The current brain task operation that is processing the concepts.
+    */
     readonly Operation: ProcessConceptsOperation;
 
-    /// <summary>
-    /// The new or existing context that is the result of various concept handlers. It is used to build the content of the user's intent.
-    /// New contexts should be added or associated as required, or data loss will occur; causing much confusion.
-    /// An intent context is shared globally within a single text-part-combination path and helps to build the over all intent of the user.
-    /// </summary>
+    /**
+     *  The new or existing context that is the result of various concept handlers. It is used to build the content of the user's intent.
+     *  New contexts should be added or associated as required, or data loss will occur; causing much confusion.
+     *  An intent context is shared globally within a single text-part-combination path and helps to build the over all intent of the user.
+    */
     Context: IntentContext;
 
-    /// <summary>
-    /// When a concept returns a context, it also sets a confidence level from 0.0 to 1.0 on how sure it is that it is the direction of intent by the user.
-    /// </summary>
+    /**
+     *  When a concept returns a context, it also sets a confidence level from 0.0 to 1.0 on how sure it is that it is the direction of intent by the user.
+    */
     Confidence: number;
 
-    /// <summary>
-    /// Upon return from a concept handler, the system keeps track of the confidence total to calculate an average later.
-    /// </summary>
+    /**
+     *  Upon return from a concept handler, the system keeps track of the confidence total to calculate an average later.
+    */
     ConfidenceSum: number;
 
-    /// <summary> Gets the average confidence at the current <see cref="Index"/>. </summary>
+    /** Gets the average confidence at the current <see cref="Index"/>. */
     /// <value> The average confidence. </value>
     get AvergeConfidence(): number { return this.ConfidenceSum / (this.Index + 1); }
 
-    /// <summary>
-    /// A match to a handler that might be able to process the most likely intent of the user.
-    /// </summary>
+    /**
+     *  A match to a handler that might be able to process the most likely intent of the user.
+    */
     ProbableIntentHandlers: Match<IntentHandler>[][];
 
-    /// <summary>
-    /// Returns true if this context has any callbacks to handler intents (user input meanings).
-    /// </summary>
+    /**
+     *  Returns true if this context has any callbacks to handler intents (user input meanings).
+    */
     get HasProbableIntentHandlers(): boolean { return this.ProbableIntentHandlers?.Any(i => i.Count > 0) ?? false; }
 
-    /// <summary>
-    /// A growing list of executing concepts that were matched against user input.
-    /// The list is growing because the final list is not known until initial handlers execute early to catch any invalid combinations.
-    /// </summary>
+    /**
+     *  A growing list of executing concepts that were matched against user input.
+     *  The list is growing because the final list is not known until initial handlers execute early to catch any invalid combinations.
+    */
     MatchedConcepts: ConceptMatch[];
 
-    /// <summary>
-    /// The current index of the current matched concept in relation to other handlers being executed.
-    /// </summary>
+    /**
+     *  The current index of the current matched concept in relation to other handlers being executed.
+    */
     Index: number;
 
-    /// <summary>
-    /// For concept handlers, this is the concept matched to the immediate left.
-    /// </summary>
+    /**
+     *  For concept handlers, this is the concept matched to the immediate left.
+    */
     LeftHandlerMatch(): ConceptMatch { return this.Index > 0 && this.Index <= MatchedConcepts?.Count ? MatchedConcepts[this.Index - 1] : null; }
 
-    /// <summary>
-    /// For concept handlers, this is the current concept match details (the one the handler belongs to).
-    /// </summary>
+    /**
+     *  For concept handlers, this is the current concept match details (the one the handler belongs to).
+    */
     get CurrentMatch(): ConceptMatch { return this.Index >= 0 && this.Index < MatchedConcepts?.Count ? MatchedConcepts[this.Index] : null; }
 
-    /// <summary> Gets the dictionary item that resulted in the current concept match. </summary>
+    /** Gets the dictionary item that resulted in the current concept match. */
     /// <value> The dictionary item of the current concept match. </value>
     get CurrentDictionaryItem(): DictionaryItem { return CurrentMatch?.Item.DictionaryItem; }
 
-    /// <summary>
-    /// For concept handlers, this is the concept matched to the immediate right.
-    /// </summary>
+    /**
+     *  For concept handlers, this is the concept matched to the immediate right.
+    */
     get RightHandlerMatch(): ConceptMatch { return this.Index >= -1 && this.Index + 1 < MatchedConcepts?.Count ? MatchedConcepts[this.Index + 1] : null; }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -191,10 +191,10 @@ export class ConceptHandlerContext implements IMemoryObject {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Makes a copy of the 'MatchedConcepts' list with 'matchedConcept' appended and returns it as a new 'ConceptHandlerContext' value.
-    /// This is used to multiply contexts when processing concept combinations.
-    /// </summary>
+    /**
+     *  Makes a copy of the 'MatchedConcepts' list with 'matchedConcept' appended and returns it as a new 'ConceptHandlerContext' value.
+     *  This is used to multiply contexts when processing concept combinations.
+    */
     /// <returns>A new concept handler context to use with calling concept handlers.
     /// The clone is returned with a 0.0 Confidence value and the 'matchedConcept' reference added.</returns>
     Clone(index: number, matchedConcept: ConceptMatch): ConceptHandlerContext {
@@ -212,9 +212,9 @@ export class ConceptHandlerContext implements IMemoryObject {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Provides a convenient way to return a context with a modified confidence value.
-    /// </summary>
+    /**
+     *  Provides a convenient way to return a context with a modified confidence value.
+    */
     /// <param name="confidence">The new confidence value.</param>
     SetConfidence(confidence: number): ConceptHandlerContext {
         this.Confidence = confidence;
@@ -223,10 +223,10 @@ export class ConceptHandlerContext implements IMemoryObject {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Registers a possible handler to process the intent based on the most likely meaning of the context tree generated from the concept handlers.
-    /// <para>If the handler context confidence value is less than the given confidence value for the intent handler, the handler context confidence will be updated to match.</para>
-    /// </summary>
+    /**
+     *  Registers a possible handler to process the intent based on the most likely meaning of the context tree generated from the concept handlers.
+     *  <para>If the handler context confidence value is less than the given confidence value for the intent handler, the handler context confidence will be updated to match.</para>
+    */
     /// <param name="handler">The intent callback to execute to handle the meaning of the input given by the user.</param>
     /// <param name="confidence">How much confidence that this registered handler can handle the user's meaning.</param>
     AddIntentHandler(handler: IntentHandler, confidence: number) {
@@ -253,10 +253,10 @@ export class ConceptHandlerContext implements IMemoryObject {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Returns true if the given text matches any following text.
-    /// The match relies on a group key, which is the text processed to remove
-    /// </summary>
+    /**
+     *  Returns true if the given text matches any following text.
+     *  The match relies on a group key, which is the text processed to remove
+    */
     /// <param name="text">The text to look for.</param>
     /// <param name="exactMatch">If false (default) then a group key is used to match similar text (such as removing letter casing and reducing spaces, etc.).</param>
     /// <returns></returns>
@@ -274,10 +274,10 @@ export class ConceptHandlerContext implements IMemoryObject {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Returns true if the given text matches any preceding text.
-    /// The match relies on a group key, which is the text processed to remove
-    /// </summary>
+    /**
+     *  Returns true if the given text matches any preceding text.
+     *  The match relies on a group key, which is the text processed to remove
+    */
     /// <param name="text">The text to look for.</param>
     /// <param name="exactMatch">If false (default) then a group key is used to match similar text (such as removing letter casing and reducing spaces, etc.).</param>
     /// <returns></returns>
@@ -295,21 +295,21 @@ export class ConceptHandlerContext implements IMemoryObject {
     // --------------------------------------------------------------------------------------------------------------------
 }
 
-/// <summary>
-/// Created when concept handlers are found that match a text part that was parsed from user input.
-/// </summary>
+/**
+ *  Created when concept handlers are found that match a text part that was parsed from user input.
+*/
 public class ConceptContext {
-    /// <summary>
-    /// The dictionary item when the concept was found.
-    /// </summary>
+    /**
+     *  The dictionary item when the concept was found.
+    */
     public DictionaryItem DictionaryItem { get; private set; }
-        /// <summary>
-        /// The concept for this context.
-        /// </summary>
+        /**
+         *  The concept for this context.
+        */
         public Concept Concept { get { return (Concept)Handler.Target; } }
-        /// <summary>
-        /// The handler of the underlying concept that matches the text part (that will be used to process it).
-        /// </summary>
+        /**
+         *  The handler of the underlying concept that matches the text part (that will be used to process it).
+        */
         public ConceptHandler Handler { get; private set; }
 
         public ConceptContext(DictionaryItem dictionaryItem, ConceptHandler handler)
@@ -319,21 +319,21 @@ public class ConceptContext {
 }
     }
 
-/// <summary>
-/// Holds all concepts that match a particular text part during text processing.
-/// </summary>
+/**
+ *  Holds all concepts that match a particular text part during text processing.
+*/
 export class MatchedConcepts extends Array<ConceptMatch>
 {
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// The original text part from the input text that resulted in the underlying set of concepts (not from a dictionary item).
-    /// </summary>
+    /**
+     *  The original text part from the input text that resulted in the underlying set of concepts (not from a dictionary item).
+    */
     public readonly string OriginalTextPart;
 
-    /// <summary>
-    /// The position of where the underlying original text part is in relation to the other text parts in the array of original text parts.
-    /// </summary>
+    /**
+     *  The position of where the underlying original text part is in relation to the other text parts in the array of original text parts.
+    */
     public readonly int OriginalTextPartIndex;
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -356,9 +356,9 @@ internal MatchedConcepts(int textPartIndex)
 
 // --------------------------------------------------------------------------------------------------------------------
 
-/// <summary>
-/// Sorts all items in this list and returns the list.
-/// </summary>
+/**
+ *  Sorts all items in this list and returns the list.
+*/
 new public MatchedConcepts Sort()
 {
     Sort(ConceptMatch.DefaultComparer);
@@ -380,21 +380,19 @@ new public MatchedConcepts Sort()
         // --------------------------------------------------------------------------------------------------------------------
     }
 
-/// <summary>
-/// A concept is a mapping to some sort of understanding or intention. For instance, if the user wants to find a file on their computer,
-/// a general "Files", or perhaps more specific "FileSearch" concept might be triggered if that concept is determined to be the best match
-/// to the user's intention. Concepts are loaded and activated as singleton instances.  Only one instance of each type is created per bot
-/// instance, and each concept is passed a ConceptContext for it to use when processing inputs it is designed to handle.
-/// Being a singleton, concepts can also be plugins for global states, such as tracking a bots simulated "feeling" level, or states that
-/// are updated by external hooks (for instance, polling for emails or IM streams, detecting light brightness, sound activity, etc.).
-/// <para>
-/// If the bot has no concept of anything, it will not be able to understand any requests or thought processes. In such a case, 
-/// all inputs are simply parsed and recorded with no responses possible (brain-dead like state).</para>
-/// <para>Internally, concepts build a tree of context objects (such as subjects and attributes) to handle various situations by analyzing
-/// surrounding concepts that were found based on user inputs in order to detect possible meanings. 
-/// Each concept handler result is test from 0.0 to 1.0 to determine the most likely course that makes more sense.</para>
-/// <para>For concept creators, a single instance of each derived concept found or registered is created and cached as singletons for text processing.</para>
-/// </summary>
+/**
+ *  A concept is a mapping to some sort of understanding or intention. For instance, if the user wants to find a file on their computer,
+ *  a general "Files", or perhaps more specific "FileSearch" concept might be triggered if that concept is determined to be the best match
+ *  to the user's intention. Concepts are loaded and activated as singleton instances.  Only one instance of each type is created per bot
+ *  instance, and each concept is passed a ConceptContext for it to use when processing inputs it is designed to handle.
+ *  Being a singleton, concepts can also be plugins for global states, such as tracking a bots simulated "feeling" level, or states that
+ *  are updated by external hooks (for instance, polling for emails or IM streams, detecting light brightness, sound activity, etc.).
+ *  <para>
+ *  If the bot has no concept of anything, it will not be able to understand any requests or thought processes. In such a case, 
+ *  all inputs are simply parsed and recorded with no responses possible (brain-dead like state).</para>
+ *  <para>Internally, concepts build a tree of context objects (such as subjects and attributes) to handle various situations by analyzing
+ *  surrounding concepts that were found based on user inputs in order to detect possible meanings. 
+ */
 export default abstract class Concept extends TimeReferencedObject implements IMemoryObject {
     // --------------------------------------------------------------------------------------------------------------------
 
@@ -404,10 +402,10 @@ export default abstract class Concept extends TimeReferencedObject implements IM
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    ///// <summary>
-    ///// The expected dictionary items used in the derived concept which is used to analyze the incoming dictionary items based on user input.
-    ///// It is recommended to use '_AddWord()' to add these items, and not do so directly.
-    ///// </summary>
+    ///**
+     * // The expected dictionary items used in the derived concept which is used to analyze the incoming dictionary items based on user input.
+    // *  It is recommended to use '_AddWord()' to add these items, and not do so directly.
+    //*/
     //protected Dictionary<string, List<TextPartHandler>> _TextPartHandlers = new Dictionary<string, List<TextPartHandler>>();
 
     constructor(brain: Brain) {
@@ -420,15 +418,15 @@ export default abstract class Concept extends TimeReferencedObject implements IM
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary> Executes once the after all core system concepts have been registered. </summary>
+    /** Executes once the after all core system concepts have been registered. */
     protected OnAfterAllRegistered() { }
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    ///// <summary>
-    ///// Registers text that should trigger this concept.  When the text is encountered, the concept's matching handler registered for that text will be triggered.
-    ///// <para>Note: POS, tense, and plurality MUST all match the same context as an existing word in the database, or a new entry will be created.</para>
-    ///// </summary>
+    ///**
+     * // Registers text that should trigger this concept.  When the text is encountered, the concept's matching handler registered for that text will be triggered.
+    // *  <para>Note: POS, tense, and plurality MUST all match the same context as an existing word in the database, or a new entry will be created.</para>
+    //*/
     ///// <param name="textpart">The text part to register. If null or empty, the given handler is registered for ANY text part not matching any other handler.</param>
     ///// <param name="pos">A part of speech (POS) to classify the context for the word.</param>
     ///// <param name="tense">A tense type to classify the context for the word (is NA in most cases).</param>
@@ -458,15 +456,15 @@ export default abstract class Concept extends TimeReferencedObject implements IM
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// A dictionary of concept handlers and the dictionary items they support.
-    /// This is populated when the brain loads the concept and calls 'RegisterHandlers()'.
-    /// </summary>
+    /**
+     *  A dictionary of concept handlers and the dictionary items they support.
+     *  This is populated when the brain loads the concept and calls 'RegisterHandlers()'.
+    */
     protected _ConceptPatterns: Map<ConceptHandler, DictionaryItem[]> = new Map<ConceptHandler, DictionaryItem[]>();
 
-    /// <summary>
-    /// Called by the system when it is ready for this concept to register any handlers on it.
-    /// </summary>
+    /**
+     *  Called by the system when it is ready for this concept to register any handlers on it.
+    */
     RegisterHandlers() {
         var methods = GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
         foreach(var method in methods)
@@ -500,9 +498,9 @@ export default abstract class Concept extends TimeReferencedObject implements IM
         }
     }
 
-    /// <summary>
-    /// Parses and adds a concept pattern and associates it with a callback handler.
-    /// </summary>
+    /**
+     *  Parses and adds a concept pattern and associates it with a callback handler.
+    */
     /// <param name="words">One or more words (separated by commas or spaces) that will trigger the handler.</param>
     /// <param name="handler">A callback delegate to execute when the pattern matches.</param>
     /// <param name="dictionary">A dictionary to hold the pattern parts. If null, the dictionary associated with brain's main memory is used.</param>
@@ -607,9 +605,9 @@ export default abstract class Concept extends TimeReferencedObject implements IM
     }
 
     // --- This is removed now in favor of concrete word matches, but pattern could be an add on later, so keep this old method idea for reference ---
-    ///// <summary>
-    ///// Parses and adds a concept pattern and associates it with a callback handler.
-    ///// </summary>
+    ///**
+     * // Parses and adds a concept pattern and associates it with a callback handler.
+    //*/
     ///// <param name="pattern">A text pattern that will trigger the handler.</param>
     ///// <param name="handler">A callback method to execute when the pattern matches.</param>
     ///// <param name="dictionary">A dictionary to hold the pattern parts. If null, the dictionary associated with brain's main memory is used.</param>
@@ -742,9 +740,9 @@ export default abstract class Concept extends TimeReferencedObject implements IM
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    ///// <summary>
-    ///// Called when ready to trigger the concept to analyze it's position with other concepts in the scene instance.
-    ///// </summary>
+    ///**
+     * // Called when ready to trigger the concept to analyze it's position with other concepts in the scene instance.
+    //*/
     ///// <param name="scene">The scene to trigger this concept against.</param>
     ///// <param name="textPartIndex">The position of the concept list in the '{Scene}.MatchedConceptLists' list that contains this concept.</param>
     ///// <param name="textpart"></param>

@@ -79,6 +79,7 @@
     <TypeScriptCompile Include="botpal\core\Comparer.ts" />
     <TypeScriptCompile Include="botpal\core\DictionaryItem.ts" />
     <TypeScriptCompile Include="botpal\core\Match.ts" />
+    <TypeScriptCompile Include="botpal\core\Tasks.ts" />
     <TypeScriptCompile Include="system\abstracts\DBAdapter.ts" />
     <TypeScriptCompile Include="system\client\Utilities.ts" />
     <TypeScriptCompile Include="system\client\Views.ts" />

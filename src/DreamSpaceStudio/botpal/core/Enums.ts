@@ -27,37 +27,37 @@ export enum Intents {
     Question,
 
     /**
-    /// The user is making a statement.
+     *  The user is making a statement.
     */
     Statement,
 
     ///**
-    ///// If the intent task returns close to 1.0, then execute the next intent
+     * // If the intent task returns close to 1.0, then execute the next intent
     //*/
     //If,
 
     ///**
-    ///// At some point, when this watch task returns close to 1.0, then execute the next intent; may be perpetual
+     * // At some point, when this watch task returns close to 1.0, then execute the next intent; may be perpetual
     //*/
     //When,
 
     ///**
-    ///// Delay the specified intent for a period of time, then activate the referenced one.
+     * // Delay the specified intent for a period of time, then activate the referenced one.
     //*/
     //Delay,
 
     ///**
-    ///// Determine if something can be done, or can be like some state. The return value will be 0.0 (cannot) to 1.0 (definitely can).
+     * // Determine if something can be done, or can be like some state. The return value will be 0.0 (cannot) to 1.0 (definitely can).
     //*/
     //Can,
 
     ///**
-    ///// Determine if something is like or similar to something else. The return value will be 0.0 (nothing like it) to 1.0 (definitely like it).
+     * // Determine if something is like or similar to something else. The return value will be 0.0 (nothing like it) to 1.0 (definitely like it).
     //*/
     //Like,
 
     ///**
-    ///// Find a person that matches the subject states and conditions as described.
+     * // Find a person that matches the subject states and conditions as described.
     //*/
     //GetWho,
     //GetWhat,

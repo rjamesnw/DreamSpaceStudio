@@ -30,38 +30,38 @@ var FrequencyTypes;
 })(FrequencyTypes = exports.FrequencyTypes || (exports.FrequencyTypes = {}));
 var RelationshipTypes;
 (function (RelationshipTypes) {
-    /// <summary>
-    /// A count of 0 will exist when the relationship
-    /// </summary>
+    /**
+     *  A count of 0 will exist when the relationship
+    */
     RelationshipTypes[RelationshipTypes["Unspecified"] = 0] = "Unspecified";
-    /// <summary>
-    /// 0 items were specifically set.
-    /// </summary>
+    /**
+     *  0 items were specifically set.
+    */
     RelationshipTypes[RelationshipTypes["None"] = 1] = "None";
-    /// <summary>
-    /// One article or subject.
-    /// </summary>
+    /**
+     *  One article or subject.
+    */
     RelationshipTypes[RelationshipTypes["One"] = 2] = "One";
-    /// <summary>
-    /// One specific article or subject ("The dog").
-    /// </summary>
+    /**
+     *  One specific article or subject ("The dog").
+    */
     RelationshipTypes[RelationshipTypes["OneSpecific"] = 3] = "OneSpecific";
-    /// <summary>
-    /// One unspecific article or subject ("A dog").
-    /// </summary>
+    /**
+     *  One unspecific article or subject ("A dog").
+    */
     RelationshipTypes[RelationshipTypes["OneNonSpecific"] = 4] = "OneNonSpecific";
-    /// <summary>
-    /// Many articles or subjects, but not all of them.
-    /// </summary>
+    /**
+     *  Many articles or subjects, but not all of them.
+    */
     RelationshipTypes[RelationshipTypes["Many"] = 5] = "Many";
-    /// <summary>
-    /// All such articles or subjects.
-    /// </summary>
+    /**
+     *  All such articles or subjects.
+    */
     RelationshipTypes[RelationshipTypes["All"] = 6] = "All";
 })(RelationshipTypes = exports.RelationshipTypes || (exports.RelationshipTypes = {}));
-/// <summary>
-/// Holds frequency type relational information.
-/// </summary>
+/**
+ *  Holds frequency type relational information.
+*/
 class FrequencyContext extends ModifierContext_1.default {
     constructor(concept, parent = null) {
         super(concept, null, parent);
@@ -104,9 +104,9 @@ class FrequencyContext extends ModifierContext_1.default {
             }
         }
     }
-    /// <summary>
-    /// Type of relationship (one time, many times - or "Count" may also be specified along with, or instead)
-    /// </summary>
+    /**
+     *  Type of relationship (one time, many times - or "Count" may also be specified along with, or instead)
+    */
     get relationshipType() { return __classPrivateFieldGet(this, __relationshipType); }
     set relationshipType(value) {
         if (__classPrivateFieldGet(this, __relationshipType) != value) {
@@ -129,21 +129,21 @@ class FrequencyContext extends ModifierContext_1.default {
     static _isOne(value) {
         return value == RelationshipTypes.One || value == RelationshipTypes.OneSpecific || value == RelationshipTypes.OneNonSpecific;
     }
-    /// <summary>
-    /// True if the relationship type is either one, a specific one, or an unspecific one ("One dog", "The dog", "A dog").
-    /// </summary>
+    /**
+     *  True if the relationship type is either one, a specific one, or an unspecific one ("One dog", "The dog", "A dog").
+    */
     isOne() { return FrequencyContext._isOne(__classPrivateFieldGet(this, __relationshipType)); }
-    /// <summary>
-    /// True if the relationship type is one specific article or subject ("The dog").
-    /// </summary>
+    /**
+     *  True if the relationship type is one specific article or subject ("The dog").
+    */
     isSpecificOne() { return __classPrivateFieldGet(this, __relationshipType) == RelationshipTypes.OneSpecific; }
-    /// <summary>
-    /// True if the relationship type is a non-specific article or subject ("A dog").
-    /// </summary>
+    /**
+     *  True if the relationship type is a non-specific article or subject ("A dog").
+    */
     isNonSpecificOne() { return __classPrivateFieldGet(this, __relationshipType) == RelationshipTypes.OneNonSpecific; }
-    /// <summary>
-    /// The count frequency of the related context when used as an attribute.
-    /// </summary>
+    /**
+     *  The count frequency of the related context when used as an attribute.
+    */
     get count() { return this._count; }
     set count(value) {
         if (this._count != value) {

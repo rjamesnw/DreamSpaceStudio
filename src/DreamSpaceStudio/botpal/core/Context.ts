@@ -10,9 +10,9 @@ import GroupContext from "../contexts/GroupContext";
 
 export class ContextCollection<T extends Context> extends Array<T>
 {
-    /// <summary>
-    /// The context that owns this collection.
-    /// </summary>
+    /**
+     *  The context that owns this collection.
+    */
     readonly owner: Context;
 
     #_contextType: IType<T>;
@@ -38,9 +38,9 @@ export class ContextCollection<T extends Context> extends Array<T>
                     this.add(ctx);
     }
 
-    /// <summary>
-    /// Searches the for a context of the requested type, or null if nothing was found.
-    /// </summary>
+    /**
+     *  Searches the for a context of the requested type, or null if nothing was found.
+    */
     getContexts<TContext extends Context>(type: IType<TContext>): TContext[] {
         return <TContext[]><any>this.filter(a => a.contextType == type);
     }
@@ -85,7 +85,7 @@ export class ContextCollection<T extends Context> extends Array<T>
     }
 }
 
-///// <summary> This just serves as a method to register contexts that are alike (using a shared type name). </summary>
+///** This just serves as a method to register contexts that are alike (using a shared type name). */
 ///// <typeparam name="T"> A context type. </typeparam>
 //x export interface IContext implements ITimeReferencedObject {
 //    Parent: Context;
@@ -93,27 +93,27 @@ export class ContextCollection<T extends Context> extends Array<T>
 //}
 
 
-/// <summary>
-/// The context around a given concept.
-/// When concepts are triggered, contexts are built up in order to establish the content and intent of the user's input.
-/// </summary>
+/**
+ *  The context around a given concept.
+ *  When concepts are triggered, contexts are built up in order to establish the content and intent of the user's input.
+*/
 export default class Context extends TimeReferencedObject implements IMemoryObject {
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Keeps a reference of the parent context connections that relates to this context, if any. This allows nesting contexts under other contexts using relationships.
-    /// A parent context can have many child contexts, which is a context tree that represents a potential engram of data content to store later.
-    /// </summary>
+    /**
+     *  Keeps a reference of the parent context connections that relates to this context, if any. This allows nesting contexts under other contexts using relationships.
+     *  A parent context can have many child contexts, which is a context tree that represents a potential engram of data content to store later.
+    */
     readonly parent: Context;
 
-    /// <summary>
-    /// The type if this context.
-    /// </summary>
+    /**
+     *  The type if this context.
+    */
     readonly contextType: IType<Context>;
 
-    /// <summary>
-    /// The concept responsible for creating this context, if any.
-    /// </summary>
+    /**
+     *  The concept responsible for creating this context, if any.
+    */
     readonly concept: Concept;
 
     get memory() { return this.concept.memory; }
@@ -133,64 +133,64 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    ///// <summary>
-    ///// Get the current instance or a parent instance that is a subject context (<see cref="SubjectContext"/> instance).
-    ///// </summary>
+    ///**
+     * // Get the current instance or a parent instance that is a subject context (<see cref="SubjectContext"/> instance).
+    //*/
     //x public bool IsSubjectContext => this is SubjectContext;
 
-    ///// <summary> Returns true if this object is question context (<see cref="QuestionContext"/> instance). </summary>
+    ///** Returns true if this object is question context (<see cref="QuestionContext"/> instance). */
     ///// <value> A true or false value. </value>
     //x public bool IsQuestionContext => this is QuestionContext;
 
-    /// <summary> 
-    /// The action (verbs) of a statement in regards to the subjects. For example, "is" or "are" is a claim one or more
-    /// things is like something else (i.e. John is nice), or as part of a question (who are they? what time is it?). 
-    /// Other examples may be "John *drove* away" or "Pat *ran* to the store.".
-    /// </summary>
+    /** 
+     *  The action (verbs) of a statement in regards to the subjects. For example, "is" or "are" is a claim one or more
+     *  things is like something else (i.e. John is nice), or as part of a question (who are they? what time is it?). 
+     *  Other examples may be "John *drove* away" or "Pat *ran* to the store.".
+    */
     get Actions(): Iterable<ActionContext> { return this.get(ActionContext); }
 
-    /// <summary>
-    /// True if this context has actions (typically because of verbs).
-    /// </summary>
+    /**
+     *  True if this context has actions (typically because of verbs).
+    */
     get HasActions(): boolean { return this.get(ActionContext)?.hasItems ?? false; }
 
-    /// <summary>
-    /// Associates descriptive attributes for this context.
-    /// These contexts typically determine how something is like another.
-    /// </summary>
+    /**
+     *  Associates descriptive attributes for this context.
+     *  These contexts typically determine how something is like another.
+    */
     get Attributes() { return this.#_Attributes; };
     #_Attributes: Iterable<AttributeContext>;
 
-    /// <summary>
-    /// True if this context has attributes (typically because of adjectives).
-    /// </summary>
+    /**
+     *  True if this context has attributes (typically because of adjectives).
+    */
     get HasAttributes(): boolean { return this.get(AttributeContext)?.hasItems ?? false; }
 
-    /// <summary>
-    /// Associates contexts that modify this context (such as frequency, time constraints, speed, etc.).
-    /// The most common is the frequency context, which use used with the determiner concept (i.e. "the" or "a", etc.).
-    /// </summary>
+    /**
+     *  Associates contexts that modify this context (such as frequency, time constraints, speed, etc.).
+     *  The most common is the frequency context, which use used with the determiner concept (i.e. "the" or "a", etc.).
+    */
     get Modifiers() { return this.#_Modifiers; }
     #_Modifiers: Iterable<ModifierContext>;
 
-    /// <summary>
-    /// True if this context has modifiers (typically because of adverbs).
-    /// </summary>
+    /**
+     *  True if this context has modifiers (typically because of adverbs).
+    */
     get HasModifiers(): boolean { return this.get(ModifierContext)?.hasItems ?? false; }
 
-    /// <summary>
-    /// Associates contexts that modify this context (such as frequency, time constraints, speed, etc.).
-    /// The most common is the frequency context, which use used with the determiner concept (i.e. "the" or "a", etc.).
-    /// </summary>
+    /**
+     *  Associates contexts that modify this context (such as frequency, time constraints, speed, etc.).
+     *  The most common is the frequency context, which use used with the determiner concept (i.e. "the" or "a", etc.).
+    */
     get Questions() { return this.#_Questions; }
     #_Questions: Iterable<ModifierContext>;
 
-    /// <summary>
-    /// True if this context has modifiers (typically because of adverbs).
-    /// </summary>
+    /**
+     *  True if this context has modifiers (typically because of adverbs).
+    */
     get HasQuestions(): boolean { return this.get(QuestionContext)?.hasItems ?? false; }
 
-    /// <summary> Determines if there is a question context associated with the given question word. </summary>
+    /** Determines if there is a question context associated with the given question word. */
     /// <param name="question"> The question word to check for. </param>
     /// <returns> True if the question is in the context, and false if not. </returns>
     HasQuestion(question: DictionaryItem): boolean {
@@ -228,7 +228,7 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
         return this;
     }
 
-    /// <summary> Enumerates the contexts of a given type and returns them in a new collection object. </summary>
+    /** Enumerates the contexts of a given type and returns them in a new collection object. */
     /// <param name="contextType"> The context type to find. </param>
     /// <returns> An enumerator that allows enumerating over the matched items. </returns>
     get<T extends Context>(contextType: IType<T>): ContextCollection<T> {
@@ -238,7 +238,7 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary> Enumerates this collection for all contexts of type <typeparamref name="T"/>. </summary>
+    /** Enumerates this collection for all contexts of type <typeparamref name="T"/>. */
     /// <typeparam name="T"> The context types to include in the enumeration. </typeparam>
     /// <param name="includeGroups"> (Optional) True to include grouped contexts in the search. </param>
     /// <returns> An enumeration of all contexts found matching type <typeparamref name="T"/>. </returns>
@@ -257,17 +257,17 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    ///// <summary>
-    ///// Get the current instance or a parent instance that is a context of the requested type, or null if nothing was found.
-    ///// </summary>
+    ///**
+     * // Get the current instance or a parent instance that is a context of the requested type, or null if nothing was found.
+    //*/
     //public T GetContext<T>() where T : Context
     //{
     //    return (this is T) ? (T)this : Parent?.GetContext<T>();
     //}
 
-    ///// <summary>
-    ///// Ignores the current instance and looks for a parent instance that is a context of the requested type, or null if nothing was found.
-    ///// </summary>
+    ///**
+     * // Ignores the current instance and looks for a parent instance that is a context of the requested type, or null if nothing was found.
+    //*/
     //public T GetParentContext<T>() where T : Context
     //{
     //    return Parent?.GetContext<T>();
@@ -275,9 +275,9 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    ///// <summary>
-    ///// Create a split point from this scene to process separately, but in relation to this one.
-    ///// </summary>
+    ///**
+     * // Create a split point from this scene to process separately, but in relation to this one.
+    //*/
     //? public virtual Context Fork()
     //{
     //    var s = new Context(Memory, this);
@@ -291,9 +291,9 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /// <summary>
-    /// Attempts to detect and remove the given context object from any of the context collections it should belong to.
-    /// </summary>
+    /**
+     *  Attempts to detect and remove the given context object from any of the context collections it should belong to.
+    */
     remove(context: Context): boolean {
         if (context == null) return false;
 

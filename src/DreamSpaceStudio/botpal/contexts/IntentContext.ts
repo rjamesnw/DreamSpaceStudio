@@ -5,9 +5,9 @@ using System.Text;
 
 namespace BotPal
 {
-    /// <summary>
-    /// Holds accumulated contexts that hopefully grow towards an intent (and possible response).
-    /// </summary>
+    /**
+     *  Holds accumulated contexts that hopefully grow towards an intent (and possible response).
+    */
     public class IntentContext : Context
     {
         // --------------------------------------------------------------------------------------------------------------------
@@ -18,10 +18,10 @@ namespace BotPal
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        /// <summary>
-        ///     Flattens all nested subjects into one enumeration. The returned list may not be in the correct time line sorted
-        ///     order.
-        /// </summary>
+        /**
+         *      Flattens all nested subjects into one enumeration. The returned list may not be in the correct time line sorted
+         *      order.
+        */
         /// <param name="includeGroups"> (Optional) True to include grouped contexts in the search. </param>
         /// <returns> An enumeration of all subject contexts found. </returns>
         public IEnumerable<SubjectContext> AllSubjects(bool includeGroups = true)
@@ -29,11 +29,11 @@ namespace BotPal
             return Flatten<SubjectContext>(includeGroups);
         }
 
-        /// <summary>
-        ///     Flattens all parent subjects into one subject list, sorted correctly by a descending timeline (time and sequence
-        ///     that subjects were added). This allows the first subject to be the most recent (helps with pronouns in proximity,
-        ///     etc.).
-        /// </summary>
+        /**
+         *      Flattens all parent subjects into one subject list, sorted correctly by a descending timeline (time and sequence
+         *      that subjects were added). This allows the first subject to be the most recent (helps with pronouns in proximity,
+         *      etc.).
+        */
         /// <returns> An enumeration of all subject contexts found, in timeline order. </returns>
         public IEnumerable<SubjectContext> FlattenMostRecentSubjects()
         {

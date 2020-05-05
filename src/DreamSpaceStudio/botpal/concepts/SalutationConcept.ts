@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace BotPal.Concepts
 {
-    /// <summary>
-    /// Adds rules to help determine colors.
-    /// </summary>
+    /**
+     *  Adds rules to help determine colors.
+    */
     export default class SalutationConcept extends Concept
     {
         // --------------------------------------------------------------------------------------------------------------------

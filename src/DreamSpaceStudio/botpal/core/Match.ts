@@ -13,16 +13,16 @@ export default class Match<T> implements IMatch<T> {
     set score(value: number) { if (this.#_score != value) { this.#_score = value; this.changed = true; } }
     #_score: number;
 
-    /// <summary>
-    /// Set to 'True' if the score has changed.
-    /// </summary>
+    /**
+     *  Set to 'True' if the score has changed.
+    */
     public changed: boolean;
 
     constructor(item: T, score: number) { this.item = item; this.#_score = score; }
 
-    ///// <summary>
-    ///// The default match comparer, which sorts scores in descending order so higher scores are first.
-    ///// </summary>
+    ///**
+     * // The default match comparer, which sorts scores in descending order so higher scores are first.
+    //*/
     // static readonly Comparer DefaultComparer = new Comparer();
 }
 

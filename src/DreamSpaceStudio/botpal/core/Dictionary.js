@@ -5,60 +5,60 @@ const Memory_1 = require("./Memory");
 const TextPart_1 = require("./TextPart");
 const DictionaryItem_1 = require("./DictionaryItem");
 const Enums_1 = require("./Enums");
-/// <summary>
-/// The dictionary holds both the RAW text, without context (no duplicates), and various 'DictionaryEntry' instances,
-/// which both link to the raw text, along with some contextual parameters for the text.  'DictionaryEntry' items CAN
-/// reference the same text among them, but there should only ever be one context entry based on contextual parameters,
-/// such as Part Of Speech, Tense, Plurality, etc.
-/// <para>The main purpose of the dictionary is as an index for quick text lookups when parsing user text inputs.   
-/// It can be purged and refreshed from the default dictionary words, and the loaded and parsed memory of user inputs 
-/// (though it may never be the same as before, since the system dynamically changes).</para>
-/// </summary>
+/**
+ *  The dictionary holds both the RAW text, without context (no duplicates), and various 'DictionaryEntry' instances,
+ *  which both link to the raw text, along with some contextual parameters for the text.  'DictionaryEntry' items CAN
+ *  reference the same text among them, but there should only ever be one context entry based on contextual parameters,
+ *  such as Part Of Speech, Tense, Plurality, etc.
+ *  <para>The main purpose of the dictionary is as an index for quick text lookups when parsing user text inputs.
+ *  It can be purged and refreshed from the default dictionary words, and the loaded and parsed memory of user inputs
+ *  (though it may never be the same as before, since the system dynamically changes).</para>
+*/
 class Dictionary {
     // --------------------------------------------------------------------------------------------------------------------
     constructor(memory) {
-        /// <summary>
-        /// The raw texts, as originally entered by users. The key IS case sensitive, which is '{TextPart}.Key'. That said, this only stores text
-        /// exactly as entered by a user. Normally casing is always determined in context at output to user.
-        /// </summary>
+        /**
+         *  The raw texts, as originally entered by users. The key IS case sensitive, which is '{TextPart}.Key'. That said, this only stores text
+         *  exactly as entered by a user. Normally casing is always determined in context at output to user.
+        */
         this._Texts = new Map();
-        /// <summary>
-        /// An index of all texts by their first letter (always lower casing). This can help to quickly speed up/shortcut word analysis.
-        /// </summary>
+        /**
+         *  An index of all texts by their first letter (always lower casing). This can help to quickly speed up/shortcut word analysis.
+        */
         this._TextIndexByFirstLetter = new Map(); // TODO: Consider restricting on max word length as well.
-        /// <summary>
-        /// Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity. This list holds those references.
-        /// This can help to quickly speed up/shortcut text input analysis.
-        /// </summary>
+        /**
+         *  Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity. This list holds those references.
+         *  This can help to quickly speed up/shortcut text input analysis.
+        */
         this._SimilarTexts = new Map();
-        /// <summary>
-        /// All words or phrases in this dictionary, based on group keys, and other specific word context parameters (POS, Tense, Plurality, etc.).
-        /// This servers as a quick index, which can be rebuilt or updated as needed.
-        /// By default, the lexicon will contain entries used to split text for grammar trees.
-        /// </summary>
+        /**
+         *  All words or phrases in this dictionary, based on group keys, and other specific word context parameters (POS, Tense, Plurality, etc.).
+         *  This servers as a quick index, which can be rebuilt or updated as needed.
+         *  By default, the lexicon will contain entries used to split text for grammar trees.
+        */
         this._Entries = new Map();
-        /// <summary>
-        /// Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity. 
-        /// This list holds those references, as it relates to dictionary entries.
-        /// This can help to quickly speed up/shortcut text input analysis, taking away the need to know context parameters (POS, Tense, Plurality, etc.).
-        /// </summary>
+        /**
+         *  Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity.
+         *  This list holds those references, as it relates to dictionary entries.
+         *  This can help to quickly speed up/shortcut text input analysis, taking away the need to know context parameters (POS, Tense, Plurality, etc.).
+        */
         this._SimilarEntries = new Map();
-        /// <summary>
-        /// An index of all words by their first letter (always lower casing). This can help to quickly speed up/shortcut word analysis.
-        /// </summary>
+        /**
+         *  An index of all words by their first letter (always lower casing). This can help to quickly speed up/shortcut word analysis.
+        */
         this._IndexByFirstLetter = new Map(); // TODO: Consider restricting on max word length as well.
-        /// <summary>
-        /// An index of all words by their string length. This can help to quickly speed up/shortcut word analysis.
-        /// </summary>
+        /**
+         *  An index of all words by their string length. This can help to quickly speed up/shortcut word analysis.
+        */
         this._IndexByLength = new Map(); // TODO: Consider restricting on max word length as well.
         this.memory = memory;
         this._Entries.set('', new DictionaryItem_1.default(this, null)); // (this is a global placeholder for "match unknown" concepts)
         // (NOTE: Synonyms, in this case, are more like word GROUPS, and less an actual list of strict synonyms; this helps the AI to know related words)
         // TODO: Consider keeping strict synonyms, and instead have a map to other "related" words.
     }
-    /// <summary>
-    /// This references the dictionary entry that has a blank key, and is used to store global data, such as concepts that should run if no other concepts are found.
-    /// </summary>
+    /**
+     *  This references the dictionary entry that has a blank key, and is used to store global data, such as concepts that should run if no other concepts are found.
+    */
     get GlobalEntry() { return this._Entries.get(''); }
     AddTextPart(textPart, pos = null, tense = Enums_1.TenseTypes.Unspecified, plurality = Enums_1.Plurality.Unspecified) {
         if (textPart instanceof TextPart_1.default) {
@@ -70,9 +70,9 @@ class Dictionary {
             return this.AddEntry(entry);
         }
     }
-    /// <summary>
-    /// Attempts to add the given entry, returning any existing entry instead if one already exists.
-    /// </summary>
+    /**
+     *  Attempts to add the given entry, returning any existing entry instead if one already exists.
+    */
     AddEntry(entry) {
         if (!entry)
             throw DS.Exception.argumentRequired("Dictionary.AddEntry()", "entry");

@@ -5,7 +5,7 @@ import ITTSService from "../services/tts/ITTSService";
 import BrainTask from "./BrainTask";
 import Operation from "./Operation";
 import { DefaultTTSService } from "../services/tts/TTSService";
-import Concept from "./Concept";
+import Concept, { conceptTypes } from "./Concept";
 import Match from "./Match";
 
 export interface ResponseHandler { (brain: Brain, response: Response): Promise<void>; }
@@ -68,43 +68,21 @@ export default class Brain {
 
     /**
      *  The response event is a hook for host handlers to receive output responses from previously processed user input.
-     *  <para>Note: THIS IS CALLED IN A DIFFERENT THREAD. For many UI frameworks you most likely need to execute responses
-     *  on the MAIN thread. Make sure on the host side you use either "Invoke()" or "BeingInvoke()", or similar, on your
-     *  WinForms control, or WPF "Dispatcher" reference.</para>
+     *  Note: THIS IS CALLED IN A DIFFERENT THREAD. For many UI frameworks you most likely need to execute responses
+     *  on the MAIN thread.
     */
-    Response: ResponseHandler; //event
+    response: ResponseHandler; //event
 
     /** Make the bot respond with some text.  Keep in mind this simply pushes a response to the listening host, and the bot will not know about it. */
-    async DoResponse(response: Response | string): Promise {
-        if (typeof response == 'string') response = new Response(response);
+    async doResponse(response: Response | string): Promise {
+        if (typeof response == 'string')
+            response = new Response(response);
 
-        if (this.Response != null)
-            if (_SynchronizationContext != null) {
-                var taskSource = new TaskCompletionSource<boolean>();
-                _SynchronizationContext.Send(async _ => { await Response.Invoke(this, response); taskSource.SetResult(true); }, null);
-                await taskSource.Task;
-            }
-            else
-                await Response.Invoke(this, response); // (called directly from this thread as a last resort)
-
-        //else
-        //{
-        //    // ... try other attempts ...
-        //    Dispatcher dispatcher = Dispatcher.FromThread(_MainThread);
-        //    if (dispatcher != null)
-        //    {
-        //        // We know the thread have a dispatcher that we can use.
-        //        dispatcher.BeginInvoke((Action)(() => Response?.Invoke(this, response)));
-        //    }
-        //    else if (Application.Current != null && !Application.Current.Dispatcher.CheckAccess())
-        //    {
-        //        Application.Current.Dispatcher.BeginInvoke((Action)(() => Response?.Invoke(this, response)));
-        //    }
-        //    else Response?.Invoke(this, response); // (called directly from this thread as a last resort)
-        //}
+        if (this.response != null)
+            await this.response.call(this, response); // (called directly from this thread as a last resort)
     }
 
-    async Say(text: string, voiceCode: string = null): Promise {
+    async say(text: string, voiceCode: string = null): Promise {
         if (this.TTSService == null)
             this.TTSService = new DefaultTTSService();
 
@@ -114,16 +92,20 @@ export default class Brain {
     // --------------------------------------------------------------------------------------------------------------------
 
     /**
-     *  Creates a new brain.
-    */
-    /// <param name="synchronizationContext">A SynchronizationContext instance to use to allow the Brain to synchronize events in context with the main thread.
-    /// This should be available for both WinForms and WPF.  If not specified, and it cannot be detected, the events will be called directly from worker threads.
-    /// <para>Note: Auto-detection reads from 'SynchronizationContext.Current', which means, if used, the constructor must be called on the main UI thread.</para></param>
-    /// <param name="configureConcepts">If true (default), then all concepts defined in this assembly are added to the brain.</param>
-    constructor(synchronizationContext: Worker = null, configureConcepts = true) {
-        this._MainThread = Thread.CurrentThread;
-        this._SynchronizationContext = synchronizationContext ?? SynchronizationContext.Current; // (supported both in WinForms AND WPF!)
+     *  The main worker that contains the main bot instance.  This allows the Brain to synchronize events in context with the
+     *  main thread. If not specified, then the system looks for 'onmessage' and 'postMessage' in the global scope. If found,
+     *  it will assume to be inside a worker, then it will set this to the global scope. If not found, then it will assume
+     *  to be the main bot instance.
+     *  If a main bot instance is moved to a worker instead, then this will no longer work, so this provides a way to connect
+     *  all other workers to the main worker.
+     */
+     _mainWorker: Worker;
 
+    /**
+     *  Creates a new brain.
+     * @param configureConcepts If true (default), then all concepts defined in this assembly are added to the brain.
+     */
+    constructor(configureConcepts = true) {
         this.Memory = new Memory(this);
 
         if (configureConcepts)
@@ -151,21 +133,17 @@ export default class Brain {
      *  Scans the current assembly for supported concepts and loads an instance of each one into the brain.
     */
     ConfigureDefaultConcepts() {
-        var conceptTypes = (from t in Assembly.GetExecutingAssembly().GetTypes() where t.IsClass && !t.IsGenericType && !t.IsAbstract && t.IsSubclassOf(typeof (Concept)) select t);
-
-        for (var concept of conceptTypes) {
-            var conceptAttrib = concept.GetCustomAttribute<ConceptAttribute>();
-            if (conceptAttrib != null && !conceptAttrib.Enabled) continue;
+        for (var conceptType of conceptTypes) {
             // ... iterate over the concept methods and store them for text matching later ...
-            Concept conceptInstance = (Concept)Activator.CreateInstance(concept, this);
-            this._Concepts.set(concept, conceptInstance);
+            Concept conceptInstance = (Concept)Activator.CreateInstance(conceptType, this);
+            this._Concepts.set(conceptType, conceptInstance);
             conceptInstance.RegisterHandlers();
         }
 
         // ... let all concepts know the core concepts are loaded and ready ...
 
-        for (var concept of this._Concepts.values)
-            concept.OnAfterAllRegistered();
+        for (var conceptType of this._Concepts.values)
+            conceptType.OnAfterAllRegistered();
     }
 
     /** Returns a registered concept singleton. 
@@ -259,7 +237,7 @@ export default class Brain {
                     this.#_operations.remove(op);
 
                 if (op.IsCompletedWithErrors)
-                    await this.DoResponse(new Response("Hmmm. Sorry, it looks like I had an internal error with one of my operations. Please contact support and pass along the following details.", null, string.Join(Environment.NewLine, op.Errors.Select(er => Exceptions.GetFullErrorMessage(er)))));
+                    await this.doResponse(new Response("Hmmm. Sorry, it looks like I had an internal error with one of my operations. Please contact support and pass along the following details.", null, string.Join(Environment.NewLine, op.Errors.Select(er => Exceptions.GetFullErrorMessage(er)))));
                 else if (op.Next != null)
                     this.#_operations.push(op.Next);
             }

@@ -138,7 +138,7 @@ class Dictionary {
     UpdateUsageFactor(force = false) {
         if (!force) {
             // ... schedule a refresh; if already scheduled, this will cancel the existing one and start a new one ...
-            this.memory.Brain.CreateTask((bt) => {
+            this.memory.Brain.createTask((bt) => {
                 this.UpdateUsageFactor(true);
                 return Task.CompletedTask;
             }).Start(TimeSpan.FromSeconds(1), "Dictionary", "UpdateUsageFactor");

@@ -21,13 +21,13 @@ export default class Memory implements IMemoryObject {
     readonly Dictionary: Dictionary;
 
     ///**
-     * // A list of all neural nodes in the memory.
+    //* A list of all neural nodes in the memory.
     //*/
     //? public readonly SortedSet<NeuralNode> NeuralNodes = new SortedSet<NeuralNode>(TimeReferencedObject.DefaultComparer);
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    public Memory(brain: Brain) {
+    constructor(brain: Brain) {
         this.Brain = brain;
         (<Writeable<Memory>>this).Dictionary = new Dictionary(this);
     }

@@ -3,17 +3,16 @@ var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 const Dictionary_1 = require("./Dictionary");
 class Memory {
-    get memory() { return this; }
     ///**
-    * // A list of all neural nodes in the memory.
+    //* A list of all neural nodes in the memory.
     //*/
     //? public readonly SortedSet<NeuralNode> NeuralNodes = new SortedSet<NeuralNode>(TimeReferencedObject.DefaultComparer);
     // --------------------------------------------------------------------------------------------------------------------
-    public() { }
-    Memory(brain) {
+    constructor(brain) {
         this.Brain = brain;
         this.Dictionary = new Dictionary_1.default(this);
     }
+    get memory() { return this; }
     GetCombinationCount(IList, , Match, , DictionaryItem) { }
 }
 exports.default = Memory;

@@ -12,7 +12,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     }
     return privateMap.get(receiver);
 };
-var __brain, __index, __delay, __category, __name, __promise, __error, __action;
+var __brain, __delay, __category, __name, __promise, __error, __action;
 Object.defineProperty(exports, "__esModule", { value: true });
 const TimeReferencedObject_1 = require("./TimeReferencedObject");
 /**
@@ -29,7 +29,7 @@ class BrainTask extends TimeReferencedObject_1.default {
     constructor(brain, action, timeout) {
         super();
         __brain.set(this, void 0);
-        __index.set(this, -1); // (used to quickly remove the task from a brain's task list; note: never read/modify this without first locking Brain._Tasks)
+        this._index = -1; // (used to quickly remove the task from a brain's task list; note: never read/modify this without first locking Brain._Tasks)
         __delay.set(this, void 0);
         __category.set(this, void 0);
         __name.set(this, void 0);
@@ -104,7 +104,7 @@ class BrainTask extends TimeReferencedObject_1.default {
                 if (result instanceof Promise)
                     await result;
             }
-            __classPrivateFieldGet(this, __promise).completed = true;
+            __classPrivateFieldGet(this, __promise).state = true;
         }
         catch (ex) {
             __classPrivateFieldGet(this, __promise).error = ex;
@@ -156,7 +156,7 @@ class BrainTask extends TimeReferencedObject_1.default {
     }
 }
 exports.default = BrainTask;
-__brain = new WeakMap(), __index = new WeakMap(), __delay = new WeakMap(), __category = new WeakMap(), __name = new WeakMap(), __promise = new WeakMap(), __error = new WeakMap(), __action = new WeakMap();
+__brain = new WeakMap(), __delay = new WeakMap(), __category = new WeakMap(), __name = new WeakMap(), __promise = new WeakMap(), __error = new WeakMap(), __action = new WeakMap();
 //export default class BrainTask<TState extends object> extends BrainTaskBase {
 //    _Action2: Action<BrainTask<TState>>;
 //    _Action3: Action2<BrainTask<TState>, TState>;
@@ -190,4 +190,4 @@ __brain = new WeakMap(), __index = new WeakMap(), __delay = new WeakMap(), __cat
 //constructor(brain: Brain, action: Action < BrainTask < TState >, TState > , TState state, creationOptions: TaskCreationOptions) : base(brain) { _Action3 = action; Task = new Task(_run3, this, creationOptions); }
 //constructor(brain: Brain, action: Action < BrainTask < TState >, TState > , TState state, cancellationToken: CancellationToken, creationOptions: TaskCreationOptions) : base(brain) { _Action3 = action; _CancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken); Task = new Task(_run3, this, cancellationToken, creationOptions); }
 //}
-//# sourceMappingURL=Tasks.js.map
+//# sourceMappingURL=BrainTask.js.map

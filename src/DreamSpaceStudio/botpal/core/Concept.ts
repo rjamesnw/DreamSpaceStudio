@@ -267,7 +267,7 @@ export class ConceptHandlerContext implements IMemoryObject {
             return (text ?? "") == (this.RightHandlerMatch?.item.DictionaryItem.TextPart.Text ?? "");
         }
         else {
-            var grpkey = DS.StringUtils.isEmptyOrWhitespace(text) ? null : this.memory?.Brain.ToGroupKey(text);
+            var grpkey = DS.StringUtils.isEmptyOrWhitespace(text) ? null : this.memory?.Brain.toGroupKey(text);
             return grpkey == this.RightHandlerMatch.item.DictionaryItem.TextPart.GroupKey;
         }
     }

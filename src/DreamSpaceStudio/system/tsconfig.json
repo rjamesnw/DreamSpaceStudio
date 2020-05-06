@@ -26,6 +26,7 @@
     "VDOM.ts",
     "Templating.ts",
     "Templating.parse.ts",
+    "StatePromise.ts",
     "./*.ts",
     "abstracts/Events.ts",
     "abstracts/VirtualFileSystem.ts",

@@ -9,16 +9,25 @@ var __operations, __isShuttingDown, __isStopped;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Thread = void 0;
 const Memory_1 = require("./Memory");
-const cluster_1 = require("cluster");
 const Response_1 = require("../core/Response");
-const Tasks_1 = require("./Tasks");
+const BrainTask_1 = require("./BrainTask");
 const Operation_1 = require("./Operation");
+const TTSService_1 = require("../services/tts/TTSService");
+const Concept_1 = require("./Concept");
 class Thread {
 }
 exports.Thread = Thread;
 /** The brain is the whole system that observes, evaluates, and decides what to do based on user inputs. */
 class Brain {
-    constructor() {
+    // --------------------------------------------------------------------------------------------------------------------
+    /**
+     *  Creates a new brain.
+    */
+    /// <param name="synchronizationContext">A SynchronizationContext instance to use to allow the Brain to synchronize events in context with the main thread.
+    /// This should be available for both WinForms and WPF.  If not specified, and it cannot be detected, the events will be called directly from worker threads.
+    /// <para>Note: Auto-detection reads from 'SynchronizationContext.Current', which means, if used, the constructor must be called on the main UI thread.</para></param>
+    /// <param name="configureConcepts">If true (default), then all concepts defined in this assembly are added to the brain.</param>
+    constructor(synchronizationContext = null, configureConcepts = true) {
         // --------------------------------------------------------------------------------------------------------------------
         this.LanguageParsingRegex = new RegExp("\".*?\"|'.*?'|[A-Za-z']+|[0-9]+|\\s+|.", 'm');
         //? public Thought Thought; // (this should never be null when a brain is loaded, as thoughts are historical; otherwise this is a brand new brain, and this can be null)
@@ -27,6 +36,20 @@ class Brain {
         __operations.set(this, []);
         __isShuttingDown.set(this, void 0);
         __isStopped.set(this, void 0);
+        // --------------------------------------------------------------------------------------------------------------------
+        /**
+         *  Concepts are registered here as singletons so they can be referenced by other concepts.
+         *  This is required so that each concept can register and expose the words it recognizes,
+         *  complete with lexical details about the word (or text/phrase).
+        */
+        this._Concepts = new Map();
+        this.ConceptHandlerLoadErrors = new List(); // (one place for all concepts to log errors on registration - the UI should display this on first load)
+        this._MainThread = Thread.CurrentThread;
+        this._SynchronizationContext = synchronizationContext !== null && synchronizationContext !== void 0 ? synchronizationContext : SynchronizationContext.Current; // (supported both in WinForms AND WPF!)
+        this.Memory = new Memory_1.default(this);
+        if (configureConcepts)
+            this.ConfigureDefaultConcepts();
+        var task = this._ProcessOperations(null);
     }
     // --------------------------------------------------------------------------------------------------------------------
     /**
@@ -45,6 +68,8 @@ class Brain {
     get IsStopped() { return __classPrivateFieldGet(this, __isStopped); }
     /** Make the bot respond with some text.  Keep in mind this simply pushes a response to the listening host, and the bot will not know about it. */
     async DoResponse(response) {
+        if (typeof response == 'string')
+            response = new Response_1.default(response);
         if (this.Response != null)
             if (_SynchronizationContext != null) {
                 var taskSource = new TaskCompletionSource();
@@ -69,77 +94,44 @@ class Brain {
         //    else Response?.Invoke(this, response); // (called directly from this thread as a last resort)
         //}
     }
-    DoResponse(string, response) { }
-    DoResponse(, Response) { }
+    async Say(text, voiceCode = null) {
+        if (this.TTSService == null)
+            this.TTSService = new TTSService_1.DefaultTTSService();
+        await this.TTSService.Say(text, voiceCode);
+    }
+    get Concepts() { return this._Concepts.Values; }
+    ConfigureDefaultConcepts() {
+        var conceptTypes = (from), t;
+         in Assembly.GetExecutingAssembly().GetTypes();
+        where;
+        t.IsClass && !t.IsGenericType && !t.IsAbstract && t.IsSubclassOf(typeof (Concept_1.default));
+        select;
+        t;
+        ;
+        foreach();
+        var concept;
+         in conceptTypes;
+        {
+            var conceptAttrib = concept.GetCustomAttribute();
+            if (conceptAttrib != null && !conceptAttrib.Enabled)
+                continue;
+            // ... iterate over the concept methods and store them for text matching later ...
+            Concept_1.default;
+            conceptInstance = (Concept_1.default);
+            Activator.CreateInstance(concept, this);
+            _Concepts[concept] = conceptInstance;
+            conceptInstance.RegisterHandlers();
+        }
+        // ... let all concepts know the core concepts are loaded and ready ...
+        foreach();
+        var concept;
+         in _Concepts.Values;
+        concept.OnAfterAllRegistered();
+    }
 }
 exports.default = Brain;
 __operations = new WeakMap(), __isShuttingDown = new WeakMap(), __isStopped = new WeakMap();
-(response);
-;
-async;
-Task;
-Say(string, text, string, voiceCode = null);
-{
-    if (TTSService == null)
-        TTSService = new DefaultTTSService();
-    await TTSService.Say(text, voiceCode);
-}
-// --------------------------------------------------------------------------------------------------------------------
-/**
- *  Creates a new brain.
-*/
-/// <param name="synchronizationContext">A SynchronizationContext instance to use to allow the Brain to synchronize events in context with the main thread.
-/// This should be available for both WinForms and WPF.  If not specified, and it cannot be detected, the events will be called directly from worker threads.
-/// <para>Note: Auto-detection reads from 'SynchronizationContext.Current', which means, if used, the constructor must be called on the main UI thread.</para></param>
-/// <param name="configureConcepts">If true (default), then all concepts defined in this assembly are added to the brain.</param>
-constructor(synchronizationContext, cluster_1.Worker = null, configureConcepts = true);
-{
-    _MainThread = Thread.CurrentThread;
-    _SynchronizationContext = synchronizationContext !== null && synchronizationContext !== void 0 ? synchronizationContext : SynchronizationContext.Current; // (supported both in WinForms AND WPF!)
-    Memory_1.default = new Memory_1.default(this);
-    if (configureConcepts)
-        ConfigureDefaultConcepts();
-    var task = _ProcessOperations(null);
-}
-Dictionary < Type, Concept > _Concepts;
-new Dictionary();
-IEnumerable < Concept > Concepts;
-_Concepts.Values;
-List < Exception > ConceptHandlerLoadErrors;
-new List(); // (one place for all concepts to log errors on registration - the UI should display this on first load)
-void ConfigureDefaultConcepts();
-{
-    var conceptTypes = (from), t;
-     in Assembly.GetExecutingAssembly().GetTypes();
-    where;
-    t.IsClass && !t.IsGenericType && !t.IsAbstract && t.IsSubclassOf(typeof (Concept));
-    select;
-    t;
-    ;
-    foreach();
-    var concept;
-     in conceptTypes;
-    {
-        var conceptAttrib = concept.GetCustomAttribute();
-        if (conceptAttrib != null && !conceptAttrib.Enabled)
-            continue;
-        // ... iterate over the concept methods and store them for text matching later ...
-        Concept;
-        conceptInstance = (Concept);
-        Activator.CreateInstance(concept, this);
-        _Concepts[concept] = conceptInstance;
-        conceptInstance.RegisterHandlers();
-    }
-    // ... let all concepts know the core concepts are loaded and ready ...
-    foreach();
-    var concept;
-     in _Concepts.Values;
-    concept.OnAfterAllRegistered();
-}
-T;
-GetConcept();
-where;
-T: Concept => (T);
+(T);
 _Concepts.Value(typeof (T));
 ///**
     *
@@ -208,7 +200,7 @@ void Stop(bool, wait = true);
 // --------------------------------------------------------------------------------------------------------------------
 async;
 Task;
-_ProcessOperations(Tasks_1.default, btask);
+_ProcessOperations(BrainTask_1.default, btask);
 {
     if (btask != null) {
         Operation_1.default[];
@@ -249,21 +241,21 @@ void AddOperation(Operation_1.default, op);
     if (!_Operations.Contains(op))
         _Operations.Add(op);
 }
-Tasks_1.default;
+BrainTask_1.default;
 CreateEmptyTask();
 {
-    var btask = new Tasks_1.default(this);
+    var btask = new BrainTask_1.default(this);
     lock(_Tasks);
     {
         _Tasks.Add(btask);
     }
     return btask;
 }
-Tasks_1.default;
-CreateTask(Func < Tasks_1.default, Task > action, CancellationToken ? cancelToken = null : );
+BrainTask_1.default;
+CreateTask(Func < BrainTask_1.default, Task > action, CancellationToken ? cancelToken = null : );
 {
     if (action != null) {
-        var btask = new Tasks_1.default(this, action, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
+        var btask = new BrainTask_1.default(this, action, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
         lock(_Tasks);
         {
             _Tasks.Add(btask);
@@ -273,16 +265,16 @@ CreateTask(Func < Tasks_1.default, Task > action, CancellationToken ? cancelToke
     else
         return null;
 }
-Tasks_1.default < TState > Create;
+BrainTask_1.default < TState > Create;
 i;
-Promise(Action < Tasks_1.default < TState >> action, TState, state, CancellationToken ? cancelToken = null : );
+Promise(Action < BrainTask_1.default < TState >> action, TState, state, CancellationToken ? cancelToken = null : );
 where;
 TState: class {
     if(action) { }
 }
  != null;
 {
-    var btask = new Tasks_1.default(this, action, state, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
+    var btask = new BrainTask_1.default(this, action, state, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
     lock(_Tasks);
     {
         btask._Index = _Tasks.Count;
@@ -291,14 +283,14 @@ TState: class {
     return btask;
 }
 return null;
-Tasks_1.default < TState > CreateTask(Action < Tasks_1.default < TState > , TState > action, TState, state, CancellationToken ? cancelToken = null : );
+BrainTask_1.default < TState > CreateTask(Action < BrainTask_1.default < TState > , TState > action, TState, state, CancellationToken ? cancelToken = null : );
 where;
 TState: class {
     if(action) { }
 }
  != null;
 {
-    var btask = new Tasks_1.default(this, action, state, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
+    var btask = new BrainTask_1.default(this, action, state, cancelToken !== null && cancelToken !== void 0 ? cancelToken : new CancellationToken());
     lock(_Tasks);
     {
         _Tasks.Add(btask);
@@ -306,8 +298,8 @@ TState: class {
     return btask;
 }
 return null;
-Tasks_1.default;
-RemoveTask(Tasks_1.default, btask);
+BrainTask_1.default;
+RemoveTask(BrainTask_1.default, btask);
 {
     lock(_Tasks);
     {
@@ -322,25 +314,25 @@ RemoveTask(Tasks_1.default, btask);
                 _Tasks.RemoveAt(i2);
             btask._Index = -1;
             // ... also remove from the delayed list if this is a delayed task ...
-            if (btask.IsDelayed)
+            if (btask.isDelayed)
                 lock(_DelayedTasks);
-            _DelayedTasks.Remove(btask.Key);
+            _DelayedTasks.Remove(btask.key);
         }
     }
     return btask;
 }
-Tasks_1.default;
+BrainTask_1.default;
 GetTask(string, category, string, name);
 {
     lock(_DelayedTasks);
     return _DelayedTasks.Value((category !== null && category !== void 0 ? category : "") + "_" + name);
 }
-Tasks_1.default;
+BrainTask_1.default;
 CancelTask(string, category, string, name, bool, ignoreIfCannotBeCanceled = false);
 {
     var btask = GetTask(category, name);
-    if (btask != null && (btask.CanBeCanceled || !ignoreIfCannotBeCanceled)) //canceled 
-        btask.Cancel();
+    if (btask != null && (btask.canBeCanceled || !ignoreIfCannotBeCanceled)) //canceled 
+        btask.cancel();
     return btask;
 }
 string[];

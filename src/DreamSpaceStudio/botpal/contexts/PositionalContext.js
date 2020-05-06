@@ -10,10 +10,10 @@ using;
 System.Text;
 var BotPal;
 (function (BotPal) {
-    /// <summary>
-    /// Represents the position of subjects in a scene. Positions assume that positive Z is forward, positive Y is up, and 
-    /// positive X is right (left handed coordinate system).
-    /// </summary>
+    /**
+     *  Represents the position of subjects in a scene. Positions assume that positive Z is forward, positive Y is up, and
+     *  positive X is right (left handed coordinate system).
+    */
     class PositionalContext {
     }
     Context;

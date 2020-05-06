@@ -1,6 +1,8 @@
 interface Array<T> {
     /** Removes the specified item and returns true if removed, or false if not found. */
     remove(item: T): boolean;
+    /** Removes an item at the specified index and returns true if removed, or false if the index is out of bounds. */
+    removeAt(index: number): boolean;
     /**
      * Returns the maximum value found using comparison function, or default primitive comparison if not supplied. Undefined items are ignored.
      * The predicate function should return -1 if 'a' is less than 'b', 0 if equal, and 1 if 'a' is greater than 'b'.
@@ -18,6 +20,13 @@ interface IndexedObject<T = any> {
 declare type Writeable<T> = {
     -readonly [P in keyof T]: T[P];
 };
+interface Promise<T = void> {
+}
+declare type Action2<T, T2> = (a: T, b: T2) => T;
+declare type Action<T = void> = (a: T) => void;
+declare type Func2<T, T2, R> = (a: T, b: T2) => R;
+declare type Func1<T, R> = (a: T) => R;
+declare type Func<R = any> = () => R;
 interface IStaticGlobals {
     [index: string]: any;
     Function: FunctionConstructor;
@@ -940,6 +949,82 @@ declare namespace DS {
     }
 }
 declare namespace DS {
+    type TExecutor = (resolve: (value?: boolean | PromiseLike<boolean>) => void, reject: (reason?: any) => void) => void;
+    /**
+     * Creates a promise that is resolved when some state is set. This allows a task to stay dormant until some external state changes.
+     */
+    class SpecializedPromise<T = any, TData = any> extends Promise<T> {
+        /**
+         * Returns true once a state have been set. Once the state is set it cannot be changed.
+         */
+        get completed(): boolean;
+        protected _completed: boolean;
+        /**
+         * Gets or sets an error state on this object.
+         * Setting an error state (such as an Error object reference) will trigger "reject" on the promise.
+         * Note: Even if error is set to undefined or null, it still counts as an error state, and 'failed' will be true.
+         */
+        get error(): any;
+        set error(err: any);
+        protected _error: any;
+        /**
+         * Returns true if this promise erred out.
+         */
+        get failed(): boolean;
+        protected _failed: boolean;
+        protected _resolve: (value?: T | PromiseLike<T>) => void;
+        protected _reject: (reason?: any) => void;
+        /** Any user-specific data that needs to be associated with this promise. */
+        data?: TData;
+        constructor(executor?: TExecutor | any);
+        protected doResolve(value?: T): void;
+        protected _cleanUp(): void;
+        /** Adds this state promise to an array of states and returns the same state promise instance. */
+        addTo(queue: SpecializedPromise[]): this;
+        /**
+         *  Forces this promise to continue in an uncompleted state, which assumes the developer is aware an will handle the state accordingly.
+         * @param {T} value The value to resolve with in order to continue.
+         */
+        continueUncompleted(value: T): void;
+        /** Just a shortcut to set an "Aborted." error message, which rejects the promise. */
+        abort(): void;
+    }
+    class TimeBasedPromise<T = any, TData = any> extends SpecializedPromise<T, TData> {
+        protected _time: number;
+        protected _timerHandle: any;
+        constructor(executor?: TExecutor | any);
+        /**
+         * Called 'setTimeout()' with the specified time, in milliseconds, along with the callback function.
+         * @param time The time in milliseconds.
+         * @param callback The callback to execute. If not supplied the promise resolves automatically once the time elapses.
+         */
+        protected _setTimer(time: number, callback?: Action): void;
+        /** Clears any timer handles and resets some internal values. */
+        protected _cleanUp(): void;
+    }
+    /**
+     * Creates a promise that is resolved when some state is set. This allows a task to stay dormant until some external state changes.
+     */
+    class StatePromise<TState = boolean, TData = any> extends TimeBasedPromise<boolean, TData> {
+        #private;
+        /**
+         * Any user-specific state value that will resolve this promise.
+         * Setting this to undefined has no effect (see also: continueUncompleted()).
+         */
+        get state(): TState;
+        set state(v: TState);
+        /**
+         * Constructs a new StatePromise instance.
+         * @param {number} timeout An optional timeout period, in milliseconds, after which a rejection occurs.
+         */
+        constructor(timeout?: number);
+        /**
+         *  Forces this promise to continue in an uncompleted state, which assumes the developer is aware an will handle the state accordingly.
+         */
+        continueUncompleted(): void;
+    }
+}
+declare namespace DS {
     /** Contains information on the user agent (browser) being used.
       * Note: While it's always better to check objects for supported functions, sometimes an existing function may take different
       * parameters based on the browser (such as 'Worker.postMessage()' using transferable objects with IE vs All Others [as usual]).
@@ -1156,6 +1241,26 @@ declare namespace DS {
             getValue(type?: string, parameter?: string): any;
         }
     }
+}
+declare namespace DS {
+    /**
+     * Creates a promise that delays for a time before continuing.
+     * The promise also supports aborting the delay, which also rejects the promise.
+     */
+    class DelayedPromise<TData = any> extends TimeBasedPromise<boolean, TData> {
+        constructor(ms: number);
+        /**
+         *  Forces this promise to continue in an uncompleted state, which assumes the developer is aware an will handle the state accordingly.
+         */
+        continueUncompleted(): void;
+    }
+}
+interface PromiseConstructor {
+    /**
+     * Delays for the specified number of milliseconds before continuing.
+     * @param {number} ms
+     */
+    delay(ms: number): DS.DelayedPromise;
 }
 declare namespace DS {
     interface DelegateFunction<TObj extends object = object> {
@@ -2015,7 +2120,17 @@ declare namespace DS {
      * properties does not cause the other values to update.  Use the supplied functions for manipulating the values.
      */
     class TimeSpan {
-        constructor(year?: number, dayOfYear?: number, hours?: number, minutes?: number, seconds?: number, milliseconds?: number);
+        /** Constructs a new TimeSpan instance. */
+        constructor();
+        /**
+         * Constructs a new TimeSpan instance.
+         * @param time The time, in milliseconds since JS-based Epoch, to set this TimeSpan to.
+         */
+        constructor(time: number);
+        /**
+         * Constructs a new TimeSpan instance.
+         */
+        constructor(year: number, dayOfYear: number, hours?: number, minutes?: number, seconds?: number, milliseconds?: number);
         /** Returns the time zone offset in milliseconds ({Date}.getTimezoneOffset() returns it in minutes). */
         static getTimeZoneOffset(): number;
         /** Creates a TimeSpan object from the current value returned by calling 'Date.now()', or 'new Date().getTime()' if 'now()' is not supported. */

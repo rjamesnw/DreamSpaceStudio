@@ -79,7 +79,7 @@
     <TypeScriptCompile Include="botpal\core\Comparer.ts" />
     <TypeScriptCompile Include="botpal\core\DictionaryItem.ts" />
     <TypeScriptCompile Include="botpal\core\Match.ts" />
-    <TypeScriptCompile Include="botpal\core\Tasks.ts" />
+    <TypeScriptCompile Include="botpal\core\BrainTask.ts" />
     <TypeScriptCompile Include="system\abstracts\DBAdapter.ts" />
     <TypeScriptCompile Include="system\client\Utilities.ts" />
     <TypeScriptCompile Include="system\client\Views.ts" />
@@ -98,6 +98,7 @@
     <TypeScriptCompile Include="system\client\extended_abstracts\Project.ts" />
     <TypeScriptCompile Include="system\client\extended_abstracts\Solution.ts" />
     <TypeScriptCompile Include="system\client\extended_abstracts\VirtualFileSystem.ts" />
+    <TypeScriptCompile Include="system\DelayedPromise.ts" />
     <TypeScriptCompile Include="system\Delegate.ts" />
     <TypeScriptCompile Include="system\DependentObject.ts" />
     <TypeScriptCompile Include="system\Diagnostics.ts" />
@@ -133,6 +134,7 @@
     <TypeScriptCompile Include="system\abstracts\Solution.ts" />
     <TypeScriptCompile Include="system\abstracts\User.ts" />
     <TypeScriptCompile Include="system\abstracts\Workflow.ts" />
+    <TypeScriptCompile Include="system\StatePromise.ts" />
     <TypeScriptCompile Include="system\Templating.Parser.ts" />
     <TypeScriptCompile Include="system\ResourceRequest.ts" />
     <TypeScriptCompile Include="system\Resources.ts" />

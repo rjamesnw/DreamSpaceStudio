@@ -24,8 +24,19 @@ namespace DS {
      * properties does not cause the other values to update.  Use the supplied functions for manipulating the values.
      */
     export class TimeSpan {
+        /** Constructs a new TimeSpan instance. */
+        constructor();
+        /**
+         * Constructs a new TimeSpan instance.
+         * @param time The time, in milliseconds since JS-based Epoch, to set this TimeSpan to.
+         */
+        constructor(time: number);
+        /**
+         * Constructs a new TimeSpan instance.
+         */
+        constructor(year: number, dayOfYear: number, hours?: number, minutes?: number, seconds?: number, milliseconds?: number);
         constructor(year?: number, dayOfYear?: number, hours?: number, minutes?: number, seconds?: number, milliseconds?: number) {
-            if (arguments.length <= 3)
+            if (arguments.length <= 1)
                 this.setTime(year);
             else
                 this.setTime(TimeSpan.msFromTime(year, dayOfYear, hours, minutes, seconds, milliseconds));

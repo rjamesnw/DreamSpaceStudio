@@ -1,22 +1,22 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-/// <summary>
-/// A multi-node is a node that has multiple children and siblings.
-/// Sibling nodes are use mainly for grouping together the same types of nodes.
-/// </summary>
+/**
+ *  A multi-node is a node that has multiple children and siblings.
+ *  Sibling nodes are use mainly for grouping together the same types of nodes.
+*/
 /// <typeparam name="T"></typeparam>
 class MultiNode {
     // --------------------------------------------------------------------------------------------------------------------
-    /// <summary> The parent nodes. </summary>
+    /** The parent nodes. */
     get parent() { return this._parent; }
     get hasSiblings() { var _a; return ((_a = this.siblings) === null || _a === void 0 ? void 0 : _a.length) > 0; }
-    /// <summary>
-    /// Returns the node at the top left most side of the parent hierarchy.
-    /// <para>Note: If the current node is already the top left most, then itself is returned. </para>
-    /// </summary>
+    /**
+     *  Returns the node at the top left most side of the parent hierarchy.
+     *  <para>Note: If the current node is already the top left most, then itself is returned. </para>
+    */
     get root() { var _a, _b; return (_b = (_a = this._parent) === null || _a === void 0 ? void 0 : _a.root) !== null && _b !== void 0 ? _b : this; }
     // --------------------------------------------------------------------------------------------------------------------
-    /// <summary> Removes the given node from the children (if exists) then returns the node. </summary>
+    /** Removes the given node from the children (if exists) then returns the node. */
     /// <param name="node"> . </param>
     /// <param name="includeParent">
     ///     (Optional) True to also remove this parent from the given child node (the default is true).
@@ -29,7 +29,7 @@ class MultiNode {
                 node.RemoveParent(false);
         return node;
     }
-    /// <summary> Removes the given node from the children (if exists) then returns the node. </summary>
+    /** Removes the given node from the children (if exists) then returns the node. */
     /// <param name="node"> . </param>
     /// <param name="includeParent"> (Optional) True to also remove this parent from the given child node. </param>
     /// <returns> Returns the type 'T' instance. </returns>
@@ -40,7 +40,7 @@ class MultiNode {
                 node.Detach();
         return node;
     }
-    /// <summary> Removes the given parent node from this child node (if exists), then returns this node. </summary>
+    /** Removes the given parent node from this child node (if exists), then returns this node. */
     /// <param name="includeChild">
     ///     (Optional) True to also removed this child from the parent's children list (the default is true). If false, then the
     ///     node is detached locally only.
@@ -54,7 +54,7 @@ class MultiNode {
         }
         return this;
     }
-    /// <summary> Removes and returns all the child nodes. </summary>
+    /** Removes and returns all the child nodes. */
     /// <returns> A List&lt;T&gt; </returns>
     RemoveChildren() {
         var _a, _b;
@@ -63,10 +63,10 @@ class MultiNode {
             removedItems.push(this.RemoveChild(this.children[i]));
         return removedItems;
     }
-    /// <summary>
-    ///     Completely removes the given node from the parent (if any) then returns the node. This involves removing from either
-    ///     the child or sibling parent lists.
-    /// </summary>
+    /**
+     *      Completely removes the given node from the parent (if any) then returns the node. This involves removing from either
+     *      the child or sibling parent lists.
+    */
     /// <returns> Returns the type 'T' instance. </returns>
     Detach() {
         var _a, _b;
@@ -75,10 +75,10 @@ class MultiNode {
         this._parent = null;
         return this;
     }
-    /// <summary>
-    ///     Attaches the node as a child to this node. Note: This forces an attachment.  No check is performed, so it is assumed
-    ///     the caller knows what they are doing.
-    /// </summary>
+    /**
+     *      Attaches the node as a child to this node. Note: This forces an attachment.  No check is performed, so it is assumed
+     *      the caller knows what they are doing.
+    */
     /// <exception cref="ArgumentNullException"> Thrown when one or more required arguments are null. </exception>
     /// <param name="node"> . </param>
     /// <returns> A Node. </returns>
@@ -94,10 +94,10 @@ class MultiNode {
         node._parent = this;
         return node;
     }
-    /// <summary>
-    ///     Attaches the node as a child to this node. Note: This forces an attachment.  No check is performed, so it is assumed
-    ///     the caller knows what they are doing.
-    /// </summary>
+    /**
+     *      Attaches the node as a child to this node. Note: This forces an attachment.  No check is performed, so it is assumed
+     *      the caller knows what they are doing.
+    */
     /// <param name="node"> . </param>
     /// <returns> A Node. </returns>
     AddSibling(node) {
@@ -113,7 +113,7 @@ class MultiNode {
         return node;
     }
     // --------------------------------------------------------------------------------------------------------------------
-    /// <summary> Replaces the current node with the given node and returns the given node. </summary>
+    /** Replaces the current node with the given node and returns the given node. */
     /// <exception cref="ArgumentNullException"> Thrown when one or more required arguments are null. </exception>
     /// <param name="node"> . </param>
     /// <returns> Returns the type 'T' instance. </returns>

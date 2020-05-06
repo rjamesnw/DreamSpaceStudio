@@ -8,9 +8,9 @@ using;
 System.Text;
 var BotPal;
 (function (BotPal) {
-    /// <summary>
-    /// Holds accumulated contexts that hopefully grow towards an intent (and possible response).
-    /// </summary>
+    /**
+     *  Holds accumulated contexts that hopefully grow towards an intent (and possible response).
+    */
     class IntentContext {
     }
     Context;

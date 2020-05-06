@@ -6,6 +6,8 @@
 interface Array<T> {
     /** Removes the specified item and returns true if removed, or false if not found. */
     remove(item: T): boolean;
+    /** Removes an item at the specified index and returns true if removed, or false if the index is out of bounds. */
+    removeAt(index: number): boolean;
     /** 
      * Returns the maximum value found using comparison function, or default primitive comparison if not supplied. Undefined items are ignored. 
      * The predicate function should return -1 if 'a' is less than 'b', 0 if equal, and 1 if 'a' is greater than 'b'.
@@ -17,6 +19,10 @@ if (!Array.prototype.remove) // Primarily to help support conversions from C# - 
     Array.prototype.remove = function (this: Array<any>, item: any) {
         var i = this.indexOf(this);
         return i > -1 ? (this.splice(i, 1), true) : false;
+    };
+if (!Array.prototype.removeAt) // Primarily to help support conversions from C# - also, this should exist anyhow!
+    Array.prototype.removeAt = function (this: Array<any>, index: number) {
+        return index >= 0 && index < this.length ? (this.splice(index, 1), true) : false;
     };
 if (!Array.prototype.max) // Primarily to help support conversions from C# - also, this should exist anyhow!
     Array.prototype.max = function (this: Array<any>, predicate?: (a: any, b: any, aIndex: number, bIndex: number) => number) {
@@ -54,6 +60,15 @@ interface IndexedObject<T = any> {
 type Writeable<T> = {
     -readonly [P in keyof T]: T[P];
 };
+
+interface Promise<T = void> { }
+
+type Action2<T, T2> = (a: T, b: T2) => T;
+type Action<T = void> = (a: T) => void;
+
+type Func2<T, T2, R> = (a: T, b: T2) => R;
+type Func1<T, R> = (a: T) => R;
+type Func<R = any> = () => R;
 
 interface IStaticGlobals {
     [index: string]: any;

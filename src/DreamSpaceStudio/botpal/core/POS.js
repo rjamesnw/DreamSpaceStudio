@@ -52,15 +52,15 @@ let PartOfSpeech = /** @class */ (() => {
 })();
 exports.PartOfSpeech = PartOfSpeech;
 /**
-/// Part-of-speech word assignment categories describing word syntactic functions.
+ *  Part-of-speech word assignment categories describing word syntactic functions.
 */
 let POS = /** @class */ (() => {
     class POS {
     }
     /**
-    ///     The 100 series represent groups.  For example, when creating a thought graph, 'Pronoun_Question' and
-    ///     'Adverb_Question' can be grouped together under a shared POS type.  Another example may be "me and john" where the
-    ///     pronoun and noun become grouped. Groups can be viewed as root nodes to the details under them.
+     *      The 100 series represent groups.  For example, when creating a thought graph, 'Pronoun_Question' and
+     *      'Adverb_Question' can be grouped together under a shared POS type.  Another example may be "me and john" where the
+     *      pronoun and noun become grouped. Groups can be viewed as root nodes to the details under them.
     */
     POS.Group = new PartOfSpeech("group", 100);
     POS.Group_Question = POS.Group.addClass("question", 110); // (usually pronoun or adverb)
@@ -111,8 +111,8 @@ let POS = /** @class */ (() => {
     /** Words meaning "to be able or permitted to", such as "they can run fast", "we can if you like", etc. */
     POS.Verb_AbleToOrPermitted = POS.Verb.addClass("abletoorpermitted", 4050);
     /**
-    /// A word which usually describes a verb. It tells you how something is done. It may also tell you when or where
-    /// something happened. (Examples: slowly, intelligently, well, yesterday, tomorrow, here, everywhere)
+     *  A word which usually describes a verb. It tells you how something is done. It may also tell you when or where
+     *  something happened. (Examples: slowly, intelligently, well, yesterday, tomorrow, here, everywhere)
     */
     POS.Adverb = new PartOfSpeech("adverb", 5000);
     /** For questions, such as "When", "Where", "Why", etc. */
@@ -158,10 +158,10 @@ let POS = /** @class */ (() => {
     /** "Yes.", "No.", "Help!", etc. */
     POS.Exclamation = new PartOfSpeech("exclamation", 10000);
     /**
-    /// Used to show purpose, intention, result, cause, desired action, reports or status, or one action following another.
-    /// Details: Infinitive markers are function words that distinguish the base forms from the infinitive forms of English
-    /// verbs. Function words are words that perform definite grammatical functions but that lack definite lexical meaning.
-    /// Read more at http://www.linguisticsgirl.com/the-infinitive-marker-in-english-grammar/#84KDCvODiCcW2r8q.99
+     *  Used to show purpose, intention, result, cause, desired action, reports or status, or one action following another.
+     *  Details: Infinitive markers are function words that distinguish the base forms from the infinitive forms of English
+     *  verbs. Function words are words that perform definite grammatical functions but that lack definite lexical meaning.
+     *  Read more at http://www.linguisticsgirl.com/the-infinitive-marker-in-english-grammar/#84KDCvODiCcW2r8q.99
     */
     POS.InfinitiveMarker = new PartOfSpeech("infinitiveMarker", 110000); // (examples: http://www.oxfordlearnersdictionaries.com/definition/english/to_2)
     /** A numerical value. */

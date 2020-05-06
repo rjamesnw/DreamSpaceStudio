@@ -1,22 +1,22 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-/// <summary>
-/// Represents a slice of time sequence.  This value also maintains a global sequence counter that makes sure the subsequent fast calls - where
-/// the time elapsed may be 0 - are kept in order.  No two new/updated time references should ever be equal.
-/// </summary>
+/**
+ *  Represents a slice of time sequence.  This value also maintains a global sequence counter that makes sure the subsequent fast calls - where
+ *  the time elapsed may be 0 - are kept in order.  No two new/updated time references should ever be equal.
+*/
 let TimeReference = /** @class */ (() => {
     class TimeReference {
-        /// <summary>
-        /// Initializes a new time reference.
-        /// </summary>
+        /**
+         *  Initializes a new time reference.
+        */
         /// <param name="ticks">Set this to a '{DateTime}.Ticks' value, or leave out to use the current UTC date/time.</param>
         constructor(ticks) {
             this.Timestamp = ticks !== null && ticks !== void 0 ? ticks : Date.now();
             this.SeqenceID = TimeReference._seqenceIDCounter++;
         }
-        /// <summary>
-        /// Returns a new 'TimeReference' value set to the current time and next sequence count.
-        /// </summary>
+        /**
+         *  Returns a new 'TimeReference' value set to the current time and next sequence count.
+        */
         static getCurrentTime() { return new TimeReference(); }
         toString() {
             return this.Timestamp.toString() + this.SeqenceID.toString();
@@ -29,9 +29,9 @@ let TimeReference = /** @class */ (() => {
             return (obj instanceof TimeReference) && obj.Timestamp == this.Timestamp && obj.SeqenceID == this.SeqenceID;
         }
     }
-    /// <summary>
-    /// A counter is used to maintain a global input sequence in case the time lapse is too short between requests.
-    /// </summary>
+    /**
+     *  A counter is used to maintain a global input sequence in case the time lapse is too short between requests.
+    */
     TimeReference._seqenceIDCounter = 1;
     /**
      * Plug in this comparer function to sort in ascending order for instances of this type.

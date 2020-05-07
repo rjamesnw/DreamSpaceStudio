@@ -13,6 +13,14 @@ interface Array<T> {
 interface String {
     /** Trims the given character from the end of the string and returns the new string. */
     trimRightChar(char: string): string;
+    /**
+     * Returns true if the specified string as at the start of this string.
+     */
+    startsWith(str: string): boolean;
+    /**
+     * Returns true if the specified string as at the end of this string.
+     */
+    endsWith(str: string): boolean;
 }
 interface IndexedObject<T = any> {
     [name: string]: T;
@@ -84,7 +92,7 @@ declare namespace DS {
     var version: string;
     /** Returns the current user defined application version, or a default version. */
     var getAppVersion: () => string;
-    const constructor: symbol;
+    const staticConstructor: symbol;
     /** A simple function that does nothing (no operation).
     * This is used to clear certain function properties, such as when preventing client/server functions based on platform,
     * or when replacing the 'DreamSpace.Loader.bootstrap()' function, which should only ever need to be called once.
@@ -1340,7 +1348,7 @@ declare namespace DS {
         private __apply;
         equal(value: any): boolean;
     }
-    interface IDelegate<TObj extends object = object, TFunc extends DelegateFunction = DelegateFunction> extends Delegate<TObj, TFunc> {
+    interface IDelegate<TObj extends object = object, TFunc extends DelegateFunction = DelegateFunction> extends Pick<Delegate<TObj, TFunc>, 'func' | 'object' | 'invoke' | 'call' | 'apply' | 'equal'> {
     }
 }
 /**

@@ -60,7 +60,7 @@ class Dictionary {
      *  This references the dictionary entry that has a blank key, and is used to store global data, such as concepts that should run if no other concepts are found.
     */
     get GlobalEntry() { return this._Entries.get(''); }
-    AddTextPart(textPart, pos = null, tense = Enums_1.TenseTypes.Unspecified, plurality = Enums_1.Plurality.Unspecified) {
+    addTextPart(textPart, pos = null, tense = Enums_1.TenseTypes.Unspecified, plurality = Enums_1.Plurality.Unspecified) {
         if (textPart instanceof TextPart_1.default) {
             var entry = new DictionaryItem_1.default(this, this.AddText(textPart), pos, tense, plurality); // (this wraps the details so we can generate a key that represents the entry, then see if one already exists)
             return this.AddEntry(entry);
@@ -138,7 +138,7 @@ class Dictionary {
     UpdateUsageFactor(force = false) {
         if (!force) {
             // ... schedule a refresh; if already scheduled, this will cancel the existing one and start a new one ...
-            this.memory.Brain.createTask((bt) => {
+            this.memory.brain.createTask((bt) => {
                 this.UpdateUsageFactor(true);
                 return Task.CompletedTask;
             }).Start(TimeSpan.FromSeconds(1), "Dictionary", "UpdateUsageFactor");
@@ -186,7 +186,7 @@ class Dictionary {
         if (textpart == null)
             throw new ArgumentNullException(textpart);
         var matches = new List();
-        if (!string.IsNullOrWhiteSpace(textpart)) {
+        if (!DS.StringUtils.isEmptyOrWhitespace(textpart)) {
             if (quickSearch) {
                 var groupkey = Memory_1.default.Brain.ToGroupKey(textpart);
                 var entries = FindSimilarEntries(groupkey);
@@ -217,14 +217,14 @@ class Dictionary {
         return matches.ToArray();
     }
     LoadDefaultWords(string, filename = "dictionary.json", string, body = null) {
-        if (string.IsNullOrWhiteSpace(body)) {
+        if (DS.StringUtils.isEmptyOrWhitespace(body)) {
             var libPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase), filename);
             if (File.Exists(libPath))
                 body = File.ReadAllText(libPath);
             else
                 return new FileNotFoundException(libPath);
         }
-        if (!string.IsNullOrWhiteSpace(body))
+        if (!DS.StringUtils.isEmptyOrWhitespace(body))
             try {
                 var jarray = JArray.Parse(body);
                 foreach();

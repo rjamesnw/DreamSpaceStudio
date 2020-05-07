@@ -43,7 +43,7 @@ namespace BotPal.Concepts
 
         async Task<boolean>
         {
-            await Brain.DoResponse("I'm doing great, thanks.");
+            await this.brain.doResponse("I'm doing great, thanks.");
             return true;
         }
 
@@ -69,7 +69,7 @@ namespace BotPal.Concepts
         }
         async Task<boolean>
         {
-            await Brain.DoResponse("The time is " + DateTime.Now.ToShortTimeString());
+            await this.brain.doResponse("The time is " + DateTime.Now.ToShortTimeString());
             return true;
         }
 

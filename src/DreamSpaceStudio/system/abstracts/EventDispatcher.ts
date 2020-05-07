@@ -403,7 +403,7 @@ namespace DS {
             this.canCancel = canCancel;
         }
 
-        private static [DS.constructor]() { // (A static constructor that will be executed when the factory is registered)
+        private static [DS.staticConstructor]() { // (A static constructor that will be executed when the factory is registered)
 
             function getTriggerFunc(this: EventDispatcher, args: any[]) {
                 //x args.push(void 0, this); // (add 2 optional items on end)
@@ -440,7 +440,7 @@ namespace DS {
         }
     }
 
-    (<any>EventDispatcher)[DS.constructor](); // ('any' is used because the static constructor is private)
+    (<any>EventDispatcher)[DS.staticConstructor](); // ('any' is used because the static constructor is private)
 
     export interface IEventDispatcher<TOwner extends object, TCallback extends EventHandler> extends EventDispatcher<TOwner, TCallback> { }
 

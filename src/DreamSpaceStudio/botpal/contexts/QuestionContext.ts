@@ -1,13 +1,15 @@
-﻿/**
- *  Holds details about a question.
-
-import Context from "../core/Context";
+﻿import Context, { context } from "../core/Context";
 import DictionaryItem from "../core/DictionaryItem";
 import Concept from "../core/Concept";
 
-*/
+/**
+ *  Holds details about a question.
+ */
+@context()
 export default class QuestionContext extends Context {
     // --------------------------------------------------------------------------------------------------------------------
+
+    static get tag() { return "question"; }
 
     /** If the user's context is a question, this is the question type (who, what, when, where, why, etc.). */
     question: DictionaryItem;
@@ -28,7 +30,7 @@ export default class QuestionContext extends Context {
     // --------------------------------------------------------------------------------------------------------------------
 
     constructor(concept: Concept, question: DictionaryItem, parent: Context = null) {
-        super(concept.memory, concept, parent)
+        super(concept, parent)
         this.question = question;
     }
 

@@ -22,8 +22,8 @@ export interface IUnderlyingContext<T extends Context> extends Context {
     last: T;
 }
 
-/** Manages a specific collection of the same contexts. */
-export default class GroupContext<T extends Context> extends Context //x implements IUnderlyingContext<T>
+/** Manages a specific collection of contexts. */
+export default class GroupContext<T extends Context = Context> extends Context //x implements IUnderlyingContext<T>
 {
     // --------------------------------------------------------------------------------------------------------------------
 
@@ -50,7 +50,7 @@ export default class GroupContext<T extends Context> extends Context //x impleme
     get hasItems() { return this.contexts.hasItems; }
 
     ///**
-     * // Returns this context or the nearest parent context that has subjects (the root context of one or more subjects).
+    // *  Returns this context or the nearest parent context that has subjects (the root context of one or more subjects).
     // *  If no root contexts are found with subjects, the top most context in the hierarchy is returned.
     ///// <para>Note this does NOT return nodes of 'GroupContext' type, but only contexts that have subjects as child nodes.
     ///// This allows focusing on a single or group of subjects in a context.</para>

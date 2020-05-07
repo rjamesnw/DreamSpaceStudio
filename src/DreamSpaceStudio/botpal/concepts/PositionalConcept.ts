@@ -34,7 +34,7 @@ namespace BotPal.Concepts
 
         async Task<boolean>
         {
-            await Brain.DoResponse("Ok.");
+            await this.brain.doResponse("Ok.");
             return true;
         }
 

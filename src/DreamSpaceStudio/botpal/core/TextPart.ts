@@ -22,13 +22,13 @@ export default class TextPart extends TimeReferencedObject implements IMemoryObj
     protected set _Text(value: string) { if (this.#_text != value) { this.#_text = value; this.#_textParts = null; this.#_key = null; } }
     #_text: string;
 
-    get textParts(): string[] { return this.#_textParts ?? (this.#_textParts = this.parent.memory.Brain.parse(this.#_text)); }
+    get textParts(): string[] { return this.#_textParts ?? (this.#_textParts = this.parent.memory.brain.parse(this.#_text)); }
     #_textParts: string[];
 
     /**
      A case sensitive key used to identify the precise text entered by the user, without the whitespace.
     */
-    get key(): string { return this.#_key ?? (this.#_key = this.parent.memory.Brain.getKeyFromTextParts(this.textParts)); }
+    get key(): string { return this.#_key ?? (this.#_key = this.parent.memory.brain.getKeyFromTextParts(this.textParts)); }
     #_key: string;
 
     /**
@@ -43,7 +43,7 @@ export default class TextPart extends TimeReferencedObject implements IMemoryObj
      A grouping key to identify all similar texts without considering case sensitivity.
      This can be used to group text that is different only based on case sensitivity, or that of characters which "look" similar.
     */
-    get groupKey(): string { return this.memory.Brain.keyToGroupKey(this.key); }
+    get groupKey(): string { return this.memory.brain.keyToGroupKey(this.key); }
 
     // --------------------------------------------------------------------------------------------------------------------
 

@@ -1,5 +1,7 @@
 ﻿import Dictionary from "./Dictionary";
 import Brain from "./Brain";
+import DictionaryItem from "./DictionaryItem";
+import Match from "./Match";
 
 export interface IMemoryObject {
     /** The memory instance this object belongs to. */
@@ -9,7 +11,7 @@ export interface IMemoryObject {
 export default class Memory implements IMemoryObject {
     // --------------------------------------------------------------------------------------------------------------------
 
-    public readonly Brain: Brain;
+    public readonly brain: Brain;
 
     get memory() { return this; }
 
@@ -18,7 +20,7 @@ export default class Memory implements IMemoryObject {
      *  which both link to the raw text, along with some contextual parameters for the text ('DictionaryEntry' items CAN
      *  reference the same text among them).
     */
-    readonly Dictionary: Dictionary;
+    readonly dictionary: Dictionary;
 
     ///**
     //* A list of all neural nodes in the memory.
@@ -28,8 +30,8 @@ export default class Memory implements IMemoryObject {
     // --------------------------------------------------------------------------------------------------------------------
 
     constructor(brain: Brain) {
-        this.Brain = brain;
-        (<Writeable<Memory>>this).Dictionary = new Dictionary(this);
+        this.brain = brain;
+        (<Writeable<Memory>>this).dictionary = new Dictionary(this);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -39,71 +41,70 @@ export default class Memory implements IMemoryObject {
     */
     /// <param name="matchesList"></param>
     /// <returns></returns>
-    public int GetCombinationCount(IList <Match <DictionaryItem > [] > matchesList) //?
-{
-    if (matchesList == null || matchesList.Count == 0) return 0;
-    var count = 1;
-    for (int i = 0, n = matchesList.Count; i < n; ++i)
-    count *= (matchesList[i]?.Length ?? 1);
-    return count;
-}
+    GetCombinationCount(matchesList: Array<Match<DictionaryItem>[]>): number //?
+    {
+        if (matchesList == null || matchesList.length == 0) return 0;
+        var count = 1;
+        for (var i = 0, n = matchesList.length; i < n; ++i)
+            count *= (matchesList[i]?.length ?? 1);
+        return count;
+    }
 
-        /**
-         *  Uses a yield-return method to return the best combinations first, allowing the caller to stop at any point when 
-         *  enough is received, or enough time has elapsed.
-        */
-        /// <param name="matchesList">A list of matches for each text part the user entered.  Each match array item in the list
-        /// corresponds to the same text part (usually from user input), but different possible dictionary item (context) matches.</param>
-        public IEnumerable < Match < DictionaryItem > [] > GetCombinations(IList < Match < DictionaryItem > [] > matchesList) // TODO: There is error in this logic!!!
-{
-    // ... in "clock counter" fashion, count down through the combinations, from the top, so the best combinations are first ...
+    /**
+     *  Uses a yield-return method to return the best combinations first, allowing the caller to stop at any point when 
+     *  enough is received, or enough time has elapsed.
+     *  @param matchesList A list of matches for each text part the user entered.  Each match array item in the list
+     *  corresponds to the same text part (usually from user input), but different possible dictionary item (context) matches.
+     */
+    *getCombinations(matchesList: Array<Match<DictionaryItem>[]>): Iterable<Match<DictionaryItem>[]> // TODO: There is error in this logic!!!
+    {
+        // ... in "clock counter" fashion, count down through the combinations, from the top, so the best combinations are first ...
 
-    var indexes = new int[matchesList.Count];
-    var matches = new Match < DictionaryItem > [indexes.Length];
-    var depthLevel = 2; // (once all possible combinations for a level are completed, this will increment, until all combinations are returned)
-    int carry;
-    bool finished;
-    bool at_eol; // (at end of list [or depth])
+        var indexes: number[] = new Array(matchesList.length);
+        var matches: Match<DictionaryItem>[] = new Array(indexes.length);
+        var depthLevel = 2; // (once all possible combinations for a level are completed, this will increment, until all combinations are returned)
+        var carry: number;
+        var finished: boolean;
+        var at_eol: boolean; // (at end of list [or depth])
 
-    do {
-        carry = 1;
-        finished = true;
-        at_eol = true;
+        do {
+            carry = 1;
+            finished = true;
+            at_eol = true;
 
-        for (int i = 0, n = indexes.Length, index, matchesLen; i < n; ++i)
-        {
-            index = indexes[i];
+            for (var i = 0, n = indexes.length, index: number, matchesLen; i < n; ++i) {
+                index = indexes[i];
 
-            matchesLen = matchesList[i].Length;
+                matchesLen = matchesList[i].length;
 
-            matches[i] = matchesList[i][index];
+                matches[i] = matchesList[i][index];
 
-            index += carry;
+                index += carry;
 
-            if (index >= depthLevel || index >= matchesLen) {
-                index = 0;
-                // (carry is not reset in order to increment the next index entry)
+                if (index >= depthLevel || index >= matchesLen) {
+                    index = 0;
+                    // (carry is not reset in order to increment the next index entry)
+                }
+                else {
+                    carry = 0;
+
+                    if (index != depthLevel - 1 && index != matchesLen - 1)
+                        at_eol = false; // (signals that the index is not at the last item for this depth level [so there is more combinations pending within this depth level])
+                }
+
+                indexes[i] = index;
+
+                if (matchesLen - 1 > index)
+                    finished = false; // ('finished' will always reset to false while there are more pending combinations for a match array)
+
+                if (at_eol && !finished && i == n - 1)
+                    ++depthLevel; // (this is reached only when all indexes for all match arrays are at their final ends for all possible combos within the current depth level, BUT more is possible [not 'finished'])
             }
-            else {
-                carry = 0;
 
-                if (index != depthLevel - 1 && index != matchesLen - 1)
-                    at_eol = false; // (signals that the index is not at the last item for this depth level [so there is more combinations pending within this depth level])
-            }
+            yield matches; // (return a copy, as the array will be overwritten on next pass, if any)
 
-            indexes[i] = index;
-
-            if (matchesLen - 1 > index)
-                finished = false; // ('finished' will always reset to false while there are more pending combinations for a match array)
-
-            if (at_eol && !finished && i == n - 1)
-                ++depthLevel; // (this is reached only when all indexes for all match arrays are at their final ends for all possible combos within the current depth level, BUT more is possible [not 'finished'])
-        }
-
-        yield return matches.ToArray(); // (return a copy, as the array will be overwritten on next pass, if any)
-
-    } while (!finished); // (note also: if carry is 1 at this point, then all combinations within all possible depths have been reached)
-}
+        } while (!finished); // (note also: if carry is 1 at this point, then all combinations within all possible depths have been reached)
+    }
 
     // --------------------------------------------------------------------------------------------------------------------
 }

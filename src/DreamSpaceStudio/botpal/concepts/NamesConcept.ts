@@ -8,10 +8,10 @@ export default class NamesConcept extends Concept {
 
     constructor(brian: Brain) {
         super(brian)
-        this.Deb = this.memory.Dictionary.AddTextPart("deb", POS.Noun_Person);
-        this.Debra = this.memory.Dictionary.AddTextPart("debra", POS.Noun_Person);
-        this.Debohrra = this.memory.Dictionary.AddTextPart("debohrra", POS.Noun_Person);
-        this.James = this.memory.Dictionary.AddTextPart("james", POS.Noun_Person);
+        this.Deb = this.memory.dictionary.addTextPart("deb", POS.Noun_Person);
+        this.Debra = this.memory.dictionary.addTextPart("debra", POS.Noun_Person);
+        this.Debohrra = this.memory.dictionary.addTextPart("debohrra", POS.Noun_Person);
+        this.James = this.memory.dictionary.addTextPart("james", POS.Noun_Person);
     }
 
     readonly Deb: DictionaryItem;
@@ -35,7 +35,7 @@ export default class NamesConcept extends Concept {
 
     async  _Name_Intent(context: ConceptHandlerContext): Promise<boolean> // (must always provide an intent to fall-back to if a better one isn't found)
     {
-        await Brain.DoResponse("Yes, please continue.");
+        await this.brain.doResponse("Yes, please continue.");
         return true;
     }
 

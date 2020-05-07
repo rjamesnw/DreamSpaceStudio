@@ -129,7 +129,7 @@ namespace DS {
 
             // --------------------------------------------------------------------------------------------------------------------------
 
-            private static [DS.constructor](factory: typeof LogItem) {
+            private static [DS.staticConstructor](factory: typeof LogItem) {
                 //factory.init = (o, isnew) => { // not dealing with private properties, so this is not needed!
                 //};
             }

@@ -32,7 +32,7 @@ namespace BotPal.Concepts
 
         async Task<boolean> _Hi_Intent(context: ConceptHandlerContext )
         {
-            await Brain.DoResponse("Hello.");
+            await this.brain.doResponse("Hello.");
             return true;
         }
 
@@ -42,7 +42,7 @@ namespace BotPal.Concepts
             var c = Brain.GetConcept<NamesConcept>;
             if (c?.CurrentName?.TextPart != null)
                 name = " " + c.CurrentName.TextPart.Text;
-            await Brain.DoResponse("Hi" + name + ".");
+            await this.brain.doResponse("Hi" + name + ".");
             return true;
         }
 
@@ -56,7 +56,7 @@ namespace BotPal.Concepts
 
         async Task<boolean>
         {
-            await Brain.DoResponse("Hi there.");
+            await this.brain.doResponse("Hi there.");
             return true;
         }
 

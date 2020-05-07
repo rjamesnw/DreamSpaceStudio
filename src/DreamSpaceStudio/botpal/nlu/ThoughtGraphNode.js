@@ -36,6 +36,13 @@ class ThoughtGraphNode extends Node_1.default {
     // --------------------------------------------------------------------------------------------------------------------
     get root() { return super.root; }
     /**
+     * Gets the context for the subject related to this node.
+     * When a thought graph is being analyzed a context group is first made for the subject node (which is required in all graphs).
+     * The whole graph is then cross-referenced with all registered concepts. Each concept can add new context objects to expand the
+     * context group.  Typically this means the top level group contains the main subjects, and
+     */
+    get context() { var _a; return (_a = this.findTopFirst(POS_1.default.Group_Subject, true)) === null || _a === void 0 ? void 0 : _a._context; }
+    /**
      *      The part of speech that this node classifies under.  This is a generalization that may be different than the
      *      associated word (such as for groups).
     */
@@ -148,7 +155,7 @@ class ThoughtGraphNode extends Node_1.default {
     }
     // --------------------------------------------------------------------------------------------------------------------
     _requireSubject() {
-        var subject = this.FindTopFirst(POS_1.default.Group_Subject, true);
+        var subject = this.findTopFirst(POS_1.default.Group_Subject, true);
         if (subject != null)
             return subject;
         if (this.root.isQuestion)
@@ -157,7 +164,7 @@ class ThoughtGraphNode extends Node_1.default {
             return this.root.attachAsParent(ThoughtGraphNode.CreateSubjectGroupDictionaryItem());
     }
     _requireQuestion() {
-        var qgroup = this.FindTopFirst(POS_1.default.Group_Question, true);
+        var qgroup = this.findTopFirst(POS_1.default.Group_Question, true);
         if (qgroup != null)
             return qgroup;
         return this._requireSubject().attachAsParent(ThoughtGraphNode.CreateQuestiontGroupDictionaryItem());
@@ -324,7 +331,7 @@ class ThoughtGraphNode extends Node_1.default {
             return null;
         }
     }
-    FindTopFirst(item, includeThis = false, includeSiblings = false, includeConjunctions = false, depth = -1) {
+    findTopFirst(item, includeThis = false, includeSiblings = false, includeConjunctions = false, depth = -1) {
         var _a, _b;
         if (item instanceof DictionaryItem_1.default)
             return (_a = this.FindInParents(item, includeThis, includeSiblings, includeConjunctions, depth) // (search up to root first)

@@ -1,5 +1,4 @@
 ﻿import TimeReferencedObject, { ITimeReferencedObject } from "./TimeReferencedObject";
-import Memory, { IMemoryObject } from "./Memory";
 import Concept from "./Concept";
 import DictionaryItem from "./DictionaryItem";
 import ActionContext from "../contexts/ActionContext";
@@ -7,6 +6,25 @@ import AttributeContext from "../contexts/AttributeContext";
 import ModifierContext from "../contexts/ModifierContext";
 import QuestionContext from "../contexts/QuestionContext";
 import GroupContext from "../contexts/GroupContext";
+import { IMemoryObject } from "./Memory";
+
+/**
+ * Holds a list of registered context tags, and the context type associated with it, if any.
+ * Some concepts only trigger when certain context tags exist within a context.
+ */
+export var contextTags: { [name: string]: IType<Context> & { tag: string } } = {};
+
+/**
+ * Registers a context tag name and type with the system.
+ */
+export function context() {
+    return (target: IType<Context> & { tag: string }): any => {
+        var tag = target.tag;
+        if (DS.StringUtils.isEmptyOrWhitespace(tag))
+            throw "You did not specify a valid context tag name for context type '" + DS.Utilities.getTypeName(target) + "'.";
+        contextTags[tag] = target;
+    };
+}
 
 export class ContextCollection<T extends Context> extends Array<T>
 {
@@ -101,6 +119,11 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
     // --------------------------------------------------------------------------------------------------------------------
 
     /**
+     * The tag used to register a context type under.  This should be overridden on derived types to return a valid word.
+     */
+    static abstract get tag(): string;
+
+    /**
      *  Keeps a reference of the parent context connections that relates to this context, if any. This allows nesting contexts under other contexts using relationships.
      *  A parent context can have many child contexts, which is a context tree that represents a potential engram of data content to store later.
     */
@@ -134,20 +157,20 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
     // --------------------------------------------------------------------------------------------------------------------
 
     ///**
-     * // Get the current instance or a parent instance that is a subject context (<see cref="SubjectContext"/> instance).
-    //*/
-    //x public bool IsSubjectContext => this is SubjectContext;
+    * // Get the current instance or a parent instance that is a subject context (<see cref="SubjectContext"/> instance).
+        //*/
+        //x public bool IsSubjectContext => this is SubjectContext;
 
-    ///** Returns true if this object is question context (<see cref="QuestionContext"/> instance). */
-    ///// <value> A true or false value. </value>
-    //x public bool IsQuestionContext => this is QuestionContext;
+        ///** Returns true if this object is question context (<see cref="QuestionContext"/> instance). */
+        ///// <value> A true or false value. </value>
+        //x public bool IsQuestionContext => this is QuestionContext;
 
-    /** 
-     *  The action (verbs) of a statement in regards to the subjects. For example, "is" or "are" is a claim one or more
-     *  things is like something else (i.e. John is nice), or as part of a question (who are they? what time is it?). 
-     *  Other examples may be "John *drove* away" or "Pat *ran* to the store.".
-    */
-    get Actions(): Iterable<ActionContext> { return this.get(ActionContext); }
+        /** 
+         *  The action (verbs) of a statement in regards to the subjects. For example, "is" or "are" is a claim one or more
+         *  things is like something else (i.e. John is nice), or as part of a question (who are they? what time is it?). 
+         *  Other examples may be "John *drove* away" or "Pat *ran* to the store.".
+        */
+        get Actions(): Iterable<ActionContext> { return this.get(ActionContext); }
 
     /**
      *  True if this context has actions (typically because of verbs).
@@ -258,7 +281,7 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
     // --------------------------------------------------------------------------------------------------------------------
 
     ///**
-     * // Get the current instance or a parent instance that is a context of the requested type, or null if nothing was found.
+    * // Get the current instance or a parent instance that is a context of the requested type, or null if nothing was found.
     //*/
     //public T GetContext<T>() where T : Context
     //{
@@ -277,24 +300,24 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
 
     ///**
      * // Create a split point from this scene to process separately, but in relation to this one.
-    //*/
-    //? public virtual Context Fork()
-    //{
-    //    var s = new Context(Memory, this);
+        //*/
+        //? public virtual Context Fork()
+        //{
+        //    var s = new Context(Memory, this);
 
-    //    // Forked contexts are blank, but allow associating sub-contexts with a related parent context.
-    //    // Example: The dog [the one I saw yesterday] was black)
-    //    // In the above case, "the one" refers to the parent context subject "the dog". As such, contexts can back reference subjects in parent scopes.
+        //    // Forked contexts are blank, but allow associating sub-contexts with a related parent context.
+        //    // Example: The dog [the one I saw yesterday] was black)
+        //    // In the above case, "the one" refers to the parent context subject "the dog". As such, contexts can back reference subjects in parent scopes.
 
-    //    return s;
-    //}
+        //    return s;
+        //}
 
-    // --------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------
 
-    /**
-     *  Attempts to detect and remove the given context object from any of the context collections it should belong to.
-    */
-    remove(context: Context): boolean {
+        /**
+         *  Attempts to detect and remove the given context object from any of the context collections it should belong to.
+        */
+        remove(context: Context): boolean {
         if (context == null) return false;
 
         var removed = false;

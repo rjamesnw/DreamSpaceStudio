@@ -14,13 +14,30 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 };
 var __contextType, __contextMap, __contexts, __Attributes, __Modifiers, __Questions;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ContextCollection = void 0;
+exports.ContextCollection = exports.context = exports.contextTags = void 0;
 const TimeReferencedObject_1 = require("./TimeReferencedObject");
 const ActionContext_1 = require("../contexts/ActionContext");
 const AttributeContext_1 = require("../contexts/AttributeContext");
 const ModifierContext_1 = require("../contexts/ModifierContext");
 const QuestionContext_1 = require("../contexts/QuestionContext");
 const GroupContext_1 = require("../contexts/GroupContext");
+/**
+ * Holds a list of registered context tags, and the context type associated with it, if any.
+ * Some concepts only trigger when certain context tags exist within a context.
+ */
+exports.contextTags = {};
+/**
+ * Registers a context tag name and type with the system.
+ */
+function context() {
+    return (target) => {
+        var tag = target.tag;
+        if (DS.StringUtils.isEmptyOrWhitespace(tag))
+            throw "You did not specify a valid context tag name for context type '" + DS.Utilities.getTypeName(target) + "'.";
+        exports.contextTags[tag] = target;
+    };
+}
+exports.context = context;
 class ContextCollection extends Array {
     constructor(contextType, obj) {
         super();

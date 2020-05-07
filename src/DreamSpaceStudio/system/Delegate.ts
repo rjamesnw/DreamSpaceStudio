@@ -65,7 +65,7 @@ namespace DS {
 
         //? static readonly $Type = $Delegate;
 
-        private [DS.constructor](factory: typeof Delegate): void {
+        private [DS.staticConstructor](delegate: typeof Delegate): void {
             /** Generates "case" statements for function templates.  The function template is converted into a string, the resulting cases get inserted,
               * and the compiled result is returned.  This hard-codes the logic for greatest speed, and if more parameters are need, can easily be expanded.
             */
@@ -79,7 +79,7 @@ namespace DS {
             }
             // TODO: Look into using the "...spread" operator for supported browsers, based on support: https://goo.gl/a5tvW1
 
-            factory.fastApply = <any>makeCases(0, 20, function (func: Function, context: {}, args: { [index: number]: any; length: number; }) {
+            delegate.fastApply = <any>makeCases(0, 20, function (func: Function, context: {}, args: { [index: number]: any; length: number; }) {
                 if (!arguments.length) throw Exception.error("Delegate.fastApply()", "No function specified.");
                 if (typeof func !== 'function') throw Exception.error("Delegate.fastApply()", "Function object expected.");
                 if (arguments.length == 1 || context == void 0 && (args == void 0 || !args.length)) return func();
@@ -89,7 +89,7 @@ namespace DS {
                 }
             }, "func.call", "context, ", "args");
 
-            factory.fastCall = <any>makeCases(0, 20, function (func: Function, context: {}) {
+            delegate.fastCall = <any>makeCases(0, 20, function (func: Function, context: {}) {
                 if (!arguments.length) throw Exception.error("Delegate.fastCall()", "No function specified.");
                 if (typeof func !== 'function') throw Exception.error("Delegate.fastApply()", "Function object expected.");
                 var restArgsLength = arguments.length - 2; /* (subtract func and context parameters from the count to get the "...rest" args) */
@@ -222,7 +222,9 @@ namespace DS {
         // -------------------------------------------------------------------------------------------------------------------
     }
 
-    export interface IDelegate<TObj extends object = object, TFunc extends DelegateFunction = DelegateFunction> extends Delegate<TObj, TFunc> { }
+    Delegate[DS.staticConstructor](Delegate);
+
+    export interface IDelegate<TObj extends object = object, TFunc extends DelegateFunction = DelegateFunction> extends Pick<Delegate<TObj, TFunc>, 'func' | 'object' | 'invoke' | 'call' | 'apply' | 'equal'> { }
 
     // ============================================================================================================================
 }

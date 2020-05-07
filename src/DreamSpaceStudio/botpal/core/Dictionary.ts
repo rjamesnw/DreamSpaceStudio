@@ -85,7 +85,7 @@ export default class Dictionary implements IMemoryObject {
      * @param {Plurality} plurality?
      * @returns
      */
-    AddTextPart(textPart: TextPart, pos: PartOfSpeech, tense?: TenseTypes, plurality?: Plurality): DictionaryItem;
+    addTextPart(textPart: TextPart, pos: PartOfSpeech, tense?: TenseTypes, plurality?: Plurality): DictionaryItem;
 
     /**
      * Adds one or more text parts (text usually without whitespace) to the dictionary.  If any entry already exists, it will be returned instead.
@@ -95,9 +95,9 @@ export default class Dictionary implements IMemoryObject {
      * @param {Plurality} plurality?
      * @returns
      */
-    AddTextPart(textPart: string, pos: PartOfSpeech, tense?: TenseTypes, plurality?: Plurality): DictionaryItem;
+    addTextPart(textPart: string, pos: PartOfSpeech, tense?: TenseTypes, plurality?: Plurality): DictionaryItem;
 
-    AddTextPart(textPart: TextPart | string, pos: PartOfSpeech = null, tense = TenseTypes.Unspecified, plurality = Plurality.Unspecified): DictionaryItem {
+    addTextPart(textPart: TextPart | string, pos: PartOfSpeech = null, tense = TenseTypes.Unspecified, plurality = Plurality.Unspecified): DictionaryItem {
         if (textPart instanceof TextPart) {
             var entry = new DictionaryItem(this, this.AddText(textPart), pos, tense, plurality); // (this wraps the details so we can generate a key that represents the entry, then see if one already exists)
             return this.AddEntry(entry);
@@ -215,7 +215,7 @@ export default class Dictionary implements IMemoryObject {
     UpdateUsageFactor(force = false) {
         if (!force) {
             // ... schedule a refresh; if already scheduled, this will cancel the existing one and start a new one ...
-            this.memory.Brain.createTask((bt) => {
+            this.memory.brain.createTask((bt) => {
                 this.UpdateUsageFactor(true);
                 return Task.CompletedTask;
             }).Start(TimeSpan.FromSeconds(1), "Dictionary", "UpdateUsageFactor");
@@ -286,7 +286,7 @@ export default class Dictionary implements IMemoryObject {
 
         var matches = new List<Match<DictionaryItem>>();
 
-        if (!string.IsNullOrWhiteSpace(textpart)) {
+        if (!DS.StringUtils.isEmptyOrWhitespace(textpart)) {
             if (quickSearch) {
                 var groupkey = Memory.Brain.ToGroupKey(textpart);
                 var entries = FindSimilarEntries(groupkey);
@@ -333,7 +333,7 @@ export default class Dictionary implements IMemoryObject {
     /// <param name="body">The dictionary JSON contents if the file is already loaded, otherwise leave this null to load the contents.</param>
     /// <returns>'null' if the dictionary file was loaded successfully, or an error otherwise.</returns>
     public Exception LoadDefaultWords(string filename = "dictionary.json", string body = null) {
-        if (string.IsNullOrWhiteSpace(body)) {
+        if (DS.StringUtils.isEmptyOrWhitespace(body)) {
             var libPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase), filename);
             if (File.Exists(libPath))
                 body = File.ReadAllText(libPath);
@@ -341,7 +341,7 @@ export default class Dictionary implements IMemoryObject {
                 return new FileNotFoundException(libPath);
         }
 
-        if (!string.IsNullOrWhiteSpace(body))
+        if (!DS.StringUtils.isEmptyOrWhitespace(body))
             try {
                 var jarray = JArray.Parse(body);
                 foreach(var item in jarray)

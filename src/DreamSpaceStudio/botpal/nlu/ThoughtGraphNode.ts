@@ -2,6 +2,7 @@
 import TextPart from "../core/TextPart";
 import POS, { PartOfSpeech } from "../core/POS";
 import DictionaryItem from "../core/DictionaryItem";
+import GroupContext from "../contexts/GroupContext";
 
 export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
 {
@@ -17,6 +18,15 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     // --------------------------------------------------------------------------------------------------------------------
 
     get root(): ThoughtGraphNode { return super.root; }
+
+    /**
+     * Gets the context for the subject related to this node.
+     * When a thought graph is being analyzed a context group is first made for the subject node (which is required in all graphs). 
+     * The whole graph is then cross-referenced with all registered concepts. Each concept can add new context objects to expand the
+     * context group.  Typically this means the top level group contains the main subjects, and 
+     */
+    get context(): GroupContext { return this.findTopFirst(POS.Group_Subject, true)?._context; }
+    private _context: GroupContext;
 
     /**
      *  A word (or symbol or other text) that is the subject of this node in the graph.
@@ -169,7 +179,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     // --------------------------------------------------------------------------------------------------------------------
 
     _requireSubject(): ThoughtGraphNode {
-        var subject = this.FindTopFirst(POS.Group_Subject, true);
+        var subject = this.findTopFirst(POS.Group_Subject, true);
         if (subject != null)
             return subject;
 
@@ -180,7 +190,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     }
 
     _requireQuestion(): ThoughtGraphNode {
-        var qgroup = this.FindTopFirst(POS.Group_Question, true);
+        var qgroup = this.findTopFirst(POS.Group_Question, true);
         if (qgroup != null)
             return qgroup;
         return this._requireSubject().attachAsParent(ThoughtGraphNode.CreateQuestiontGroupDictionaryItem());
@@ -285,44 +295,44 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     // --------------------------------------------------------------------------------------------------------------------
 
     ///**
-     * //     Converts the current node to a group, if not already a group, by making sure the parent is a group node, and then
-    // *      adds the given node.
-    //*/
-    ///// <param name="groupPOS"> The group position. </param>
-    ///// <param name="newNode"> . </param>
-    ///// <returns> The current node, or if converted to a group, the group node. </returns>
-    //x public ThoughtGraphNode AddToGroup(PartOfSpeech groupPOS, ThoughtGraphNode newNode)
-    //{
-    //    if (IsGroup)
-    //        return Attach(newNode);
-    //    else if (Parent?.IsGroup ?? false)
-    //        return Parent.Attach(newNode);
+    * //     Converts the current node to a group, if not already a group, by making sure the parent is a group node, and then
+        // *      adds the given node.
+        //*/
+        ///// <param name="groupPOS"> The group position. </param>
+        ///// <param name="newNode"> . </param>
+        ///// <returns> The current node, or if converted to a group, the group node. </returns>
+        //x public ThoughtGraphNode AddToGroup(PartOfSpeech groupPOS, ThoughtGraphNode newNode)
+        //{
+        //    if (IsGroup)
+        //        return Attach(newNode);
+        //    else if (Parent?.IsGroup ?? false)
+        //        return Parent.Attach(newNode);
 
-    //    // ... no group found, so create one for this node ...
+        //    // ... no group found, so create one for this node ...
 
-    //    var group = AttachAsParent(CreateTempDictionaryItem(groupPOS));
-    //    group.Attach(this); // (subject now moved into a group; next we add the new noun to the group)
-    //    group.Attach(newNode);
-    //    return group;
-    //}
+        //    var group = AttachAsParent(CreateTempDictionaryItem(groupPOS));
+        //    group.Attach(this); // (subject now moved into a group; next we add the new noun to the group)
+        //    group.Attach(newNode);
+        //    return group;
+        //}
 
-    // --------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------
 
-    /** Searches the parent nodes for a match to the given dictionary word item. */
-    /// <param name="word"> The dictionary item to search for. </param>
-    /// <param name="includeThis"> (Optional) If true, then the current instance is included (default is false). </param>
-    /// <param name="includeSiblings">
-    ///     (Optional) Set to true to include grouped nodes (siblings) in the search. The default is false, which ignores all
-    ///     siblings.
-    /// </param>
-    /// <param name="includeConjunctions">
-    ///     (Optional) Associations are subject boundaries. Most searches usually occur within specific subject areas. If this
-    ///     is true, then associations are ignored, which means the entire thought graph as a whole is searched. The default is
-    ///     false.
-    /// </param>
-    /// <param name="depth"> (Optional) How many parents deep to run the search. Enabled if value is > 0. </param>
-    /// <returns> The found in parents. </returns>
-    FindInParents(word: DictionaryItem, includeThis: boolean, includeSiblings: boolean, includeConjunctions: boolean, depth: number, exclude?: ThoughtGraphNode): ThoughtGraphNode;
+        /** Searches the parent nodes for a match to the given dictionary word item. */
+        /// <param name="word"> The dictionary item to search for. </param>
+        /// <param name="includeThis"> (Optional) If true, then the current instance is included (default is false). </param>
+        /// <param name="includeSiblings">
+        ///     (Optional) Set to true to include grouped nodes (siblings) in the search. The default is false, which ignores all
+        ///     siblings.
+        /// </param>
+        /// <param name="includeConjunctions">
+        ///     (Optional) Associations are subject boundaries. Most searches usually occur within specific subject areas. If this
+        ///     is true, then associations are ignored, which means the entire thought graph as a whole is searched. The default is
+        ///     false.
+        /// </param>
+        /// <param name="depth"> (Optional) How many parents deep to run the search. Enabled if value is > 0. </param>
+        /// <returns> The found in parents. </returns>
+        FindInParents(word: DictionaryItem, includeThis: boolean, includeSiblings: boolean, includeConjunctions: boolean, depth: number, exclude?: ThoughtGraphNode): ThoughtGraphNode;
 
     /**
      *      Searches the parent nodes for a match to the given part of speech classification.
@@ -474,7 +484,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     /// </param>
     /// <param name="depth"> (Optional) How many parents/children deep to run the search. Enabled if value is > 0. </param>
     /// <returns> The found in children. </returns>
-    FindTopFirst(generalPOS: PartOfSpeech, includeThis?: boolean, includeSiblings?: boolean, includeConjunctions?: boolean, depth?: number): ThoughtGraphNode;
+    findTopFirst(generalPOS: PartOfSpeech, includeThis?: boolean, includeSiblings?: boolean, includeConjunctions?: boolean, depth?: number): ThoughtGraphNode;
 
     /** Searches the parent AND child nodes (in that order) for a match to the given dictionary word item. */
     /// <param name="word"> The dictionary item to search for. </param>
@@ -490,8 +500,8 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     /// </param>
     /// <param name="depth"> (Optional) How many parents/children deep to run the search. Enabled if value is > 0. </param>
     /// <returns> The found in children. </returns>
-    FindTopFirst(word: DictionaryItem, includeThis?: boolean, includeSiblings?: boolean, includeConjunctions?: boolean, depth?: number): ThoughtGraphNode;
-    FindTopFirst(item: DictionaryItem | PartOfSpeech, includeThis = false, includeSiblings = false, includeConjunctions = false, depth = -1): ThoughtGraphNode {
+    findTopFirst(word: DictionaryItem, includeThis?: boolean, includeSiblings?: boolean, includeConjunctions?: boolean, depth?: number): ThoughtGraphNode;
+    findTopFirst(item: DictionaryItem | PartOfSpeech, includeThis = false, includeSiblings = false, includeConjunctions = false, depth = -1): ThoughtGraphNode {
         if (item instanceof DictionaryItem)
             return this.FindInParents(item, includeThis, includeSiblings, includeConjunctions, depth)  // (search up to root first)
                 ?? this.root.FindInChildren(item, false, includeSiblings, includeConjunctions, depth); // (search down from root next)

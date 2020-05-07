@@ -3,10 +3,17 @@ import Memory, { IMemoryObject } from "./Memory";
 import DictionaryItem from "./DictionaryItem";
 import TimeReferencedObject from "./TimeReferencedObject";
 import Brain from "./Brain";
+import Dictionary from "./Dictionary";
+import POS, { PartOfSpeech } from "./POS";
+import Context from "./Context";
 
 /** An array of all concept types registered by applying the '@concept()' decorator to register them. */
 export const conceptTypes: IType<Concept>[] = [];
 
+/**
+ * Registers a concept type with the system.
+ * @param enabled If true (default) then a concept type is included.  Set to false to disable a concept.
+ */
 export function concept(enabled = true) {
     return (target: IType<Concept>): any => {
         var o: IndexedObject = target;
@@ -18,7 +25,7 @@ export function concept(enabled = true) {
 /**
  *  Associates a method on a derived 'Concept' class with words that will trigger it.
  */
-export function conceptHandler(triggerWords: string, pattern: string = null) {
+export function conceptHandler(triggerWords: string, ...contexts: (string | (IType<Context> & { tag: string }))[]) {
     return (target: IndexedObject, propertyName: string, descriptor: PropertyDescriptor): any => { // (target: Either the constructor function of the class for a static member, or the prototype of the class for an instance member.)
         const originalFunction = descriptor.value;
         // (note: good tool to use to check for POS: https://foxtype.com/sentence-tree)
@@ -26,7 +33,7 @@ export function conceptHandler(triggerWords: string, pattern: string = null) {
         /// <param name="pattern">(not yet supported) A pattern to use for ALL trigger words, which is just a more complex criteria that must be settled for running the handler.
         /// To create a different pattern for different words, use multiple attributes on the same method.</param>
         originalFunction.triggerWords = triggerWords;
-        originalFunction.pattern = pattern;
+        originalFunction.contexts = contexts?.map(v => typeof v == 'string' ? v : v.tag).filter(v => !!v);
     };
 }
 
@@ -62,7 +69,7 @@ export class ConceptMatch extends Match<ConceptContext>
  */
 /// <param name="context">A context struct to hold the context for a handler call.</param>
 /// <returns>The return should be the same or updated copy of the given context.</returns>
-export interface ConceptHandler { (context: ConceptHandlerContext): Promise<ConceptHandlerContext> }
+export interface ConceptHandler extends DS.IDelegate<Concept, { (context: ConceptHandlerContext): Promise<ConceptHandlerContext> }> { }
 
 /**
  *  A handler to execute on a concept to process the most likely intent that was detected.
@@ -71,7 +78,7 @@ export interface ConceptHandler { (context: ConceptHandlerContext): Promise<Conc
 */
 /// <param name="context">After all input is processed and concept handlers are run, the intent with the best score is executed.</param>
 /// <returns>True if the intent was handled. If for some reason the intent cannot be handled, false can be returned to cause the next handler (if any) to execute instead.</returns>
-export interface IntentHandler { (context: ConceptHandlerContext): Promise<boolean> }
+export interface IntentHandler extends DS.IDelegate<Concept, { (context: ConceptHandlerContext): Promise<boolean> }> { }
 
 /**
  *  The context for the concept handler call. 
@@ -267,7 +274,7 @@ export class ConceptHandlerContext implements IMemoryObject {
             return (text ?? "") == (this.RightHandlerMatch?.item.DictionaryItem.TextPart.Text ?? "");
         }
         else {
-            var grpkey = DS.StringUtils.isEmptyOrWhitespace(text) ? null : this.memory?.Brain.toGroupKey(text);
+            var grpkey = DS.StringUtils.isEmptyOrWhitespace(text) ? null : this.memory?.brain.toGroupKey(text);
             return grpkey == this.RightHandlerMatch.item.DictionaryItem.TextPart.GroupKey;
         }
     }
@@ -287,7 +294,7 @@ export class ConceptHandlerContext implements IMemoryObject {
         if (exactMatch)
             return (text ?? "") == (this.LeftHandlerMatch?.Item.DictionaryItem.TextPart.Text ?? "");
         else {
-            var grpkey = string.IsNullOrWhiteSpace(text) ? null : this.#_memory?.Brain.ToGroupKey(text);
+            var grpkey = DS.StringUtils.isEmptyOrWhitespace(text) ? null : this.#_memory?.brain.toGroupKey(text);
             return grpkey == this.LeftHandlerMatch.Item.DictionaryItem.TextPart.GroupKey;
         }
     }
@@ -298,7 +305,7 @@ export class ConceptHandlerContext implements IMemoryObject {
 /**
  *  Created when concept handlers are found that match a text part that was parsed from user input.
 */
-public class ConceptContext<TConcept extends Concept> {
+public class ConceptContext<TConcept extends Concept = Concept> {
     /**
      *  The dictionary item when the concept was found.
     */
@@ -407,7 +414,7 @@ export default abstract class Concept extends TimeReferencedObject implements IM
 
     readonly brain: Brain;
 
-    get memory(): Memory { return this.brain.Memory; }
+    get memory(): Memory { return this.brain.memory; }
 
     /**
      * Used to determined whether or not to include a derived type concept when adding to a new brain instance.
@@ -439,51 +446,50 @@ export default abstract class Concept extends TimeReferencedObject implements IM
     // --------------------------------------------------------------------------------------------------------------------
 
     ///**
-    * // Registers text that should trigger this concept.  When the text is encountered, the concept's matching handler registered for that text will be triggered.
-        // *  <para>Note: POS, tense, and plurality MUST all match the same context as an existing word in the database, or a new entry will be created.</para>
-        //*/
-        ///// <param name="textpart">The text part to register. If null or empty, the given handler is registered for ANY text part not matching any other handler.</param>
-        ///// <param name="pos">A part of speech (POS) to classify the context for the word.</param>
-        ///// <param name="tense">A tense type to classify the context for the word (is NA in most cases).</param>
-        ///// <param name="plurality">A plurality type to classify the context for the word (is NA in most cases).</param>
-        //protected DictionaryItem _RegisterTextPartHandler(string textpart, PartOfSpeech pos, TextPartHandler wordHandler, TenseTypes tense = TenseTypes.NA, Plurality plurality = Plurality.NA)
-        //{
-        //    // ... register this concept for the given text part with the brain instance ...
+    // * // Registers text that should trigger this concept.  When the text is encountered, the concept's matching handler registered for that text will be triggered.
+    // *  <para>Note: POS, tense, and plurality MUST all match the same context as an existing word in the database, or a new entry will be created.</para>
+    //*/
+    ///// <param name="textpart">The text part to register. If null or empty, the given handler is registered for ANY text part not matching any other handler.</param>
+    ///// <param name="pos">A part of speech (POS) to classify the context for the word.</param>
+    ///// <param name="tense">A tense type to classify the context for the word (is NA in most cases).</param>
+    ///// <param name="plurality">A plurality type to classify the context for the word (is NA in most cases).</param>
+    //protected DictionaryItem _RegisterTextPartHandler(string textpart, PartOfSpeech pos, TextPartHandler wordHandler, TenseTypes tense = TenseTypes.NA, Plurality plurality = Plurality.NA)
+    //{
+    //    // ... register this concept for the given text part with the brain instance ...
 
-        //    var dicItem = Brain._RegisterConcept(this, textpart, pos, tense, plurality);
+    //    var dicItem = Brain._RegisterConcept(this, textpart, pos, tense, plurality);
 
-        //    // ... register the handler that will trigger when this word text is seen ...
+    //    // ... register the handler that will trigger when this word text is seen ...
 
-        //    var key = TextPart.ToGroupKey(textpart);
+    //    var key = TextPart.ToGroupKey(textpart);
 
-        //    var handlers = _TextPartHandlers.Value(key);
+    //    var handlers = _TextPartHandlers.Value(key);
 
-        //    if (handlers == null)
-        //    {
-        //        _TextPartHandlers[key] = handlers = new List<TextPartHandler>();
-        //        handlers.Add(wordHandler);
-        //    }
-        //    else if (!handlers.Contains(wordHandler))
-        //        handlers.Add(wordHandler);
+    //    if (handlers == null)
+    //    {
+    //        _TextPartHandlers[key] = handlers = new List<TextPartHandler>();
+    //        handlers.Add(wordHandler);
+    //    }
+    //    else if (!handlers.Contains(wordHandler))
+    //        handlers.Add(wordHandler);
 
-        //    return dicItem;
-        //}
+    //    return dicItem;
+    //}
 
-        // --------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------
 
-        /**
-         *  A dictionary of concept handlers and the dictionary items they support.
-         *  This is populated when the brain loads the concept and calls 'RegisterHandlers()'.
-        */
-        protected _ConceptPatterns: Map<ConceptHandler, DictionaryItem[]> = new Map<ConceptHandler, DictionaryItem[]>();
+    /**
+     *  A dictionary of concept handlers and the dictionary items they support.
+     *  This is populated when the brain loads the concept and calls 'RegisterHandlers()'.
+    */
+    protected _ConceptPatterns: Map<ConceptHandler, DictionaryItem[]> = new Map<ConceptHandler, DictionaryItem[]>();
 
     /**
      *  Called by the system when it is ready for this concept to register any handlers on it.
     */
     RegisterHandlers() {
         var methods = GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
-        foreach(var method in methods)
-        {
+        for (var method of methods) {
             // ... since a handler can have many trigger words and/or patterns, look for and process multiple attributes ...
             var attributes = method.GetCustomAttributes<ConceptHandlerAttribute>();
 
@@ -491,7 +497,7 @@ export default abstract class Concept extends TimeReferencedObject implements IM
 
             foreach(var attr in attributes)
             {
-                if (string.IsNullOrWhiteSpace(attr.TriggerWords)) continue;
+                if (DS.StringUtils.isEmptyOrWhitespace(attr.TriggerWords)) continue;
                 // ... else this method is a handler for this concept; register the method with the text ...
 
                 //? if (_Concepts.ContainsKey(attr.Pattern))
@@ -515,241 +521,246 @@ export default abstract class Concept extends TimeReferencedObject implements IM
 
     /**
      *  Parses and adds a concept pattern and associates it with a callback handler.
-    */
+     */
     /// <param name="words">One or more words (separated by commas or spaces) that will trigger the handler.</param>
     /// <param name="handler">A callback delegate to execute when the pattern matches.</param>
     /// <param name="dictionary">A dictionary to hold the pattern parts. If null, the dictionary associated with brain's main memory is used.</param>
     /// <returns>The patterns are mapped to the handler and stored within the concept instance, but pattern entries are also returned if needed.</returns>
-    AddConceptTriggerWords(string words, ConceptHandler handler, Dictionary dictionary = null) {
-        if (string.IsNullOrWhiteSpace(words)) return;
+    addConceptTriggerWords(words: string, handler: ConceptHandler, dictionary: Dictionary = null) {
+        if (DS.StringUtils.isEmptyOrWhitespace(words)) return;
 
-        if (dictionary == null)
-            dictionary = Brain?.Memory?.Dictionary ?? throw new ArgumentNullException("dictionary", "No dictionary was given, and 'this.Brain.Memory.Dictionary' is null.");
+        if (!dictionary)
+            dictionary = this.brain?.memory?.dictionary;
 
-        List < DictionaryItem[] > dictionaryItems = new List<DictionaryItem[]>();
+        if (!dictionary)
+            throw DS.Exception.error(DS.Utilities.nameof(() => (<Concept><any>Concept).addConceptTriggerWords, true) + "()", "No dictionary was given, and 'this.brain.memory.dictionary' is did not return anything.");
 
-        dictionary = dictionary ?? Brain?.Memory?.Dictionary;
-        if (dictionary == null) throw new ArgumentNullException("dictionary");
+        var dictionaryItems: Array<DictionaryItem[]> = [];
 
-        var expectedWords = words.Split(new char[] { ' ', ',' }, StringSplitOptions.RemoveEmptyEntries);
+        var expectedWords = words.split(/'\s|,'/g).filter(v => !DS.StringUtils.isEmptyOrWhitespace(v));
 
-        for (var i = 0; i < expectedWords.Length; ++i) {
+        for (var i = 0; i < expectedWords.length; ++i) {
             var wordpart = expectedWords[i];
-            var worddetails = wordpart.Split(new char[] { '^' }, StringSplitOptions.RemoveEmptyEntries);
+            var worddetails = wordpart.split('^').filter(v => !DS.StringUtils.isEmptyOrWhitespace(v));
             var word = worddetails[0]; // (there's always at least 1 item)
 
             // (Note: if 'word' is empty, it is a wild card place holder for text)
 
-            var posStr = worddetails.Length > 1 ? worddetails[1] : null;
-            PartOfSpeech pos = null;
-            DictionaryItem dicItem;
+            for (var i2 = 1, n2 = worddetails.length; i2 < n2; ++i2) {
+                var posStr = worddetails[i2];
+                var pos: PartOfSpeech = null;
+                var dicItem: DictionaryItem;
 
-            if (word == "*")
-                word = ""; // (in case user uses * for a wildcard at this point, just accept and convert it)
-            else if (word.StartsWith("**"))
-                word.Replace("**", "*"); // (double will be the escape for a single)
+                if (word == "*")
+                    word = ""; // (in case user uses * for a wildcard at this point, just accept and convert it)
+                else if (word.startsWith("**"))
+                    word = DS.StringUtils.replace(word, "**", "*"); // (double will be the escape for a single)
 
-            if (!string.IsNullOrWhiteSpace(posStr)) {
-                switch (posStr.ToUpper()) {
-                    case "D": pos = POS.Determiner; break;
-                    case "DD": pos = POS.Determiner_Definite; break;
-                    case "DI": pos = POS.Determiner_Indefinite; break;
+                if (!DS.StringUtils.isEmptyOrWhitespace(posStr)) {
+                    switch (posStr.toUpperCase()) {
+                        case "D": pos = POS.Determiner; break;
+                        case "DD": pos = POS.Determiner_Definite; break;
+                        case "DI": pos = POS.Determiner_Indefinite; break;
 
-                    case "N": pos = POS.Noun; break;
-                    case "NA": pos = POS.Noun_Action; break;
-                    case "NC": pos = POS.Noun_Creature; break;
-                    case "NO": pos = POS.Noun_Object; break;
-                    case "NP": pos = POS.Noun_Person; break;
-                    case "NPL": pos = POS.Noun_Place; break;
-                    case "NQF": pos = POS.Noun_Quality_Or_Feeling; break;
-                    case "NS": pos = POS.Noun_Spatial; break;
-                    case "NT": pos = POS.Noun_Temporal; break;
-                    case "NTR": pos = POS.Noun_Trait; break;
+                        case "N": pos = POS.Noun; break;
+                        case "NA": pos = POS.Noun_Action; break;
+                        case "NC": pos = POS.Noun_Creature; break;
+                        case "NO": pos = POS.Noun_Object; break;
+                        case "NP": pos = POS.Noun_Person; break;
+                        case "NPL": pos = POS.Noun_Place; break;
+                        case "NQF": pos = POS.Noun_Quality_Or_Feeling; break;
+                        case "NS": pos = POS.Noun_Spatial; break;
+                        case "NT": pos = POS.Noun_Temporal; break;
+                        case "NTR": pos = POS.Noun_Trait; break;
 
-                    case "V": pos = POS.Verb; break;
-                    case "VAP": pos = POS.Verb_AbleToOrPermitted; break;
-                    case "VA": pos = POS.Verb_Action; break;
-                    case "VIS": pos = POS.Verb_Is; break;
-                    case "VO": pos = POS.Verb_Occurrence; break;
-                    case "VS": pos = POS.Verb_State; break;
+                        case "V": pos = POS.Verb; break;
+                        case "VAP": pos = POS.Verb_AbleToOrPermitted; break;
+                        case "VA": pos = POS.Verb_Action; break;
+                        case "VIS": pos = POS.Verb_Is; break;
+                        case "VO": pos = POS.Verb_Occurrence; break;
+                        case "VS": pos = POS.Verb_State; break;
 
-                    case "AV": pos = POS.Adverb; break;
+                        case "AV": pos = POS.Adverb; break;
 
-                    case "A": pos = POS.Adjective; break;
-                    case "AT": pos = POS.Adjective_Trait; break;
+                        case "A": pos = POS.Adjective; break;
+                        case "AT": pos = POS.Adjective_Trait; break;
 
-                    case "PN": pos = POS.Pronoun; break;
-                    case "PNP": pos = POS.Pronoun_Possessive; break;
-                    case "PS": pos = POS.Pronoun_Subject; break;
+                        case "PN": pos = POS.Pronoun; break;
+                        case "PNP": pos = POS.Pronoun_Possessive; break;
+                        case "PS": pos = POS.Pronoun_Subject; break;
 
-                    case "PP": pos = POS.Preposition; break;
-                    case "PPA": pos = POS.Preposition_Amount; break;
-                    case "PPC": pos = POS.Preposition_Contact; break;
-                    case "PPD": pos = POS.Preposition_Directional; break;
-                    case "PPE": pos = POS.Preposition_End; break;
-                    case "PPI": pos = POS.Preposition_Including; break;
-                    case "PPIN": pos = POS.Preposition_Intention; break;
-                    case "PPINV": pos = POS.Preposition_Involvement; break;
-                    case "PPO": pos = POS.Preposition_Onbehalf; break;
-                    case "PPS": pos = POS.Preposition_Spatial; break;
-                    case "PPST": pos = POS.Preposition_State; break;
-                    case "PPSU": pos = POS.Preposition_Supporting; break;
-                    case "PPT": pos = POS.Preposition_Temporal; break;
-                    case "PPTW": pos = POS.Preposition_Towards; break;
-                    case "PPUS": pos = POS.Preposition_Using; break;
+                        case "PP": pos = POS.Preposition; break;
+                        case "PPA": pos = POS.Preposition_Amount; break;
+                        case "PPC": pos = POS.Preposition_Contact; break;
+                        case "PPD": pos = POS.Preposition_Directional; break;
+                        case "PPE": pos = POS.Preposition_End; break;
+                        case "PPI": pos = POS.Preposition_Including; break;
+                        case "PPIN": pos = POS.Preposition_Intention; break;
+                        case "PPINV": pos = POS.Preposition_Involvement; break;
+                        case "PPO": pos = POS.Preposition_Onbehalf; break;
+                        case "PPS": pos = POS.Preposition_Spatial; break;
+                        case "PPST": pos = POS.Preposition_State; break;
+                        case "PPSU": pos = POS.Preposition_Supporting; break;
+                        case "PPT": pos = POS.Preposition_Temporal; break;
+                        case "PPTW": pos = POS.Preposition_Towards; break;
+                        case "PPUS": pos = POS.Preposition_Using; break;
 
-                    case "&": pos = POS.Conjunction; break;
-                    case "I": pos = POS.Interjection; break;
-                    case "!": pos = POS.Exclamation; break;
-                    case "IN": pos = POS.InfinitiveMarker; break;
-                    case "#": pos = POS.Numeric; break;
-                    case "$": pos = POS.Numeric_currency; break;
-                    case "DA": pos = POS.Date; break;
-                    case "TM": pos = POS.Time; break;
-                    case "DT": pos = POS.Datetime; break;
+                        case "&": pos = POS.Conjunction; break;
+                        case "I": pos = POS.Interjection; break;
+                        case "!": pos = POS.Exclamation; break;
+                        case "IN": pos = POS.InfinitiveMarker; break;
+                        case "#": pos = POS.Numeric; break;
+                        case "$": pos = POS.Numeric_currency; break;
+                        case "DA": pos = POS.Date; break;
+                        case "TM": pos = POS.Time; break;
+                        case "DT": pos = POS.Datetime; break;
 
-                    default: throw new InvalidOperationException("Unknown part of speech code '" + pos + "': " + words);
+                        default:
+                            throw DS.Exception.error(DS.Utilities.nameof(() => (<Concept><any>Concept).addConceptTriggerWords, true) + "()",
+                                "Unknown part of speech code '" + pos + "': " + words);
+                    }
                 }
+
+                dicItem = DS.StringUtils.isEmptyOrWhitespace(word) ? dictionary.GlobalEntry
+                    : dictionary.addTextPart(word, pos); // (this adds the word into the dictionary, build a small word base from the concept patterns)
+
+                dicItem.addConceptHandler(handler);
+                // (dictionary items should reference back to the concepts that created them; when a word match is found, the concept is considered [in context])
             }
-
-            dicItem = string.IsNullOrWhiteSpace(word) ? dictionary.GlobalEntry
-                : dictionary.AddTextPart(word, pos); // (this adds the word into the dictionary, build a small word base from the concept patterns)
-
-            dicItem.AddConceptHandler(handler); // (dictionary items should reference back to the concepts that created them)
         }
     }
 
     // --- This is removed now in favor of concrete word matches, but pattern could be an add on later, so keep this old method idea for reference ---
     ///**
-    * // Parses and adds a concept pattern and associates it with a callback handler.
-        //*/
-        ///// <param name="pattern">A text pattern that will trigger the handler.</param>
-        ///// <param name="handler">A callback method to execute when the pattern matches.</param>
-        ///// <param name="dictionary">A dictionary to hold the pattern parts. If null, the dictionary associated with brain's main memory is used.</param>
-        ///// <returns>The patterns are mapped to the handler and stored within the concept instance, but pattern entries are also returned if needed.</returns>
-        //public DictionaryItem[][] AddConceptPattern(string pattern, ConceptHandler handler, Dictionary dictionary = null)
-        //{
-        //    if (string.IsNullOrWhiteSpace(pattern)) return new DictionaryItem[0][];
+    //// Parses and adds a concept pattern and associates it with a callback handler.
+    //*/
+    ///// <param name="pattern">A text pattern that will trigger the handler.</param>
+    ///// <param name="handler">A callback method to execute when the pattern matches.</param>
+    ///// <param name="dictionary">A dictionary to hold the pattern parts. If null, the dictionary associated with brain's main memory is used.</param>
+    ///// <returns>The patterns are mapped to the handler and stored within the concept instance, but pattern entries are also returned if needed.</returns>
+    //public DictionaryItem[][] AddConceptPattern(string pattern, ConceptHandler handler, Dictionary dictionary = null)
+    //{
+    //    if (DS.StringUtils.isEmptyOrWhitespace(pattern)) return new DictionaryItem[0][];
 
-        //    if (dictionary == null)
-        //        dictionary = Brain?.Memory?.Dictionary ?? throw new ArgumentNullException("dictionary", "No dictionary was given, and 'this.Brain.Memory.Dictionary' is null.");
+    //    if (dictionary == null)
+    //        dictionary = Brain?.Memory?.Dictionary ?? throw new ArgumentNullException("dictionary", "No dictionary was given, and 'this.Brain.Memory.Dictionary' is null.");
 
-        //    List<DictionaryItem[]> dictionaryItems = new List<DictionaryItem[]>();
+    //    List<DictionaryItem[]> dictionaryItems = new List<DictionaryItem[]>();
 
-        //    dictionary = dictionary ?? Brain?.Memory?.Dictionary;
-        //    if (dictionary == null) throw new ArgumentNullException("dictionary");
+    //    dictionary = dictionary ?? Brain?.Memory?.Dictionary;
+    //    if (dictionary == null) throw new ArgumentNullException("dictionary");
 
-        //    var parts = pattern.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+    //    var parts = pattern.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-        //    for (var i = 0; i < parts.Length; ++i)
-        //    {
-        //        var patternpart = parts[i];
-        //        var wordparts = patternpart.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-        //        var supportedWordEntries = new List<DictionaryItem>();
+    //    for (var i = 0; i < parts.Length; ++i)
+    //    {
+    //        var patternpart = parts[i];
+    //        var wordparts = patternpart.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+    //        var supportedWordEntries = new List<DictionaryItem>();
 
-        //        for (var i2 = 0; i2 < wordparts.Length; ++i2)
-        //        {
-        //            var wordpart = wordparts[i2];
-        //            var worddetails = patternpart.Split(new char[] { '^' }, StringSplitOptions.RemoveEmptyEntries);
-        //            var word = worddetails[0];
+    //        for (var i2 = 0; i2 < wordparts.Length; ++i2)
+    //        {
+    //            var wordpart = wordparts[i2];
+    //            var worddetails = patternpart.Split(new char[] { '^' }, StringSplitOptions.RemoveEmptyEntries);
+    //            var word = worddetails[0];
 
-        //            // (Note: if 'word' is empty, it is a wild card place holder for text)
+    //            // (Note: if 'word' is empty, it is a wild card place holder for text)
 
-        //            var posstr = worddetails[1];
-        //            PartOfSpeech pos = null;
-        //            DictionaryItem dicItem;
+    //            var posstr = worddetails[1];
+    //            PartOfSpeech pos = null;
+    //            DictionaryItem dicItem;
 
-        //            if (word == "*")
-        //                word = ""; // (in case user uses * for a wildcard at this point, just accept and convert it)
-        //            else if (word.StartsWith("**"))
-        //                word.Replace("**", "*"); // (double will be the escape for a single)
+    //            if (word == "*")
+    //                word = ""; // (in case user uses * for a wildcard at this point, just accept and convert it)
+    //            else if (word.StartsWith("**"))
+    //                word.Replace("**", "*"); // (double will be the escape for a single)
 
-        //            if (!string.IsNullOrWhiteSpace(posstr))
-        //            {
-        //                switch (posstr.ToUpper())
-        //                {
-        //                    case "D": pos = POS.Determiner; break;
-        //                    case "DD": pos = POS.Determiner_Definite; break;
-        //                    case "DI": pos = POS.Determiner_Indefinite; break;
+    //            if (!DS.StringUtils.isEmptyOrWhitespace(posstr))
+    //            {
+    //                switch (posstr.ToUpper())
+    //                {
+    //                    case "D": pos = POS.Determiner; break;
+    //                    case "DD": pos = POS.Determiner_Definite; break;
+    //                    case "DI": pos = POS.Determiner_Indefinite; break;
 
-        //                    case "N": pos = POS.Noun; break;
-        //                    case "NA": pos = POS.Noun_Action; break;
-        //                    case "NC": pos = POS.Noun_Creature; break;
-        //                    case "NO": pos = POS.Noun_Object; break;
-        //                    case "NP": pos = POS.Noun_Person; break;
-        //                    case "NPL": pos = POS.Noun_Place; break;
-        //                    case "NQF": pos = POS.Noun_Quality_Or_Feeling; break;
-        //                    case "NS": pos = POS.Noun_Spatial; break;
-        //                    case "NT": pos = POS.Noun_Temporal; break;
-        //                    case "NTR": pos = POS.Noun_Trait; break;
+    //                    case "N": pos = POS.Noun; break;
+    //                    case "NA": pos = POS.Noun_Action; break;
+    //                    case "NC": pos = POS.Noun_Creature; break;
+    //                    case "NO": pos = POS.Noun_Object; break;
+    //                    case "NP": pos = POS.Noun_Person; break;
+    //                    case "NPL": pos = POS.Noun_Place; break;
+    //                    case "NQF": pos = POS.Noun_Quality_Or_Feeling; break;
+    //                    case "NS": pos = POS.Noun_Spatial; break;
+    //                    case "NT": pos = POS.Noun_Temporal; break;
+    //                    case "NTR": pos = POS.Noun_Trait; break;
 
-        //                    case "V": pos = POS.Verb; break;
-        //                    case "VAP": pos = POS.Verb_AbleToOrPermitted; break;
-        //                    case "VA": pos = POS.Verb_Action; break;
-        //                    case "VIS": pos = POS.Verb_Is; break;
-        //                    case "VO": pos = POS.Verb_Occurrence; break;
-        //                    case "VS": pos = POS.Verb_State; break;
+    //                    case "V": pos = POS.Verb; break;
+    //                    case "VAP": pos = POS.Verb_AbleToOrPermitted; break;
+    //                    case "VA": pos = POS.Verb_Action; break;
+    //                    case "VIS": pos = POS.Verb_Is; break;
+    //                    case "VO": pos = POS.Verb_Occurrence; break;
+    //                    case "VS": pos = POS.Verb_State; break;
 
-        //                    case "AV": pos = POS.Adverb; break;
+    //                    case "AV": pos = POS.Adverb; break;
 
-        //                    case "A": pos = POS.Adjective; break;
-        //                    case "AT": pos = POS.Adjective_Trait; break;
+    //                    case "A": pos = POS.Adjective; break;
+    //                    case "AT": pos = POS.Adjective_Trait; break;
 
-        //                    case "PN": pos = POS.Pronoun; break;
-        //                    case "PNP": pos = POS.Pronoun_Possessive; break;
-        //                    case "PS": pos = POS.Pronoun_Subject; break;
+    //                    case "PN": pos = POS.Pronoun; break;
+    //                    case "PNP": pos = POS.Pronoun_Possessive; break;
+    //                    case "PS": pos = POS.Pronoun_Subject; break;
 
-        //                    case "PP": pos = POS.Preposition; break;
-        //                    case "PPA": pos = POS.Preposition_Amount; break;
-        //                    case "PPC": pos = POS.Preposition_Contact; break;
-        //                    case "PPD": pos = POS.Preposition_Directional; break;
-        //                    case "PPE": pos = POS.Preposition_End; break;
-        //                    case "PPI": pos = POS.Preposition_Including; break;
-        //                    case "PPIN": pos = POS.Preposition_Intention; break;
-        //                    case "PPINV": pos = POS.Preposition_Involvement; break;
-        //                    case "PPO": pos = POS.Preposition_Onbehalf; break;
-        //                    case "PPS": pos = POS.Preposition_Spatial; break;
-        //                    case "PPST": pos = POS.Preposition_State; break;
-        //                    case "PPSU": pos = POS.Preposition_Supporting; break;
-        //                    case "PPT": pos = POS.Preposition_Temporal; break;
-        //                    case "PPTW": pos = POS.Preposition_Towards; break;
-        //                    case "PPUS": pos = POS.Preposition_Using; break;
+    //                    case "PP": pos = POS.Preposition; break;
+    //                    case "PPA": pos = POS.Preposition_Amount; break;
+    //                    case "PPC": pos = POS.Preposition_Contact; break;
+    //                    case "PPD": pos = POS.Preposition_Directional; break;
+    //                    case "PPE": pos = POS.Preposition_End; break;
+    //                    case "PPI": pos = POS.Preposition_Including; break;
+    //                    case "PPIN": pos = POS.Preposition_Intention; break;
+    //                    case "PPINV": pos = POS.Preposition_Involvement; break;
+    //                    case "PPO": pos = POS.Preposition_Onbehalf; break;
+    //                    case "PPS": pos = POS.Preposition_Spatial; break;
+    //                    case "PPST": pos = POS.Preposition_State; break;
+    //                    case "PPSU": pos = POS.Preposition_Supporting; break;
+    //                    case "PPT": pos = POS.Preposition_Temporal; break;
+    //                    case "PPTW": pos = POS.Preposition_Towards; break;
+    //                    case "PPUS": pos = POS.Preposition_Using; break;
 
-        //                    case "&": pos = POS.Conjunction; break;
-        //                    case "I": pos = POS.Interjection; break;
-        //                    case "!": pos = POS.Exclamation; break;
-        //                    case "IN": pos = POS.InfinitiveMarker; break;
-        //                    case "#": pos = POS.Numeric; break;
-        //                    case "$": pos = POS.Numeric_currency; break;
-        //                    case "DA": pos = POS.Date; break;
-        //                    case "TM": pos = POS.Time; break;
-        //                    case "DT": pos = POS.Datetime; break;
+    //                    case "&": pos = POS.Conjunction; break;
+    //                    case "I": pos = POS.Interjection; break;
+    //                    case "!": pos = POS.Exclamation; break;
+    //                    case "IN": pos = POS.InfinitiveMarker; break;
+    //                    case "#": pos = POS.Numeric; break;
+    //                    case "$": pos = POS.Numeric_currency; break;
+    //                    case "DA": pos = POS.Date; break;
+    //                    case "TM": pos = POS.Time; break;
+    //                    case "DT": pos = POS.Datetime; break;
 
-        //                    default: throw new InvalidOperationException("Unknown part of speech code '" + pos + "': " + pattern);
-        //                }
-        //            }
+    //                    default: throw new InvalidOperationException("Unknown part of speech code '" + pos + "': " + pattern);
+    //                }
+    //            }
 
-        //            dicItem = string.IsNullOrWhiteSpace(word) ? new DictionaryItem(null, null, pos)
-        //                : dictionary.AddTextPart(word, pos); // (this adds the word into the dictionary, build a small word base from the concept patterns)
+    //            dicItem = DS.StringUtils.isEmptyOrWhitespace(word) ? new DictionaryItem(null, null, pos)
+    //                : dictionary.AddTextPart(word, pos); // (this adds the word into the dictionary, build a small word base from the concept patterns)
 
-        //            dicItem.AddConceptHandler(this, handler); // (dictionary items should reference back to the concepts that created them)
+    //            dicItem.AddConceptHandler(this, handler); // (dictionary items should reference back to the concepts that created them)
 
-        //            supportedWordEntries.Add(dicItem);
-        //        }
+    //            supportedWordEntries.Add(dicItem);
+    //        }
 
-        //        dictionaryItems.Add(supportedWordEntries.ToArray());
-        //    }
+    //        dictionaryItems.Add(supportedWordEntries.ToArray());
+    //    }
 
-        //    var patternItems = dictionaryItems.ToArray();
+    //    var patternItems = dictionaryItems.ToArray();
 
-        //    _ConceptPatterns[handler] = patternItems;
+    //    _ConceptPatterns[handler] = patternItems;
 
-        //    return patternItems;
-        //}
+    //    return patternItems;
+    //}
 
-        // --------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------
 
-        IsMatch(DictionaryItem left, DictionaryItem item, DictionaryItem right): boolean {
+    IsMatch(DictionaryItem left, DictionaryItem item, DictionaryItem right): boolean {
         return false;
     }
 

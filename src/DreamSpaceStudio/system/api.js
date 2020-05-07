@@ -39,12 +39,28 @@ if (!Array.prototype.max) // Primarily to help support conversions from C# - als
         }
         return [maxValue, lastIndex];
     };
-if (!String.prototype.trimRightChar) // Primarily to help support conversions from C# - also, this should exist anyhow!
+if (!String.prototype.trimRightChar)
     String.prototype.trimRightChar = function (char) {
         var s = this;
         while (s[s.length - 1] === char)
             s = s.substr(0, this.length - 1);
         return s;
+    };
+if (!String.prototype.startsWith)
+    String.prototype.startsWith = function (str) {
+        if (str === void 0 || str === null)
+            return false;
+        if (typeof str != 'string')
+            str = '' + str;
+        return this.substr(0, str.length) === str;
+    };
+if (!String.prototype.endsWith)
+    String.prototype.endsWith = function (str) {
+        if (str === void 0 || str === null)
+            return false;
+        if (typeof str != 'string')
+            str = '' + str;
+        return this.substr(-str.length) === str;
     };
 var isNode = typeof global == 'object' && !!global.process && !!global.process.versions && !!global.process.versions.node;
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
@@ -82,7 +98,7 @@ var DS;
         else
             console.log("%c -=< %cDreamSpace Client OS - v" + DS.version + " %c>=- ", "background: #000; color: lightblue; font-weight:bold", "background: #000; color: yellow; font-style:italic; font-weight:bold", "background: #000; color: lightblue; font-weight:bold");
     // ------------------------------------------------------------------------------------------------------------------------
-    DS.constructor = Symbol("static constructor");
+    DS.staticConstructor = Symbol("static constructor");
     // ------------------------------------------------------------------------------------------------------------------------
     // ===========================================================================================================================
     // Setup some preliminary settings before the core scope, including the "safe" and "global" 'eval()' functions.
@@ -1250,7 +1266,7 @@ var DS;
                 return txt;
             }
             // --------------------------------------------------------------------------------------------------------------------------
-            static [DS.constructor](factory) {
+            static [DS.staticConstructor](factory) {
                 //factory.init = (o, isnew) => { // not dealing with private properties, so this is not needed!
                 //};
             }
@@ -2734,7 +2750,7 @@ var DS;
             return isstaticctx;
         }
         //? static readonly $Type = $Delegate;
-        [DS.constructor](factory) {
+        [DS.staticConstructor](delegate) {
             /** Generates "case" statements for function templates.  The function template is converted into a string, the resulting cases get inserted,
               * and the compiled result is returned.  This hard-codes the logic for greatest speed, and if more parameters are need, can easily be expanded.
             */
@@ -2747,7 +2763,7 @@ var DS;
                 return DS.safeEval("(" + ftext.replace(matchRegex, cases) + ")");
             }
             // TODO: Look into using the "...spread" operator for supported browsers, based on support: https://goo.gl/a5tvW1
-            factory.fastApply = makeCases(0, 20, function (func, context, args) {
+            delegate.fastApply = makeCases(0, 20, function (func, context, args) {
                 if (!arguments.length)
                     throw DS.Exception.error("Delegate.fastApply()", "No function specified.");
                 if (typeof func !== 'function')
@@ -2759,7 +2775,7 @@ var DS;
                     default: return func.apply(context, args); /* (no arguments supplied) */
                 }
             }, "func.call", "context, ", "args");
-            factory.fastCall = makeCases(0, 20, function (func, context) {
+            delegate.fastCall = makeCases(0, 20, function (func, context) {
                 if (!arguments.length)
                     throw DS.Exception.error("Delegate.fastCall()", "No function specified.");
                 if (typeof func !== 'function')
@@ -2857,6 +2873,7 @@ var DS;
         }
     }
     DS.Delegate = Delegate;
+    Delegate[DS.staticConstructor](Delegate);
     // ============================================================================================================================
 })(DS || (DS = {}));
 // ###########################################################################################################################
@@ -7149,7 +7166,7 @@ var DS;
             for (var i = this.__listeners.length - 1; i >= 0; --i)
                 this.__removeListener(i);
         }
-        static [DS.constructor]() {
+        static [DS.staticConstructor]() {
             function getTriggerFunc(args) {
                 //x args.push(void 0, this); // (add 2 optional items on end)
                 //x var dataIndex = args.length - 2; // (set the index where the data should be set when each handler gets called)
@@ -7191,7 +7208,7 @@ var DS;
         }
     }
     DS.EventDispatcher = EventDispatcher;
-    EventDispatcher[DS.constructor](); // ('any' is used because the static constructor is private)
+    EventDispatcher[DS.staticConstructor](); // ('any' is used because the static constructor is private)
     class EventObject {
         /** Call this if you wish to implement 'changing' events for supported properties.
         * If any event handler cancels the event, then 'false' will be returned.

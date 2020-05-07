@@ -1,5 +1,9 @@
-﻿import Concept, { concept, conceptHandler, intentHandler } from "../core/Concept";
+﻿import Concept, { concept, conceptHandler, intentHandler, ConceptHandlerContext } from "../core/Concept";
 import Brain from "../core/Brain";
+import QuestionContext from "../contexts/QuestionContext";
+import DictionaryItem from "../core/DictionaryItem";
+import POS from "../core/POS";
+import SubjectContext from "../contexts/SubjectContext";
 
 @concept()
 export default class QuestionsConcept extends Concept {
@@ -7,16 +11,16 @@ export default class QuestionsConcept extends Concept {
 
     constructor(brian: Brain) {
         super(brian)
-        this.Who = this.memory.Dictionary.AddTextPart("who", this.POS.Pronoun_Subject);
-        this.What = this.memory.Dictionary.AddTextPart("what", this.POS.Pronoun_Subject);
-        this.When = this.memory.Dictionary.AddTextPart("when", this.POS.Adverb);
-        this.Where = this.memory.Dictionary.AddTextPart("where", this.POS.Adverb);
-        this.Why = this.memory.Dictionary.AddTextPart("why", this.POS.Adverb);
-        this.How = this.memory.Dictionary.AddTextPart("how", this.POS.Adverb);
-        this.Are = this.memory.Dictionary.AddTextPart("are", this.POS.Verb_Is);
-        this.Is = this.memory.Dictionary.AddTextPart("is", this.POS.Verb_Is);
-        this.If = this.memory.Dictionary.AddTextPart("if", this.POS.Conjunction);
-        this.Can = this.memory.Dictionary.AddTextPart("can", this.POS.Verb_AbleToOrPermitted);
+        this.Who = this.memory.dictionary.addTextPart("who", POS.Pronoun_Subject);
+        this.What = this.memory.dictionary.addTextPart("what", POS.Pronoun_Subject);
+        this.When = this.memory.dictionary.addTextPart("when", POS.Adverb);
+        this.Where = this.memory.dictionary.addTextPart("where", POS.Adverb);
+        this.Why = this.memory.dictionary.addTextPart("why", POS.Adverb);
+        this.How = this.memory.dictionary.addTextPart("how", POS.Adverb);
+        this.Are = this.memory.dictionary.addTextPart("are", POS.Verb_Is);
+        this.Is = this.memory.dictionary.addTextPart("is", POS.Verb_Is);
+        this.If = this.memory.dictionary.addTextPart("if", POS.Conjunction);
+        this.Can = this.memory.dictionary.addTextPart("can", POS.Verb_AbleToOrPermitted);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -35,122 +39,121 @@ export default class QuestionsConcept extends Concept {
     // --------------------------------------------------------------------------------------------------------------------
 
     @conceptHandler("Who^PN")
-    _Who(context: conceptHandlerContext): Promise<conceptHandlerContext> {
+    _Who(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, Who));
+            context.Context.Add(new QuestionContext(this, this.Who));
         return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    @conceptHandler("name", "what^PN is^V ^PN name")
-    _GetName(context: conceptHandlerContext): Promise<conceptHandlerContext> {
+    @conceptHandler("name^N^V^A", QuestionContext, SubjectContext, 'tobe|is') //"what^PN is^V ^PN name"
+    _GetName(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         return Promise.resolve(context);
     }
 
     @conceptHandler("What!?")
-    _What_Exclamation(context: conceptHandlerContext): Promise<conceptHandlerContext> {
-        context.AddIntentHandler(_What_Excl_Intent, 1d);
+    _What_Exclamation(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        context.AddIntentHandler(new DS.Delegate(this, this._What_Excl_Intent), 1);
         return Promise.resolve(context);
     }
-    async  _What_Excl_Intent(context: conceptHandlerContext): Promise<boolean> {
-        await Brain.DoResponse("Why so surprised?");
+    async  _What_Excl_Intent(context: ConceptHandlerContext): Promise<boolean> {
+        await this.brain.doResponse("Why so surprised?");
         return true;
     }
 
     @conceptHandler("What")
-    _What_Unknown_Question(context: conceptHandlerContext): Promise<conceptHandlerContext> {
+    _What_Unknown_Question(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null)) {
-            context.Context.Add(new QuestionContext(this, What));
-            context.AddIntentHandler(_What_Intent, context.Operation.MinConfidence); // (this is like a fall-back plan if nothing else better is found)
+            context.Context.Add(new QuestionContext(this, this.What));
+            context.AddIntentHandler(new DS.Delegate(this, this._What_Intent), context.Operation.MinConfidence); // (this is like a fall-back plan if nothing else better is found)
         }
         return Promise.resolve(context);
     }
 
-    async  _What_Intent(context: conceptHandlerContext): Promise<boolean> {
-        await Brain.DoResponse("What about what?");
+    async  _What_Intent(context: ConceptHandlerContext): Promise<boolean> {
+        await this.brain.doResponse("What about what?");
         return true;
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
     @conceptHandler("When")
-    _When(context: conceptHandlerContext): Promise<conceptHandlerContext> {
+    _When(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, When));
+            context.Context.Add(new QuestionContext(this, this.When));
         return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
     @conceptHandler("Where")
-    _Where(context: conceptHandlerContext): Promise<conceptHandlerContext> {
+    _Where(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, Where));
+            context.Context.Add(new QuestionContext(this, this.Where));
         return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
     @conceptHandler("Why", "Why *")
-    _Why(context: conceptHandlerContext): Promise<conceptHandlerContext> {
+    _Why(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, Why));
+            context.Context.Add(new QuestionContext(this, this.Why));
         return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
     @conceptHandler("How")
-    _How(context: conceptHandlerContext): Promise<conceptHandlerContext> {
+    _How(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null)) {
-            context.Context.Add(new QuestionContext(this, How));
-            context.AddIntentHandler(_How_Intent, context.Operation.MinConfidence);
+            context.Context.Add(new QuestionContext(this, this.How));
+            context.AddIntentHandler(new DS.Delegate(this, this._How_Intent), context.Operation.MinConfidence);
         }
         return Promise.resolve(context);
     }
 
     @intentHandler("How")
-    async  _How_Intent(context: conceptHandlerContext): Promise<boolean> {
+    async  _How_Intent(context: ConceptHandlerContext): Promise<boolean> {
         if (context.WasPrevious(null))
-            await Brain.DoResponse("How what?");
+            await this.brain.doResponse("How what?");
         return true;
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
     @conceptHandler("Can", "Can *")
-    _Can(context: conceptHandlerContext): Promise<conceptHandlerContext> {
+    _Can(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, Can));
+            context.Context.Add(new QuestionContext(this, this.Can));
         return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
     @conceptHandler("Is", "Is *")
-    _Is(context: conceptHandlerContext): Promise<conceptHandlerContext> {
+    _Is(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, Is));
+            context.Context.Add(new QuestionContext(this, this.Is));
         return Promise.resolve(context);
     }
 
     @conceptHandler("Are", "Are *")
-    _Are(context: conceptHandlerContext): Promise<conceptHandlerContext> {
+    _Are(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, Are));
+            context.Context.Add(new QuestionContext(this, this.Are));
         return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
     @conceptHandler("If", "If *")
-    _If(context: conceptHandlerContext): Promise<conceptHandlerContext> {
+    _If(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, If));
+            context.Context.Add(new QuestionContext(this, this.If));
         return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
-}
 }

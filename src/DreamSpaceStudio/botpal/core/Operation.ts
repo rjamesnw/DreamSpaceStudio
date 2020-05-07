@@ -24,7 +24,7 @@ export default abstract class Operation extends TimeReferencedObject implements 
     */
     readonly Brain: Brain;
 
-    get memory(): Memory { return this.Brain.Memory; }
+    get memory(): Memory { return this.Brain.memory; }
 
     /**
      *  The parent operation that must precede this operation before it can execute.

@@ -23,7 +23,7 @@ export default class Brain {
     /**
      *  The memory instance, which also contains the core dictionary for quick lookups.
     */
-    readonly Memory: Memory;
+    readonly memory: Memory;
 
     /**
      *  A Text-To-Speech plugin object to use when calling "Brain.Say()".
@@ -106,7 +106,7 @@ export default class Brain {
      * @param configureConcepts If true (default), then all concepts defined in this assembly are added to the brain.
      */
     constructor(configureConcepts = true) {
-        this.Memory = new Memory(this);
+        this.memory = new Memory(this);
 
         if (configureConcepts)
             this.ConfigureDefaultConcepts();
@@ -204,8 +204,8 @@ export default class Brain {
 
     findConceptContexts(text: string, threshold = 0.8): Match<ConceptContext>[] {
         var dicItems = threshold == 1 ? // (if 'threshold' is 1.0 then do a similar [near exact] match [using group keys], otherwise find close partial matches instead.
-            this.Memory.Dictionary.FindSimilarEntries(Memory.Brain.ToGroupKey(text)).SelectMany(i => i.ConceptContexts.Select(c => new Match<ConceptContext>(c, 1.0)))
-            : this.Memory.Dictionary.FindMatchingEntries(text, threshold).SelectMany(m => m.Item.ConceptContexts.Select(c => new Match<ConceptContext>(c, m.Score)));
+            this.memory.dictionary.FindSimilarEntries(Memory.Brain.ToGroupKey(text)).SelectMany(i => i.ConceptContexts.Select(c => new Match<ConceptContext>(c, 1.0)))
+            : this.memory.dictionary.FindMatchingEntries(text, threshold).SelectMany(m => m.Item.ConceptContexts.Select(c => new Match<ConceptContext>(c, m.Score)));
         return dicItems.ToArray();
     }
 

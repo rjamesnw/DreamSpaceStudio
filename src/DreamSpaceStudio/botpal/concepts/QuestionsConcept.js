@@ -1,172 +1,158 @@
-using;
-System;
-using;
-System.Collections.Generic;
-using;
-System.Linq;
-using;
-System.Text;
-using;
-System.Threading.Tasks;
-var BotPal;
-(function (BotPal) {
-    var Concepts;
-    (function (Concepts) {
-        [Concept];
-        class QuestionsConcept {
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const Concept_1 = require("../core/Concept");
+const QuestionContext_1 = require("../contexts/QuestionContext");
+const POS_1 = require("../core/POS");
+const SubjectContext_1 = require("../contexts/SubjectContext");
+let QuestionsConcept = /** @class */ (() => {
+    let QuestionsConcept = class QuestionsConcept extends Concept_1.default {
+        // --------------------------------------------------------------------------------------------------------------------
+        constructor(brian) {
+            super(brian);
+            this.Who = this.memory.dictionary.addTextPart("who", POS_1.default.Pronoun_Subject);
+            this.What = this.memory.dictionary.addTextPart("what", POS_1.default.Pronoun_Subject);
+            this.When = this.memory.dictionary.addTextPart("when", POS_1.default.Adverb);
+            this.Where = this.memory.dictionary.addTextPart("where", POS_1.default.Adverb);
+            this.Why = this.memory.dictionary.addTextPart("why", POS_1.default.Adverb);
+            this.How = this.memory.dictionary.addTextPart("how", POS_1.default.Adverb);
+            this.Are = this.memory.dictionary.addTextPart("are", POS_1.default.Verb_Is);
+            this.Is = this.memory.dictionary.addTextPart("is", POS_1.default.Verb_Is);
+            this.If = this.memory.dictionary.addTextPart("if", POS_1.default.Conjunction);
+            this.Can = this.memory.dictionary.addTextPart("can", POS_1.default.Verb_AbleToOrPermitted);
         }
-        Concept;
-        {
-            QuestionsConcept(Brain, brian);
-            base(brian);
-            {
-                Who = Memory.Dictionary.AddTextPart("who", POS.Pronoun_Subject);
-                What = Memory.Dictionary.AddTextPart("what", POS.Pronoun_Subject);
-                When = Memory.Dictionary.AddTextPart("when", POS.Adverb);
-                Where = Memory.Dictionary.AddTextPart("where", POS.Adverb);
-                Why = Memory.Dictionary.AddTextPart("why", POS.Adverb);
-                How = Memory.Dictionary.AddTextPart("how", POS.Adverb);
-                Are = Memory.Dictionary.AddTextPart("are", POS.Verb_Is);
-                Is = Memory.Dictionary.AddTextPart("is", POS.Verb_Is);
-                If = Memory.Dictionary.AddTextPart("if", POS.Conjunction);
-                Can = Memory.Dictionary.AddTextPart("can", POS.Verb_AbleToOrPermitted);
-            }
-            DictionaryItem;
-            Who;
-            DictionaryItem;
-            What;
-            DictionaryItem;
-            When;
-            DictionaryItem;
-            Where;
-            DictionaryItem;
-            Why;
-            DictionaryItem;
-            How;
-            DictionaryItem;
-            Are;
-            DictionaryItem;
-            Is;
-            DictionaryItem;
-            If;
-            DictionaryItem;
-            Can;
-            // --------------------------------------------------------------------------------------------------------------------
-            [ConceptHandler("Who^PN")];
-            Task < ConceptHandlerContext > _Who(ConceptHandlerContext, context);
-            {
-                if (context.WasPrevious(null))
-                    context.Context.Add(new QuestionContext(this, Who));
-                return Task.FromResult(context);
-            }
-            // --------------------------------------------------------------------------------------------------------------------
-            [ConceptHandler("name", "what^PN is^V ^PN name")];
-            Task < ConceptHandlerContext > _GetName(ConceptHandlerContext, context);
-            {
-                return Task.FromResult(context);
-            }
-            [ConceptHandler("What!?")];
-            Task < ConceptHandlerContext > _What_Exclamation(ConceptHandlerContext, context);
-            {
-                context.AddIntentHandler(_What_Excl_Intent, 1, d);
-                return Task.FromResult(context);
-            }
-            async;
-            Task < bool > _What_Excl_Intent(ConceptHandlerContext, context);
-            {
-                await Brain.DoResponse("Why so surprised?");
-                return true;
-            }
-            [ConceptHandler("What")];
-            Task < ConceptHandlerContext > _What_Unknown_Question(ConceptHandlerContext, context);
-            {
-                if (context.WasPrevious(null)) {
-                    context.Context.Add(new QuestionContext(this, What));
-                    context.AddIntentHandler(_What_Intent, context.Operation.MinConfidence); // (this is like a fall-back plan if nothing else better is found)
-                }
-                return Task.FromResult(context);
-            }
-            async;
-            Task < bool > _What_Intent(ConceptHandlerContext, context);
-            {
-                await Brain.DoResponse("What about what?");
-                return true;
-            }
-            // --------------------------------------------------------------------------------------------------------------------
-            [ConceptHandler("When")];
-            Task < ConceptHandlerContext > _When(ConceptHandlerContext, context);
-            {
-                if (context.WasPrevious(null))
-                    context.Context.Add(new QuestionContext(this, When));
-                return Task.FromResult(context);
-            }
-            // --------------------------------------------------------------------------------------------------------------------
-            [ConceptHandler("Where")];
-            Task < ConceptHandlerContext > _Where(ConceptHandlerContext, context);
-            {
-                if (context.WasPrevious(null))
-                    context.Context.Add(new QuestionContext(this, Where));
-                return Task.FromResult(context);
-            }
-            // --------------------------------------------------------------------------------------------------------------------
-            [ConceptHandler("Why", "Why *")];
-            Task < ConceptHandlerContext > _Why(ConceptHandlerContext, context);
-            {
-                if (context.WasPrevious(null))
-                    context.Context.Add(new QuestionContext(this, Why));
-                return Task.FromResult(context);
-            }
-            // --------------------------------------------------------------------------------------------------------------------
-            [ConceptHandler("How")];
-            Task < ConceptHandlerContext > _How(ConceptHandlerContext, context);
-            {
-                if (context.WasPrevious(null)) {
-                    context.Context.Add(new QuestionContext(this, How));
-                    context.AddIntentHandler(_How_Intent, context.Operation.MinConfidence);
-                }
-                return Task.FromResult(context);
-            }
-            [IntentHandler("How")];
-            async;
-            Task < bool > _How_Intent(ConceptHandlerContext, context);
-            {
-                if (context.WasPrevious(null))
-                    await Brain.DoResponse("How what?");
-                return true;
-            }
-            // --------------------------------------------------------------------------------------------------------------------
-            [ConceptHandler("Can", "Can *")];
-            Task < ConceptHandlerContext > _Can(ConceptHandlerContext, context);
-            {
-                if (context.WasPrevious(null))
-                    context.Context.Add(new QuestionContext(this, Can));
-                return Task.FromResult(context);
-            }
-            // --------------------------------------------------------------------------------------------------------------------
-            [ConceptHandler("Is", "Is *")];
-            Task < ConceptHandlerContext > _Is(ConceptHandlerContext, context);
-            {
-                if (context.WasPrevious(null))
-                    context.Context.Add(new QuestionContext(this, Is));
-                return Task.FromResult(context);
-            }
-            [ConceptHandler("Are", "Are *")];
-            Task < ConceptHandlerContext > _Are(ConceptHandlerContext, context);
-            {
-                if (context.WasPrevious(null))
-                    context.Context.Add(new QuestionContext(this, Are));
-                return Task.FromResult(context);
-            }
-            // --------------------------------------------------------------------------------------------------------------------
-            [ConceptHandler("If", "If *")];
-            Task < ConceptHandlerContext > _If(ConceptHandlerContext, context);
-            {
-                if (context.WasPrevious(null))
-                    context.Context.Add(new QuestionContext(this, If));
-                return Task.FromResult(context);
-            }
-            // --------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------
+        _Who(context) {
+            if (context.WasPrevious(null))
+                context.Context.Add(new QuestionContext_1.default(this, this.Who));
+            return Promise.resolve(context);
         }
-    })(Concepts = BotPal.Concepts || (BotPal.Concepts = {}));
-})(BotPal || (BotPal = {}));
+        // --------------------------------------------------------------------------------------------------------------------
+        _GetName(context) {
+            return Promise.resolve(context);
+        }
+        _What_Exclamation(context) {
+            context.AddIntentHandler(new DS.Delegate(this, this._What_Excl_Intent), 1);
+            return Promise.resolve(context);
+        }
+        async _What_Excl_Intent(context) {
+            await this.brain.doResponse("Why so surprised?");
+            return true;
+        }
+        _What_Unknown_Question(context) {
+            if (context.WasPrevious(null)) {
+                context.Context.Add(new QuestionContext_1.default(this, this.What));
+                context.AddIntentHandler(new DS.Delegate(this, this._What_Intent), context.Operation.MinConfidence); // (this is like a fall-back plan if nothing else better is found)
+            }
+            return Promise.resolve(context);
+        }
+        async _What_Intent(context) {
+            await this.brain.doResponse("What about what?");
+            return true;
+        }
+        // --------------------------------------------------------------------------------------------------------------------
+        _When(context) {
+            if (context.WasPrevious(null))
+                context.Context.Add(new QuestionContext_1.default(this, this.When));
+            return Promise.resolve(context);
+        }
+        // --------------------------------------------------------------------------------------------------------------------
+        _Where(context) {
+            if (context.WasPrevious(null))
+                context.Context.Add(new QuestionContext_1.default(this, this.Where));
+            return Promise.resolve(context);
+        }
+        // --------------------------------------------------------------------------------------------------------------------
+        _Why(context) {
+            if (context.WasPrevious(null))
+                context.Context.Add(new QuestionContext_1.default(this, this.Why));
+            return Promise.resolve(context);
+        }
+        // --------------------------------------------------------------------------------------------------------------------
+        _How(context) {
+            if (context.WasPrevious(null)) {
+                context.Context.Add(new QuestionContext_1.default(this, this.How));
+                context.AddIntentHandler(new DS.Delegate(this, this._How_Intent), context.Operation.MinConfidence);
+            }
+            return Promise.resolve(context);
+        }
+        async _How_Intent(context) {
+            if (context.WasPrevious(null))
+                await this.brain.doResponse("How what?");
+            return true;
+        }
+        // --------------------------------------------------------------------------------------------------------------------
+        _Can(context) {
+            if (context.WasPrevious(null))
+                context.Context.Add(new QuestionContext_1.default(this, this.Can));
+            return Promise.resolve(context);
+        }
+        // --------------------------------------------------------------------------------------------------------------------
+        _Is(context) {
+            if (context.WasPrevious(null))
+                context.Context.Add(new QuestionContext_1.default(this, this.Is));
+            return Promise.resolve(context);
+        }
+        _Are(context) {
+            if (context.WasPrevious(null))
+                context.Context.Add(new QuestionContext_1.default(this, this.Are));
+            return Promise.resolve(context);
+        }
+        // --------------------------------------------------------------------------------------------------------------------
+        _If(context) {
+            if (context.WasPrevious(null))
+                context.Context.Add(new QuestionContext_1.default(this, this.If));
+            return Promise.resolve(context);
+        }
+    };
+    __decorate([
+        Concept_1.conceptHandler("Who^PN")
+    ], QuestionsConcept.prototype, "_Who", null);
+    __decorate([
+        Concept_1.conceptHandler("name^N^V^A", QuestionContext_1.default, SubjectContext_1.default, 'tobe|is') //"what^PN is^V ^PN name"
+    ], QuestionsConcept.prototype, "_GetName", null);
+    __decorate([
+        Concept_1.conceptHandler("What!?")
+    ], QuestionsConcept.prototype, "_What_Exclamation", null);
+    __decorate([
+        Concept_1.conceptHandler("What")
+    ], QuestionsConcept.prototype, "_What_Unknown_Question", null);
+    __decorate([
+        Concept_1.conceptHandler("When")
+    ], QuestionsConcept.prototype, "_When", null);
+    __decorate([
+        Concept_1.conceptHandler("Where")
+    ], QuestionsConcept.prototype, "_Where", null);
+    __decorate([
+        Concept_1.conceptHandler("Why", "Why *")
+    ], QuestionsConcept.prototype, "_Why", null);
+    __decorate([
+        Concept_1.conceptHandler("How")
+    ], QuestionsConcept.prototype, "_How", null);
+    __decorate([
+        Concept_1.intentHandler("How")
+    ], QuestionsConcept.prototype, "_How_Intent", null);
+    __decorate([
+        Concept_1.conceptHandler("Can", "Can *")
+    ], QuestionsConcept.prototype, "_Can", null);
+    __decorate([
+        Concept_1.conceptHandler("Is", "Is *")
+    ], QuestionsConcept.prototype, "_Is", null);
+    __decorate([
+        Concept_1.conceptHandler("Are", "Are *")
+    ], QuestionsConcept.prototype, "_Are", null);
+    __decorate([
+        Concept_1.conceptHandler("If", "If *")
+    ], QuestionsConcept.prototype, "_If", null);
+    QuestionsConcept = __decorate([
+        Concept_1.concept()
+    ], QuestionsConcept);
+    return QuestionsConcept;
+})();
+exports.default = QuestionsConcept;
 //# sourceMappingURL=QuestionsConcept.js.map

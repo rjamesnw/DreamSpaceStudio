@@ -42,14 +42,36 @@ if (!Array.prototype.max) // Primarily to help support conversions from C# - als
 
 interface String {
     /** Trims the given character from the end of the string and returns the new string. */
-    trimRightChar(char: string): string;
+    trimRightChar(char: string): string; // Primarily to help support conversions from C# - also, this should exist anyhow!
+
+    /**
+     * Returns true if the specified string is at the start of this string.
+     */
+    startsWith(str: string): boolean; // Primarily to help support conversions from C# - also, this should exist anyhow!
+
+    /**
+     * Returns true if the specified string is at the end of this string.
+     */
+    endsWith(str: string): boolean; // Primarily to help support conversions from C# - also, this should exist anyhow!
 }
-if (!String.prototype.trimRightChar) // Primarily to help support conversions from C# - also, this should exist anyhow!
+if (!String.prototype.trimRightChar)
     String.prototype.trimRightChar = function (this: string, char: string) {
         var s = this;
         while (s[s.length - 1] === char)
             s = s.substr(0, this.length - 1);
         return s;
+    };
+if (!String.prototype.startsWith)
+    String.prototype.startsWith = function (this: string, str: string) {
+        if (str === void 0 || str === null) return false;
+        if (typeof str != 'string') str = '' + str;
+        return this.substr(0, str.length) === str;
+    };
+if (!String.prototype.endsWith)
+    String.prototype.endsWith = function (this: string, str: string) {
+        if (str === void 0 || str === null) return false;
+        if (typeof str != 'string') str = '' + str;
+        return this.substr(-str.length) === str;
     };
 
 
@@ -151,7 +173,7 @@ namespace DS {
 
     // ------------------------------------------------------------------------------------------------------------------------
 
-    export const constructor: symbol = Symbol("static constructor");
+    export const staticConstructor: symbol = Symbol("static constructor");
 
     // ------------------------------------------------------------------------------------------------------------------------
 

@@ -7,14 +7,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const Concept_1 = require("../core/Concept");
-const Brain_1 = require("../core/Brain");
+const POS_1 = require("../core/POS");
 let TimeConcept = /** @class */ (() => {
     let TimeConcept = class TimeConcept extends Concept_1.default {
         // --------------------------------------------------------------------------------------------------------------------
         constructor(brian) {
             super(brian);
             // (https://foxtype.com/sentence-tree)
-            this.time = this.memory.Dictionary.AddTextPart("time", this.POS.Noun_Temporal);
+            this.time = this.memory.dictionary.addTextPart("time", POS_1.default.Noun_Temporal);
         }
     };
     TimeConcept = __decorate([
@@ -37,7 +37,7 @@ exports.default = TimeConcept;
 //}
 //@conceptHandler("it^PN is^V time^N to^")
 // {
-await Brain_1.default.DoResponse("I don't know what time.");
+await this.brain.doResponse("I don't know what time.");
 Promise < ConceptHandlerContext > _IsTimeTo(context, ConceptHandlerContext);
 //{
 //    return Promise.resolve(context);

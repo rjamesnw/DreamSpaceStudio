@@ -138,9 +138,9 @@ export class DefaultTTSService implements ITTSService {
             if (exisitngTTSFile == null)
                 this._BotPalDB.TTSFiles.Add(exisitngTTSFile = new TTSFile());
 
-            exisitngTTSFile.filename = Path.GetFileName(targetFilename);
-            exisitngTTSFile.voice_code = string.IsNullOrWhiteSpace(voiceCode) ? null : voiceCode;
-            exisitngTTSFile.location = Path.GetDirectoryName(targetFilename);
+            exisitngTTSFile.filename = DS.Path.getName(targetFilename);
+            exisitngTTSFile.voice_code = DS.StringUtils.isEmptyOrWhitespace(voiceCode) ? null : voiceCode;
+            exisitngTTSFile.location = DS.Path.getPath(targetFilename);
             exisitngTTSFile.text = text;
 
             this._BotPalDB.SaveChanges();

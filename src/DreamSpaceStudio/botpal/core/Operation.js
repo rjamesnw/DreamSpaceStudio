@@ -35,7 +35,7 @@ class Operation extends TimeReferencedObject_1.default {
         this.Parent = null;
         this.Intent = commandCode;
     }
-    get memory() { return this.Brain.Memory; }
+    get memory() { return this.Brain.memory; }
     /**
      *  The gets/sets the last operation to execute in a nested sequence.
     */

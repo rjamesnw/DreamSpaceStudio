@@ -57,17 +57,17 @@ class TextPart extends TimeReferencedObject_1.default {
         __classPrivateFieldSet(this, __textParts, null);
         __classPrivateFieldSet(this, __key, null);
     } }
-    get textParts() { var _a; return (_a = __classPrivateFieldGet(this, __textParts)) !== null && _a !== void 0 ? _a : (__classPrivateFieldSet(this, __textParts, this.parent.memory.Brain.parse(__classPrivateFieldGet(this, __text)))); }
+    get textParts() { var _a; return (_a = __classPrivateFieldGet(this, __textParts)) !== null && _a !== void 0 ? _a : (__classPrivateFieldSet(this, __textParts, this.parent.memory.brain.parse(__classPrivateFieldGet(this, __text)))); }
     /**
      A case sensitive key used to identify the precise text entered by the user, without the whitespace.
     */
-    get key() { var _a; return (_a = __classPrivateFieldGet(this, __key)) !== null && _a !== void 0 ? _a : (__classPrivateFieldSet(this, __key, this.parent.memory.Brain.getKeyFromTextParts(this.textParts))); }
+    get key() { var _a; return (_a = __classPrivateFieldGet(this, __key)) !== null && _a !== void 0 ? _a : (__classPrivateFieldSet(this, __key, this.parent.memory.brain.getKeyFromTextParts(this.textParts))); }
     // --------------------------------------------------------------------------------------------------------------------
     /**
      A grouping key to identify all similar texts without considering case sensitivity.
      This can be used to group text that is different only based on case sensitivity, or that of characters which "look" similar.
     */
-    get groupKey() { return this.memory.Brain.keyToGroupKey(this.key); }
+    get groupKey() { return this.memory.brain.keyToGroupKey(this.key); }
     // --------------------------------------------------------------------------------------------------------------------
     /**
      * Returns true if the given text part or string is an exact match to the underlying text for this text part.

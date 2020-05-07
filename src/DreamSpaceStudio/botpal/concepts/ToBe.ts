@@ -41,12 +41,12 @@ export default class ToBeConcept extends Concept {
     }
 
     async  _Is_What_Intent(context: ConceptHandlerContext ): Promise<boolean> _How_Is_Intent(context: ConceptHandlerContext ) {
-        await Brain.DoResponse("How is what?");
+        await this.brain.doResponse("How is what?");
         return true;
     }
 
     async Task<boolean> {
-        await Brain.DoResponse("Is what?");
+        await this.brain.doResponse("Is what?");
         return true;
     }
 
@@ -78,7 +78,7 @@ export default class ToBeConcept extends Concept {
     }
 
     async Task<boolean> {
-        await Brain.DoResponse("How are what?");
+        await this.brain.doResponse("How are what?");
         return true;
     }
 

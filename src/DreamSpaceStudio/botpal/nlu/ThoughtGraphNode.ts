@@ -108,8 +108,8 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     */
     /// <param name="word"> . </param>
     /// <returns> The new <see cref="ThoughtGraphNode"/> added. </returns>
-    attach(word: DictionaryItem): ThoughtGraphNode {
-        return super.attach(new ThoughtGraphNode(word));
+    attachWord(word: DictionaryItem): ThoughtGraphNode {
+        return this.attach(new ThoughtGraphNode(word));
     }
 
     /**
@@ -148,7 +148,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     /// <returns> A ThoughtGraphNode. </returns>
     Add(word: DictionaryItem): ThoughtGraphNode {
         // ... check the question FIRST, since we are ignoring the POS class here ...
-        if (word.pos?.Classification == POS.Adverb_Question.classification) // (all questions have the same classification text)
+        if (word.pos?.classification == POS.Adverb_Question.classification) // (all questions have the same classification text)
             return this._AddQuestion(word);
 
         return this._CheckConjunction(word)._Add(word);
@@ -184,7 +184,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
             return subject;
 
         if (this.root.isQuestion)
-            return this.root.attach(ThoughtGraphNode.CreateSubjectGroupDictionaryItem()); // (the subject should come under the question, if one exists)
+            return this.root.attachWord(ThoughtGraphNode.CreateSubjectGroupDictionaryItem()); // (the subject should come under the question, if one exists)
         else
             return this.root.attachAsParent(ThoughtGraphNode.CreateSubjectGroupDictionaryItem());
     }
@@ -201,7 +201,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
         if (attrGroup == null) {
             // ... this is the first attribute, so create a new group, attached to the current subject, and return it ...
             var subject = this._requireSubject(); // (first find the subject within this area)
-            attrGroup = subject.attach(ThoughtGraphNode.CreateAttributeGroupDictionaryItem());
+            attrGroup = subject.attachWord(ThoughtGraphNode.CreateAttributeGroupDictionaryItem());
         }
         return attrGroup;
     }
@@ -211,7 +211,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
         if (modGroup == null) {
             // ... this is the first attribute, so create a new group, attached to the current subject, and return it ...
             var verb = this.FindBottomFirst(POS.Verb, true); // (first find the subject within this area)
-            modGroup = (verb ?? this).attach(ThoughtGraphNode.CreateModifierGroupDictionaryItem());
+            modGroup = (verb ?? this).attachWord(ThoughtGraphNode.CreateModifierGroupDictionaryItem());
         }
         return modGroup;
     }
@@ -219,7 +219,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     // --------------------------------------------------------------------------------------------------------------------
 
     _AddUnkown(text: DictionaryItem): ThoughtGraphNode {
-        return this.attach(text); // (in the case that we don't know what to do with this we just attach it and stay on the current node)
+        return this.attachWord(text); // (in the case that we don't know what to do with this we just attach it and stay on the current node)
         //? return this;
     }
 
@@ -231,13 +231,13 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
 
     _AddDeterminer(det: DictionaryItem): ThoughtGraphNode {
         var subject = this._requireSubject();
-        subject.attach(det);
+        subject.attachWord(det);
         return subject;
     }
 
     _AddSubjectAssociation(assoc: DictionaryItem): ThoughtGraphNode {
         var subject = this._requireSubject();
-        return subject.attach(assoc); // (the "is" or "are" will act as a connector, and will become the new 'current' node [by returning it]; this also creates a barrier [all associations are subject ])
+        return subject.attachWord(assoc); // (the "is" or "are" will act as a connector, and will become the new 'current' node [by returning it]; this also creates a barrier [all associations are subject ])
     }
 
     _AddIs(isOrAre: DictionaryItem): ThoughtGraphNode { return this._AddSubjectAssociation(isOrAre); }
@@ -249,9 +249,9 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
         if (this.word.equals(conj)) return this;
         // ... certain conjunctions will tag on the end of the current node and then returned as current until we know what comes next ...
         if (conj.equals("and") || conj.equals("or"))
-            return this.attach(conj);
+            return this.attachWord(conj);
         else
-            return this._requireSubject().attach(conj); // (all others we will attach to the subject right away)
+            return this._requireSubject().attachWord(conj); // (all others we will attach to the subject right away)
     }
 
     _CheckConjunction(nextWord: DictionaryItem): ThoughtGraphNode // (repositions the conjunction based on the next word; returns where to add the next word)
@@ -295,44 +295,44 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     // --------------------------------------------------------------------------------------------------------------------
 
     ///**
-    * //     Converts the current node to a group, if not already a group, by making sure the parent is a group node, and then
-        // *      adds the given node.
-        //*/
-        ///// <param name="groupPOS"> The group position. </param>
-        ///// <param name="newNode"> . </param>
-        ///// <returns> The current node, or if converted to a group, the group node. </returns>
-        //x public ThoughtGraphNode AddToGroup(PartOfSpeech groupPOS, ThoughtGraphNode newNode)
-        //{
-        //    if (IsGroup)
-        //        return Attach(newNode);
-        //    else if (Parent?.IsGroup ?? false)
-        //        return Parent.Attach(newNode);
+    // *     Converts the current node to a group, if not already a group, by making sure the parent is a group node, and then
+    // *      adds the given node.
+    //*/
+    ///// <param name="groupPOS"> The group position. </param>
+    ///// <param name="newNode"> . </param>
+    ///// <returns> The current node, or if converted to a group, the group node. </returns>
+    //x public ThoughtGraphNode AddToGroup(PartOfSpeech groupPOS, ThoughtGraphNode newNode)
+    //{
+    //    if (IsGroup)
+    //        return Attach(newNode);
+    //    else if (Parent?.IsGroup ?? false)
+    //        return Parent.Attach(newNode);
 
-        //    // ... no group found, so create one for this node ...
+    //    // ... no group found, so create one for this node ...
 
-        //    var group = AttachAsParent(CreateTempDictionaryItem(groupPOS));
-        //    group.Attach(this); // (subject now moved into a group; next we add the new noun to the group)
-        //    group.Attach(newNode);
-        //    return group;
-        //}
+    //    var group = AttachAsParent(CreateTempDictionaryItem(groupPOS));
+    //    group.Attach(this); // (subject now moved into a group; next we add the new noun to the group)
+    //    group.Attach(newNode);
+    //    return group;
+    //}
 
-        // --------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------
 
-        /** Searches the parent nodes for a match to the given dictionary word item. */
-        /// <param name="word"> The dictionary item to search for. </param>
-        /// <param name="includeThis"> (Optional) If true, then the current instance is included (default is false). </param>
-        /// <param name="includeSiblings">
-        ///     (Optional) Set to true to include grouped nodes (siblings) in the search. The default is false, which ignores all
-        ///     siblings.
-        /// </param>
-        /// <param name="includeConjunctions">
-        ///     (Optional) Associations are subject boundaries. Most searches usually occur within specific subject areas. If this
-        ///     is true, then associations are ignored, which means the entire thought graph as a whole is searched. The default is
-        ///     false.
-        /// </param>
-        /// <param name="depth"> (Optional) How many parents deep to run the search. Enabled if value is > 0. </param>
-        /// <returns> The found in parents. </returns>
-        FindInParents(word: DictionaryItem, includeThis: boolean, includeSiblings: boolean, includeConjunctions: boolean, depth: number, exclude?: ThoughtGraphNode): ThoughtGraphNode;
+    /** Searches the parent nodes for a match to the given dictionary word item. */
+    /// <param name="word"> The dictionary item to search for. </param>
+    /// <param name="includeThis"> (Optional) If true, then the current instance is included (default is false). </param>
+    /// <param name="includeSiblings">
+    ///     (Optional) Set to true to include grouped nodes (siblings) in the search. The default is false, which ignores all
+    ///     siblings.
+    /// </param>
+    /// <param name="includeConjunctions">
+    ///     (Optional) Associations are subject boundaries. Most searches usually occur within specific subject areas. If this
+    ///     is true, then associations are ignored, which means the entire thought graph as a whole is searched. The default is
+    ///     false.
+    /// </param>
+    /// <param name="depth"> (Optional) How many parents deep to run the search. Enabled if value is > 0. </param>
+    /// <returns> The found in parents. </returns>
+    FindInParents(word: DictionaryItem, includeThis: boolean, includeSiblings: boolean, includeConjunctions: boolean, depth: number, exclude?: ThoughtGraphNode): ThoughtGraphNode;
 
     /**
      *      Searches the parent nodes for a match to the given part of speech classification.

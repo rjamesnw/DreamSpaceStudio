@@ -505,7 +505,7 @@ var DS;
             if (origin === void 0 || origin === null)
                 origin = this !== DS.global ? this : DS.global;
             if (typeof path !== 'string')
-                path = '' + path;
+                path = DS.StringUtils.toString(path);
             var c, pc, i = 0, n = path.length, name = '', q;
             while (i <= n)
                 ((c = path[i++]) == '.' || c == '[' || c == ']' || c == "'" || c == '"' || c == void 0) ?
@@ -1693,7 +1693,7 @@ var DS;
             /** The node type.*/
             nodeType) {
                 this.childNodes = new NodeList(this, null);
-                nodeName = ('' + nodeName).trim();
+                nodeName = DS.StringUtils.toString(nodeName).trim();
                 if (!nodeName)
                     throw "A node name is required.";
                 if (typeof nodeType != 'number' || nodeType < 0)
@@ -4433,13 +4433,13 @@ var DS;
             if (source === void 0)
                 source = "";
             else if (typeof source != 'string')
-                source = '' + source;
+                source = toString(source);
             if (typeof suffix != 'string')
-                suffix = '' + suffix;
+                suffix = toString(suffix);
             if (delimiter === void 0 || delimiter === null)
                 delimiter = '';
             else if (typeof delimiter != 'string')
-                delimiter = '' + delimiter;
+                delimiter = toString(delimiter);
             if (!source)
                 return suffix;
             return source + delimiter + suffix;
@@ -4452,11 +4452,11 @@ var DS;
             if (source === void 0)
                 source = "";
             else if (typeof source != 'string')
-                source = '' + source;
+                source = toString(source);
             if (typeof prefix != 'string')
-                prefix = '' + prefix;
+                prefix = toString(prefix);
             if (typeof delimiter != 'string')
-                delimiter = '' + delimiter;
+                delimiter = toString(delimiter);
             if (!source)
                 return prefix;
             return prefix + delimiter + source;
@@ -4496,7 +4496,7 @@ var DS;
         StringUtils.toString = toString;
         /** Splits the lines of the text (delimited by '\r\n', '\r', or '\n') into an array of strings. */
         function getLines(text) {
-            var txt = typeof text == 'string' ? text : '' + text;
+            var txt = typeof text == 'string' ? text : toString(text);
             return txt.split(/\r\n|\n|\r/gm);
         }
         StringUtils.getLines = getLines;
@@ -4574,9 +4574,9 @@ var DS;
             if ((a === null || a === void 0) && (b === null || b == void 0))
                 return 1;
             if (a != null && a !== void 0 && typeof a !== 'string')
-                a = '' + a;
+                a = toString(a);
             if (b != null && b !== void 0 && typeof b !== 'string')
-                b = '' + b;
+                b = toString(b);
             return a.localeCompare(b, undefined, { sensitivity: 'accent' });
         }
         StringUtils.compare = compare;
@@ -4802,7 +4802,7 @@ var DS;
          * @param encodeSpaceAsNBSP If true, the spaces are replaced with "&nbsp;" elements to maintain the spacing.  If false (the default), the spaces will be collapsed when displayed in browsers.
          */
         function encodeHTML(html, ingoreChars, encodeSpaceAsNBSP = false) {
-            return !DS.isNullOrUndefined(html) && ('' + html).replace(/[^0-9A-Za-z!@#$%^*()\-_=+{}\[\]:";',.?\/~`|\\]/g, function (c) {
+            return !DS.isNullOrUndefined(html) && StringUtils.toString(html).replace(/[^0-9A-Za-z!@#$%^*()\-_=+{}\[\]:";',.?\/~`|\\]/g, function (c) {
                 return ingoreChars && ingoreChars.indexOf(c) >= 0 ? c : encodeSpaceAsNBSP && c == ' ' ? "&nbsp;" : c == ' ' ? c : "&#" + c.charCodeAt(0) + ";";
             }) || "";
         }
@@ -6427,7 +6427,7 @@ var DS;
                 for (var p in data) {
                     var translatedProp = p.toLowerCase(), ct;
                     if (columnTranslations && (ct = columnTranslations[p]))
-                        translatedProp = (typeof ct == 'string' ? ct : typeof ct == 'function' ? '' + ct(p) : p).toLowerCase();
+                        translatedProp = (typeof ct == 'string' ? ct : typeof ct == 'function' ? DS.StringUtils.toString(ct(p)) : p).toLowerCase();
                     if (translatedProp)
                         if (colResIndex[translatedProp]) {
                             q.setValue(translatedProp, data[p]);
@@ -6639,7 +6639,7 @@ var DS;
                 var ci = this.columnInfo[name];
                 if (ci)
                     return ci;
-                ci = this.columnInfo[('' + name).toLowerCase()];
+                ci = this.columnInfo[DS.StringUtils.toString(name).toLowerCase()];
                 if (ci)
                     return ci;
                 // ... failed fast lookups; need to enumerate to find any matches now ...
@@ -6805,13 +6805,13 @@ var DS;
             if (colInfo) {
                 var type = colInfo.Type.toLowerCase();
                 if (type.indexOf('timestamp') >= 0 || type.indexOf('datetime') >= 0) {
-                    return "'" + DS.StringUtils.escapeString(('' + val).trim(), true) + "'";
+                    return "'" + DS.StringUtils.escapeString(DS.StringUtils.toString(val).trim(), true) + "'";
                 }
                 else if (type.indexOf('int') >= 0 || type.indexOf('bigint') >= 0) {
                     var i = +val;
                     if (isNaN(i))
                         throw `Cannot convert value ${JSON.stringify(val)} to 'int'.`;
-                    return ('' + val).trim();
+                    return DS.StringUtils.toString(val).trim();
                 }
                 else if (type.indexOf('varchar') >= 0 || type.indexOf('nchar') >= 0 || type.indexOf('text') >= 0 || type.indexOf('tinytext') >= 0) {
                     val = `'${DS.StringUtils.escapeString(val, true)}'`;

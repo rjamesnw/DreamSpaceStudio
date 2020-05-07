@@ -56,10 +56,10 @@ namespace DS {
           */
         export function append(source: string, suffix?: string, delimiter?: string): string {
             if (source === void 0) source = "";
-            else if (typeof source != 'string') source = '' + source;
-            if (typeof suffix != 'string') suffix = '' + suffix;
+            else if (typeof source != 'string') source = toString(source);
+            if (typeof suffix != 'string') suffix = toString(suffix);
             if (delimiter === void 0 || delimiter === null) delimiter = '';
-            else if (typeof delimiter != 'string') delimiter = '' + delimiter;
+            else if (typeof delimiter != 'string') delimiter = toString(delimiter);
             if (!source) return suffix;
             return source + delimiter + suffix;
         }
@@ -69,9 +69,9 @@ namespace DS {
           */
         export function prepend(source: string, prefix?: string, delimiter?: string): string {
             if (source === void 0) source = "";
-            else if (typeof source != 'string') source = '' + source;
-            if (typeof prefix != 'string') prefix = '' + prefix;
-            if (typeof delimiter != 'string') delimiter = '' + delimiter;
+            else if (typeof source != 'string') source = toString(source);
+            if (typeof prefix != 'string') prefix = toString(prefix);
+            if (typeof delimiter != 'string') delimiter = toString(delimiter);
             if (!source) return prefix;
             return prefix + delimiter + source;
         }
@@ -106,7 +106,7 @@ namespace DS {
 
         /** Splits the lines of the text (delimited by '\r\n', '\r', or '\n') into an array of strings. */
         export function getLines(text: string): string[] {
-            var txt = typeof text == 'string' ? text : '' + text;
+            var txt = typeof text == 'string' ? text : toString(text);
             return txt.split(/\r\n|\n|\r/gm);
         }
 
@@ -184,8 +184,8 @@ namespace DS {
          */
         export function compare(a: string, b: string, ignorecase = true): number {
             if ((a === null || a === void 0) && (b === null || b == void 0)) return 1;
-            if (a != null && a !== void 0 && typeof a !== 'string') a = '' + a;
-            if (b != null && b !== void 0 && typeof b !== 'string') b = '' + b;
+            if (a != null && a !== void 0 && typeof a !== 'string') a = toString(a);
+            if (b != null && b !== void 0 && typeof b !== 'string') b = toString(b);
             return a.localeCompare(b, undefined, { sensitivity: 'accent' });
         }
     }
@@ -427,7 +427,7 @@ namespace DS {
          * @param encodeSpaceAsNBSP If true, the spaces are replaced with "&nbsp;" elements to maintain the spacing.  If false (the default), the spaces will be collapsed when displayed in browsers.
          */
         export function encodeHTML(html: string, ingoreChars?: string, encodeSpaceAsNBSP = false) {
-            return !isNullOrUndefined(html) && ('' + html).replace(/[^0-9A-Za-z!@#$%^*()\-_=+{}\[\]:";',.?\/~`|\\]/g, function (c: string) {
+            return !isNullOrUndefined(html) && StringUtils.toString(html).replace(/[^0-9A-Za-z!@#$%^*()\-_=+{}\[\]:";',.?\/~`|\\]/g, function (c: string) {
                 return ingoreChars && ingoreChars.indexOf(c) >= 0 ? c : encodeSpaceAsNBSP && c == ' ' ? "&nbsp;" : c == ' ' ? c : "&#" + c.charCodeAt(0) + ";";
             }) || "";
         }

@@ -99,7 +99,7 @@ export default class Brain {
      *  If a main bot instance is moved to a worker instead, then this will no longer work, so this provides a way to connect
      *  all other workers to the main worker.
      */
-     _mainWorker: Worker;
+    _mainWorker: Worker;
 
     /**
      *  Creates a new brain.
@@ -354,7 +354,7 @@ export default class Brain {
     /// <param name="language">An optional language name used to override the default language.</param>
     /// <returns>The text parts split by the language regex.</returns>
     parse(text: string): string[] {
-        text = '' + text;
+        text = DS.StringUtils.toString(text);
         if (!text) return [];
 
         var parts = text.match(this.LanguageParsingRegex);

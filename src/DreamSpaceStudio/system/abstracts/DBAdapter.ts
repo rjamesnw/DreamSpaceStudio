@@ -127,7 +127,7 @@
                 for (var p in data) {
                     var translatedProp: string = p.toLowerCase(), ct: any;
                     if (columnTranslations && (ct = columnTranslations[p]))
-                        translatedProp = (typeof ct == 'string' ? ct : typeof ct == 'function' ? '' + ct(p) : p).toLowerCase();
+                        translatedProp = (typeof ct == 'string' ? ct : typeof ct == 'function' ? StringUtils.toString(ct(p)) : p).toLowerCase();
 
                     if (translatedProp)
                         if (colResIndex[translatedProp]) {
@@ -407,7 +407,7 @@
                 if (!this.columnInfo) return void 0;
                 var ci = this.columnInfo[name];
                 if (ci) return ci;
-                ci = this.columnInfo[('' + name).toLowerCase()];
+                ci = this.columnInfo[StringUtils.toString(name).toLowerCase()];
                 if (ci) return ci;
                 // ... failed fast lookups; need to enumerate to find any matches now ...
                 for (var p in this.columnInfo)
@@ -593,11 +593,11 @@
             if (colInfo) {
                 var type = colInfo.Type.toLowerCase();
                 if (type.indexOf('timestamp') >= 0 || type.indexOf('datetime') >= 0) {
-                    return "'" + DS.StringUtils.escapeString(('' + val).trim(), true) + "'";
+                    return "'" + DS.StringUtils.escapeString(StringUtils.toString(val).trim(), true) + "'";
                 } else if (type.indexOf('int') >= 0 || type.indexOf('bigint') >= 0) {
                     var i = +val;
                     if (isNaN(i)) throw `Cannot convert value ${JSON.stringify(val)} to 'int'.`;
-                    return ('' + val).trim();
+                    return StringUtils.toString(val).trim();
                 } else if (type.indexOf('varchar') >= 0 || type.indexOf('nchar') >= 0 || type.indexOf('text') >= 0 || type.indexOf('tinytext') >= 0) {
                     val = `'${DS.StringUtils.escapeString(val, true)}'`;
                     if ((<string>val).indexOf('?') >= 0)

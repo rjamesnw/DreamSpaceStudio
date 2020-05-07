@@ -148,7 +148,7 @@ namespace DS.DB.MSSQL {
                 for (var p in colInfo)
                     if (colInfo.hasOwnProperty(p)) {
                         var col = colInfo[p];
-                        columns.push({ Field: col.name, Key: '' + col.identity, Null: '' + col.nullable, Type: '' + col.type, Default: void 0, Extra: void 0 });
+                        columns.push({ Field: col.name, Key: StringUtils.toString(col.identity), Null: DS.StringUtils.toString(col.nullable), Type: DS.StringUtils.toString(col.type), Default: void 0, Extra: void 0 });
                     }
 
                 return columns;

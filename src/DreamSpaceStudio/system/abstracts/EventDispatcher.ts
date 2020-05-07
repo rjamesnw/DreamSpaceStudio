@@ -389,7 +389,7 @@ namespace DS {
         constructor(owner: TOwner, eventName: string, removeOnTrigger: boolean = false, canCancel: boolean = true, eventTriggerHandler: EventTriggerHandler<TOwner, TCallback> = null) {
             super();
 
-            if (typeof eventName !== 'string') eventName = '' + eventName;
+            if (typeof eventName !== 'string') eventName = StringUtils.toString(eventName);
             if (!eventName) throw "An event name is required.";
 
             this.__eventName = eventName;

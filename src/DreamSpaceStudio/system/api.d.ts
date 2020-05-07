@@ -14,11 +14,11 @@ interface String {
     /** Trims the given character from the end of the string and returns the new string. */
     trimRightChar(char: string): string;
     /**
-     * Returns true if the specified string as at the start of this string.
+     * Returns true if the specified string is at the start of this string.
      */
     startsWith(str: string): boolean;
     /**
-     * Returns true if the specified string as at the end of this string.
+     * Returns true if the specified string is at the end of this string.
      */
     endsWith(str: string): boolean;
 }

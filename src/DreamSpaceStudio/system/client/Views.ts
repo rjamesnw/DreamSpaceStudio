@@ -810,7 +810,7 @@
                 _view = <View>viewOrName;
             }
             else {
-                _view = this.getView('' + viewOrName);
+                _view = this.getView(StringUtils.toString(viewOrName));
                 if (!_view)
                     throw "There's no view named '" + viewOrName + "' (case sensitive).";
             }

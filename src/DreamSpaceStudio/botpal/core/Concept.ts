@@ -22,32 +22,35 @@ export function concept(enabled = true) {
     };
 }
 
+type ContextTypeWithTag = IType<Context> & { tag: string }
 /**
  *  Associates a method on a derived 'Concept' class with words that will trigger it.
  */
-export function conceptHandler(triggerWords: string, ...contexts: (string | (IType<Context> & { tag: string }))[]) {
+export function conceptHandler(...args: (DictionaryItem | ContextTypeWithTag | string)[]) {
     return (target: IndexedObject, propertyName: string, descriptor: PropertyDescriptor): any => { // (target: Either the constructor function of the class for a static member, or the prototype of the class for an instance member.)
         const originalFunction = descriptor.value;
         // (note: good tool to use to check for POS: https://foxtype.com/sentence-tree)
         /// <param name="triggerWords">Words that will trigger this concept.  You can append a caret (^) to a word to set a part of speech (i.e. "w1^N,w2^V" makes w1 a noun and w2 a verb).</param>
         /// <param name="pattern">(not yet supported) A pattern to use for ALL trigger words, which is just a more complex criteria that must be settled for running the handler.
         /// To create a different pattern for different words, use multiple attributes on the same method.</param>
-        originalFunction.triggerWords = triggerWords;
-        originalFunction.contexts = contexts?.map(v => typeof v == 'string' ? v : v.tag).filter(v => !!v);
+        originalFunction.triggerWords = args?.filter(v => v instanceof DictionaryItem);
+        originalFunction.contexts = args?.filter(v => !(v instanceof DictionaryItem))
+            .map(v => typeof v == 'string' ? v : (<ContextTypeWithTag>v).tag).filter(v => !!v);
     };
 }
 
 /**
  *  Associates a method on a derived 'Concept' class with words that will trigger it.
  */
-export function intentHandler(triggerWords: string, pattern: string = null) {
+export function intentHandler(...args: (DictionaryItem | ContextTypeWithTag | string)[]) {
     return (target: IndexedObject, propertyName: string, descriptor: PropertyDescriptor): any => { // (target: Either the constructor function of the class for a static member, or the prototype of the class for an instance member.)
         const originalFunction = descriptor.value;
         // (note: good tool to use to check for POS: https://foxtype.com/sentence-tree)
         /// <param name="pattern">(not yet supported) A pattern to use for ALL trigger words, which is just a more complex criteria that must be settled for running the handler.
         /// To create a different pattern for different words, use multiple attributes on the same method.</param>
-        originalFunction.triggerWords = triggerWords;
-        originalFunction.pattern = pattern;
+        originalFunction.triggerWords = args?.filter(v => v instanceof DictionaryItem);
+        originalFunction.contexts = args?.filter(v => !(v instanceof DictionaryItem))
+            .map(v => typeof v == 'string' ? v : (<ContextTypeWithTag>v).tag).filter(v => !!v);
     };
 }
 
@@ -365,7 +368,7 @@ export class MatchedConcepts extends Array<ConceptMatch>
             throw DS.Exception.error("new MatchedConcepts()", "The text part index must be greater or equal to 0.");
         this.OriginalTextPartIndex = textPartIndex;
         if (arguments.length = 2) {
-            textpartOrIndex = '' + textpartOrIndex;
+            textpartOrIndex = DS.StringUtils.toString(textpartOrIndex);
             if (DS.StringUtils.isEmptyOrWhitespace(textpartOrIndex))
                 throw DS.Exception.error("new MatchedConcepts()", "A text part cannot be null, empty, or white text.");
             this.OriginalTextPart = textpartOrIndex;
@@ -436,12 +439,30 @@ export default abstract class Concept extends TimeReferencedObject implements IM
             throw DS.Exception.argumentRequired("new Concept()", "brain");
 
         this.brain = brain;
+
+        this._ApplyStaticDictionaryItems();
+    }
+
+    /**
+     * Scans the properties of the type that created this instance for static dictionary items to add to the dictionary
+     * associated with this concept instance. This allows concepts to define their terms and conditions, which in turn
+     * helps to populate the dictionary with a base level of words.  The secondary purpose is also to copy the registered
+     * words to the instance side so that the specific dictionary words can be easily referenced while coding.
+     */
+    private _ApplyStaticDictionaryItems() {
+        var type = <{ [name: string]: DictionaryItem } & Object><any>this.constructor;
+        for (var p in type)
+            if (type.hasOwnProperty(p)) {
+                var val = type[p];
+                if (val instanceof DictionaryItem)
+                    (<any>this)[p] = this.memory.dictionary.AddEntry(val); // (adds the item and returns the registered item [which could be an existing one instead])
+            }
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
     /** Executes once the after all core system concepts have been registered. */
-    protected OnAfterAllRegistered() { }
+    protected onAfterAllRegistered() { }
 
     // --------------------------------------------------------------------------------------------------------------------
 

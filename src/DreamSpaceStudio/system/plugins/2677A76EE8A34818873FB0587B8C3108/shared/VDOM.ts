@@ -175,7 +175,7 @@ export class Node {
         /** The node type.*/
         nodeType: NodeTypes
     ) {
-        nodeName = ('' + nodeName).trim();
+        nodeName = DS.StringUtils.toString(nodeName).trim();
         if (!nodeName) throw "A node name is required.";
         if (typeof nodeType != 'number' || nodeType < 0) throw "'nodeType' is not valid.";
         this.nodeName = nodeName.charAt(0) != '#' ? nodeName.toUpperCase() : nodeName;

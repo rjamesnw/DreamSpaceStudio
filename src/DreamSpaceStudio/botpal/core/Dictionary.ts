@@ -406,7 +406,7 @@ export default class Dictionary implements IMemoryObject {
     //          */
     //        public Context getContext(word: string | DictionaryWord, partOfSpeech?: POS, throwOnEmpty = false, throwOnTooMany = true)
     //{
-    //    var wordInfo = this.words["" + word];
+    //    var wordInfo = this.words[DS.StringUtils.toString(word)];
     //    if (wordInfo)
     //        if (wordInfo.contexts && wordInfo.contexts.length > 0)
     //            if (wordInfo.contexts.length == 1 && partOfSpeech == void 0)

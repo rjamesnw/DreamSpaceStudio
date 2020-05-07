@@ -110,7 +110,7 @@
         export function dereferencePropertyPath(path: string, origin?: IndexedObject, unsafe = false): any {
             if (unsafe) return safeEval('p0.' + path, origin); // (note: this is 'DreamSpace.eval()', not a direct call to the global 'eval()')
             if (origin === void 0 || origin === null) origin = this !== global ? this : global;
-            if (typeof path !== 'string') path = '' + path;
+            if (typeof path !== 'string') path = StringUtils.toString(path);
 
             var c: string, pc: string, i = 0, n = path.length, name = '', q: string;
 

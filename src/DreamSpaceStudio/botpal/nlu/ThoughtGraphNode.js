@@ -100,8 +100,8 @@ class ThoughtGraphNode extends Node_1.default {
     */
     /// <param name="word"> . </param>
     /// <returns> The new <see cref="ThoughtGraphNode"/> added. </returns>
-    attach(word) {
-        return super.attach(new ThoughtGraphNode(word));
+    attachWord(word) {
+        return this.attach(new ThoughtGraphNode(word));
     }
     /**
      *      Replaces this node with the given node and attaches the current node as a child to the new parent node. Note: This
@@ -134,7 +134,7 @@ class ThoughtGraphNode extends Node_1.default {
     Add(word) {
         var _a;
         // ... check the question FIRST, since we are ignoring the POS class here ...
-        if (((_a = word.pos) === null || _a === void 0 ? void 0 : _a.Classification) == POS_1.default.Adverb_Question.classification) // (all questions have the same classification text)
+        if (((_a = word.pos) === null || _a === void 0 ? void 0 : _a.classification) == POS_1.default.Adverb_Question.classification) // (all questions have the same classification text)
             return this._AddQuestion(word);
         return this._CheckConjunction(word)._Add(word);
     }
@@ -159,7 +159,7 @@ class ThoughtGraphNode extends Node_1.default {
         if (subject != null)
             return subject;
         if (this.root.isQuestion)
-            return this.root.attach(ThoughtGraphNode.CreateSubjectGroupDictionaryItem()); // (the subject should come under the question, if one exists)
+            return this.root.attachWord(ThoughtGraphNode.CreateSubjectGroupDictionaryItem()); // (the subject should come under the question, if one exists)
         else
             return this.root.attachAsParent(ThoughtGraphNode.CreateSubjectGroupDictionaryItem());
     }
@@ -174,7 +174,7 @@ class ThoughtGraphNode extends Node_1.default {
         if (attrGroup == null) {
             // ... this is the first attribute, so create a new group, attached to the current subject, and return it ...
             var subject = this._requireSubject(); // (first find the subject within this area)
-            attrGroup = subject.attach(ThoughtGraphNode.CreateAttributeGroupDictionaryItem());
+            attrGroup = subject.attachWord(ThoughtGraphNode.CreateAttributeGroupDictionaryItem());
         }
         return attrGroup;
     }
@@ -183,13 +183,13 @@ class ThoughtGraphNode extends Node_1.default {
         if (modGroup == null) {
             // ... this is the first attribute, so create a new group, attached to the current subject, and return it ...
             var verb = this.FindBottomFirst(POS_1.default.Verb, true); // (first find the subject within this area)
-            modGroup = (verb !== null && verb !== void 0 ? verb : this).attach(ThoughtGraphNode.CreateModifierGroupDictionaryItem());
+            modGroup = (verb !== null && verb !== void 0 ? verb : this).attachWord(ThoughtGraphNode.CreateModifierGroupDictionaryItem());
         }
         return modGroup;
     }
     // --------------------------------------------------------------------------------------------------------------------
     _AddUnkown(text) {
-        return this.attach(text); // (in the case that we don't know what to do with this we just attach it and stay on the current node)
+        return this.attachWord(text); // (in the case that we don't know what to do with this we just attach it and stay on the current node)
         //? return this;
     }
     _AddQuestion(q) {
@@ -199,12 +199,12 @@ class ThoughtGraphNode extends Node_1.default {
     }
     _AddDeterminer(det) {
         var subject = this._requireSubject();
-        subject.attach(det);
+        subject.attachWord(det);
         return subject;
     }
     _AddSubjectAssociation(assoc) {
         var subject = this._requireSubject();
-        return subject.attach(assoc); // (the "is" or "are" will act as a connector, and will become the new 'current' node [by returning it]; this also creates a barrier [all associations are subject ])
+        return subject.attachWord(assoc); // (the "is" or "are" will act as a connector, and will become the new 'current' node [by returning it]; this also creates a barrier [all associations are subject ])
     }
     _AddIs(isOrAre) { return this._AddSubjectAssociation(isOrAre); }
     _AddPreposition(prepos) { return this._AddSubjectAssociation(prepos); }
@@ -214,9 +214,9 @@ class ThoughtGraphNode extends Node_1.default {
             return this;
         // ... certain conjunctions will tag on the end of the current node and then returned as current until we know what comes next ...
         if (conj.equals("and") || conj.equals("or"))
-            return this.attach(conj);
+            return this.attachWord(conj);
         else
-            return this._requireSubject().attach(conj); // (all others we will attach to the subject right away)
+            return this._requireSubject().attachWord(conj); // (all others we will attach to the subject right away)
     }
     _CheckConjunction(nextWord) {
         var _a, _b, _c;

@@ -115,7 +115,7 @@ namespace DS {
             Store.store(store, backup);
             if (error && !ignoreErrors) throw error;
             if (high > 0 && !error)
-                try { store.setItem("$__fs_maxsize", '' + (high * 2)); } catch (ex) { console.log("getStorageTotalSize(): Could not cache storage max size - out of space."); }
+                try { store.setItem("$__fs_maxsize", StringUtils.toString(high * 2)); } catch (ex) { console.log("getStorageTotalSize(): Could not cache storage max size - out of space."); }
             return high * 2; // (*2 because of Unicode storage)
         }
 

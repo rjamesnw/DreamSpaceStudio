@@ -9,6 +9,7 @@ import { TenseTypes, Plurality } from "./Enums";
 import { bool } from "aws-sdk/clients/signer";
 import { IEquality } from "./Comparer";
 import { ConceptHandler } from "./Concept";
+import Context from "./Context";
 
 /**
  A dictionary item is a map of text to its use in some context.
@@ -55,8 +56,8 @@ export default class DictionaryItem extends TimeReferencedObject implements IMem
     /**
      Enumerates over all concepts associated with this dictionary item.
     */
-    conceptContexts(): Iterable<ConceptContext> { return this._ConceptContexts; }
-    protected _ConceptContexts: ConceptContext[] = [];
+    conceptContexts(): Iterable<Context> { return this._ConceptContexts; }
+    protected _ConceptContexts: Context[] = [];
 
     ///**
     // Holds a reference to all contexts where this entry is associated with.
@@ -75,13 +76,18 @@ export default class DictionaryItem extends TimeReferencedObject implements IMem
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    constructor(dictionary: Dictionary, textPart: TextPart, pos: PartOfSpeech = null, tense: TenseTypes = TenseTypes.Unspecified, plurality: Plurality = Plurality.Unspecified) {
+    constructor(dictionary: Dictionary, textPart: TextPart | string, pos?: PartOfSpeech, tense?: TenseTypes, plurality?: Plurality);
+    constructor(textPart: TextPart | string, pos?: PartOfSpeech, tense?: TenseTypes, plurality?: Plurality);
+    constructor(a: any, ...args: any[]) {
         super();
-        this.dictionary = dictionary; // (note: this can be null for temp items not yet added)
-        this.#_textPart = textPart; // (note: this can be null due to wildcards in concept patterns)
-        this.pos = pos;
-        this.tenseType = tense;
-        this.plurality = plurality;
+        if (typeof a != 'object' || !(a instanceof Dictionary || a instanceof TextPart || a instanceof String))
+            throw DS.Exception.argumentRequired('DictionaryItem.create()', "'Dictionary' or 'TextPart' instance expected as the first parameter.");
+        var i = a instanceof Dictionary ? 1 : 0;
+        this.dictionary = i == 1 ? a : null; // (note: this can be null for temp items not yet added)
+        this.#_textPart = arguments[i] instanceof TextPart ? arguments[i] : new TextPart(this, DS.StringUtils.toString(arguments[i])); // (note: this can be null due to wildcards in concept patterns)
+        this.pos = arguments[i + 1] ?? null;
+        this.tenseType = arguments[i + 2] ?? TenseTypes.Unspecified;
+        this.plurality = arguments[i + 3] ?? Plurality.Unspecified;
     }
 
     // --------------------------------------------------------------------------------------------------------------------

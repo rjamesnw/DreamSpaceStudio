@@ -609,7 +609,7 @@ var DS;
                 throw error;
             if (high > 0 && !error)
                 try {
-                    store.setItem("$__fs_maxsize", '' + (high * 2));
+                    store.setItem("$__fs_maxsize", DS.StringUtils.toString(high * 2));
                 }
                 catch (ex) {
                     console.log("getStorageTotalSize(): Could not cache storage max size - out of space.");
@@ -1445,7 +1445,7 @@ var DS;
                     _view = viewOrName;
                 }
                 else {
-                    _view = this.getView('' + viewOrName);
+                    _view = this.getView(DS.StringUtils.toString(viewOrName));
                     if (!_view)
                         throw "There's no view named '" + viewOrName + "' (case sensitive).";
                 }

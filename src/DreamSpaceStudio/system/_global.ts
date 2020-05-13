@@ -3,6 +3,8 @@
 // such as DS.init() to execute callbacks to finalize to loading process (must be called by the end user).
 // ###########################################################################################################################
 
+type char = string;
+
 interface Array<T> {
     /** Removes the specified item and returns true if removed, or false if not found. */
     remove(item: T): boolean;
@@ -41,8 +43,11 @@ if (!Array.prototype.max) // Primarily to help support conversions from C# - als
     };
 
 interface String {
+    /** Trims the given character from the start of the string and returns the new string. */
+    trimLeftChar(char: char): string; // Primarily to help support conversions from C# - also, this should exist anyhow!
+
     /** Trims the given character from the end of the string and returns the new string. */
-    trimRightChar(char: string): string; // Primarily to help support conversions from C# - also, this should exist anyhow!
+    trimRightChar(char: char): string; // Primarily to help support conversions from C# - also, this should exist anyhow!
 
     /**
      * Returns true if the specified string is at the start of this string.
@@ -54,10 +59,17 @@ interface String {
      */
     endsWith(str: string): boolean; // Primarily to help support conversions from C# - also, this should exist anyhow!
 }
-if (!String.prototype.trimRightChar)
-    String.prototype.trimRightChar = function (this: string, char: string) {
+if (!String.prototype.trimLeftChar)
+    String.prototype.trimLeftChar = function (this: string, char: char) {
         var s = this;
-        while (s[s.length - 1] === char)
+        while (s.length && s[0] === char)
+            s = s.substr(1);
+        return s;
+    };
+if (!String.prototype.trimRightChar)
+    String.prototype.trimRightChar = function (this: string, char: char) {
+        var s = this;
+        while (s.length && s[s.length - 1] === char)
             s = s.substr(0, this.length - 1);
         return s;
     };

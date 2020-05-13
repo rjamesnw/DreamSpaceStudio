@@ -83,7 +83,7 @@ export default class DictionaryItem extends TimeReferencedObject implements IMem
         if (typeof a != 'object' || !(a instanceof Dictionary || a instanceof TextPart || a instanceof String))
             throw DS.Exception.argumentRequired('DictionaryItem.create()', "'Dictionary' or 'TextPart' instance expected as the first parameter.");
         var i = a instanceof Dictionary ? 1 : 0;
-        this.dictionary = i == 1 ? a : null; // (note: this can be null for temp items not yet added)
+        this.dictionary = i == 1 ? <Dictionary>a : null; // (note: this can be null for temp items not yet added)
         this.#_textPart = arguments[i] instanceof TextPart ? arguments[i] : new TextPart(this, DS.StringUtils.toString(arguments[i])); // (note: this can be null due to wildcards in concept patterns)
         this.pos = arguments[i + 1] ?? null;
         this.tenseType = arguments[i + 2] ?? TenseTypes.Unspecified;

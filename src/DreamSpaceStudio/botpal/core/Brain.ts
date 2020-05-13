@@ -34,13 +34,13 @@ export default class Brain {
     //? public Thought Thought; // (this should never be null when a brain is loaded, as thoughts are historical; otherwise this is a brand new brain, and this can be null)
 
     protected _tasks: BrainTask[] = [];
-    protected _DelayedTasks = new Map<string, BrainTask>();
+    protected _delayedTasks = new Map<string, BrainTask>();
 
     /**
      *  The thread that the brain instance was created on.  This is always assumed as the main thread, and helps with dispatching
      *  events to the host, preventing the need for the host to handle dispatching calls to it's own main thread.
     */
-    readonly _MainThread: Thread;
+    readonly _mainThread: Thread;
 
     // --------------------------------------------------------------------------------------------------------------------
 
@@ -111,7 +111,7 @@ export default class Brain {
         if (configureConcepts)
             this.ConfigureDefaultConcepts();
 
-        var task = this._ProcessOperations(null);
+        var task = this._processOperations(null);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -121,8 +121,8 @@ export default class Brain {
      *  This is required so that each concept can register and expose the words it recognizes,
      *  complete with lexical details about the word (or text/phrase).
     */
-    readonly _Concepts = new Map<IType, Concept>();
-    get Concepts(): Iterable<Concept> { return this._Concepts.Values; }
+    readonly _Concepts = new Map<IType<Concept>, Concept>();
+    get Concepts(): Iterable<Concept> { return this._Concepts.values(); }
 
     readonly ConceptHandlerLoadErrors: Exception[] = []; // (one place for all concepts to log errors on registration - the UI should display this on first load)
     // TODO: Consider adding this as something the bot should ask (and remember): "There was a problem loading some concepts."
@@ -149,7 +149,7 @@ export default class Brain {
     /** Returns a registered concept singleton. 
      * The most common use is to get a reference to the words that a concept registers.
      */
-    GetConcept<T extends typeof Concept>(type: T) { return <T><any>this._Concepts.get(<any>type); }
+    getConcept<T extends Concept>(type: IType<T>): T { return <T>this._Concepts.get(type); }
 
     ///**
     //* Registers a concept for given text to watch for, and also creates and returns the dictionary word that will be associated with the watched text.
@@ -204,8 +204,8 @@ export default class Brain {
 
     findConceptContexts(text: string, threshold = 0.8): Match<ConceptContext>[] {
         var dicItems = threshold == 1 ? // (if 'threshold' is 1.0 then do a similar [near exact] match [using group keys], otherwise find close partial matches instead.
-            this.memory.dictionary.FindSimilarEntries(Memory.Brain.ToGroupKey(text)).SelectMany(i => i.ConceptContexts.Select(c => new Match<ConceptContext>(c, 1.0)))
-            : this.memory.dictionary.FindMatchingEntries(text, threshold).SelectMany(m => m.Item.ConceptContexts.Select(c => new Match<ConceptContext>(c, m.Score)));
+            this.memory.dictionary.findSimilarEntries(Memory.Brain.ToGroupKey(text)).SelectMany(i => i.ConceptContexts.Select(c => new Match<ConceptContext>(c, 1.0)))
+            : this.memory.dictionary.findMatchingEntries(text, threshold).SelectMany(m => m.Item.ConceptContexts.Select(c => new Match<ConceptContext>(c, m.Score)));
         return dicItems.ToArray();
     }
 
@@ -221,7 +221,7 @@ export default class Brain {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    async  _ProcessOperations(btask: BrainTask) {
+    async  _processOperations(btask: BrainTask) {
         if (btask != null) {
             var ops: Operation[] = this.#_operations; // (since the list may update, get a snapshot of the list as it is now)
             var op: Operation;
@@ -246,12 +246,12 @@ export default class Brain {
         // ... keep triggering this every few milliseconds to batch process operations ...
 
         if (!this.#_isShuttingDown)
-            this.createTask(this._ProcessOperations).start(new DS.TimeSpan(0, 0, 0, 0, 100), "Brain", "Operations");
+            this.createTask(this._processOperations).start(new DS.TimeSpan(0, 0, 0, 0, 100), "Brain", "Operations");
         else
             this.#_isStopped = true;
     }
 
-    AddOperation(op: Operation) {
+    addOperation(op: Operation) {
         if (this.#_operations.indexOf(op) < 0)
             this.#_operations.push(op);
     }
@@ -271,35 +271,11 @@ export default class Brain {
     /**
      *  Runs the given action as another task, which may be another thread.
     */
-    createTask(action: Func1<BrainTask, Promise>): BrainTask {
+    createTask<TState = any>(action: Func1<BrainTask<TState>, Promise>, state?: TState): BrainTask<TState> {
         if (action != null) {
             var btask = new BrainTask(this, action);
+            (<Writeable<BrainTask>>btask)._index = this._tasks.length;
             this._tasks.push(btask);
-            return btask;
-        }
-        else return null;
-    }
-
-    /**
-     *  Runs the given action as another task, which may be another thread.
-    */
-    createTask<TState>(action: Action<BrainTask<TState>>, state: TState): BrainTask<TState extends object> {
-        if (action != null) {
-            var btask = new BrainTask<TState>(this, action, state, cancelToken ?? new CancellationToken());
-            btask._Index = this._tasks.Count;
-            this._tasks.Add(btask);
-            return btask;
-        }
-        else return null;
-    }
-
-    /**
-     *  Runs the given action as another task, which may be another thread.
-    */
-    createTask<TState>(action: Action<BrainTask<TState>, TState>, state: TState): BrainTask<TState extends object > {
-        if (action != null) {
-            var btask = new BrainTask<TState>(this, action, state, cancelToken ?? new CancellationToken());
-            this._tasks.Add(btask);
             return btask;
         }
         else return null;
@@ -309,7 +285,7 @@ export default class Brain {
      *  Remove a given task.  This is called automatically during task cleanup after a task completes.
     */
     /// <param name="btask">The task to remove.  The task is not stopped, only removed from the brain's task list.</param>
-    RemoveTask(btask: BrainTask): BrainTask {
+    removeTask(btask: BrainTask): BrainTask {
         if (btask._index >= 0) {
             // ... swap with the end task in the list and delete from the end, which is faster ...
             var i = btask._index, i2 = this._tasks.length - 1;
@@ -321,7 +297,7 @@ export default class Brain {
             (<Writeable<BrainTask>>btask)._index = -1;
             // ... also remove from the delayed list if this is a delayed task ...
             if (btask.isDelayed)
-                this._DelayedTasks.delete(btask.key);
+                this._delayedTasks.delete(btask.key);
         }
         return btask;
     }
@@ -330,7 +306,7 @@ export default class Brain {
      *  Find and return a task given its category and name.
      */
     GetTask(category: string, name: string): BrainTask {
-        return this._DelayedTasks.get((category ?? "") + "_" + name);
+        return this._delayedTasks.get((category ?? "") + "_" + name);
     }
 
     /**
@@ -444,7 +420,7 @@ export default class Brain {
     // --------------------------------------------------------------------------------------------------------------------
 
     AddInput(text: string) {
-        this.AddOperation(new SplitTextOperation(this, text));
+        this.addOperation(new SplitTextOperation(this, text));
     }
 
     // --------------------------------------------------------------------------------------------------------------------

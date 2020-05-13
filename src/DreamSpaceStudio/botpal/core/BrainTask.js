@@ -134,14 +134,14 @@ class BrainTask extends TimeReferencedObject_1.default {
             __classPrivateFieldSet(this, __delay, delay);
             __classPrivateFieldSet(this, __category, category);
             __classPrivateFieldSet(this, __name, name);
-            var existingTask = __classPrivateFieldGet(this, __brain)._DelayedTasks.Value(this.key);
+            var existingTask = __classPrivateFieldGet(this, __brain)['_delayedTasks'].get(this.key);
             if (existingTask != null) {
                 // ... clear the key and flag the task to abort, as we are replacing it ...
                 __classPrivateFieldSet(existingTask, __category, null);
                 __classPrivateFieldSet(existingTask, __name, null);
                 existingTask.cancel();
             }
-            __classPrivateFieldGet(this, __brain)._DelayedTasks[this.key] = this;
+            __classPrivateFieldGet(this, __brain)['_delayedTasks'].set(this.key, this);
         }
         __classPrivateFieldSet(this, __promise, new DS.StatePromise(this.timeout));
         this._run();

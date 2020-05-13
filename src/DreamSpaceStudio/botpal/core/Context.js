@@ -14,13 +14,32 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 };
 var __contextType, __contextMap, __contexts, __Attributes, __Modifiers, __Questions;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ContextCollection = exports.context = exports.contextTags = void 0;
+exports.ContextCollection = exports.context = exports.contextTags = exports.ContextTag = void 0;
 const TimeReferencedObject_1 = require("./TimeReferencedObject");
 const ActionContext_1 = require("../contexts/ActionContext");
 const AttributeContext_1 = require("../contexts/AttributeContext");
 const ModifierContext_1 = require("../contexts/ModifierContext");
 const QuestionContext_1 = require("../contexts/QuestionContext");
 const GroupContext_1 = require("../contexts/GroupContext");
+/**
+ *  A context tag is a tag that can be applied by a concept.  Other concepts may rely on context tags in order to trigger.
+ *  For example, the word "time" changes meaning between "The time is" and "What is the time", where one is in context of
+ *  a question, and one is not.
+ */
+class ContextTag {
+    /**
+     * Constructs a new tag for a concept (see Concept.tag).
+     * @param {string} name The name of the tag.
+     * @param {number} weight
+     * The weight between 0.0 (0%) and 1.0 (100%) that applies to this tag. This allows creating tags with a lower requirement
+     * compared to other tags that have to exist. In the end it helps to better sort the most likely contexts by the assign tags.
+     */
+    constructor(name, weight) {
+        this.name = name;
+        this.weight = weight;
+    }
+}
+exports.ContextTag = ContextTag;
 /**
  * Holds a list of registered context tags, and the context type associated with it, if any.
  * Some concepts only trigger when certain context tags exist within a context.
@@ -32,9 +51,9 @@ exports.contextTags = {};
 function context() {
     return (target) => {
         var tag = target.tag;
-        if (DS.StringUtils.isEmptyOrWhitespace(tag))
+        if (DS.StringUtils.isEmptyOrWhitespace(tag === null || tag === void 0 ? void 0 : tag.name))
             throw "You did not specify a valid context tag name for context type '" + DS.Utilities.getTypeName(target) + "'.";
-        exports.contextTags[tag] = target;
+        exports.contextTags[tag.name] = target;
     };
 }
 exports.context = context;

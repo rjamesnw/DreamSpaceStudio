@@ -14,7 +14,7 @@ export default class BrainTask<TState extends any = any> extends TimeReferencedO
     get brain() { return this.#_brain; }
     #_brain: Brain;
 
-    readonly _index = -1; // (used to quickly remove the task from a brain's task list; note: never read/modify this without first locking Brain._Tasks)
+    readonly _index: number = -1; // (used to quickly remove the task from a brain's task list; note: never read/modify this without first locking Brain._Tasks)
 
     /** The maximum time to wait for a result. The default is 5 minutes (8 hours if a debugger is attached). */
     static get maxWaitTime(): DS.TimeSpan { return new DS.TimeSpan(0, 5, 0); }
@@ -155,14 +155,14 @@ export default class BrainTask<TState extends any = any> extends TimeReferencedO
             this.#_delay = delay;
             this.#_category = category;
             this.#_name = name;
-            var existingTask: BrainTask = this.#_brain._DelayedTasks.Value(this.key);
+            var existingTask: BrainTask = this.#_brain['_delayedTasks'].get(this.key);
             if (existingTask != null) {
                 // ... clear the key and flag the task to abort, as we are replacing it ...
                 existingTask.#_category = null;
                 existingTask.#_name = null;
                 existingTask.cancel();
             }
-            this.#_brain._DelayedTasks[this.key] = this;
+            this.#_brain['_delayedTasks'].set(this.key, this);
         }
         this.#_promise = new DS.StatePromise(this.timeout);
         this._run();

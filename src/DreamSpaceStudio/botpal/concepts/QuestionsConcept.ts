@@ -1,4 +1,4 @@
-﻿import Concept, { concept, conceptHandler, intentHandler, ConceptHandlerContext } from "../core/Concept";
+﻿import Concept, { concept, conceptHandler, intentHandler, ConceptHandlerContext, contexts } from "../core/Concept";
 import Brain from "../core/Brain";
 import QuestionContext from "../contexts/QuestionContext";
 import DictionaryItem from "../core/DictionaryItem";
@@ -9,46 +9,48 @@ import SubjectContext from "../contexts/SubjectContext";
 export default class QuestionsConcept extends Concept {
     // --------------------------------------------------------------------------------------------------------------------
 
-    static readonly Who = new DictionaryItem("Who", POS.Pronoun_Subject);
-    readonly Who: DictionaryItem;
+    static readonly who_PN = new DictionaryItem("Who", POS.Pronoun_Subject);
+    readonly who_PN: DictionaryItem;
 
-    static readonly What = new DictionaryItem("What");
-    readonly What: DictionaryItem;
+    static readonly what = new DictionaryItem("What");
+    readonly what: DictionaryItem;
 
-    static readonly What_PN = new DictionaryItem("What", POS.Pronoun_Subject);
-    readonly What_PN: DictionaryItem;
+    static readonly what_PN = new DictionaryItem("What", POS.Pronoun_Subject);
+    readonly what_PN: DictionaryItem;
 
-    static readonly What_D = new DictionaryItem("What", POS.Determiner);
-    readonly What_D: DictionaryItem;
+    static readonly what_D = new DictionaryItem("What", POS.Determiner);
+    readonly what_D: DictionaryItem;
 
-    static readonly What_AV = new DictionaryItem("What", POS.Adverb);
-    readonly What_AV: DictionaryItem;
+    static readonly what_AV = new DictionaryItem("What", POS.Adverb);
+    readonly what_AV: DictionaryItem;
 
-    static readonly When = new DictionaryItem("When", POS.Adverb);
-    readonly When: DictionaryItem;
-    static readonly Where = new DictionaryItem("Where", POS.Adverb);
-    readonly Where: DictionaryItem;
-    static readonly Why = new DictionaryItem("Why", POS.Adverb);
-    readonly Why: DictionaryItem;
-    static readonly How = new DictionaryItem("How", POS.Adverb);
-    readonly How: DictionaryItem;
-    static readonly Are = new DictionaryItem("Are", POS.Verb_Is);
-    readonly Are: DictionaryItem;
-    static readonly Is = new DictionaryItem("Is", POS.Verb_Is);
-    readonly Is: DictionaryItem;
-    static readonly If = new DictionaryItem("If", POS.Conjunction);
-    readonly If: DictionaryItem;
-    static readonly Can = new DictionaryItem("Can", POS.Verb_AbleToOrPermitted);
-    readonly Can: DictionaryItem;
+    /** When: Adverb */
+    static readonly when_AV = new DictionaryItem("When", POS.Adverb);
+    readonly when_AV: DictionaryItem;
 
-    static readonly Name_Noun = new DictionaryItem("name", POS.Noun);
-    readonly Name_Noun: DictionaryItem;
+    static readonly where_AV = new DictionaryItem("Where", POS.Adverb);
+    readonly where_AV: DictionaryItem;
+    static readonly why_AV = new DictionaryItem("Why", POS.Adverb);
+    readonly why_AV: DictionaryItem;
+    static readonly how_AV = new DictionaryItem("How", POS.Adverb);
+    readonly how_AV: DictionaryItem;
+    static readonly are_V = new DictionaryItem("Are", POS.Verb_Is);
+    readonly are_V: DictionaryItem;
+    static readonly is_V = new DictionaryItem("Is", POS.Verb_Is);
+    readonly is_V: DictionaryItem;
+    static readonly if_C = new DictionaryItem("If", POS.Conjunction);
+    readonly if_C: DictionaryItem;
+    static readonly can_V = new DictionaryItem("Can", POS.Verb_AbleToOrPermitted);
+    readonly can_V: DictionaryItem;
 
-    static readonly Name_Verb = new DictionaryItem("name", POS.Verb);
-    readonly Name_Verb: DictionaryItem;
+    static readonly Name_N = new DictionaryItem("name", POS.Noun); // (the name)
+    readonly Name_N: DictionaryItem;
 
-    static readonly Name_Adjective = new DictionaryItem("name", POS.Adjective);
-    readonly Name_Adjective: DictionaryItem;
+    static readonly Name_V = new DictionaryItem("name", POS.Verb); // (naming)
+    readonly Name_V: DictionaryItem;
+
+    static readonly Name_A = new DictionaryItem("name", POS.Adjective); // (named)
+    readonly Name_A: DictionaryItem;
 
     constructor(brian: Brain) {
         super(brian)
@@ -56,21 +58,22 @@ export default class QuestionsConcept extends Concept {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    @conceptHandler(QuestionsConcept.Who)
+    @conceptHandler(QuestionsConcept.who_PN)
     _Who(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.Who));
+            context.Context.Add(new QuestionContext(this, this.who_PN));
         return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    @conceptHandler(QuestionsConcept.Name_Noun, QuestionsConcept.Name_Verb, QuestionsConcept.Name_Adjective, QuestionContext, SubjectContext, 'tobe|is') //"what^PN is^V ^PN name"
+    @conceptHandler(QuestionsConcept.Name_N, QuestionsConcept.Name_V, QuestionsConcept.Name_A) //"what^PN is^V ^PN name"
+    @contexts(QuestionContext, SubjectContext, 'tobe|is') //"what^PN is^V ^PN name"
     _GetName(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         return Promise.resolve(context);
     }
 
-    @conceptHandler(QuestionsConcept.What_PN, QuestionsConcept.What_D, QuestionsConcept.What_AV, "!")
+    @conceptHandler(QuestionsConcept.what_PN, QuestionsConcept.what_D, QuestionsConcept.what_AV, "!")
     _What_Exclamation(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         context.AddIntentHandler(new DS.Delegate(this, this._What_Excl_Intent), 1);
         return Promise.resolve(context);
@@ -80,10 +83,10 @@ export default class QuestionsConcept extends Concept {
         return true;
     }
 
-    @conceptHandler(QuestionsConcept.What)
+    @conceptHandler(QuestionsConcept.what)
     _What_Unknown_Question(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null)) {
-            context.Context.Add(new QuestionContext(this, this.What_PN));
+            context.Context.Add(new QuestionContext(this, this.what_PN));
             context.AddIntentHandler(new DS.Delegate(this, this._What_Intent), context.Operation.MinConfidence); // (this is like a fall-back plan if nothing else better is found)
         }
         return Promise.resolve(context);
@@ -96,43 +99,43 @@ export default class QuestionsConcept extends Concept {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    @conceptHandler(QuestionsConcept.When)
+    @conceptHandler(QuestionsConcept.when_AV)
     _When(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.When));
+            context.Context.Add(new QuestionContext(this, this.when_AV));
         return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    @conceptHandler(QuestionsConcept.Where)
+    @conceptHandler(QuestionsConcept.where_AV)
     _Where(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.Where));
+            context.Context.Add(new QuestionContext(this, this.where_AV));
         return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    @conceptHandler(QuestionsConcept.Why)
+    @conceptHandler(QuestionsConcept.why_AV)
     _Why(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.Why));
+            context.Context.Add(new QuestionContext(this, this.why_AV));
         return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    @conceptHandler(QuestionsConcept.How)
+    @conceptHandler(QuestionsConcept.how_AV)
     _How(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null)) {
-            context.Context.Add(new QuestionContext(this, this.How));
+            context.Context.Add(new QuestionContext(this, this.how_AV));
             context.AddIntentHandler(new DS.Delegate(this, this._How_Intent), context.Operation.MinConfidence);
         }
         return Promise.resolve(context);
     }
 
-    @intentHandler(QuestionsConcept.How)
+    @intentHandler(QuestionsConcept.how_AV)
     async  _How_Intent(context: ConceptHandlerContext): Promise<boolean> {
         if (context.WasPrevious(null))
             await this.brain.doResponse("How what?");
@@ -141,35 +144,35 @@ export default class QuestionsConcept extends Concept {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    @conceptHandler(QuestionsConcept.Can)
+    @conceptHandler(QuestionsConcept.can_V)
     _Can(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.Can));
+            context.Context.Add(new QuestionContext(this, this.can_V));
         return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    @conceptHandler(QuestionsConcept.Is)
+    @conceptHandler(QuestionsConcept.is_V)
     _Is(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.Is));
+            context.Context.Add(new QuestionContext(this, this.is_V));
         return Promise.resolve(context);
     }
 
-    @conceptHandler(QuestionsConcept.Are)
+    @conceptHandler(QuestionsConcept.are_V)
     _Are(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.Are));
+            context.Context.Add(new QuestionContext(this, this.are_V));
         return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    @conceptHandler(QuestionsConcept.If)
+    @conceptHandler(QuestionsConcept.if_C)
     _If(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.If));
+            context.Context.Add(new QuestionContext(this, this.if_C));
         return Promise.resolve(context);
     }
 

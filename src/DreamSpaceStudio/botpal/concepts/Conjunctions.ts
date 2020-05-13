@@ -1,31 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿import Concept, { concept, conceptHandler, ConceptHandlerContext } from "../core/Concept"
+import Brain from "../core/Brain"
+import POS from "../core/POS";
+import DictionaryItem from "../core/DictionaryItem";
 
-namespace BotPal.Concepts
-{
-    /**
-     *  A concept to understand and handle pronouns.
-    */
-    [Concept]
-    export default class ConjunctionConcept extends Concept
-    {
-        // --------------------------------------------------------------------------------------------------------------------
+/**
+ *  A concept to understand and handle pronouns.
+*/
+@concept()
+export default class ConjunctionConcept extends Concept {
+    // --------------------------------------------------------------------------------------------------------------------
 
-        public ConjunctionConcept(Dictionary dictionary)
-            : base(dictionary)
-        {
-        }
+    static readonly and = new DictionaryItem("and", POS.Conjunction);
+    readonly and: DictionaryItem;
 
-        // --------------------------------------------------------------------------------------------------------------------
+    static readonly that = new DictionaryItem("that", POS.Conjunction);
+    readonly that: DictionaryItem;
 
-        @conceptHandler("* and^C *")
-        @conceptHandler("* that^C *") // (ex: "she said that she was satisfied" [statement or hypothesis] / "oh that he could be restored to health" [wish or regret])
-        DictionaryItem[] _Conjunction(Scene scene, Context leftCtx, Context rightCtx)
-        {
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
+    constructor(brian: Brain) {
+        super(brian)
     }
+
+    // --------------------------------------------------------------------------------------------------------------------
+
+    @conceptHandler(
+        ConjunctionConcept.and,
+        ConjunctionConcept.that) // (ex: "she said that she was satisfied" [statement or hypothesis] / "oh that he could be restored to health" [wish or regret])
+    _conjunction(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        return Promise.resolve(context);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------
 }

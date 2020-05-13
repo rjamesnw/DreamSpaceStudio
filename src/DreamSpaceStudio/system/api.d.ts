@@ -11,6 +11,8 @@ interface Array<T> {
     max(predicate?: (a: T, b: T, aIndex: number, bIndex: number) => number): [T, number];
 }
 interface String {
+    /** Trims the given character from the start of the string and returns the new string. */
+    trimLeftChar(char: string): string;
     /** Trims the given character from the end of the string and returns the new string. */
     trimRightChar(char: string): string;
     /**

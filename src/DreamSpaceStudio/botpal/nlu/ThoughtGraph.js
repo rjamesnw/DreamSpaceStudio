@@ -17,15 +17,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Node_1 = require("./Node");
 const ThoughtGraphNode_1 = require("./ThoughtGraphNode");
 /**
-    A thought graph breaks down multiple sentences into multiple graphs, each containing an isolated thought from the
-    user (though they may be related).
-
-    Each thought graph acts like a logical container to isolate the main subjects, and related details, from other
-    thoughts. The parent of a thought graph is usually the sentence outside a thought placed in brackets. Nesting occurs when nested
-    brackets (parenthesis, square, curly, angled, or similar) are discovered. Doing this keeps sub-thoughts away from
-    the main thought.
- 
-    @see MultiNode<ThoughtGraph>
+ * A thought graph breaks down multiple sentences into multiple graphs, each containing an isolated thought from the
+ *  user (though they may be related).
+ *
+ *  Each thought graph acts like a logical container to isolate the main subjects, and related details, from other
+ *  thoughts. The parent of a thought graph is usually the sentence outside a thought placed in brackets. Nesting occurs when nested
+ *  brackets (parenthesis, square, curly, angled, or similar) are discovered. Doing this keeps sub-thoughts away from
+ *  the main thought.
+ *
+ *  @see MultiNode<ThoughtGraph>
 */
 class ThoughtGraph extends Node_1.default {
     constructor() {
@@ -34,15 +34,15 @@ class ThoughtGraph extends Node_1.default {
         __current.set(this, ThoughtGraphNode_1.default.CreateSubjectGroup());
     }
     /**
-        The current node in the build process. A blank subject group node is added by default for every thought graph, since
-        any meaningful thought usually has a subject which the attributes, descriptions, and actions relate to. A subject
-        group can contain nouns and pronouns, including descriptions applied to the group, and association branches.
-    */
+     * The current node in the build process. A blank subject group node is added by default for every thought graph, since
+     * any meaningful thought usually has a subject which the attributes, descriptions, and actions relate to. A subject
+     * group can contain nouns and pronouns, including descriptions applied to the group, and association branches.
+     */
     get current() { return __classPrivateFieldGet(this, __current); }
     /**
-        Adds words (or symbols) to the thought graph. These are added like a human would read text - one by one, like a
-        stream of text parts.
-        @param words A variable-length parameters list containing words.
+     * Adds words (or symbols) to the thought graph. These are added like a human would read text - one by one, like a
+     * stream of text parts.
+     * @param words A variable-length parameters list containing words.
     */
     add(...words) {
         for (var i = 0, n = words.length; i < n; ++i) {

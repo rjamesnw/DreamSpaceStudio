@@ -39,6 +39,13 @@ if (!Array.prototype.max) // Primarily to help support conversions from C# - als
         }
         return [maxValue, lastIndex];
     };
+if (!String.prototype.trimLeftChar)
+    String.prototype.trimLeftChar = function (char) {
+        var s = this;
+        while (s.length && s[0] === char)
+            s = s.substr(1);
+        return s;
+    };
 if (!String.prototype.trimRightChar)
     String.prototype.trimRightChar = function (char) {
         var s = this;
@@ -6889,7 +6896,7 @@ var DS;
             /** True if the event can be cancelled. */
             this.canCancel = true;
             if (typeof eventName !== 'string')
-                eventName = '' + eventName;
+                eventName = DS.StringUtils.toString(eventName);
             if (!eventName)
                 throw "An event name is required.";
             this.__eventName = eventName;

@@ -1,6 +1,8 @@
-﻿import { concept, conceptHandler } from "../core/Concept"
+﻿import Concept, { concept, conceptHandler, ConceptHandlerContext } from "../core/Concept"
+import Brain from "../core/Brain";
 
-@concept
+/** Covers "is"/"are" concepts for when applying attributes and relationships between subjects. */
+@concept()
 export default class ToBeConcept extends Concept {
     // --------------------------------------------------------------------------------------------------------------------
 
@@ -14,11 +16,11 @@ export default class ToBeConcept extends Concept {
     @conceptHandler("is")
     _Is(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious("how"))
-            context.AddIntentHandler(_How_Is_Intent, context.Operation.MinConfidence);
+            context.AddIntentHandler(this._How_Is_Intent, context.Operation.MinConfidence);
         else if (context.WasPrevious("time"))
-            context.AddIntentHandler(_How_Is_Intent, context.Operation.MinConfidence);
+            context.AddIntentHandler(this._How_Is_Intent, context.Operation.MinConfidence);
         else
-            context.AddIntentHandler(_Is_What_Intent, context.Operation.MinConfidence);
+            context.AddIntentHandler(this._Is_What_Intent, context.Operation.MinConfidence);
         //{
         //    var ctx = context.Context;
         //    if (ctx.AllSubjects().Any())
@@ -40,12 +42,12 @@ export default class ToBeConcept extends Concept {
         return Promise.resolve(context);
     }
 
-    async  _Is_What_Intent(context: ConceptHandlerContext ): Promise<boolean> _How_Is_Intent(context: ConceptHandlerContext ) {
+    async  _How_Is_Intent(context: ConceptHandlerContext): Promise<boolean> {
         await this.brain.doResponse("How is what?");
         return true;
     }
 
-    async Task<boolean> {
+    async  _Is_What_Intent(context: ConceptHandlerContext): Promise<boolean> {
         await this.brain.doResponse("Is what?");
         return true;
     }
@@ -71,15 +73,15 @@ export default class ToBeConcept extends Concept {
 
     // TODO: *** Figure out how the left side will associate with the right.  Perhaps we expect to "iterate" over all the subjects, and assigned attributes from the right side. *** 
     @conceptHandler("are")
-     _How_Are_Intent(context: ConceptHandlerContext ): Promise<ConceptHandlerContext> _Are(context: ConceptHandlerContext ) {
+    async _Are(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious("how"))
-            context.AddIntentHandler(_How_Are_Intent, 0.5d);
+            context.AddIntentHandler(this._How_Are_Intent, 0.5);
         return Promise.resolve(context);
     }
 
-    async Task<boolean> {
+    async _How_Are_Intent(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         await this.brain.doResponse("How are what?");
-        return true;
+        return Promise.resolve(context);
     }
 
     // --------------------------------------------------------------------------------------------------------------------

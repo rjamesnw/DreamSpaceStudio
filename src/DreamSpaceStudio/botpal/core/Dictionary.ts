@@ -5,6 +5,7 @@ import TextPart from "./TextPart";
 import DictionaryItem from "./DictionaryItem";
 import { PartOfSpeech } from "./POS";
 import { TenseTypes, Plurality } from "./Enums";
+import Match from "./Match";
 
 /**
  *  The dictionary holds both the RAW text, without context (no duplicates), and various 'DictionaryEntry' instances,
@@ -42,24 +43,24 @@ export default class Dictionary implements IMemoryObject {
      *  This servers as a quick index, which can be rebuilt or updated as needed.
      *  By default, the lexicon will contain entries used to split text for grammar trees.
     */
-    _Entries: Map<string, DictionaryItem> = new Map<string, DictionaryItem>();
+    _entries: Map<string, DictionaryItem> = new Map<string, DictionaryItem>();
 
     /**
      *  This references the dictionary entry that has a blank key, and is used to store global data, such as concepts that should run if no other concepts are found.
     */
-    get GlobalEntry(): DictionaryItem { return this._Entries.get(''); }
+    get GlobalEntry(): DictionaryItem { return this._entries.get(''); }
 
     /**
      *  Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity. 
      *  This list holds those references, as it relates to dictionary entries.
      *  This can help to quickly speed up/shortcut text input analysis, taking away the need to know context parameters (POS, Tense, Plurality, etc.).
     */
-    readonly _SimilarEntries = new Map<string, DictionaryItem[]>();
+    readonly _similarEntries = new Map<string, DictionaryItem[]>();
 
     /**
      *  An index of all words by their first letter (always lower casing). This can help to quickly speed up/shortcut word analysis.
     */
-    _IndexByFirstLetter = new Map<string, DictionaryItem[]>(); // TODO: Consider restricting on max word length as well.
+    _indexByFirstLetter = new Map<string, DictionaryItem[]>(); // TODO: Consider restricting on max word length as well.
 
     /**
      *  An index of all words by their string length. This can help to quickly speed up/shortcut word analysis.
@@ -70,7 +71,7 @@ export default class Dictionary implements IMemoryObject {
 
     constructor(memory: Memory) {
         this.memory = memory;
-        this._Entries.set('', new DictionaryItem(this, null)); // (this is a global placeholder for "match unknown" concepts)
+        this._entries.set('', new DictionaryItem(this, null)); // (this is a global placeholder for "match unknown" concepts)
         // (NOTE: Synonyms, in this case, are more like word GROUPS, and less an actual list of strict synonyms; this helps the AI to know related words)
         // TODO: Consider keeping strict synonyms, and instead have a map to other "related" words.
     }
@@ -99,10 +100,10 @@ export default class Dictionary implements IMemoryObject {
 
     addTextPart(textPart: TextPart | string, pos: PartOfSpeech = null, tense = TenseTypes.Unspecified, plurality = Plurality.Unspecified): DictionaryItem {
         if (textPart instanceof TextPart) {
-            var entry = new DictionaryItem(this, this.AddText(textPart), pos, tense, plurality); // (this wraps the details so we can generate a key that represents the entry, then see if one already exists)
+            var entry = new DictionaryItem(this, this.addText(textPart), pos, tense, plurality); // (this wraps the details so we can generate a key that represents the entry, then see if one already exists)
             return this.AddEntry(entry);
         } else {
-            var entry = new DictionaryItem(this, this.AddText(textPart), pos, tense, plurality); // (this wraps the details so we can generate a key that represents the entry, then see if one already exists)
+            var entry = new DictionaryItem(this, this.addText(textPart), pos, tense, plurality); // (this wraps the details so we can generate a key that represents the entry, then see if one already exists)
             return this.AddEntry(entry);
 
         }
@@ -117,24 +118,24 @@ export default class Dictionary implements IMemoryObject {
 
         var entryKey = entry.key;
         var tp = entry.textPart;
-        var existingEntry = this._Entries.get(entryKey);
+        var existingEntry = this._entries.get(entryKey);
 
         if (existingEntry) // (if the entry already exists, it was already processed, so ignore)
             return existingEntry;
 
         // ... first register the underlying text of the text part (if not already added) ...
 
-        this.AddText(tp);
+        this.addText(tp);
 
         // ... register the dictionary entry by the lowercase first character of the phrase group key ...
         // (note: the entry key is NOT used, as it contains entry data with the key, and is less like the original text)
 
         var grpkey = tp.groupKey; // (a key used for grouping text that looks similar - we need to process this all using the key in lower case, etc., to properly index the text as it may look to the user, and by ordinal comparisons)
         var charIndex = grpkey[0];
-        var indexedWords = this._IndexByFirstLetter.get(charIndex);
+        var indexedWords = this._indexByFirstLetter.get(charIndex);
 
         if (!indexedWords)
-            this._IndexByFirstLetter.set(charIndex, indexedWords = []);
+            this._indexByFirstLetter.set(charIndex, indexedWords = []);
 
         indexedWords.push(entry);
 
@@ -151,13 +152,13 @@ export default class Dictionary implements IMemoryObject {
 
         // ... finally add the entry to the entry lists ...
 
-        var similarEntries = this._SimilarEntries.get(grpkey);
+        var similarEntries = this._similarEntries.get(grpkey);
         if (!similarEntries)
-            this._SimilarEntries.set(grpkey, similarEntries = []);
+            this._similarEntries.set(grpkey, similarEntries = []);
 
         similarEntries.push(entry);
 
-        this._Entries.set(entryKey, entry);
+        this._entries.set(entryKey, entry);
 
         return entry;
     }
@@ -167,17 +168,17 @@ export default class Dictionary implements IMemoryObject {
      * @param {TextPart | string} text
      * @returns
      */
-    AddText(text: TextPart | string): TextPart;
+    addText(text: TextPart | string): TextPart;
 
     /**
      * Adds text only.  No lexical dictionary entries or related references are added.
      * @param {string} text The text to add.  Note that this text will be trimmed if any whitespace exists on either end.
      * @returns
      */
-    AddText(text: string): TextPart;
+    addText(text: string): TextPart;
 
-    AddText(text: TextPart | string): TextPart {
-        if (typeof text == 'string') return this.AddText(new TextPart(this, text));
+    addText(text: TextPart | string): TextPart {
+        if (typeof text == 'string') return this.addText(new TextPart(this, text));
 
         if (text === undefined || text === null)
             throw DS.Exception.argumentUndefinedOrNull("Dictionary.AddEntry()", "entry");
@@ -236,82 +237,89 @@ export default class Dictionary implements IMemoryObject {
     // --------------------------------------------------------------------------------------------------------------------
 
     /**
-     *  Returns the dictionary entry for the given text part key (i.e. 'TextPart.Key').
-     *  The key should be a specific dictionary entry key.  Typically it is taken from 'Brain.GetKeyFromTextParts()'.
+     *  Returns the dictionary entry for the given text part key (i.e. 'TextPart.key').
+     *  The key should be a specific dictionary entry key.  Typically it is taken from 'Brain.getKeyFromTextParts()'.
     */
-    public DictionaryItem GetEntry(string key) {
-        lock(_Entries) return _Entries.Value(key);
+    getEntryByTextPartKey(key: string): DictionaryItem {
+        return this._entries.get(key);
     }
 
     /**
      *  Returns the dictionary entry for the given group key, parts of speech (POS), and other parameters.
-     *  The group key should be a specific group key typically returned via 'TextPart.ToGroupKey()'.
+     *  The group key should be a specific group key typically returned via 'TextPart.toGroupKey()'.
      *  The match is precise, which means all parameters much 
     */
-    public DictionaryItem GetEntry(string groupkey, PartOfSpeech pos, TenseTypes tense = TenseTypes.NA, Plurality plurality = Plurality.NA) {
-        var key = DictionaryItem.CreateKey(groupkey, pos, tense, plurality);
-        lock(_Entries) return _Entries.Value(key);
+    getEntryByGroupKey(groupkey: string, pos: PartOfSpeech, tense = TenseTypes.NA, plurality = Plurality.NA): DictionaryItem {
+        var key = DictionaryItem.createKey(groupkey, pos, tense, plurality);
+        return this._entries.get(key);
     }
 
     /**
      *  Returns the dictionary entries that are similar using a group key.
      *  A group key is a special lowercase and translated version of a normal key that is made more generic based on "looks".
-     *  It is best to wrap the text in an instance of 'Text' and call the 'GroupKey' property, or use the static method 'TextPart.ToGroupKey()'.
+     *  It is best to wrap the text in an instance of 'Text' and call the 'GroupKey' property, or use the static method 'TextPart.toGroupKey()'.
     */
-    public DictionaryItem[] FindSimilarEntries(string groupkey) {
-        lock(_Entries) return _SimilarEntries.Value(groupkey)?.ToArray();
+    findSimilarEntries(groupkey: string): DictionaryItem[] {
+        return this._similarEntries.get(groupkey);
     }
 
     /**
      *  Returns the dictionary word information list for the given letter, or first letter of any given word.
      *  This serves as a shortcut to help locating words a bit more quickly.
     */
-    public DictionaryItem[] GetEntriesByFirstLetter(char letter) {
-        lock(_Entries) return _IndexByFirstLetter.Value(letter)?.ToArray();
+    getEntriesByFirstLetter(letter: char): DictionaryItem[] {
+        return this._indexByFirstLetter.get(letter);
     }
 
+    /**
+    */
+    /// <param name="textpart"></param>
+    /// <param name="threshold"></param>
+    /// <param name="quickSearch"></param>
+    /// <returns></returns>
     /**
      *  Returns a list of words that have similar characters in similar positions to the given part of text.
      *  The first letter is used as a shortcut to speed up the search.
      *  The returns list is sorted so the higher score is first.
-    */
-    /// <param name="textpart">The text to look for.</param>
-    /// <param name="threshold">Only include matches equal or greater to this threshold.</param>
-    /// <param name="quickSearch">If true (default) then exact matches by key indexes are done first before scanning all texts. If matches are found, no other text is considered.
-    /// If false, each text entry is checked one by one, which can be extremely slow.</param>
-    /// <returns></returns>
-    public Match<DictionaryItem> [] FindMatchingEntries(string textpart, double threshold = 0.8, bool quickSearch = true) {
-        if (textpart == null)
-            throw new ArgumentNullException(textpart);
+     * @param {string} textpart The text to look for.
+     * @param threshold Only include matches equal or greater to this threshold.
+     * @param quickSearch
+     * If true (default) then exact matches by key indexes are done first before scanning all texts. If matches are found, no
+     * other text is considered. If false, each text entry is checked one by one, which can be extremely slow.
+     * @returns A list of possible matches.
+     */
+    findMatchingEntries(textpart: string, threshold = 0.8, quickSearch = true): Match<DictionaryItem>[] {
+        if (!textpart)
+            throw DS.Exception.argumentRequired('Dictionary.findMatchingEntries()', 'textpart');
 
-        var matches = new List<Match<DictionaryItem>>();
+        var matches: Match<DictionaryItem>[] = [];
 
         if (!DS.StringUtils.isEmptyOrWhitespace(textpart)) {
             if (quickSearch) {
-                var groupkey = Memory.Brain.ToGroupKey(textpart);
-                var entries = FindSimilarEntries(groupkey);
+                var groupkey = this.memory.brain.toGroupKey(textpart);
+                var entries = this.findSimilarEntries(groupkey);
                 if (entries != null)
-                    foreach(var e in entries)
-                matches.Add(new Match<DictionaryItem>(e, 1)); // (perfect matches)
+                    for (var e of entries)
+                        matches.push(new Match<DictionaryItem>(e, 1)); // (perfect matches)
             }
 
-            if (matches.Count == 0) {
+            if (matches.length == 0) {
                 // (no perfect matches were found, or quick search was skipped, so check all text - note, this search text first, not entries)
 
                 // ... first, get words with the same character to help speed this up a bit ...
 
                 var firstChar = textpart[0];
 
-                var indexedItems = _IndexByFirstLetter.Value(firstChar);
+                var indexedItems = this._indexByFirstLetter.get(firstChar);
 
-                if (indexedItems?.Count > 0) {
+                if (indexedItems.length > 0) {
                     // ... store all matched texts into an array that will be used to break down into group keys, then dictionary entries ...
 
-                    for (var i = 0; i < indexedItems.Count; ++i) { // (check each word of the same first letter for a % match)
+                    for (var i = 0; i < indexedItems.length; ++i) { // (check each word of the same first letter for a % match)
                         var item = indexedItems[i];
-                        var score = CompareText(textpart, item.TextPart?.Text);
+                        var score = this.compareText(textpart, item.textPart?.text);
                         if (score >= threshold)
-                            matches.Add(new Match<DictionaryItem>(item, score));
+                            matches.push(new Match<DictionaryItem>(item, score));
                     }
                 }
             }
@@ -321,7 +329,7 @@ export default class Dictionary implements IMemoryObject {
 
         matches.Sort(Match<DictionaryItem>.DefaultComparer);
 
-        return matches.ToArray();
+        return matches;
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -332,23 +340,23 @@ export default class Dictionary implements IMemoryObject {
     /// <param name="filename">The name of the dictionary file. By default this is "dictionary.json".</param>
     /// <param name="body">The dictionary JSON contents if the file is already loaded, otherwise leave this null to load the contents.</param>
     /// <returns>'null' if the dictionary file was loaded successfully, or an error otherwise.</returns>
-    public Exception LoadDefaultWords(string filename = "dictionary.json", string body = null) {
+    async loadDefaultWords(filename = "dictionary.json", body: string = null): DS.Exception {
         if (DS.StringUtils.isEmptyOrWhitespace(body)) {
-            var libPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase), filename);
-            if (File.Exists(libPath))
-                body = File.ReadAllText(libPath);
+            var libPath = DS.Path.combine(DS.webRoot, filename);
+            if (DS.IO.exists(libPath))
+                body = await DS.IO.get<string>(libPath);
             else
                 return new FileNotFoundException(libPath);
         }
 
         if (!DS.StringUtils.isEmptyOrWhitespace(body))
             try {
-                var jarray = JArray.Parse(body);
-                foreach(var item in jarray)
-                AddText((string)item);
+                var jarray = DS.Data.JSON.toObject<string[]>(body);
+                for (var item of jarray)
+                    this.addText(<string>item);
                 return null;
             }
-            catch (Exception ex) { return ex; }
+            catch (ex) { return new DS.Exception(ex); }
 
         return new InvalidDataException("No data is available to be parsed - the body content may be empty.");
     }
@@ -505,16 +513,16 @@ export default class Dictionary implements IMemoryObject {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    public string NormalizeText(string text, Regex optionalTextRemovalRegex = null) {
+    normalizeText(text: string, optionalTextRemovalRegex: RegExp = null): string {
         if (text == null) text = "";
         if (optionalTextRemovalRegex != null)
             text = optionalTextRemovalRegex.Replace(text, "");
-        return text.ToLower().Replace("n't", " not"); // TODO: Think more about "'s", which is complicated to deal with, and may be context based.
+        return text.toLowerCase().replace("n't", " not"); // TODO: Think more about "'s", which is complicated to deal with, and may be context based.
     }
 
-    public string FixWord(string word) // TODO: This can be optimized.
+    fixWord(word: string): string// TODO: This can be optimized.
     {
-        return new Regex(@"[^\w]").Replace(new Regex(@"\s+").Replace(word ?? "", " "), "").ToLower();
+        return word.replace(/\s+/g, " ").replace(/[^\w]/g, "").toLowerCase();
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -522,76 +530,75 @@ export default class Dictionary implements IMemoryObject {
     /**
      *  Calculates and returns a % match between two given words. It is assume the given strings are words, and not text with any white space.
     */
-    public double CompareWords(string word1, string word2) {
-        word1 = FixWord(word1);
-        word2 = FixWord(word2);
-        return CompareText(word1, word2);
+    compareWords(word1: string, word2: string): number {
+        word1 = this.fixWord(word1);
+        word2 = this.fixWord(word2);
+        return this.compareText(word1, word2);
     }
 
     /**
      *  Calculates and returns a % match between two given texts.
     */
-    public double CompareText(string txt1, string txt2) {
+    compareText(txt1: string, txt2: string): number {
         if ((txt1 ?? "") == "" || (txt2 ?? "") == "")
-            return 1d; // exact match
+            return 1; // exact match
 
         //? var synonymMatch = this.getSynonymMatch(txt1, txt2);
         //? if (synonymMatch > 0)
         //?    return synonymMatch * 0.99; // (like-kind words are never 100%, but should match better than a partial match analysis)
 
-        // ... make lower case first ...
+        // ... make them lower case first ...
 
-        txt1 = txt1.ToLower();
-        txt2 = txt2.ToLower();
+        txt1 = txt1.toLowerCase();
+        txt2 = txt2.toLowerCase();
 
-        // ... move characters into arrays to faster analysis ...
+        // ... move characters into arrays for easier analysis ...
 
-        var txt1Chars = txt1.ToCharArray();
-        var txt2Chars = txt2.ToCharArray();
+        var txt1Chars: char[] = [...txt1];
+        var txt2Chars: char[] = [...txt2];
 
-        // ... try partial match ...
+        // ... swap the char arrays so the smallest one is first (this is important, as the smaller may scan across and match part of the larger) ...
 
-        if (txt2Chars.Length < txt1Chars.Length) {
-            // ... swap the char arrays so the smallest one is first (this is important, as the smaller may scan across and match part of the larger) ...
+        if (txt2Chars.length < txt1Chars.length) {
             var tmp = txt1Chars;
             txt1Chars = txt2Chars;
             txt2Chars = tmp;
         }
 
-        var txt1CharsLen = txt1Chars.Length;
-        var txt2CharsLen = txt2Chars.Length;
+        var txt1CharsLen = txt1Chars.length;
+        var txt2CharsLen = txt2Chars.length;
 
         // Note: Scanning for all possible matches using this method has the total matches at n(n+1)/2 (same as adding all numbers up to the word length).
 
-        string txt;
-        int i1 = 0, scanLen1 = 0, i2, scanLen2, i3, depthCount = 0, charsLeft1 = txt1CharsLen, charsLeft2 = txt2CharsLen;
-        var totalPossibleCombinations = txt1CharsLen * ((double)txt1CharsLen + 1) / 2; / / !
-            int totalLevels = txt1CharsLen - 1, level = 0; //? ('level' helps to add weight to matches at various levels [lower values are better matches])
-        int distance, matchCount = 0; // each match at a particular % depth is added.
-        double totalMatch = 0;
+        var txt: string;
+        var i1 = 0, scanLen1 = 0, i2, scanLen2, i3, depthCount = 0, charsLeft1 = txt1CharsLen, charsLeft2 = txt2CharsLen;
+        var totalPossibleCombinations = txt1CharsLen * (txt1CharsLen + 1) / 2; // !
+        var totalLevels = txt1CharsLen - 1, level = 0; //? ('level' helps to add weight to matches at various levels [lower values are better matches])
+        var distance: number, matchCount = 0; // each match at a particular % depth is added.
+        var totalMatch = 0;
 
         while (scanLen1 < txt1CharsLen) {
             i1 = 0;
             i2 = txt1CharsLen - scanLen1; // (scanLen1 is how far to scan sub text across to find a match in the target)
-            scanLen2 = txt2CharsLen - i2;
+            scanLen2 = txt2CharsLen - i2; // (txt1 length is <= txt2 length, so we need to find how far across to scan for txt2 if longer)
 
             while (i2 > i1 && i2 <= txt1CharsLen) {
-                txt = new string(txt1Chars, i1, i2 - i1); // (get a segment of text [between indexes i1 and i2] from text 1 to scan against text 2)
+                txt = txt1Chars.slice(i1, i2 - i1).join(''); // (get a segment of text [between indexes i1 and i2] from text 1 to scan against text 2)
 
                 for (i3 = 0; i3 <= scanLen2; ++i3) {
-                    if (new string(txt2Chars, i3, txt.Length) == txt) // TODO: Consider using a compare loop instead of this (and txt) in case the GC becomes an issue.
+                    if (txt2Chars.slice(i3, txt.length).join('') == txt) // TODO: Consider using a compare loop instead of this (and txt) in case the GC becomes an issue.
                     {
                         // ... replace matched text segments with a special char so they are not matched again ...
 
                         for (var ri = i1; ri < i2; ++ri)
                             txt1Chars[ri] = '\x01';
-                        for (var ri = i3; ri < i3 + txt.Length; ++ri)
+                        for (var ri = i3; ri < i3 + txt.length; ++ri)
                             txt2Chars[ri] = '\x02'; // (a different char here to prevent any matches)
 
                         // ... get the distance between the source and target indexes between these matches; this determines a score based on 
                         //     how far apart the matches are when the two texts are placed side by side ...
 
-                        distance = Math.Abs(i3 - i1);
+                        distance = Math.abs(i3 - i1);
 
                         // ... formula is:
                         // 1. avg = ({% of matching text length to total txt1 length} + {% of matching text length to total txt2 length}) / 2
@@ -601,12 +608,12 @@ export default class Dictionary implements IMemoryObject {
                         //    (the farther away matching text offsets are when put side by side, the more exponentially worse the score becomes)
                         // ...
 
-                        totalMatch += ((double)txt.Length / txt1CharsLen + (double)txt.Length / txt2CharsLen) / 2 / Math.Pow(2, distance);  //? * (1 - distance / txt1CharsLen)
+                        totalMatch += (txt.length / txt1CharsLen + txt.length / txt2CharsLen) / 2 / Math.pow(2, distance);  //? * (1 - distance / txt1CharsLen)
                         ++matchCount;
-                        charsLeft1 -= txt.Length; //? (keeping track of how many characters are left unmatched helps to fine tune the score)
-                        charsLeft2 -= txt.Length;
+                        charsLeft1 -= txt.length; //? (keeping track of how many characters are left unmatched helps to fine tune the score)
+                        charsLeft2 -= txt.length;
                         i1 = i2; // check next part of the word text
-                        i2 = i1 + txt.Length;
+                        i2 = i1 + txt.length;
                         break;
                     }
                 }

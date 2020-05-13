@@ -5,7 +5,7 @@ import TimeReferencedObject from "./TimeReferencedObject";
 import Brain from "./Brain";
 import Dictionary from "./Dictionary";
 import POS, { PartOfSpeech } from "./POS";
-import Context from "./Context";
+import Context, { ContextTag } from "./Context";
 
 /** An array of all concept types registered by applying the '@concept()' decorator to register them. */
 export const conceptTypes: IType<Concept>[] = [];
@@ -22,22 +22,38 @@ export function concept(enabled = true) {
     };
 }
 
-type ContextTypeWithTag = IType<Context> & { tag: string }
+type ContextTypeWithTag = IType<Context> & { tag: ContextTag }
+
 /**
  *  Associates a method on a derived 'Concept' class with words that will trigger it.
  */
-export function conceptHandler(...args: (DictionaryItem | ContextTypeWithTag | string)[]) {
+export function conceptHandler(...args: (DictionaryItem | string)[]) {
     return (target: IndexedObject, propertyName: string, descriptor: PropertyDescriptor): any => { // (target: Either the constructor function of the class for a static member, or the prototype of the class for an instance member.)
         const originalFunction = descriptor.value;
         // (note: good tool to use to check for POS: https://foxtype.com/sentence-tree)
         /// <param name="triggerWords">Words that will trigger this concept.  You can append a caret (^) to a word to set a part of speech (i.e. "w1^N,w2^V" makes w1 a noun and w2 a verb).</param>
         /// <param name="pattern">(not yet supported) A pattern to use for ALL trigger words, which is just a more complex criteria that must be settled for running the handler.
         /// To create a different pattern for different words, use multiple attributes on the same method.</param>
-        originalFunction.triggerWords = args?.filter(v => v instanceof DictionaryItem);
+        originalFunction.triggerWords = args?.map(v => v instanceof DictionaryItem ? v : new DictionaryItem(v));
+    };
+}
+
+/**
+ *  Associates a function on a derived 'Concept' class with a list of contexts that will trigger it.
+ *  Not ALL contexts are required.  
+ */
+export function contexts(...args: (ContextTypeWithTag | string)[]) {
+    return (target: IndexedObject, propertyName: string, descriptor: PropertyDescriptor): any => { // (target: Either the constructor function of the class for a static member, or the prototype of the class for an instance member.)
+        const originalFunction = descriptor.value;
+        // (note: good tool to use to check for POS: https://foxtype.com/sentence-tree)
+        /// <param name="triggerWords">Words that will trigger this concept.  You can append a caret (^) to a word to set a part of speech (i.e. "w1^N,w2^V" makes w1 a noun and w2 a verb).</param>
+        /// <param name="pattern">(not yet supported) A pattern to use for ALL trigger words, which is just a more complex criteria that must be settled for running the handler.
+        /// To create a different pattern for different words, use multiple attributes on the same method.</param>
         originalFunction.contexts = args?.filter(v => !(v instanceof DictionaryItem))
             .map(v => typeof v == 'string' ? v : (<ContextTypeWithTag>v).tag).filter(v => !!v);
     };
 }
+
 
 /**
  *  Associates a method on a derived 'Concept' class with words that will trigger it.

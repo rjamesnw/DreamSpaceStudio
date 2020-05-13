@@ -8,21 +8,37 @@ import QuestionContext from "../contexts/QuestionContext";
 import GroupContext from "../contexts/GroupContext";
 import { IMemoryObject } from "./Memory";
 
+/** 
+ *  A context tag is a tag that can be applied by a concept.  Other concepts may rely on context tags in order to trigger. 
+ *  For example, the word "time" changes meaning between "The time is" and "What is the time", where one is in context of 
+ *  a question, and one is not.
+ */
+export class ContextTag {
+    /**
+     * Constructs a new tag for a concept (see Concept.tag).
+     * @param {string} name The name of the tag.
+     * @param {number} weight 
+     * The weight between 0.0 (0%) and 1.0 (100%) that applies to this tag. This allows creating tags with a lower requirement
+     * compared to other tags that have to exist. In the end it helps to better sort the most likely contexts by the assign tags.
+     */
+    constructor(public name: string, public weight: number) { }
+}
+
 /**
  * Holds a list of registered context tags, and the context type associated with it, if any.
  * Some concepts only trigger when certain context tags exist within a context.
  */
-export var contextTags: { [name: string]: IType<Context> & { tag: string } } = {};
+export var contextTags: { [name: string]: IType<Context> & { tag: ContextTag } } = {};
 
 /**
  * Registers a context tag name and type with the system.
  */
 export function context() {
-    return (target: IType<Context> & { tag: string }): any => {
+    return (target: IType<Context> & { tag: ContextTag }): any => {
         var tag = target.tag;
-        if (DS.StringUtils.isEmptyOrWhitespace(tag))
+        if (DS.StringUtils.isEmptyOrWhitespace(tag?.name))
             throw "You did not specify a valid context tag name for context type '" + DS.Utilities.getTypeName(target) + "'.";
-        contextTags[tag] = target;
+        contextTags[tag.name] = target;
     };
 }
 
@@ -121,7 +137,7 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
     /**
      * The tag used to register a context type under.  This should be overridden on derived types to return a valid word.
      */
-    static abstract get tag(): string;
+    static abstract readonly tag: ContextTag;
 
     /**
      *  Keeps a reference of the parent context connections that relates to this context, if any. This allows nesting contexts under other contexts using relationships.

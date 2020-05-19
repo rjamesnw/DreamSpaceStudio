@@ -49,7 +49,7 @@ if (!String.prototype.trimLeftChar)
 if (!String.prototype.trimRightChar)
     String.prototype.trimRightChar = function (char) {
         var s = this;
-        while (s[s.length - 1] === char)
+        while (s.length && s[s.length - 1] === char)
             s = s.substr(0, this.length - 1);
         return s;
     };
@@ -2796,44 +2796,41 @@ var DS;
                 }
             }, "func.call", "context, ", "arguments");
             Delegate.prototype.invoke = makeCases(0, 20, function () {
-                var $this = this;
                 if (!arguments.length)
-                    return $this.func(this.object, this);
-                var context = (arguments[0] === void 0) ? $this : arguments[0];
+                    return this.func(this.object, this);
+                var context = (arguments[0] === void 0) ? this : arguments[0];
                 switch (arguments.length) {
-                    case 1: return $this.func(context, arguments[1], this);
-                    default: return $this.func.apply(this, [context].concat(arguments, this));
+                    case 1: return this.func(context, arguments[1], this);
+                    default: return this.func.apply(this, [context, ...arguments, this]);
                 }
-            }, "$this.func", "context, ", "arguments");
+            }, "this.func", "context, ", "arguments");
             var call = function () {
-                var $this = this;
                 if (!arguments.length)
-                    return $this.func(this.object, this);
+                    return this.func(this.object, this);
                 switch (arguments.length) {
-                    case 1: return $this.func($this.object, arguments[1], this);
-                    default: return $this.func.apply(this, [$this.object].concat(arguments, this));
+                    case 1: return this.func(this.object, arguments[1], this);
+                    default: return this.func.apply(this, [this.object, ...arguments, this]);
                 }
             };
             Delegate.prototype.call = ((DS.Browser.type != DS.Browser.BrowserTypes.IE) ?
-                makeCases(0, 20, call, "$this.func", "$this.object, ", "arguments")
-                : makeCases(0, 20, call, "$this.__boundFunc", "", "arguments"));
+                makeCases(0, 20, call, "this.func", "this.object, ", "arguments")
+                : makeCases(0, 20, call, "this.__boundFunc", "", "arguments"));
             var apply = function (context, argsArray) {
-                var $this = this;
                 if (arguments.length == 1) { // (only array given)
                     argsArray = context;
-                    context = $this.object;
+                    context = this.object;
                 }
-                else if (arguments.length > 1 && $this.apply != $this.__apply)
-                    return $this.__apply(context, argsArray); // (only the non-bound version can handle context changes)
+                else if (arguments.length > 1 && this.apply != this.__apply)
+                    return this.__apply(context, argsArray); // (only the non-bound version can handle context changes)
                 if (argsArray == void 0 || !argsArray.length)
-                    return $this.invoke(context, this);
+                    return this.invoke(context, this);
                 switch (argsArray.length) {
-                    case 1: return $this.func(context, argsArray[0], this);
-                    default: return $this.func.apply(this, [context].concat(argsArray, this));
+                    case 1: return this.func(context, argsArray[0], this);
+                    default: return this.func.apply(this, [context].concat(argsArray, this));
                 }
             };
-            Delegate.prototype.__apply = makeCases(0, 20, apply, "$this.func", "context, ", "args"); // (keep reference to the non-bound version as a fallback for user defined contexts)
-            Delegate.prototype.apply = ((DS.Browser.type != DS.Browser.BrowserTypes.IE) ? Delegate.prototype.__apply : makeCases(0, 20, apply, "$this.__boundFunc", "", "args")); // (note: bound functions are faster in IE)
+            Delegate.prototype.__apply = makeCases(0, 20, apply, "this.func", "context, ", "args"); // (keep reference to the non-bound version as a fallback for user defined contexts)
+            Delegate.prototype.apply = ((DS.Browser.type != DS.Browser.BrowserTypes.IE) ? Delegate.prototype.__apply : makeCases(0, 20, apply, "this.__boundFunc", "", "args")); // (note: bound functions are faster in IE)
         }
         /** A read-only key string that uniquely identifies the combination of object instance and function in this delegate.
         * This property is set for new instances by default.  Calling 'update()' will update it if necessary.
@@ -2880,7 +2877,7 @@ var DS;
         }
     }
     DS.Delegate = Delegate;
-    Delegate[DS.staticConstructor](Delegate);
+    Delegate.prototype[DS.staticConstructor](Delegate);
     // ============================================================================================================================
 })(DS || (DS = {}));
 // ###########################################################################################################################

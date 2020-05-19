@@ -65,7 +65,7 @@ namespace DS {
 
         //? static readonly $Type = $Delegate;
 
-        private [DS.staticConstructor](delegate: typeof Delegate): void {
+        protected [DS.staticConstructor](delegate: typeof Delegate): void { // NOTE: THIS IS NOT STATIC ON PURPOSE so that the instance type parameters can be used.
             /** Generates "case" statements for function templates.  The function template is converted into a string, the resulting cases get inserted,
               * and the compiled result is returned.  This hard-codes the logic for greatest speed, and if more parameters are need, can easily be expanded.
             */
@@ -100,43 +100,40 @@ namespace DS {
                 }
             }, "func.call", "context, ", "arguments");
 
-            Delegate.prototype.invoke = <any>makeCases(0, 20, function () {
-                var $this = <IDelegate<TObj, TFunc>>this;
-                if (!arguments.length) return $this.func(this.object, this);
-                var context = (arguments[0] === void 0) ? $this : arguments[0];
+            Delegate.prototype.invoke = <any>makeCases(0, 20, function (this: Delegate<TObj, TFunc>) {
+                if (!arguments.length) return this.func(this.object, this);
+                var context = (arguments[0] === void 0) ? this : arguments[0];
                 switch (arguments.length) {
-                    case 1: return $this.func(context, arguments[1], this);
-                    default: return $this.func.apply(this, [context].concat(arguments, this));
+                    case 1: return this.func(context, arguments[1], this);
+                    default: return this.func.apply(this, [context, ...arguments, this]);
                 }
-            }, "$this.func", "context, ", "arguments");
+            }, "this.func", "context, ", "arguments");
 
-            var call = function () {
-                var $this = <IDelegate<TObj, TFunc>>this;
-                if (!arguments.length) return $this.func(this.object, this);
+            var call = function (this: Delegate<TObj, TFunc>) {
+                if (!arguments.length) return this.func(this.object, this);
                 switch (arguments.length) {
-                    case 1: return $this.func($this.object, arguments[1], this);
-                    default: return $this.func.apply(this, [$this.object].concat(<TObj[]><any>arguments, this));
+                    case 1: return this.func(this.object, arguments[1], this);
+                    default: return this.func.apply(this, [this.object, ...arguments, this]);
                 }
             };
             Delegate.prototype.call = <any>((Browser.type != Browser.BrowserTypes.IE) ?
-                makeCases(0, 20, call, "$this.func", "$this.object, ", "arguments")
-                : makeCases(0, 20, call, "$this.__boundFunc", "", "arguments"));
+                makeCases(0, 20, call, "this.func", "this.object, ", "arguments")
+                : makeCases(0, 20, call, "this.__boundFunc", "", "arguments"));
 
-            var apply = function (context: object, argsArray: any[]) { // (tests: http://jsperf.com/delegate-object-test/2)
-                var $this = <IDelegate<TObj, TFunc>>this;
+            var apply = function (this: Delegate<TObj, TFunc>, context: object, argsArray: any[]) { // (tests: http://jsperf.com/delegate-object-test/2)
                 if (arguments.length == 1) { // (only array given)
                     argsArray = <any>context;
-                    context = $this.object;
-                } else if (arguments.length > 1 && $this.apply != $this.__apply)
-                    return $this.__apply(context, argsArray); // (only the non-bound version can handle context changes)
-                if (argsArray == void 0 || !argsArray.length) return $this.invoke(context, this);
+                    context = this.object;
+                } else if (arguments.length > 1 && this.apply != this.__apply)
+                    return this.__apply(context, argsArray); // (only the non-bound version can handle context changes)
+                if (argsArray == void 0 || !argsArray.length) return this.invoke(context, this);
                 switch (argsArray.length) {
-                    case 1: return $this.func(context, argsArray[0], this);
-                    default: return $this.func.apply(this, [context].concat(argsArray, this));
+                    case 1: return this.func(context, argsArray[0], this);
+                    default: return this.func.apply(this, [context].concat(argsArray, this));
                 }
             };
-            Delegate.prototype.__apply = <any>makeCases(0, 20, apply, "$this.func", "context, ", "args"); // (keep reference to the non-bound version as a fallback for user defined contexts)
-            Delegate.prototype.apply = <any>((Browser.type != Browser.BrowserTypes.IE) ? Delegate.prototype.__apply : makeCases(0, 20, apply, "$this.__boundFunc", "", "args")); // (note: bound functions are faster in IE)
+            Delegate.prototype.__apply = <any>makeCases(0, 20, apply, "this.func", "context, ", "args"); // (keep reference to the non-bound version as a fallback for user defined contexts)
+            Delegate.prototype.apply = <any>((Browser.type != Browser.BrowserTypes.IE) ? Delegate.prototype.__apply : makeCases(0, 20, apply, "this.__boundFunc", "", "args")); // (note: bound functions are faster in IE)
         }
 
         /** A read-only key string that uniquely identifies the combination of object instance and function in this delegate.
@@ -222,9 +219,10 @@ namespace DS {
         // -------------------------------------------------------------------------------------------------------------------
     }
 
-    Delegate[DS.staticConstructor](Delegate);
+    Delegate.prototype[DS.staticConstructor](Delegate);
 
-    export interface IDelegate<TObj extends object = object, TFunc extends DelegateFunction = DelegateFunction> extends Pick<Delegate<TObj, TFunc>, 'func' | 'object' | 'invoke' | 'call' | 'apply' | 'equal'> { }
+    export interface IDelegate<TObj extends object = object, TFunc extends DelegateFunction = DelegateFunction>
+        extends Pick<Delegate<TObj, TFunc>, 'func' | 'object' | 'invoke' | 'call' | 'apply' | 'equal'> { }
 
     // ============================================================================================================================
 }

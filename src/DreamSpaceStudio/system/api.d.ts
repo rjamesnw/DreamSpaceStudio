@@ -1,3 +1,4 @@
+declare type char = string;
 interface Array<T> {
     /** Removes the specified item and returns true if removed, or false if not found. */
     remove(item: T): boolean;
@@ -12,9 +13,9 @@ interface Array<T> {
 }
 interface String {
     /** Trims the given character from the start of the string and returns the new string. */
-    trimLeftChar(char: string): string;
+    trimLeftChar(char: char): string;
     /** Trims the given character from the end of the string and returns the new string. */
-    trimRightChar(char: string): string;
+    trimRightChar(char: char): string;
     /**
      * Returns true if the specified string is at the start of this string.
      */

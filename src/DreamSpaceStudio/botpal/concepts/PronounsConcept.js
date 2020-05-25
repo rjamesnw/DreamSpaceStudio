@@ -29,7 +29,7 @@ let PronounsConceptConcept = /** @class */ (() => {
         _You(context) {
             if (context.Context.HasQuestion(this._questionsConcept.how_AV))
                 if (context.WasPrevious("are"))
-                    context.AddIntentHandler(this._How_Are_You_Intent, 1);
+                    context.addIntentHandler(this._How_Are_You_Intent, 1);
             return Promise.resolve(context);
         }
         async _How_Are_You_Intent(context) {
@@ -43,7 +43,7 @@ let PronounsConceptConcept = /** @class */ (() => {
         _It_Exclamation(context) {
             if (context.Context.HasQuestion(_QuestionsConcept.What)) {
                 if (context.WasPrevious("is") && context.Context.AllSubjects().Any(s => s.NameOrTitle == _TimeConcept.Time))
-                    context.AddIntentHandler(_What_Time_Is_It_Intent, 1, d);
+                    context.addIntentHandler(_What_Time_Is_It_Intent, 1, d);
             }
             return Promise.resolve(context);
         }

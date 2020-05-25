@@ -7,8 +7,8 @@ import FrequencyContext, { RelationshipTypes } from "../contexts/FrequencyContex
 export default class DeterminerConcept extends Concept {
     // --------------------------------------------------------------------------------------------------------------------
 
-    constructor(brian: Brain) {
-        super(brian);
+    constructor(brain: Brain) {
+        super(brain);
     }
 
     // --------------------------------------------------------------------------------------------------------------------

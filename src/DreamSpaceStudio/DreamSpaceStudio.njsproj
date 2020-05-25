@@ -71,6 +71,7 @@
     <TypeScriptCompile Include="botpal\concepts\PronounsConcept.ts" />
     <TypeScriptCompile Include="botpal\concepts\QuestionsConcept.ts" />
     <TypeScriptCompile Include="botpal\concepts\SalutationConcept.ts" />
+    <TypeScriptCompile Include="botpal\concepts\TextRecognitionConcept.ts" />
     <TypeScriptCompile Include="botpal\concepts\SizeConcept.ts" />
     <TypeScriptCompile Include="botpal\concepts\SpeakingConcept.ts" />
     <TypeScriptCompile Include="botpal\concepts\TimeConcept.ts" />
@@ -181,9 +182,9 @@
     <Content Include="botpal\core\TimeReference.ts" />
     <Content Include="botpal\core\TimeReferencedObject.ts" />
     <Content Include="botpal\db\TTSFile.ts" />
-    <Content Include="botpal\nlu\Node.ts" />
-    <Content Include="botpal\nlu\ThoughtGraph.ts" />
-    <Content Include="botpal\nlu\ThoughtGraphNode.ts" />
+    <Content Include="botpal\nlp\Node.ts" />
+    <Content Include="botpal\nlp\ThoughtGraph.ts" />
+    <Content Include="botpal\nlp\ThoughtGraphNode.ts" />
     <Content Include="botpal\core\Operation.ts" />
     <Content Include="botpal\core\POS.ts" />
     <Content Include="botpal\core\Response.ts" />
@@ -249,7 +250,7 @@
     <Folder Include="botpal\db\" />
     <Folder Include="botpal\utility\" />
     <Folder Include="botpal\services\" />
-    <Folder Include="botpal\nlu\" />
+    <Folder Include="botpal\nlp\" />
     <Folder Include="botpal\services\apis\" />
     <Folder Include="botpal\services\apis\tts\" />
     <Folder Include="botpal\services\tts\" />

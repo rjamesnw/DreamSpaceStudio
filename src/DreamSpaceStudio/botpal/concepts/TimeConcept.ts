@@ -12,8 +12,8 @@ export default class TimeConcept extends Concept {
     static readonly time = new DictionaryItem("time", POS.Noun_Temporal);
     readonly time: DictionaryItem;
 
-    constructor(brian: Brain) {
-        super(brian)
+    constructor(brain: Brain) {
+        super(brain)
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ export default class TimeConcept extends Concept {
     _What_Unknown_Question(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious("what")) {
             context.Context.Add(new SubjectContext(this.memory, this, this.time));
-            context.AddIntentHandler(this._Time_Intent, context.Operation.MinConfidence);
+            context.addIntentHandler(this._Time_Intent, context.Operation.MinConfidence);
         }
         return Promise.resolve(context);
     }

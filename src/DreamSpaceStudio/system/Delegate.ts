@@ -17,7 +17,7 @@ namespace DS {
      * serialized.
      * Note: If the target object is undefined, then 'null' is assumed and passed in as 'this'.
      */
-    export class Delegate<TObj extends object, TFunc extends DelegateFunction> {
+    export class Delegate<TObj extends object = object, TFunc extends DelegateFunction = DelegateFunction> {
         /**
         * Reinitializes a disposed Delegate instance.
         * @param o The Delegate instance to initialize, or re-initialize.
@@ -65,7 +65,7 @@ namespace DS {
 
         //? static readonly $Type = $Delegate;
 
-        protected [DS.staticConstructor](delegate: typeof Delegate): void { // NOTE: THIS IS NOT STATIC ON PURPOSE so that the instance type parameters can be used.
+        private [DS.staticConstructor](delegate: typeof Delegate): void { // NOTE: THIS IS NOT STATIC ON PURPOSE so that the instance type parameters can be used.
             /** Generates "case" statements for function templates.  The function template is converted into a string, the resulting cases get inserted,
               * and the compiled result is returned.  This hard-codes the logic for greatest speed, and if more parameters are need, can easily be expanded.
             */
@@ -109,31 +109,39 @@ namespace DS {
                 }
             }, "this.func", "context, ", "arguments");
 
-            var call = function (this: Delegate<TObj, TFunc>) {
-                if (!arguments.length) return this.func(this.object, this);
-                switch (arguments.length) {
-                    case 1: return this.func(this.object, arguments[1], this);
-                    default: return this.func.apply(this, [this.object, ...arguments, this]);
+            var call = function (this: Delegate<TObj, TFunc>, context: object, ...args: any[]) {
+                if (arguments.length == 1) { // (only array given)
+                    args = <any>context;
+                    context = this.object;
+                } else if (arguments.length > 1 && this.call != this.__call) // ('this.call != this.__call' is true in some browsers, like IE, where a bound function is faster [and since it's bound, the context cannot be changed])
+                    return this.__call(context, args); // (only the non-bound version can handle context changes)
+                if (args == void 0 || !args.length) return this.func.call(context, this);
+                switch (args.length) {
+                    case 1: return this.func(context, args[0], this);
+                    default: return this.func.call(this, context, ...args, this);
                 }
             };
+            Delegate.prototype.__call = <any>makeCases(0, 20, call, "this.func", "this.object, ", "args"); // (keep reference to the non-bound version as a fallback for user defined contexts)
             Delegate.prototype.call = <any>((Browser.type != Browser.BrowserTypes.IE) ?
-                makeCases(0, 20, call, "this.func", "this.object, ", "arguments")
-                : makeCases(0, 20, call, "this.__boundFunc", "", "arguments"));
+                Delegate.prototype.__call
+                : makeCases(0, 20, call, "this.__boundFunc", "", "args"));
 
-            var apply = function (this: Delegate<TObj, TFunc>, context: object, argsArray: any[]) { // (tests: http://jsperf.com/delegate-object-test/2)
+            var apply = function (this: Delegate<TObj, TFunc>, context: object, args: any[]) { // (tests: http://jsperf.com/delegate-object-test/2)
                 if (arguments.length == 1) { // (only array given)
-                    argsArray = <any>context;
+                    args = <any>context;
                     context = this.object;
-                } else if (arguments.length > 1 && this.apply != this.__apply)
-                    return this.__apply(context, argsArray); // (only the non-bound version can handle context changes)
-                if (argsArray == void 0 || !argsArray.length) return this.invoke(context, this);
-                switch (argsArray.length) {
-                    case 1: return this.func(context, argsArray[0], this);
-                    default: return this.func.apply(this, [context].concat(argsArray, this));
+                } else if (arguments.length > 1 && this.apply != this.__apply) // ('this.apply != this.__apply' is true in some browsers, like IE, where a bound function is faster [and since it's bound, the context cannot be changed])
+                    return this.__apply(context, args); // (only the non-bound version can handle context changes)
+                if (args == void 0 || !args.length) return this.func.call(context, this);
+                switch (args.length) {
+                    case 1: return this.func(context, args[0], this);
+                    default: return this.func.call(this, context, ...args, this);
                 }
             };
             Delegate.prototype.__apply = <any>makeCases(0, 20, apply, "this.func", "context, ", "args"); // (keep reference to the non-bound version as a fallback for user defined contexts)
-            Delegate.prototype.apply = <any>((Browser.type != Browser.BrowserTypes.IE) ? Delegate.prototype.__apply : makeCases(0, 20, apply, "this.__boundFunc", "", "args")); // (note: bound functions are faster in IE)
+            Delegate.prototype.apply = <any>((Browser.type != Browser.BrowserTypes.IE) ?
+                Delegate.prototype.__apply
+                : makeCases(0, 20, apply, "this.__boundFunc", "", "args")); // (note: bound functions are faster in IE)
         }
 
         /** A read-only key string that uniquely identifies the combination of object instance and function in this delegate.
@@ -171,20 +179,22 @@ namespace DS {
         /** Invoke the delegate with a fixed number of arguments (do not pass the object context ['this'] as the first parameter - use "invoke()" instead).
         * Note: This does not simply invoke "call()" on the function, but implements much faster calling patterns based on number of arguments, and browser type.
         */
-        call: (...args: any[]) => any;
+        call: TFunc & {
+            /** Invoke the delegate using a specific object context and array of arguments.
+            * Note: This does not simply invoke "call()" on the function, but implements much faster calling patterns based on number of arguments, and browser type.
+            */
+            (context: {}, ...args: Parameters<TFunc>): any;
+        };
+        private __call: (context: {}, ...args: any[]) => any; // (used as a fallback in case '__boundFunc' is used in the 'apply' routine)
 
         /** Invoke the delegate using an array of arguments.
         * Note: This does not simply invoke "apply()" on the function, but implements much faster calling patterns based on number of arguments, and browser type.
         */
-        apply: {
-            /** Invoke the delegate using an array of arguments.
-            * Note: This does not simply invoke "apply()" on the function, but implements much faster calling patterns based on number of arguments, and browser type.
-            */
-            (args: any[]): any;
+        apply: TFunc & {
             /** Invoke the delegate using a specific object context and array of arguments.
             * Note: This does not simply invoke "apply()" on the function, but implements much faster calling patterns based on number of arguments, and browser type.
             */
-            (context: {}, args: any[]): any;
+            (context: {}, args: Parameters<TFunc>): any;
         };
         private __apply: (context: {}, args: any[]) => any; // (used as a fallback in case '__boundFunc' is used in the 'apply' routine)
 

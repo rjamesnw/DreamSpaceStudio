@@ -95,7 +95,7 @@ declare namespace DS {
     var version: string;
     /** Returns the current user defined application version, or a default version. */
     var getAppVersion: () => string;
-    const staticConstructor: symbol;
+    const staticConstructor: unique symbol;
     /** A simple function that does nothing (no operation).
     * This is used to clear certain function properties, such as when preventing client/server functions based on platform,
     * or when replacing the 'DreamSpace.Loader.bootstrap()' function, which should only ever need to be called once.
@@ -606,6 +606,7 @@ declare namespace DS {
             */
             endCapture(): void;
             toString(): string;
+            private static [DS.staticConstructor];
         }
         interface ILogItem extends LogItem {
         }
@@ -1286,7 +1287,7 @@ declare namespace DS {
      * serialized.
      * Note: If the target object is undefined, then 'null' is assumed and passed in as 'this'.
      */
-    class Delegate<TObj extends object, TFunc extends DelegateFunction> {
+    class Delegate<TObj extends object = object, TFunc extends DelegateFunction = DelegateFunction> {
         /**
         * Reinitializes a disposed Delegate instance.
         * @param o The Delegate instance to initialize, or re-initialize.
@@ -1316,6 +1317,7 @@ declare namespace DS {
          */
         static getKey<TFunc extends DelegateFunction>(object: TrackableObject, func: TFunc): string;
         protected static __validate(callername: string, object: Object, func: DelegateFunction): boolean;
+        private [DS.staticConstructor];
         /** A read-only key string that uniquely identifies the combination of object instance and function in this delegate.
         * This property is set for new instances by default.  Calling 'update()' will update it if necessary.
         */
@@ -1334,19 +1336,21 @@ declare namespace DS {
         /** Invoke the delegate with a fixed number of arguments (do not pass the object context ['this'] as the first parameter - use "invoke()" instead).
         * Note: This does not simply invoke "call()" on the function, but implements much faster calling patterns based on number of arguments, and browser type.
         */
-        call: (...args: any[]) => any;
+        call: TFunc & {
+            /** Invoke the delegate using a specific object context and array of arguments.
+            * Note: This does not simply invoke "call()" on the function, but implements much faster calling patterns based on number of arguments, and browser type.
+            */
+            (context: {}, ...args: Parameters<TFunc>): any;
+        };
+        private __call;
         /** Invoke the delegate using an array of arguments.
         * Note: This does not simply invoke "apply()" on the function, but implements much faster calling patterns based on number of arguments, and browser type.
         */
-        apply: {
-            /** Invoke the delegate using an array of arguments.
-            * Note: This does not simply invoke "apply()" on the function, but implements much faster calling patterns based on number of arguments, and browser type.
-            */
-            (args: any[]): any;
+        apply: TFunc & {
             /** Invoke the delegate using a specific object context and array of arguments.
             * Note: This does not simply invoke "apply()" on the function, but implements much faster calling patterns based on number of arguments, and browser type.
             */
-            (context: {}, args: any[]): any;
+            (context: {}, args: Parameters<TFunc>): any;
         };
         private __apply;
         equal(value: any): boolean;
@@ -3336,6 +3340,7 @@ declare namespace DS {
          * This exists mainly to support handlers called with special parameters, such as those that may need translation, or arguments that need to be injected.
          */
         constructor(owner: TOwner, eventName: string, removeOnTrigger?: boolean, canCancel?: boolean, eventTriggerHandler?: EventTriggerHandler<TOwner, TCallback>);
+        private static [DS.staticConstructor];
     }
     interface IEventDispatcher<TOwner extends object, TCallback extends EventHandler> extends EventDispatcher<TOwner, TCallback> {
     }

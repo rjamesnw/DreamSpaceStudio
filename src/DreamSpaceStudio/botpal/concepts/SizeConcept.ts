@@ -17,8 +17,8 @@ export default class SizeConcept extends Concept {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    constructor(brian: Brain, size?: Point3D) {
-        super(brian)
+    constructor(brain: Brain, size?: Point3D) {
+        super(brain)
         this.size = size;
     }
 

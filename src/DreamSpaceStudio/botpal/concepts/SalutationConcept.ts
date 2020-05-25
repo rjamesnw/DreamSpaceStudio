@@ -1,65 +1,55 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿import Concept, { concept, conceptHandler, ConceptHandlerContext } from "../core/Concept";
+import Brain from "../core/Brain";
+import NamesConcept from "./NamesConcept";
 
-namespace BotPal.Concepts
-{
-    /**
-     *  Adds rules to help determine colors.
-    */
-    export default class SalutationConcept extends Concept
-    {
-        // --------------------------------------------------------------------------------------------------------------------
+/**
+ *  Adds rules to help determine colors.
+*/
+@concept()
+export default class SalutationConcept extends Concept {
+    // --------------------------------------------------------------------------------------------------------------------
 
-        public SalutationConcept(brian: Brain)
-            : base(brian)
-        {
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        @conceptHandler("Hi")
-        (): Promise<ConceptHandlerContext> _Hi(context: ConceptHandlerContext )
-        {
-            if (context.WasPrevious(null) && context.IsNext(null))
-                context.AddIntentHandler(_Hi_Intent, 1d);
-            else if (context.WasPrevious("say"))
-                context.AddIntentHandler(_SayHi_Intent, 1d);
-            return Promise.resolve(context.SetConfidence(1d));
-        }
-
-        async Task<boolean> _Hi_Intent(context: ConceptHandlerContext )
-        {
-            await this.brain.doResponse("Hello.");
-            return true;
-        }
-
-        async Task<boolean> _SayHi_Intent(context: ConceptHandlerContext )
-        {
-            string name = "";
-            var c = Brain.GetConcept<NamesConcept>;
-            if (c?.CurrentName?.TextPart != null)
-                name = " " + c.CurrentName.TextPart.Text;
-            await this.brain.doResponse("Hi" + name + ".");
-            return true;
-        }
-
-        @conceptHandler("Hello")
-         _Hello_Intent(context: ConceptHandlerContext ): Promise<ConceptHandlerContext> _Hello(context: ConceptHandlerContext )
-        {
-            if (context.WasPrevious(null) && context.IsNext(null))
-                context.AddIntentHandler(_Hello_Intent, 1d);
-            return Promise.resolve(context.SetConfidence(1d));
-        }
-
-        async Task<boolean>
-        {
-            await this.brain.doResponse("Hi there.");
-            return true;
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
+    constructor(brain: Brain) {
+        super(brain);
     }
+
+    // --------------------------------------------------------------------------------------------------------------------
+
+    @conceptHandler("Hi")
+    _Hi(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        if (context.WasPrevious(null) && context.IsNext(null))
+            context.addIntentHandler(new DS.Delegate(this, this._Hi_Intent), 1);
+        else if (context.WasPrevious("say"))
+            context.addIntentHandler(new DS.Delegate(this, this._SayHi_Intent), 1);
+        return Promise.resolve(context.SetConfidence(1));
+    }
+
+    async _Hi_Intent(context: ConceptHandlerContext): Promise<boolean> {
+        await this.brain.doResponse("Hello.");
+        return true;
+    }
+
+    async _SayHi_Intent(context: ConceptHandlerContext): Promise<boolean> {
+        var name = "";
+        var c = this.brain.getConcept(NamesConcept);
+        if (c?.CurrentName?.textPart != null)
+            name = " " + c.CurrentName.textPart.text;
+        await this.brain.doResponse("Hi" + name + ".");
+        return true;
+    }
+
+    @conceptHandler("Hello")
+    _Hello(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        if (context.WasPrevious(null) && context.IsNext(null))
+            context.addIntentHandler(new DS.Delegate(this, this._Hello_Intent), 1);
+        return Promise.resolve(context.SetConfidence(1));
+    }
+
+    async  _Hello_Intent(context: ConceptHandlerContext): Promise<boolean> {
+        await this.brain.doResponse("Hi there.");
+        return true;
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------
 }
+

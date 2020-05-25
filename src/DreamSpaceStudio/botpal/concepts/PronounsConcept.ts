@@ -14,8 +14,8 @@ export default class PronounsConceptConcept extends Concept {
     static readonly you_PN = new DictionaryItem("you", POS.Pronoun_Subject);
     readonly you_PN: DictionaryItem;
 
-    constructor(brian: Brain) {
-        super(brian)
+    constructor(brain: Brain) {
+        super(brain)
     }
 
     onAfterAllRegistered() {
@@ -35,7 +35,7 @@ export default class PronounsConceptConcept extends Concept {
     _You(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.Context.HasQuestion(this._questionsConcept.how_AV))
             if (context.WasPrevious("are"))
-                context.AddIntentHandler(this._How_Are_You_Intent, 1);
+                context.addIntentHandler(this._How_Are_You_Intent, 1);
         return Promise.resolve(context);
     }
 
@@ -57,7 +57,7 @@ export default class PronounsConceptConcept extends Concept {
     _What_Time_Is_It_Intent(context: ConceptHandlerContext): Promise<ConceptHandlerContext> _It_Exclamation(context: ConceptHandlerContext) {
         if (context.Context.HasQuestion(_QuestionsConcept.What)) {
             if (context.WasPrevious("is") && context.Context.AllSubjects().Any(s => s.NameOrTitle == _TimeConcept.Time))
-                context.AddIntentHandler(_What_Time_Is_It_Intent, 1d);
+                context.addIntentHandler(_What_Time_Is_It_Intent, 1d);
         }
         return Promise.resolve(context);
     }

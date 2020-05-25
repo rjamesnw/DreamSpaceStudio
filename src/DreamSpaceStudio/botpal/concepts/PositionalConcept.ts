@@ -1,43 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿import Concept, { ConceptHandlerContext, concept, conceptHandler } from "../core/Concept";
+import DictionaryItem from "../core/DictionaryItem";
+import POS from "../core/POS";
+import Brain from "../core/Brain";
 
-namespace BotPal.Concepts
-{
-    /**
-     *  
-    */
-    [Concept]
-    export default class PositionalConcept extends Concept
-    {
-        // --------------------------------------------------------------------------------------------------------------------
+@concept()
+export default class PositionalConcept extends Concept {
+    // --------------------------------------------------------------------------------------------------------------------
 
-        public PositionalConcept(brian: Brain)
-            : base(brian)
-        {
-            Here = Memory.Dictionary.AddTextPart("here", POS.Preposition_Spatial);
-        }
+    static readonly here = new DictionaryItem("here", POS.Pronoun_Subject);
+    readonly here: DictionaryItem;
 
-        public readonly DictionaryItem Here;
-
-        // --------------------------------------------------------------------------------------------------------------------
-
-        @conceptHandler("here")
-         _NameIsHere_Intent(context: ConceptHandlerContext ): Promise<ConceptHandlerContext> _NameIsHere(context: ConceptHandlerContext )
-        {
-            if (context.WasPrevious("is"))
-                context.AddIntentHandler(_NameIsHere_Intent, 0.9d);
-            return Promise.resolve(context);
-        }
-
-        async Task<boolean>
-        {
-            await this.brain.doResponse("Ok.");
-            return true;
-        }
-
-        // --------------------------------------------------------------------------------------------------------------------
+    constructor(brain: Brain) {
+        super(brain);
     }
+
+    // --------------------------------------------------------------------------------------------------------------------
+
+    @conceptHandler(PositionalConcept.here)
+    _NameIsHere(context: ConceptHandlerContext) {
+        if (context.WasPrevious("is"))
+            context.addIntentHandler(new DS.Delegate(this, this._NameIsHere_Intent), 0.9);
+        return Promise.resolve(context);
+    }
+
+    async _NameIsHere_Intent(context: ConceptHandlerContext): Promise<boolean> {
+        await this.brain.doResponse("Ok.");
+        return Promise.resolve(true);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------
 }

@@ -11,8 +11,8 @@ export default class LogicConcept extends Concept {
     // --------------------------------------------------------------------------------------------------------------------
 
 
-    public constructor(brian: Brain) {
-        super(brian)
+    public constructor(brain: Brain) {
+        super(brain)
     }
 
     // --------------------------------------------------------------------------------------------------------------------

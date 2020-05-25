@@ -14,8 +14,8 @@ namespace BotPal.Concepts
     {
         // --------------------------------------------------------------------------------------------------------------------
 
-        public SpeakingConcept(brian: Brain)
-            : base(brian)
+        public SpeakingConcept(brain: Brain)
+            : base(brain)
         {
             Say = Memory.Dictionary.AddTextPart("say", POS.Noun_Person);
         }

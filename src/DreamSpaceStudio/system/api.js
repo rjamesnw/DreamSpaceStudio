@@ -2804,33 +2804,42 @@ var DS;
                     default: return this.func.apply(this, [context, ...arguments, this]);
                 }
             }, "this.func", "context, ", "arguments");
-            var call = function () {
-                if (!arguments.length)
-                    return this.func(this.object, this);
-                switch (arguments.length) {
-                    case 1: return this.func(this.object, arguments[1], this);
-                    default: return this.func.apply(this, [this.object, ...arguments, this]);
-                }
-            };
-            Delegate.prototype.call = ((DS.Browser.type != DS.Browser.BrowserTypes.IE) ?
-                makeCases(0, 20, call, "this.func", "this.object, ", "arguments")
-                : makeCases(0, 20, call, "this.__boundFunc", "", "arguments"));
-            var apply = function (context, argsArray) {
+            var call = function (context, ...args) {
                 if (arguments.length == 1) { // (only array given)
-                    argsArray = context;
+                    args = context;
                     context = this.object;
                 }
-                else if (arguments.length > 1 && this.apply != this.__apply)
-                    return this.__apply(context, argsArray); // (only the non-bound version can handle context changes)
-                if (argsArray == void 0 || !argsArray.length)
-                    return this.invoke(context, this);
-                switch (argsArray.length) {
-                    case 1: return this.func(context, argsArray[0], this);
-                    default: return this.func.apply(this, [context].concat(argsArray, this));
+                else if (arguments.length > 1 && this.call != this.__call) // ('this.call != this.__call' is true in some browsers, like IE, where a bound function is faster [and since it's bound, the context cannot be changed])
+                    return this.__call(context, args); // (only the non-bound version can handle context changes)
+                if (args == void 0 || !args.length)
+                    return this.func.call(context, this);
+                switch (args.length) {
+                    case 1: return this.func(context, args[0], this);
+                    default: return this.func.call(this, context, ...args, this);
+                }
+            };
+            Delegate.prototype.__call = makeCases(0, 20, call, "this.func", "this.object, ", "args"); // (keep reference to the non-bound version as a fallback for user defined contexts)
+            Delegate.prototype.call = ((DS.Browser.type != DS.Browser.BrowserTypes.IE) ?
+                Delegate.prototype.__call
+                : makeCases(0, 20, call, "this.__boundFunc", "", "args"));
+            var apply = function (context, args) {
+                if (arguments.length == 1) { // (only array given)
+                    args = context;
+                    context = this.object;
+                }
+                else if (arguments.length > 1 && this.apply != this.__apply) // ('this.apply != this.__apply' is true in some browsers, like IE, where a bound function is faster [and since it's bound, the context cannot be changed])
+                    return this.__apply(context, args); // (only the non-bound version can handle context changes)
+                if (args == void 0 || !args.length)
+                    return this.func.call(context, this);
+                switch (args.length) {
+                    case 1: return this.func(context, args[0], this);
+                    default: return this.func.call(this, context, ...args, this);
                 }
             };
             Delegate.prototype.__apply = makeCases(0, 20, apply, "this.func", "context, ", "args"); // (keep reference to the non-bound version as a fallback for user defined contexts)
-            Delegate.prototype.apply = ((DS.Browser.type != DS.Browser.BrowserTypes.IE) ? Delegate.prototype.__apply : makeCases(0, 20, apply, "this.__boundFunc", "", "args")); // (note: bound functions are faster in IE)
+            Delegate.prototype.apply = ((DS.Browser.type != DS.Browser.BrowserTypes.IE) ?
+                Delegate.prototype.__apply
+                : makeCases(0, 20, apply, "this.__boundFunc", "", "args")); // (note: bound functions are faster in IE)
         }
         /** A read-only key string that uniquely identifies the combination of object instance and function in this delegate.
         * This property is set for new instances by default.  Calling 'update()' will update it if necessary.

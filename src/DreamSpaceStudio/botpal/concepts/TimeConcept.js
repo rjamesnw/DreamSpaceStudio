@@ -34,7 +34,7 @@ let TimeConcept = /** @class */ (() => {
         _What_Unknown_Question(context) {
             if (context.WasPrevious("what")) {
                 context.Context.Add(new SubjectContext_1.default(this.memory, this, this.time));
-                context.AddIntentHandler(this._Time_Intent, context.Operation.MinConfidence);
+                context.addIntentHandler(this._Time_Intent, context.Operation.MinConfidence);
             }
             return Promise.resolve(context);
         }

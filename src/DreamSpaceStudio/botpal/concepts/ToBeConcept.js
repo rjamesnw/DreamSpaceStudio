@@ -11,18 +11,18 @@ const Concept_1 = require("../core/Concept");
 let ToBeConcept = /** @class */ (() => {
     let ToBeConcept = class ToBeConcept extends Concept_1.default {
         // --------------------------------------------------------------------------------------------------------------------
-        constructor(brian) {
-            super(brian);
+        constructor(brain) {
+            super(brain);
         }
         // --------------------------------------------------------------------------------------------------------------------
         // TODO: *** Figure out how the left side will associate with the right.  Perhaps we expect to "iterate" over all the subjects, which should only be on in this case. *** 
         _Is(context) {
             if (context.WasPrevious("how"))
-                context.AddIntentHandler(this._How_Is_Intent, context.Operation.MinConfidence);
+                context.addIntentHandler(this._How_Is_Intent, context.Operation.MinConfidence);
             else if (context.WasPrevious("time"))
-                context.AddIntentHandler(this._How_Is_Intent, context.Operation.MinConfidence);
+                context.addIntentHandler(this._How_Is_Intent, context.Operation.MinConfidence);
             else
-                context.AddIntentHandler(this._Is_What_Intent, context.Operation.MinConfidence);
+                context.addIntentHandler(this._Is_What_Intent, context.Operation.MinConfidence);
             //{
             //    var ctx = context.Context;
             //    if (ctx.AllSubjects().Any())
@@ -69,7 +69,7 @@ let ToBeConcept = /** @class */ (() => {
         // TODO: *** Figure out how the left side will associate with the right.  Perhaps we expect to "iterate" over all the subjects, and assigned attributes from the right side. *** 
         async _Are(context) {
             if (context.WasPrevious("how"))
-                context.AddIntentHandler(this._How_Are_Intent, 0.5);
+                context.addIntentHandler(this._How_Are_Intent, 0.5);
             return Promise.resolve(context);
         }
         async _How_Are_Intent(context) {

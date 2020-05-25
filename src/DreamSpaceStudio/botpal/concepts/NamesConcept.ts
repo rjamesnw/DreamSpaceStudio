@@ -1,13 +1,14 @@
-﻿import Concept, { concept, conceptHandler } from "../core/Concept";
+﻿import Concept, { concept, conceptHandler, ConceptHandlerContext } from "../core/Concept";
 import DictionaryItem from "../core/DictionaryItem";
 import Brain from "../core/Brain";
+import POS from "../core/POS";
 
 @concept(true)
 export default class NamesConcept extends Concept {
     // --------------------------------------------------------------------------------------------------------------------
 
-    constructor(brian: Brain) {
-        super(brian)
+    constructor(brain: Brain) {
+        super(brain)
         this.Deb = this.memory.dictionary.addTextPart("deb", POS.Noun_Person);
         this.Debra = this.memory.dictionary.addTextPart("debra", POS.Noun_Person);
         this.Debohrra = this.memory.dictionary.addTextPart("debohrra", POS.Noun_Person);
@@ -27,8 +28,8 @@ export default class NamesConcept extends Concept {
     @conceptHandler("deb,debra,debohrra,james")
     _Names(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null)) {
-            ((NamesConcept)context.CurrentMatch.Item.Concept).CurrentName = context.CurrentMatch.Item.DictionaryItem;
-            context.AddIntentHandler(_Name_Intent, context.Operation.MinConfidence);
+            (<NamesConcept>context.currentMatch.item.Concept).CurrentName = context.currentMatch.item.DictionaryItem;
+            context.addIntentHandler(new DS.Delegate(this, this._Name_Intent), context.Operation.MinConfidence);
         }
         return Promise.resolve(context);
     }

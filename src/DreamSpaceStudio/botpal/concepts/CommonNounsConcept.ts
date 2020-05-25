@@ -3,13 +3,13 @@ import Brain from "../core/Brain";
 
 /**
  * Handles common known nouns.
- * @param {Brain} brian
+ * @param {Brain} brain
  */
 export default class CommonNounsConcept extends Concept {
     // --------------------------------------------------------------------------------------------------------------------
 
-    public constructor(brian: Brain) {
-        super(brian)
+    public constructor(brain: Brain) {
+        super(brain)
     }
 
     // --------------------------------------------------------------------------------------------------------------------

@@ -16,8 +16,8 @@ export default class ConjunctionConcept extends Concept {
     static readonly that = new DictionaryItem("that", POS.Conjunction);
     readonly that: DictionaryItem;
 
-    constructor(brian: Brain) {
-        super(brian)
+    constructor(brain: Brain) {
+        super(brain)
     }
 
     // --------------------------------------------------------------------------------------------------------------------

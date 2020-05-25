@@ -18,7 +18,7 @@ export class Thread {
 export default class Brain {
     // --------------------------------------------------------------------------------------------------------------------
 
-    LanguageParsingRegex = new RegExp("\".*?\"|'.*?'|[A-Za-z']+|[0-9]+|\\s+|.", 'gmi');
+    languageParsingRegex = new RegExp("\".*?\"|'.*?'|[A-Za-z']+|[0-9]+|\\s+|.", 'gmi');
 
     /**
      *  The memory instance, which also contains the core dictionary for quick lookups.
@@ -29,7 +29,7 @@ export default class Brain {
      *  A Text-To-Speech plugin object to use when calling "Brain.Say()".
      *  If null, upon calling the method, the default "Ivona" TTS service is used.
     */
-    TTSService: ITTSService;
+    ttsService: ITTSService;
 
     //? public Thought Thought; // (this should never be null when a brain is loaded, as thoughts are historical; otherwise this is a brand new brain, and this can be null)
 
@@ -83,10 +83,10 @@ export default class Brain {
     }
 
     async say(text: string, voiceCode: string = null): Promise {
-        if (this.TTSService == null)
-            this.TTSService = new DefaultTTSService();
+        if (this.ttsService == null)
+            this.ttsService = new DefaultTTSService();
 
-        await this.TTSService.Say(text, voiceCode);
+        await this.ttsService.Say(text, voiceCode);
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -109,7 +109,7 @@ export default class Brain {
         this.memory = new Memory(this);
 
         if (configureConcepts)
-            this.ConfigureDefaultConcepts();
+            this.configureDefaultConcepts();
 
         var task = this._processOperations(null);
     }
@@ -132,18 +132,18 @@ export default class Brain {
     /**
      *  Scans the current assembly for supported concepts and loads an instance of each one into the brain.
     */
-    ConfigureDefaultConcepts() {
+    configureDefaultConcepts() {
         for (var conceptType of conceptTypes) {
             // ... iterate over the concept methods and store them for text matching later ...
-            Concept conceptInstance = (Concept)Activator.CreateInstance(conceptType, this);
+            var conceptInstance = new conceptType(this);
             this._Concepts.set(conceptType, conceptInstance);
             conceptInstance.RegisterHandlers();
         }
 
         // ... let all concepts know the core concepts are loaded and ready ...
 
-        for (var conceptType of this._Concepts.values)
-            conceptType.OnAfterAllRegistered();
+        for (var conceptInstance of this._Concepts.values())
+            conceptInstance['onAfterAllRegistered']();
     }
 
     /** Returns a registered concept singleton. 
@@ -333,7 +333,7 @@ export default class Brain {
         text = DS.StringUtils.toString(text);
         if (!text) return [];
 
-        var parts = text.match(this.LanguageParsingRegex);
+        var parts = text.match(this.languageParsingRegex);
 
         // ... remove any quotes on any quoted parts ...
 
@@ -411,7 +411,7 @@ export default class Brain {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    Process() {
+    process() {
         //? if (Thought == null)
         //?    Thought = new Thought(new Context(new TextInput(Memory, "").Parse()));
         //? Thought.Think();
@@ -419,8 +419,15 @@ export default class Brain {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    AddInput(text: string) {
-        this.addOperation(new SplitTextOperation(this, text));
+    /** A simple registry of concepts that will be called when text input is given. */
+    textInputHandlers: DS.Delegate<Concept, Action<string>>[] = [];
+
+    addInput(text: string) {
+        for (var handler of this.textInputHandlers)
+            try {
+                handler.call(text);
+            }
+            catch (ex) { DS.error('Brain.addInput()', DS.getErrorMessage(ex)); }
     }
 
     // --------------------------------------------------------------------------------------------------------------------

@@ -52,8 +52,8 @@ export default class QuestionsConcept extends Concept {
     static readonly Name_A = new DictionaryItem("name", POS.Adjective); // (named)
     readonly Name_A: DictionaryItem;
 
-    constructor(brian: Brain) {
-        super(brian)
+    constructor(brain: Brain) {
+        super(brain)
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -75,7 +75,7 @@ export default class QuestionsConcept extends Concept {
 
     @conceptHandler(QuestionsConcept.what_PN, QuestionsConcept.what_D, QuestionsConcept.what_AV, "!")
     _What_Exclamation(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
-        context.AddIntentHandler(new DS.Delegate(this, this._What_Excl_Intent), 1);
+        context.addIntentHandler(new DS.Delegate(this, this._What_Excl_Intent), 1);
         return Promise.resolve(context);
     }
     async  _What_Excl_Intent(context: ConceptHandlerContext): Promise<boolean> {
@@ -87,7 +87,7 @@ export default class QuestionsConcept extends Concept {
     _What_Unknown_Question(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null)) {
             context.Context.Add(new QuestionContext(this, this.what_PN));
-            context.AddIntentHandler(new DS.Delegate(this, this._What_Intent), context.Operation.MinConfidence); // (this is like a fall-back plan if nothing else better is found)
+            context.addIntentHandler(new DS.Delegate(this, this._What_Intent), context.Operation.MinConfidence); // (this is like a fall-back plan if nothing else better is found)
         }
         return Promise.resolve(context);
     }
@@ -130,7 +130,7 @@ export default class QuestionsConcept extends Concept {
     _How(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null)) {
             context.Context.Add(new QuestionContext(this, this.how_AV));
-            context.AddIntentHandler(new DS.Delegate(this, this._How_Intent), context.Operation.MinConfidence);
+            context.addIntentHandler(new DS.Delegate(this, this._How_Intent), context.Operation.MinConfidence);
         }
         return Promise.resolve(context);
     }

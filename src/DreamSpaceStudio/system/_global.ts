@@ -185,7 +185,7 @@ namespace DS {
 
     // ------------------------------------------------------------------------------------------------------------------------
 
-    export const staticConstructor: symbol = Symbol("static constructor");
+    export const staticConstructor: unique symbol = Symbol("static constructor");
 
     // ------------------------------------------------------------------------------------------------------------------------
 

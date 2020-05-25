@@ -167,7 +167,7 @@ export class ConceptHandlerContext implements IMemoryObject {
     /**
      *  For concept handlers, this is the current concept match details (the one the handler belongs to).
     */
-    get CurrentMatch(): ConceptMatch { return this.Index >= 0 && this.Index < MatchedConcepts?.Count ? MatchedConcepts[this.Index] : null; }
+    get currentMatch(): ConceptMatch { return this.Index >= 0 && this.Index < MatchedConcepts?.Count ? MatchedConcepts[this.Index] : null; }
 
     /** Gets the dictionary item that resulted in the current concept match. */
     /// <value> The dictionary item of the current concept match. </value>
@@ -255,7 +255,7 @@ export class ConceptHandlerContext implements IMemoryObject {
     */
     /// <param name="handler">The intent callback to execute to handle the meaning of the input given by the user.</param>
     /// <param name="confidence">How much confidence that this registered handler can handle the user's meaning.</param>
-    AddIntentHandler(handler: IntentHandler, confidence: number) {
+    addIntentHandler(handler: IntentHandler, confidence: number) {
         // ... Keep added handlers at the same position of this current context index ...
 
         for (var i = 0; i <= this.Index; ++i)

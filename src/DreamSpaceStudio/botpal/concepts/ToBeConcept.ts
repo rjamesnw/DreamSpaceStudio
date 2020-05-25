@@ -6,8 +6,8 @@ import Brain from "../core/Brain";
 export default class ToBeConcept extends Concept {
     // --------------------------------------------------------------------------------------------------------------------
 
-    constructor(brian: Brain) {
-        super(brian)
+    constructor(brain: Brain) {
+        super(brain)
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -16,11 +16,11 @@ export default class ToBeConcept extends Concept {
     @conceptHandler("is")
     _Is(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious("how"))
-            context.AddIntentHandler(this._How_Is_Intent, context.Operation.MinConfidence);
+            context.addIntentHandler(this._How_Is_Intent, context.Operation.MinConfidence);
         else if (context.WasPrevious("time"))
-            context.AddIntentHandler(this._How_Is_Intent, context.Operation.MinConfidence);
+            context.addIntentHandler(this._How_Is_Intent, context.Operation.MinConfidence);
         else
-            context.AddIntentHandler(this._Is_What_Intent, context.Operation.MinConfidence);
+            context.addIntentHandler(this._Is_What_Intent, context.Operation.MinConfidence);
         //{
         //    var ctx = context.Context;
         //    if (ctx.AllSubjects().Any())
@@ -75,7 +75,7 @@ export default class ToBeConcept extends Concept {
     @conceptHandler("are")
     async _Are(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious("how"))
-            context.AddIntentHandler(this._How_Are_Intent, 0.5);
+            context.addIntentHandler(this._How_Are_Intent, 0.5);
         return Promise.resolve(context);
     }
 

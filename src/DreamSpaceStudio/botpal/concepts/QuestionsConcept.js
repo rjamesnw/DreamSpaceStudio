@@ -28,7 +28,7 @@ let QuestionsConcept = /** @class */ (() => {
             return Promise.resolve(context);
         }
         _What_Exclamation(context) {
-            context.AddIntentHandler(new DS.Delegate(this, this._What_Excl_Intent), 1);
+            context.addIntentHandler(new DS.Delegate(this, this._What_Excl_Intent), 1);
             return Promise.resolve(context);
         }
         async _What_Excl_Intent(context) {
@@ -38,7 +38,7 @@ let QuestionsConcept = /** @class */ (() => {
         _What_Unknown_Question(context) {
             if (context.WasPrevious(null)) {
                 context.Context.Add(new QuestionContext_1.default(this, this.what_PN));
-                context.AddIntentHandler(new DS.Delegate(this, this._What_Intent), context.Operation.MinConfidence); // (this is like a fall-back plan if nothing else better is found)
+                context.addIntentHandler(new DS.Delegate(this, this._What_Intent), context.Operation.MinConfidence); // (this is like a fall-back plan if nothing else better is found)
             }
             return Promise.resolve(context);
         }
@@ -68,7 +68,7 @@ let QuestionsConcept = /** @class */ (() => {
         _How(context) {
             if (context.WasPrevious(null)) {
                 context.Context.Add(new QuestionContext_1.default(this, this.how_AV));
-                context.AddIntentHandler(new DS.Delegate(this, this._How_Intent), context.Operation.MinConfidence);
+                context.addIntentHandler(new DS.Delegate(this, this._How_Intent), context.Operation.MinConfidence);
             }
             return Promise.resolve(context);
         }

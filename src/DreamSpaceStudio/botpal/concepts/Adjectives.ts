@@ -4,8 +4,8 @@ import Brain from "../core/Brain";
 export default class AdjectiveConcept extends Concept {
     // --------------------------------------------------------------------------------------------------------------------
 
-    constructor(brian: Brain) {
-        super(brian);
+    constructor(brain: Brain) {
+        super(brain);
     }
 
     // --------------------------------------------------------------------------------------------------------------------

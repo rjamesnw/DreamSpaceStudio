@@ -14,8 +14,8 @@ const QuestionsConcept_1 = require("./QuestionsConcept");
 let LogicConcept = /** @class */ (() => {
     let LogicConcept = class LogicConcept extends Concept_1.default {
         // --------------------------------------------------------------------------------------------------------------------
-        constructor(brian) {
-            super(brian);
+        constructor(brain) {
+            super(brain);
         }
         // --------------------------------------------------------------------------------------------------------------------
         _FindWhen(context) {

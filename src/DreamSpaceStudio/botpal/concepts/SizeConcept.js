@@ -6,8 +6,8 @@ const Concept_1 = require("../core/Concept");
 */
 class SizeConcept extends Concept_1.default {
     // --------------------------------------------------------------------------------------------------------------------
-    constructor(brian, size) {
-        super(brian);
+    constructor(brain, size) {
+        super(brain);
         this.size = size;
     }
 }

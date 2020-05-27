@@ -95,6 +95,12 @@ type Writeable<T> = {
     -readonly [P in keyof T]: T[P];
 };
 
+type NonFunctionPropertyNames<T> = {
+    [K in keyof T]: T[K] extends Function ? never : K;
+}[keyof T];
+
+type NonFunctionProperties<T> = Pick<T, NonFunctionPropertyNames<T>>;
+
 interface Promise<T = void> { }
 
 type Action2<T, T2> = (a: T, b: T2) => T;

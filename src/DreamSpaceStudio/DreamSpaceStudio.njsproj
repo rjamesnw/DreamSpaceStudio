@@ -76,6 +76,7 @@
     <TypeScriptCompile Include="botpal\concepts\SpeakingConcept.ts" />
     <TypeScriptCompile Include="botpal\concepts\TimeConcept.ts" />
     <TypeScriptCompile Include="botpal\concepts\ToBeConcept.ts" />
+    <TypeScriptCompile Include="botpal\contexts\TextRecognitionContext.ts" />
     <TypeScriptCompile Include="botpal\core\Comparer.ts" />
     <TypeScriptCompile Include="botpal\core\DictionaryItem.ts" />
     <TypeScriptCompile Include="botpal\core\Match.ts" />

@@ -16,8 +16,8 @@ const POS_1 = require("../core/POS");
 */
 let PronounsConceptConcept = /** @class */ (() => {
     class PronounsConceptConcept extends Concept_1.default {
-        constructor(brian) {
-            super(brian);
+        constructor(brain) {
+            super(brain);
         }
         onAfterAllRegistered() {
             // ... get a reference to the concepts we will associated with ...

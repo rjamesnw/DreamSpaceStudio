@@ -10,8 +10,8 @@ const Concept_1 = require("../core/Concept");
 let AdverbConcept = /** @class */ (() => {
     class AdverbConcept extends Concept_1.default {
         // --------------------------------------------------------------------------------------------------------------------
-        constructor(brian) {
-            super(brian);
+        constructor(brain) {
+            super(brain);
         }
         // --------------------------------------------------------------------------------------------------------------------
         _Adverb(context) {

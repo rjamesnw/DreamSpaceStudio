@@ -12,8 +12,8 @@ const POS_1 = require("../core/POS");
 let PositionalConcept = /** @class */ (() => {
     var PositionalConcept_1;
     let PositionalConcept = PositionalConcept_1 = class PositionalConcept extends Concept_1.default {
-        constructor(brian) {
-            super(brian);
+        constructor(brain) {
+            super(brain);
         }
         // --------------------------------------------------------------------------------------------------------------------
         _NameIsHere(context) {

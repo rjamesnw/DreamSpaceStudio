@@ -14,8 +14,8 @@ const SubjectContext_1 = require("../contexts/SubjectContext");
 let QuestionsConcept = /** @class */ (() => {
     var QuestionsConcept_1;
     let QuestionsConcept = QuestionsConcept_1 = class QuestionsConcept extends Concept_1.default {
-        constructor(brian) {
-            super(brian);
+        constructor(brain) {
+            super(brain);
         }
         // --------------------------------------------------------------------------------------------------------------------
         _Who(context) {

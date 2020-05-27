@@ -12,8 +12,8 @@ const POS_1 = require("../core/POS");
 const SubjectContext_1 = require("../contexts/SubjectContext");
 let TimeConcept = /** @class */ (() => {
     let TimeConcept = class TimeConcept extends Concept_1.default {
-        constructor(brian) {
-            super(brian);
+        constructor(brain) {
+            super(brain);
         }
         // --------------------------------------------------------------------------------------------------------------------
         //@conceptHandler("what^D time^N is^V it^PN")

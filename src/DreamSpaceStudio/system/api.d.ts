@@ -31,6 +31,10 @@ interface IndexedObject<T = any> {
 declare type Writeable<T> = {
     -readonly [P in keyof T]: T[P];
 };
+declare type NonFunctionPropertyNames<T> = {
+    [K in keyof T]: T[K] extends Function ? never : K;
+}[keyof T];
+declare type NonFunctionProperties<T> = Pick<T, NonFunctionPropertyNames<T>>;
 interface Promise<T = void> {
 }
 declare type Action2<T, T2> = (a: T, b: T2) => T;

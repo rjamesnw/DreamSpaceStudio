@@ -14,8 +14,8 @@ const NamesConcept_1 = require("./NamesConcept");
 let SalutationConcept = /** @class */ (() => {
     let SalutationConcept = class SalutationConcept extends Concept_1.default {
         // --------------------------------------------------------------------------------------------------------------------
-        constructor(brian) {
-            super(brian);
+        constructor(brain) {
+            super(brain);
         }
         // --------------------------------------------------------------------------------------------------------------------
         _Hi(context) {

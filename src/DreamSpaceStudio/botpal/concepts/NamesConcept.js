@@ -11,8 +11,8 @@ const POS_1 = require("../core/POS");
 let NamesConcept = /** @class */ (() => {
     let NamesConcept = class NamesConcept extends Concept_1.default {
         // --------------------------------------------------------------------------------------------------------------------
-        constructor(brian) {
-            super(brian);
+        constructor(brain) {
+            super(brain);
             this.Deb = this.memory.dictionary.addTextPart("deb", POS_1.default.Noun_Person);
             this.Debra = this.memory.dictionary.addTextPart("debra", POS_1.default.Noun_Person);
             this.Debohrra = this.memory.dictionary.addTextPart("debohrra", POS_1.default.Noun_Person);

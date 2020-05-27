@@ -15,8 +15,8 @@ const DictionaryItem_1 = require("../core/DictionaryItem");
 let ConjunctionConcept = /** @class */ (() => {
     var ConjunctionConcept_1;
     let ConjunctionConcept = ConjunctionConcept_1 = class ConjunctionConcept extends Concept_1.default {
-        constructor(brian) {
-            super(brian);
+        constructor(brain) {
+            super(brain);
         }
         // --------------------------------------------------------------------------------------------------------------------
         _conjunction(context) {

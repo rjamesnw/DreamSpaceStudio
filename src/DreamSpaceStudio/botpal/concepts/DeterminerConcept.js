@@ -12,8 +12,8 @@ const FrequencyContext_1 = require("../contexts/FrequencyContext");
 let DeterminerConcept = /** @class */ (() => {
     class DeterminerConcept extends Concept_1.default {
         // --------------------------------------------------------------------------------------------------------------------
-        constructor(brian) {
-            super(brian);
+        constructor(brain) {
+            super(brain);
         }
         // --------------------------------------------------------------------------------------------------------------------
         _A(context) {

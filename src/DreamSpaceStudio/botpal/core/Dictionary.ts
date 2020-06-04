@@ -8,6 +8,25 @@ import { TenseTypes, Plurality } from "./Enums";
 import Match from "./Match";
 
 /**
+ * Contains a grouping of text entries that create a phrase.
+ * Note: While the phrase is treated as a single entry itself, it keeps reference to the individual word/symbol entries that make it up.
+ */
+export class Phrase extends DictionaryItem {
+    readonly _entries: DictionaryItem[];
+    get groupKey() {
+        var gk = "";
+        if (this._entries)
+            for (var i = 0, n = this._entries.length; i < n; ++i)
+                gk += this._entries[i]?.textPart?.groupKey;
+        return gk;
+    }
+    constructor(dictionary: Dictionary, originalTextPart: TextPart | string, entries: DictionaryItem[], pos?: PartOfSpeech, tense?: TenseTypes, plurality?: Plurality) {
+        super(dictionary, originalTextPart, pos, tense, plurality);
+        this._entries = entries.slice();
+    }
+}
+
+/**
  *  The dictionary holds both the RAW text, without context (no duplicates), and various 'DictionaryEntry' instances,
  *  which both link to the raw text, along with some contextual parameters for the text.  'DictionaryEntry' items CAN
  *  reference the same text among them, but there should only ever be one context entry based on contextual parameters,
@@ -25,21 +44,28 @@ export default class Dictionary implements IMemoryObject {
      *  The raw texts, as originally entered by users. The key IS case sensitive, which is '{TextPart}.Key'. That said, this only stores text
      *  exactly as entered by a user. Normally casing is always determined in context at output to user.
     */
-    _Texts: Map<string, TextPart> = new Map<string, TextPart>();
+    _texts: Map<string, TextPart> = new Map<string, TextPart>();
 
     /**
      *  An index of all texts by their first letter (always lower casing). This can help to quickly speed up/shortcut word analysis.
     */
-    _TextIndexByFirstLetter: Map<string, TextPart[]> = new Map<string, TextPart[]>(); // TODO: Consider restricting on max word length as well.
+    _textIndexByFirstLetter: Map<string, TextPart[]> = new Map<string, TextPart[]>(); // TODO: Consider restricting on max word length as well.
 
     /**
      *  Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity. This list holds those references.
      *  This can help to quickly speed up/shortcut text input analysis.
     */
-    _SimilarTexts: Map<string, TextPart[]> = new Map<string, TextPart[]>();
+    _similarTexts: Map<string, TextPart[]> = new Map<string, TextPart[]>();
 
     /**
-     *  All words or phrases in this dictionary, based on group keys, and other specific word context parameters (POS, Tense, Plurality, etc.).
+     * A mapping of phrase group keys against phrase instances containing a list of dictionary entries in order of the phrase
+     * wording being represented. This can help to quickly speed up/shortcut text input analysis.
+     * Note: Each dictionary entry contains a reference to any related phrases for quick mapping of relate
+     */
+    _phrases: Map<string, Phrase> = new Map<string, Phrase>();
+
+    /**
+     *  All word or symbol items in this dictionary, based on group keys, and other specific word context parameters (POS, Tense, Plurality, etc.).
      *  This servers as a quick index, which can be rebuilt or updated as needed.
      *  By default, the lexicon will contain entries used to split text for grammar trees.
     */
@@ -48,7 +74,7 @@ export default class Dictionary implements IMemoryObject {
     /**
      *  This references the dictionary entry that has a blank key, and is used to store global data, such as concepts that should run if no other concepts are found.
     */
-    get GlobalEntry(): DictionaryItem { return this._entries.get(''); }
+    get globalEntry(): DictionaryItem { return this._entries.get(''); }
 
     /**
      *  Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity. 
@@ -65,7 +91,7 @@ export default class Dictionary implements IMemoryObject {
     /**
      *  An index of all words by their string length. This can help to quickly speed up/shortcut word analysis.
     */
-    _IndexByLength = new Map<number, DictionaryItem[]>(); // TODO: Consider restricting on max word length as well.
+    _indexByLength = new Map<number, DictionaryItem[]>(); // TODO: Consider restricting on max word length as well.
 
     // --------------------------------------------------------------------------------------------------------------------
 
@@ -86,7 +112,7 @@ export default class Dictionary implements IMemoryObject {
      * @param {Plurality} plurality?
      * @returns
      */
-    addTextPart(textPart: TextPart, pos: PartOfSpeech, tense?: TenseTypes, plurality?: Plurality): DictionaryItem;
+    addTextPart(textPart: TextPart, pos?: PartOfSpeech, tense?: TenseTypes, plurality?: Plurality): DictionaryItem;
 
     /**
      * Adds one or more text parts (text usually without whitespace) to the dictionary.  If any entry already exists, it will be returned instead.
@@ -96,7 +122,7 @@ export default class Dictionary implements IMemoryObject {
      * @param {Plurality} plurality?
      * @returns
      */
-    addTextPart(textPart: string, pos: PartOfSpeech, tense?: TenseTypes, plurality?: Plurality): DictionaryItem;
+    addTextPart(textPart: string, pos?: PartOfSpeech, tense?: TenseTypes, plurality?: Plurality): DictionaryItem;
 
     addTextPart(textPart: TextPart | string, pos: PartOfSpeech = null, tense = TenseTypes.Unspecified, plurality = Plurality.Unspecified): DictionaryItem {
         if (textPart instanceof TextPart) {
@@ -143,10 +169,10 @@ export default class Dictionary implements IMemoryObject {
         // (note: the key has the white spaces removed so they don't through this off)
 
         var lenIndex = grpkey.length;
-        var indexedWordsByLen = this._IndexByLength.get(lenIndex);
+        var indexedWordsByLen = this._indexByLength.get(lenIndex);
 
         if (!indexedWordsByLen)
-            this._IndexByLength.set(lenIndex, indexedWordsByLen = []);
+            this._indexByLength.set(lenIndex, indexedWordsByLen = []);
 
         indexedWordsByLen.push(entry);
 
@@ -184,26 +210,26 @@ export default class Dictionary implements IMemoryObject {
             throw DS.Exception.argumentUndefinedOrNull("Dictionary.AddEntry()", "entry");
 
         var key = text.key;
-        var txt = this._Texts.get(key);
+        var txt = this._texts.get(key);
         if (txt == null) {
             // ... adding it for the first time ...
 
-            this._Texts.set(key, txt = text);
+            this._texts.set(key, txt = text);
 
             // ... also add to the group of similar texts ...
 
             var grpkey = text.groupKey;
-            var stexts = this._SimilarTexts.get(grpkey);
+            var stexts = this._similarTexts.get(grpkey);
             if (!stexts)
-                this._SimilarTexts.set(grpkey, stexts = []);
+                this._similarTexts.set(grpkey, stexts = []);
             stexts.push(text);
 
             // ... finally index the text by the first character ...
 
             var charIndex = grpkey[0];
-            var indexedTexts = this._TextIndexByFirstLetter.get(charIndex);
+            var indexedTexts = this._textIndexByFirstLetter.get(charIndex);
             if (!indexedTexts)
-                this._TextIndexByFirstLetter.set(charIndex, indexedTexts = []);
+                this._textIndexByFirstLetter.set(charIndex, indexedTexts = []);
             indexedTexts.push(text);
         }
         return txt;
@@ -259,8 +285,17 @@ export default class Dictionary implements IMemoryObject {
      *  A group key is a special lowercase and translated version of a normal key that is made more generic based on "looks".
      *  It is best to wrap the text in an instance of 'Text' and call the 'GroupKey' property, or use the static method 'TextPart.toGroupKey()'.
     */
-    findSimilarEntries(groupkey: string): DictionaryItem[] {
+    findSimilarEntriesByGroupKey(groupkey: string): DictionaryItem[] {
         return this._similarEntries.get(groupkey);
+    }
+
+    /**
+     *  Returns the dictionary entries that are similar using a group key.
+     *  A group key is a special lowercase and translated version of a normal key that is made more generic based on "looks".
+     *  It is best to wrap the text in an instance of 'Text' and call the 'GroupKey' property, or use the static method 'TextPart.toGroupKey()'.
+    */
+    findSimilarEntries(text: string): DictionaryItem[] {
+        return this._similarEntries.get(new TextPart(this, text).groupKey);
     }
 
     /**
@@ -297,7 +332,7 @@ export default class Dictionary implements IMemoryObject {
         if (!DS.StringUtils.isEmptyOrWhitespace(textpart)) {
             if (quickSearch) {
                 var groupkey = this.memory.brain.toGroupKey(textpart);
-                var entries = this.findSimilarEntries(groupkey);
+                var entries = this.findSimilarEntriesByGroupKey(groupkey);
                 if (entries != null)
                     for (var e of entries)
                         matches.push(new Match<DictionaryItem>(e, 1)); // (perfect matches)

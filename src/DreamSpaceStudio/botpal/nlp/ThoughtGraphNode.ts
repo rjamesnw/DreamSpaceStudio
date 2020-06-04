@@ -226,7 +226,7 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     _AddQuestion(q: DictionaryItem): ThoughtGraphNode {
         var qnode = this._requireQuestion();
         var newNode = new ThoughtGraphNode(q);
-        return qnode.AddSibling(newNode); // (the current node context is now the question group, not a single subject [noun])
+        return qnode.addSibling(newNode); // (the current node context is now the question group, not a single subject [noun])
     }
 
     _AddDeterminer(det: DictionaryItem): ThoughtGraphNode {
@@ -283,13 +283,13 @@ export default class ThoughtGraphNode extends MultiNode<ThoughtGraphNode>
     _AddNoun(noun: DictionaryItem): ThoughtGraphNode {
         var subject = this._requireSubject();
         var newNode = new ThoughtGraphNode(noun);
-        return subject.AddSibling(newNode); // (the new noun node now becomes the new current node)
+        return subject.addSibling(newNode); // (the new noun node now becomes the new current node)
     }
 
     _AddPronoun(pronoun: DictionaryItem): ThoughtGraphNode {
         var subject = this._requireSubject();
         var newNode = new ThoughtGraphNode(pronoun);
-        return subject.AddSibling(newNode); // (the new noun node now becomes the new current node)
+        return subject.addSibling(newNode); // (the new noun node now becomes the new current node)
     }
 
     // --------------------------------------------------------------------------------------------------------------------

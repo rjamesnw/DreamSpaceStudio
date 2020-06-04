@@ -1,10 +1,30 @@
 "use strict";
 // ========================================================================================================================
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Phrase = void 0;
 const TextPart_1 = require("./TextPart");
 const DictionaryItem_1 = require("./DictionaryItem");
 const Enums_1 = require("./Enums");
 const Match_1 = require("./Match");
+/**
+ * Contains a grouping of text entries that create a phrase.
+ * Note: While the phrase is treated as a single entry itself, it keeps reference to the individual word/symbol entries that make it up.
+ */
+class Phrase extends DictionaryItem_1.default {
+    constructor(dictionary, originalTextPart, entries, pos, tense, plurality) {
+        super(dictionary, originalTextPart, pos, tense, plurality);
+        this._entries = entries.slice();
+    }
+    get groupKey() {
+        var _a, _b;
+        var gk = "";
+        if (this._entries)
+            for (var i = 0, n = this._entries.length; i < n; ++i)
+                gk += (_b = (_a = this._entries[i]) === null || _a === void 0 ? void 0 : _a.textPart) === null || _b === void 0 ? void 0 : _b.groupKey;
+        return gk;
+    }
+}
+exports.Phrase = Phrase;
 /**
  *  The dictionary holds both the RAW text, without context (no duplicates), and various 'DictionaryEntry' instances,
  *  which both link to the raw text, along with some contextual parameters for the text.  'DictionaryEntry' items CAN
@@ -21,18 +41,24 @@ class Dictionary {
          *  The raw texts, as originally entered by users. The key IS case sensitive, which is '{TextPart}.Key'. That said, this only stores text
          *  exactly as entered by a user. Normally casing is always determined in context at output to user.
         */
-        this._Texts = new Map();
+        this._texts = new Map();
         /**
          *  An index of all texts by their first letter (always lower casing). This can help to quickly speed up/shortcut word analysis.
         */
-        this._TextIndexByFirstLetter = new Map(); // TODO: Consider restricting on max word length as well.
+        this._textIndexByFirstLetter = new Map(); // TODO: Consider restricting on max word length as well.
         /**
          *  Each 'Text' has a 'GroupKey' property that can be used to bind together similar texts without case sensitivity. This list holds those references.
          *  This can help to quickly speed up/shortcut text input analysis.
         */
-        this._SimilarTexts = new Map();
+        this._similarTexts = new Map();
         /**
-         *  All words or phrases in this dictionary, based on group keys, and other specific word context parameters (POS, Tense, Plurality, etc.).
+         * A mapping of phrase group keys against phrase instances containing a list of dictionary entries in order of the phrase
+         * wording being represented. This can help to quickly speed up/shortcut text input analysis.
+         * Note: Each dictionary entry contains a reference to any related phrases for quick mapping of relate
+         */
+        this._phrases = new Map();
+        /**
+         *  All word or symbol items in this dictionary, based on group keys, and other specific word context parameters (POS, Tense, Plurality, etc.).
          *  This servers as a quick index, which can be rebuilt or updated as needed.
          *  By default, the lexicon will contain entries used to split text for grammar trees.
         */
@@ -50,7 +76,7 @@ class Dictionary {
         /**
          *  An index of all words by their string length. This can help to quickly speed up/shortcut word analysis.
         */
-        this._IndexByLength = new Map(); // TODO: Consider restricting on max word length as well.
+        this._indexByLength = new Map(); // TODO: Consider restricting on max word length as well.
         this.memory = memory;
         this._entries.set('', new DictionaryItem_1.default(this, null)); // (this is a global placeholder for "match unknown" concepts)
         // (NOTE: Synonyms, in this case, are more like word GROUPS, and less an actual list of strict synonyms; this helps the AI to know related words)
@@ -59,7 +85,7 @@ class Dictionary {
     /**
      *  This references the dictionary entry that has a blank key, and is used to store global data, such as concepts that should run if no other concepts are found.
     */
-    get GlobalEntry() { return this._entries.get(''); }
+    get globalEntry() { return this._entries.get(''); }
     addTextPart(textPart, pos = null, tense = Enums_1.TenseTypes.Unspecified, plurality = Enums_1.Plurality.Unspecified) {
         if (textPart instanceof TextPart_1.default) {
             var entry = new DictionaryItem_1.default(this, this.addText(textPart), pos, tense, plurality); // (this wraps the details so we can generate a key that represents the entry, then see if one already exists)
@@ -94,9 +120,9 @@ class Dictionary {
         // ... register the dictionary entry by the length of the phrase group key ...
         // (note: the key has the white spaces removed so they don't through this off)
         var lenIndex = grpkey.length;
-        var indexedWordsByLen = this._IndexByLength.get(lenIndex);
+        var indexedWordsByLen = this._indexByLength.get(lenIndex);
         if (!indexedWordsByLen)
-            this._IndexByLength.set(lenIndex, indexedWordsByLen = []);
+            this._indexByLength.set(lenIndex, indexedWordsByLen = []);
         indexedWordsByLen.push(entry);
         // ... finally add the entry to the entry lists ...
         var similarEntries = this._similarEntries.get(grpkey);
@@ -112,21 +138,21 @@ class Dictionary {
         if (text === undefined || text === null)
             throw DS.Exception.argumentUndefinedOrNull("Dictionary.AddEntry()", "entry");
         var key = text.key;
-        var txt = this._Texts.get(key);
+        var txt = this._texts.get(key);
         if (txt == null) {
             // ... adding it for the first time ...
-            this._Texts.set(key, txt = text);
+            this._texts.set(key, txt = text);
             // ... also add to the group of similar texts ...
             var grpkey = text.groupKey;
-            var stexts = this._SimilarTexts.get(grpkey);
+            var stexts = this._similarTexts.get(grpkey);
             if (!stexts)
-                this._SimilarTexts.set(grpkey, stexts = []);
+                this._similarTexts.set(grpkey, stexts = []);
             stexts.push(text);
             // ... finally index the text by the first character ...
             var charIndex = grpkey[0];
-            var indexedTexts = this._TextIndexByFirstLetter.get(charIndex);
+            var indexedTexts = this._textIndexByFirstLetter.get(charIndex);
             if (!indexedTexts)
-                this._TextIndexByFirstLetter.set(charIndex, indexedTexts = []);
+                this._textIndexByFirstLetter.set(charIndex, indexedTexts = []);
             indexedTexts.push(text);
         }
         return txt;
@@ -184,8 +210,16 @@ class Dictionary {
      *  A group key is a special lowercase and translated version of a normal key that is made more generic based on "looks".
      *  It is best to wrap the text in an instance of 'Text' and call the 'GroupKey' property, or use the static method 'TextPart.toGroupKey()'.
     */
-    findSimilarEntries(groupkey) {
+    findSimilarEntriesByGroupKey(groupkey) {
         return this._similarEntries.get(groupkey);
+    }
+    /**
+     *  Returns the dictionary entries that are similar using a group key.
+     *  A group key is a special lowercase and translated version of a normal key that is made more generic based on "looks".
+     *  It is best to wrap the text in an instance of 'Text' and call the 'GroupKey' property, or use the static method 'TextPart.toGroupKey()'.
+    */
+    findSimilarEntries(text) {
+        return this._similarEntries.get(new TextPart_1.default(this, text).groupKey);
     }
     /**
      *  Returns the dictionary word information list for the given letter, or first letter of any given word.
@@ -219,7 +253,7 @@ class Dictionary {
         if (!DS.StringUtils.isEmptyOrWhitespace(textpart)) {
             if (quickSearch) {
                 var groupkey = this.memory.brain.toGroupKey(textpart);
-                var entries = this.findSimilarEntries(groupkey);
+                var entries = this.findSimilarEntriesByGroupKey(groupkey);
                 if (entries != null)
                     for (var e of entries)
                         matches.push(new Match_1.default(e, 1)); // (perfect matches)

@@ -1,22 +1,8 @@
 "use strict";
-var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
-    if (!privateMap.has(receiver)) {
-        throw new TypeError("attempted to get private field on non-instance");
-    }
-    return privateMap.get(receiver);
-};
-var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
-    if (!privateMap.has(receiver)) {
-        throw new TypeError("attempted to set private field on non-instance");
-    }
-    privateMap.set(receiver, value);
-    return value;
-};
-var __Completed, __errors;
 Object.defineProperty(exports, "__esModule", { value: true });
 const TimeReferencedObject_1 = require("./TimeReferencedObject");
 /**
- * An operation is a threaded task that needs to be completed in the "brain".
+ * An operation is a n asynchronous task that needs to be completed in the "brain".
  * A subject instance contains details on a tangible object or intangible idea.
  * For instance, a list of colors verses specific parts of a car.
  * Most conversations require one or more subject matters as focus of communication, along a verb; otherwise the
@@ -29,8 +15,6 @@ const TimeReferencedObject_1 = require("./TimeReferencedObject");
 class Operation extends TimeReferencedObject_1.default {
     constructor(brain, commandCode) {
         super();
-        __Completed.set(this, void 0);
-        __errors.set(this, void 0);
         this.Brain = brain;
         this.Parent = null;
         this.Intent = commandCode;
@@ -44,37 +28,36 @@ class Operation extends TimeReferencedObject_1.default {
     /**
      *  Should be set to true when the operation completes successfully.
     */
-    get Completed() { return __classPrivateFieldGet(this, __Completed); }
-    get Errors() { return __classPrivateFieldGet(this, __errors); }
+    get completed() { return this._completed; }
+    get Errors() { return this._errors; }
     /**
      *  Will be true if the operation completed successfully, but there were errors in the process.
     */
-    get IsCompletedWithErrors() { var _a; return this.Completed && ((_a = this === null || this === void 0 ? void 0 : this.Errors) === null || _a === void 0 ? void 0 : _a.length) > 0; }
+    get IsCompletedWithErrors() { var _a; return this.completed && ((_a = this === null || this === void 0 ? void 0 : this.Errors) === null || _a === void 0 ? void 0 : _a.length) > 0; }
     /**
      *  Execute the operation. If true is returned, the instruction can be removed, otherwise it must be left, and the next instruction executed.
      *  This occurs in a cycle, keeping all operations "alive" until they are all completed.
     */
     /// <param name="btask">The brain task that is executing this operation, if any. If null, this is being called on the main thread. 
     /// This is provided so that the task's 'IsCancellationRequested' property can be monitored, allowing to gracefully abort current operations.</param>
-    async Execute(btask = null) {
+    async execute(btask = null) {
         try {
-            __classPrivateFieldSet(this, __Completed, await this.OnExecute(btask));
+            this._completed = await this.onExecute(btask);
         }
         catch (ex) {
-            __classPrivateFieldSet(this, __Completed, true); // (this should only be false if the task needs to be called again later - usually because details are missing that may be given at a later time)
-            this._AddError(ex);
+            this._completed = true; // (this should only be false if the task needs to be called again later - usually because details are missing that may be given at a later time)
+            this._addError(ex);
             // ('Completed' is not forced to false here to allow implementers to fire off exceptions to abort operations and complete at the same time; though the error will be set).
         }
-        return this.Completed;
+        return this.completed;
     }
-    _AddError(error) {
-        if (!__classPrivateFieldGet(this, __errors))
-            __classPrivateFieldSet(this, __errors, []);
-        if (__classPrivateFieldGet(this, __errors).indexOf(error) < 0)
-            __classPrivateFieldGet(this, __errors).push(error);
+    _addError(error) {
+        if (!this._errors)
+            this._errors = [];
+        if (this._errors.indexOf(error) < 0)
+            this._errors.push(error);
         return error;
     }
 }
 exports.default = Operation;
-__Completed = new WeakMap(), __errors = new WeakMap();
 //# sourceMappingURL=Operation.js.map

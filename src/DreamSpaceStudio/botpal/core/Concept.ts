@@ -658,7 +658,7 @@ export default abstract class Concept extends TimeReferencedObject implements IM
                     }
                 }
 
-                dicItem = DS.StringUtils.isEmptyOrWhitespace(word) ? dictionary.GlobalEntry
+                dicItem = DS.StringUtils.isEmptyOrWhitespace(word) ? dictionary.globalEntry
                     : dictionary.addTextPart(word, pos); // (this adds the word into the dictionary, build a small word base from the concept patterns)
 
                 dicItem.addConceptHandler(handler);

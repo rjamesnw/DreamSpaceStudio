@@ -123,7 +123,7 @@ export default class MultiNode<T extends MultiNode<any>>
     */
     /// <param name="node"> . </param>
     /// <returns> A Node. </returns>
-    AddSibling(node: T): T {
+    addSibling(node: T): T {
         if (node == null)
             throw DS.Exception.argumentUndefinedOrNull('MultiNode.addSibling()', 'node');
 

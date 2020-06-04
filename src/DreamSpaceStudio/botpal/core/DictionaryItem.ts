@@ -3,17 +3,16 @@
 import Memory, { IMemoryObject } from "./Memory";
 import TimeReferencedObject from "./TimeReferencedObject";
 import TextPart from "./TextPart";
-import Dictionary from "./Dictionary";
+import Dictionary, { Phrase } from "./Dictionary";
 import { PartOfSpeech } from "./POS";
 import { TenseTypes, Plurality } from "./Enums";
-import { bool } from "aws-sdk/clients/signer";
 import { IEquality } from "./Comparer";
 import { ConceptHandler } from "./Concept";
 import Context from "./Context";
 
 /**
- A dictionary item is a map of text to its use in some context.
-*/
+ * A dictionary item is a map of text to its use in some context.
+ */
 export default class DictionaryItem extends TimeReferencedObject implements IMemoryObject, IEquality {
     // --------------------------------------------------------------------------------------------------------------------
 
@@ -22,26 +21,32 @@ export default class DictionaryItem extends TimeReferencedObject implements IMem
     get memory(): Memory { return this.dictionary?.memory; }
 
     /**
-     A text part instance that relates to this dictionary item.
-    */
+     * A text part instance that relates to this dictionary item.
+     */
     get textPart(): TextPart { return this.#_textPart; }
     #_textPart: TextPart;
 
     /**
-     The grammar type for the underlying word for this map.  It is used to complete the expected grammar types needed by
-     other concepts waiting for resolution.
-    */
+     * The grammar type for the underlying word for this map.  It is used to complete the expected grammar types needed by
+     * other concepts waiting for resolution.
+     */
     pos: PartOfSpeech;
 
     /**
-     The tense type for the underlying word for this map.
-    */
+     * The tense type for the underlying word for this map.
+     */
     tenseType: TenseTypes;
 
     /**
-     The plurality for the underlying word for this map.
-    */
+     * The plurality for the underlying word for this map.
+     */
     plurality: Plurality;
+
+    /**
+     * An array of phrases that contain this dictionary item.
+     * This can be used as a cross reference, typically in case of miss-spellings where at least one or more other words are correct.
+     */
+    relatedPhrases: Phrase[];
 
     get key(): string { return DictionaryItem.createKey(this.#_textPart?.groupKey, this.pos, this.tenseType, this.plurality); }
 
@@ -54,8 +59,8 @@ export default class DictionaryItem extends TimeReferencedObject implements IMem
     }
 
     /**
-     Enumerates over all concepts associated with this dictionary item.
-    */
+     * Enumerates over all concepts associated with this dictionary item.
+     */
     conceptContexts(): Iterable<Context> { return this._ConceptContexts; }
     protected _ConceptContexts: Context[] = [];
 
@@ -66,8 +71,8 @@ export default class DictionaryItem extends TimeReferencedObject implements IMem
     //#_usages: Context[] = [];
 
     /**
-     A list of entries that mean the same or similar thing as this entry.
-    */
+     * A list of entries that mean the same or similar thing as this entry.
+     */
     get synonyms(): DictionaryItem[] { return this._synonyms && [...this._synonyms.values()] || []; }
     _synonyms: Map<string, DictionaryItem>;
 

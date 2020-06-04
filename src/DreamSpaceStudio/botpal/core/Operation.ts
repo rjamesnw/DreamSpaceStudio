@@ -5,10 +5,10 @@ import { Intents } from "./Enums";
 import Brain from "./Brain";
 import Concept from "./Concept";
 import Context from "./Context";
-import BrainTask from "./Tasks";
+import BrainTask from "./BrainTask";
 
 /**
- * An operation is a threaded task that needs to be completed in the "brain".
+ * An operation is a n asynchronous task that needs to be completed in the "brain".
  * A subject instance contains details on a tangible object or intangible idea.
  * For instance, a list of colors verses specific parts of a car.
  * Most conversations require one or more subject matters as focus of communication, along a verb; otherwise the
@@ -60,16 +60,16 @@ export default abstract class Operation extends TimeReferencedObject implements 
     /**
      *  Should be set to true when the operation completes successfully.
     */
-    get Completed() { return this.#_Completed; }
-    #_Completed: boolean;
+    get completed() { return this._completed; }
+    protected _completed: boolean;
 
-    get Errors() { return this.#_errors; }
-    #_errors: DS.Exception[];
+    get Errors() { return this._errors; }
+    protected _errors: DS.Exception[];
 
     /**
      *  Will be true if the operation completed successfully, but there were errors in the process.
     */
-    get IsCompletedWithErrors() { return this.Completed && this?.Errors?.length > 0; }
+    get IsCompletedWithErrors() { return this.completed && this?.Errors?.length > 0; }
 
     /**
      *  A list of commands to execute for this command, if any.
@@ -94,25 +94,25 @@ export default abstract class Operation extends TimeReferencedObject implements 
     */
     /// <param name="btask">The brain task that is executing this operation, if any. If null, this is being called on the main thread. 
     /// This is provided so that the task's 'IsCancellationRequested' property can be monitored, allowing to gracefully abort current operations.</param>
-    async  Execute(btask: BrainTask = null): Promise<boolean> {
+    async execute(btask: BrainTask = null): Promise<boolean> {
         try {
-            this.#_Completed = await this.OnExecute(btask);
+            this._completed = await this.onExecute(btask);
         }
         catch (ex) {
-            this.#_Completed = true; // (this should only be false if the task needs to be called again later - usually because details are missing that may be given at a later time)
-            this._AddError(ex);
+            this._completed = true; // (this should only be false if the task needs to be called again later - usually because details are missing that may be given at a later time)
+            this._addError(ex);
             // ('Completed' is not forced to false here to allow implementers to fire off exceptions to abort operations and complete at the same time; though the error will be set).
         }
-        return this.Completed;
+        return this.completed;
     }
 
-    protected _AddError(error: DS.Exception): DS.Exception {
-        if (!this.#_errors)
-            this.#_errors = [];
-        if (this.#_errors.indexOf(error) < 0)
-            this.#_errors.push(error);
+    protected _addError(error: DS.Exception): DS.Exception {
+        if (!this._errors)
+            this._errors = [];
+        if (this._errors.indexOf(error) < 0)
+            this._errors.push(error);
         return error;
     }
 
-    abstract OnExecute(task?: BrainTask): Promise<boolean>;
+    protected abstract onExecute(task?: BrainTask): Promise<boolean>;
 }

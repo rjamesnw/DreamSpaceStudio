@@ -1,81 +1,103 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Concept_1 = require("../core/Concept");
-class SplitTextState {
-    constructor(state) {
+const ThoughtGraph_1 = require("../nlp/ThoughtGraph");
+const Operation_1 = require("../core/Operation");
+const Enums_1 = require("../core/Enums");
+class SplitTextOperation extends Operation_1.default {
+    /**
+     * Constructs a new split text operation.
+     * @param {TextRecognitionConcept} concept The concept that triggered the operation.
+     * @param {ISplitTextState} state A state instance to copy from, if any.
+     * @param {ThoughtGraph} thoughtGraph A thought graph to clone from as a starting point.
+     */
+    constructor(concept, state, thoughtGraph) {
+        var _a;
+        super(concept.brain, Enums_1.Intents.SplitText);
+        this.concept = concept;
         if (typeof state == 'object')
             for (var p in state)
                 if (state.hasOwnProperty(p))
                     this[p] = state[p];
+        this.thoughtGraph = (_a = thoughtGraph === null || thoughtGraph === void 0 ? void 0 : thoughtGraph.clone()) !== null && _a !== void 0 ? _a : new ThoughtGraph_1.default();
     }
     clone() {
-        return new SplitTextState(this);
+        return new SplitTextOperation(this.concept, this.state, this.thoughtGraph);
     }
-    async execute() {
-        if (!this.started) {
-            this.partsLen = this.textParts.length;
-            this.spanEndIndex = this.partsLen;
-            this.started = true;
+    async onExecute(btask) {
+        var state = this.state;
+        if (!state.started) {
+            state.partsLen = state.textParts.length;
+            state.spanEndIndex = state.partsLen;
+            state.started = true;
         }
-        var possibleConceptContextMatches;
-        for (; this.partsIndex1 < this.partsLen; ++this.partsIndex1) // (select the first text part to search for)
+        var dictionaryItems; // Match<ConceptContext>[];
+        for (; state.partsIndex1 < state.partsLen; ++state.partsIndex1) // (select the first text part to search for)
          {
-            if (btask.IsCancellationRequested) {
-                Completed = true;
-                throw new OperationCanceledException(btask.Token);
+            if (btask.cancelled) {
+                this._completed = false;
+                return false;
             }
             // ... don't bother starting on empty parts, since it will cause double checking on the same text ...
-            while (this.partsIndex1 < this.partsLen && DS.StringUtils.isEmptyOrWhitespace(this.textParts[this.partsIndex1]))
-                ++this.partsIndex1;
-            if (this.partsIndex1 == this.partsLen)
+            while (state.partsIndex1 < state.partsLen && DS.StringUtils.isEmptyOrWhitespace(state.textParts[state.partsIndex1]))
+                ++state.partsIndex1;
+            if (state.partsIndex1 == state.partsLen)
                 break; // (everything else is just blank text parts, so exit)
-            possibleConceptContextMatches = null;
+            dictionaryItems = null;
             do {
                 // ... combine a span of text on each pass, combining one less part each time until a match is found ...
-                this.textToMatch = "";
-                for (this.partsIndex2 = this.partsIndex1; this.partsIndex2 < this.spanEndIndex; ++this.partsIndex2) {
-                    this.part = this.textParts[this.partsIndex2];
-                    if (this.partsIndex2 != this.partsIndex1 && this.partsIndex2 != this.spanEndIndex - 1 || !DS.StringUtils.isEmptyOrWhitespace(this.part))
-                        this.textToMatch += this.textParts[this.partsIndex2];
+                state.textToMatch = "";
+                for (state.partsIndex2 = state.partsIndex1; state.partsIndex2 < state.spanEndIndex; ++state.partsIndex2) {
+                    state.part = state.textParts[state.partsIndex2];
+                    if (state.partsIndex2 != state.partsIndex1 && state.partsIndex2 != state.spanEndIndex - 1 || !DS.StringUtils.isEmptyOrWhitespace(state.part))
+                        state.textToMatch += state.textParts[state.partsIndex2];
                 }
-                this.textToMatch = this.textToMatch.trim();
-                if (!DS.StringUtils.isEmptyOrWhitespace(this.textToMatch)) {
-                    possibleConceptContextMatches = this.concept.brain.findConceptContexts(this.textToMatch); // (returns a list of concepts matching the text)
-                    if (possibleConceptContextMatches.length > 0) {
-                        // (found some concepts for this text part, or combined parts [phrases])
+                state.textToMatch = state.textToMatch.trim();
+                if (!DS.StringUtils.isEmptyOrWhitespace(state.textToMatch)) {
+                    //possibleConceptContextMatches = this.concept.brain.findConceptContexts(state.textToMatch); // (returns a list of concepts matching the text)
+                    dictionaryItems = this.concept.brain.memory.dictionary.findSimilarEntries(state.textToMatch);
+                    if (dictionaryItems.length > 0) {
+                        // (found some dictionary matches for this text part, or combined parts [phrases])
                         // ... for phrases (more than one matched text part), spawn a new task to handle them, then continue
                         //    down to a single text part, then break out to process the possible matches ...
-                        var len = this.spanEndIndex - this.partsIndex2;
+                        var len = state.spanEndIndex - state.partsIndex2;
                         // TODO: DON'T SPAWN YET TO GET SHORTER MATCHES - keep the most text parts matched as the best likely match, until we can later "test" the "nature of things".
-                        //if (len > 1)
-                        //{
-                        //    // (if we find a match for multiple text parts, typically a phrase or combo word (like  "hot dog"), we still need to try other combinations without the phrase, so we need to spawn a new task 
-                        //    //  that continues to shorten down to a single text part, and locally continue to handle the phrase we just found)
-                        //    var spawnedOp = Clone();
-                        //    --spawnedOp.this.SpanEndIndex; // (adjust so the spawned job tries the next shorter text span; the SPAWNED job will try looking for a SHORTER phrase, while THIS current one will CONTINUE to use the one found)
-                        //    Brain.AddOperation(spawnedOp);
-                        //}
-                        this.partsIndex1 += len;
+                        if (len > 1) {
+                            // (if we find a match for multiple text parts, typically a phrase or combo word (like  "hot dog"), we still need to try other combinations without the phrase, so we need to spawn a new task 
+                            //  that continues to shorten down to a single text part, and locally continue to handle the phrase we just found)
+                            var spawnedOp = this.clone();
+                            --spawnedOp.state.spanEndIndex; // (adjust so the spawned job tries the next shorter text span; the SPAWNED job will try looking for a SHORTER phrase, while THIS current one will CONTINUE to use the one found)
+                            this.concept.brain.addOperation(spawnedOp);
+                        }
+                        state.partsIndex1 += len;
                         break;
                     } // (else there is no dictionary entry for this text part yet)
                 }
-                --this.spanEndIndex;
+                --state.spanEndIndex;
                 // ... skip over any white space on end ...
-                while (this.spanEndIndex > this.partsIndex1 && DS.StringUtils.isEmptyOrWhitespace(this.textParts[this.spanEndIndex - 1]))
-                    --this.spanEndIndex;
-            } while (this.spanEndIndex > this.partsIndex1);
-            if ((possibleConceptContextMatches === null || possibleConceptContextMatches === void 0 ? void 0 : possibleConceptContextMatches.length) > 0) // (also, if this.SpanEndIndex == this.PartsIndex2, no concepts were found)
+                while (state.spanEndIndex > state.partsIndex1 && DS.StringUtils.isEmptyOrWhitespace(state.textParts[state.spanEndIndex - 1]))
+                    --state.spanEndIndex;
+            } while (state.spanEndIndex > state.partsIndex1);
+            if ((dictionaryItems === null || dictionaryItems === void 0 ? void 0 : dictionaryItems.length) > 0) // (also, if state.SpanEndIndex == state.PartsIndex2, no concepts were found)
              {
-                // ... some concepts were found for this text part; add them ...
-                this.CurrentProcessConceptsOperation.AddConceptContextMatches(this.textPartIndex++, possibleConceptContextMatches, this.textToMatch);
+                // ... some items were found for this text part; add them ...
+                this.thoughtGraph.add(dictionaryItems[0]); // (always include the first one for this operation, and spawn more operations for the rest)
+                // state.CurrentProcessConceptsOperation.AddConceptContextMatches(state.textPartIndex++, dictionaryItems, state.textToMatch);
+                for (let i = 1, n = dictionaryItems.length; i < n; ++i) {
+                    var spawnedOp = this.clone();
+                    --spawnedOp.state.spanEndIndex; // (adjust so the spawned job tries the next shorter text span; the SPAWNED job will try looking for a SHORTER phrase, while THIS current one will CONTINUE to use the one found)
+                    spawnedOp.thoughtGraph.add(dictionaryItems[i]);
+                    this.concept.brain.addOperation(spawnedOp);
+                }
             }
             else {
-                // ... no concept exists to handle this text part, so skip and move on (it may be inferred later on after other concepts execute based on surrounding grammar) ...
-                this.CurrentProcessConceptsOperation.AddConceptContextMatches(this.textPartIndex++, null, this.textToMatch);
+                // ... no items exist matching this text part, so skip and move on (it may be inferred later on after other concepts execute based on surrounding grammar) ...
+                this.thoughtGraph.add(this.Brain.memory.dictionary.addTextPart(state.textToMatch));
             }
-            this.spanEndIndex = this.partsLen;
+            state.spanEndIndex = state.partsLen;
         }
         // (after splitting and searching for concepts, '_CurrentProcessConceptsOperation' should be set to run next upon return from this task)
+        return true;
     }
 }
 /**
@@ -95,6 +117,7 @@ class TextRecognitionConcept extends Concept_1.default {
     onAfterAllRegistered() { }
     onTextInput(text) {
         this.brain.createTask(this._splitTextOperation.bind(this), new SplitTextState({ concept: this, text: text }));
+        this.brain.addOperation();
     }
     async _splitTextOperation(task) {
         await task.state.execute();

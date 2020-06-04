@@ -111,7 +111,7 @@ export default class Brain {
         if (configureConcepts)
             this.configureDefaultConcepts();
 
-        var task = this._processOperations(null);
+        var task = this._processOperations(null); // (trigger the process operations cycle)
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -204,7 +204,7 @@ export default class Brain {
 
     findConceptContexts(text: string, threshold = 0.8): Match<ConceptContext>[] {
         var dicItems = threshold == 1 ? // (if 'threshold' is 1.0 then do a similar [near exact] match [using group keys], otherwise find close partial matches instead.
-            this.memory.dictionary.findSimilarEntries(Memory.Brain.ToGroupKey(text)).SelectMany(i => i.ConceptContexts.Select(c => new Match<ConceptContext>(c, 1.0)))
+            this.memory.dictionary.findSimilarEntriesByGroupKey(Memory.Brain.ToGroupKey(text)).SelectMany(i => i.ConceptContexts.Select(c => new Match<ConceptContext>(c, 1.0)))
             : this.memory.dictionary.findMatchingEntries(text, threshold).SelectMany(m => m.Item.ConceptContexts.Select(c => new Match<ConceptContext>(c, m.Score)));
         return dicItems.ToArray();
     }
@@ -231,7 +231,7 @@ export default class Brain {
             for (var i = 0, n = ops.length; i < n && !this.#_isShuttingDown; ++i) {
                 op = ops[i];
 
-                var completed = await op.Execute(btask);
+                var completed = await op.execute(btask);
 
                 if (completed)
                     this.#_operations.remove(op);

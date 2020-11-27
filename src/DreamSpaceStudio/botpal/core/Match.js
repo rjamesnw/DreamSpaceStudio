@@ -30,16 +30,30 @@ class Match {
         __classPrivateFieldSet(this, __score, value);
         this.changed = true;
     } }
+    equals(obj) {
+        return (obj instanceof Match) && obj.item == this.item && __classPrivateFieldGet(obj, __score) == __classPrivateFieldGet(this, __score);
+    }
 }
 exports.default = Match;
 __score = new WeakMap();
-//export class Comparer : Comparer < Match < T >>
-//{
-//    public override int Compare(Match<T> x, Match < T > y)
-//{
-//    var comp = (y._Score ?? -1) - (x._Score ?? -1); // (x and y are reversed so that the highest scores are at the top; null [unknown] scores are the lowest at -1, though are considered "pending")
-//    return comp < 0 ? -1 : comp > 0 ? 1 : 0;
-//}
-//}
+/**
+ * Plug in this comparer function to sort matches in descending order.
+ * This is the default comparer, which puts high scores first.
+ */
+Match.Comparer = function (x, y) {
+    var _a, _b;
+    var comp = ((_a = __classPrivateFieldGet(y, __score)) !== null && _a !== void 0 ? _a : -1) - ((_b = __classPrivateFieldGet(x, __score)) !== null && _b !== void 0 ? _b : -1);
+    // (x and y are reversed so that the highest scores are at the top; null/undefined [unknown] scores are the lowest at -1, though are considered "pending")
+    return comp < 0 ? -1 : comp > 0 ? 1 : 0;
+};
+/**
+ * Plug in this comparer function to sort matches in ascending order.
+ * This puts low scores first.
+ */
+Match.ReverseComparer = function (x, y) {
+    var _a, _b;
+    var comp = ((_a = __classPrivateFieldGet(x, __score)) !== null && _a !== void 0 ? _a : -1) - ((_b = __classPrivateFieldGet(y, __score)) !== null && _b !== void 0 ? _b : -1);
+    return comp < 0 ? -1 : comp > 0 ? 1 : 0;
+};
 // ========================================================================================================================
 //# sourceMappingURL=Match.js.map

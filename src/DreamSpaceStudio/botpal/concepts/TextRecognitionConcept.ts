@@ -1,4 +1,4 @@
-﻿import Concept from "../core/Concept";
+﻿import Concept, { concept } from "../core/Concept";
 import DictionaryItem from "../core/DictionaryItem";
 import Brain from "../core/Brain";
 import ThoughtGraph from "../nlp/ThoughtGraph";
@@ -7,8 +7,9 @@ import Match from "../core/Match";
 import Operation from "../core/Operation";
 import { Intents } from "../core/Enums";
 import TextPart from "../core/TextPart";
+import ThoughtGraphNode from "../nlp/ThoughtGraphNode";
 
-interface ISplitTextState {
+export interface ISplitTextState {
     text: string;
 
     started?: boolean; // (when false, this triggers initialization on first time execution)
@@ -26,7 +27,7 @@ interface ISplitTextState {
     groupKey?: string;
 }
 
-class SplitTextOperation extends Operation {
+export class SplitTextOperation extends Operation {
 
     state: ISplitTextState;
 
@@ -151,12 +152,13 @@ class SplitTextOperation extends Operation {
 }
 
 /**
- *  Ads a concept that recognizes user input text against the current dictionary.
+ *  Adds a concept that recognizes user input text against the current dictionary.
  *  When a user inputs text, it needs to be broken down into phrases and words.  This concept starts with all words and symbols
  *  as a single phrase. A special "group key" is made from the text for rapid lookups. This allows fast recognition of any
  *  existing phrases. A loop breaks own words and symbols by removing the right most entry until either a phrase, or single
  *  word or symbol remains. Each phrase, word, or symbol is added to the NLP via a ThoughtGrap root instance.
 */
+@concept()
 export default class TextRecognitionConcept extends Concept {
     // --------------------------------------------------------------------------------------------------------------------
 
@@ -173,16 +175,14 @@ export default class TextRecognitionConcept extends Concept {
     protected onAfterAllRegistered() { }
 
     onTextInput(text: string) {
-        this.brain.createTask(this._splitTextOperation.bind(this), new SplitTextState({ concept: this, text: text }));
-        this.brain.addOperation();
+        //x this.brain.createTask(this._splitTextOperation.bind(this), <ISplitTextState>{ concept: this, text: text });
+        this.brain.addOperation(new SplitTextOperation(this, { text: text }));
     }
 
-    private async _splitTextOperation(task: BrainTask<SplitTextState>): Promise<void> {
-
-        await task.state.execute();
-
-        return; // (completed, end task and remove it)
-    }
+    //x private async _splitTextOperation(task: BrainTask<ISplitTextState>): Promise<void> {
+    //x     await task.state.execute();
+    //x     return; // (completed, end task and remove it)
+    //x }
 
     // --------------------------------------------------------------------------------------------------------------------
 }

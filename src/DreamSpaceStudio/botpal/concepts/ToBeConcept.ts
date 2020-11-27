@@ -16,11 +16,11 @@ export default class ToBeConcept extends Concept {
     @conceptHandler("is")
     _Is(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious("how"))
-            context.addIntentHandler(this._How_Is_Intent, context.Operation.MinConfidence);
+            context.addIntentHandler(this._How_Is_Intent, context.operation.MinConfidence);
         else if (context.WasPrevious("time"))
-            context.addIntentHandler(this._How_Is_Intent, context.Operation.MinConfidence);
+            context.addIntentHandler(this._How_Is_Intent, context.operation.MinConfidence);
         else
-            context.addIntentHandler(this._Is_What_Intent, context.Operation.MinConfidence);
+            context.addIntentHandler(this._Is_What_Intent, context.operation.MinConfidence);
         //{
         //    var ctx = context.Context;
         //    if (ctx.AllSubjects().Any())

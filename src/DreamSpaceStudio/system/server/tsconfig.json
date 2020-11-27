@@ -11,7 +11,6 @@
     "outFile": "server_api.js",
     "target": "ES2017",
     "lib": [ "ES2017", "dom" ],
-    "module": "commonjs",
     "types": [ "node", "mysql", "mssql" ] // (include only types we need; prevents node types from being included)
   },
   "include": [

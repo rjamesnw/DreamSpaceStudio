@@ -40,5 +40,11 @@ export default class ThoughtGraph extends MultiNode<ThoughtGraph>
 
         return this;
     }
+
+    clone(): ThoughtGraph {
+        var copy = new ThoughtGraph();
+
+        return copy;
+    }
 }
 

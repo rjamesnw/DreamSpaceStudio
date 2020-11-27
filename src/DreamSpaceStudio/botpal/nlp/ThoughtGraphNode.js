@@ -195,7 +195,7 @@ class ThoughtGraphNode extends Node_1.default {
     _AddQuestion(q) {
         var qnode = this._requireQuestion();
         var newNode = new ThoughtGraphNode(q);
-        return qnode.AddSibling(newNode); // (the current node context is now the question group, not a single subject [noun])
+        return qnode.addSibling(newNode); // (the current node context is now the question group, not a single subject [noun])
     }
     _AddDeterminer(det) {
         var subject = this._requireSubject();
@@ -242,12 +242,12 @@ class ThoughtGraphNode extends Node_1.default {
     _AddNoun(noun) {
         var subject = this._requireSubject();
         var newNode = new ThoughtGraphNode(noun);
-        return subject.AddSibling(newNode); // (the new noun node now becomes the new current node)
+        return subject.addSibling(newNode); // (the new noun node now becomes the new current node)
     }
     _AddPronoun(pronoun) {
         var subject = this._requireSubject();
         var newNode = new ThoughtGraphNode(pronoun);
-        return subject.AddSibling(newNode); // (the new noun node now becomes the new current node)
+        return subject.addSibling(newNode); // (the new noun node now becomes the new current node)
     }
     FindInParents(item, includeThis = false, includeSiblings = false, includeConjunctions = false, depth = -1, exclude = null) {
         var _a, _b, _c, _d, _e, _f, _g;

@@ -33,13 +33,13 @@ export default class PronounsConceptConcept extends Concept {
     // TODO: *** Figure out how the left side will associate with the right.  Perhaps we expect to "iterate" over all the subjects, and assigned attributes from the right side. *** 
     @conceptHandler(PronounsConceptConcept.you_PN)
     _You(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
-        if (context.Context.HasQuestion(this._questionsConcept.how_AV))
+        if (context.context.HasQuestion(this._questionsConcept.how_AV))
             if (context.WasPrevious("are"))
-                context.addIntentHandler(this._How_Are_You_Intent, 1);
+                context.addIntentHandler(new DS.Delegate(this, this._How_Are_You_Intent), context.operation.MaxConfidence);
         return Promise.resolve(context);
     }
 
-    async _How_Are_You_Intent(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+    async _How_Are_You_Intent(context: ConceptHandlerContext): Promise<boolean> {
         await this.brain.doResponse("I'm doing great, thanks.");
         return Promise.resolve(true);
     }
@@ -54,17 +54,17 @@ export default class PronounsConceptConcept extends Concept {
     // --------------------------------------------------------------------------------------------------------------------
 
     @conceptHandler("it")
-    _What_Time_Is_It_Intent(context: ConceptHandlerContext): Promise<ConceptHandlerContext> _It_Exclamation(context: ConceptHandlerContext) {
-        if (context.Context.HasQuestion(_QuestionsConcept.What)) {
-            if (context.WasPrevious("is") && context.Context.AllSubjects().Any(s => s.NameOrTitle == _TimeConcept.Time))
-                context.addIntentHandler(_What_Time_Is_It_Intent, 1d);
+    async _It_Exclamation(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+        if (context.context.HasQuestion(_QuestionsConcept.What)) {
+            if (context.WasPrevious("is") && context.context.AllSubjects().Any(s => s.NameOrTitle == _TimeConcept.Time))
+                context.addIntentHandler(new DS.Delegate(this, this._What_Time_Is_It_Intent), context.operation.MaxConfidence);
         }
         return Promise.resolve(context);
     }
-    async Task<boolean>
-{
-        await this.brain.doResponse("The time is " + DateTime.Now.ToShortTimeString());
-        return true;
+
+    async _What_Time_Is_It_Intent(context: ConceptHandlerContext): Promise<boolean> {
+        await this.brain.doResponse("The time is " + new Date().toUTCString());
+        return Promise.resolve(true);
     }
 
     // --------------------------------------------------------------------------------------------------------------------

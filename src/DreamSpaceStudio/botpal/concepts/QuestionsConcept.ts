@@ -61,7 +61,7 @@ export default class QuestionsConcept extends Concept {
     @conceptHandler(QuestionsConcept.who_PN)
     _Who(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.who_PN));
+            context.context.Add(new QuestionContext(this, this.who_PN));
         return Promise.resolve(context);
     }
 
@@ -86,8 +86,8 @@ export default class QuestionsConcept extends Concept {
     @conceptHandler(QuestionsConcept.what)
     _What_Unknown_Question(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null)) {
-            context.Context.Add(new QuestionContext(this, this.what_PN));
-            context.addIntentHandler(new DS.Delegate(this, this._What_Intent), context.Operation.MinConfidence); // (this is like a fall-back plan if nothing else better is found)
+            context.context.Add(new QuestionContext(this, this.what_PN));
+            context.addIntentHandler(new DS.Delegate(this, this._What_Intent), context.operation.MinConfidence); // (this is like a fall-back plan if nothing else better is found)
         }
         return Promise.resolve(context);
     }
@@ -102,7 +102,7 @@ export default class QuestionsConcept extends Concept {
     @conceptHandler(QuestionsConcept.when_AV)
     _When(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.when_AV));
+            context.context.Add(new QuestionContext(this, this.when_AV));
         return Promise.resolve(context);
     }
 
@@ -111,7 +111,7 @@ export default class QuestionsConcept extends Concept {
     @conceptHandler(QuestionsConcept.where_AV)
     _Where(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.where_AV));
+            context.context.Add(new QuestionContext(this, this.where_AV));
         return Promise.resolve(context);
     }
 
@@ -120,7 +120,7 @@ export default class QuestionsConcept extends Concept {
     @conceptHandler(QuestionsConcept.why_AV)
     _Why(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.why_AV));
+            context.context.Add(new QuestionContext(this, this.why_AV));
         return Promise.resolve(context);
     }
 
@@ -129,8 +129,8 @@ export default class QuestionsConcept extends Concept {
     @conceptHandler(QuestionsConcept.how_AV)
     _How(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null)) {
-            context.Context.Add(new QuestionContext(this, this.how_AV));
-            context.addIntentHandler(new DS.Delegate(this, this._How_Intent), context.Operation.MinConfidence);
+            context.context.Add(new QuestionContext(this, this.how_AV));
+            context.addIntentHandler(new DS.Delegate(this, this._How_Intent), context.operation.MinConfidence);
         }
         return Promise.resolve(context);
     }
@@ -147,7 +147,7 @@ export default class QuestionsConcept extends Concept {
     @conceptHandler(QuestionsConcept.can_V)
     _Can(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.can_V));
+            context.context.Add(new QuestionContext(this, this.can_V));
         return Promise.resolve(context);
     }
 
@@ -156,14 +156,14 @@ export default class QuestionsConcept extends Concept {
     @conceptHandler(QuestionsConcept.is_V)
     _Is(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.is_V));
+            context.context.Add(new QuestionContext(this, this.is_V));
         return Promise.resolve(context);
     }
 
     @conceptHandler(QuestionsConcept.are_V)
     _Are(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.are_V));
+            context.context.Add(new QuestionContext(this, this.are_V));
         return Promise.resolve(context);
     }
 
@@ -172,7 +172,7 @@ export default class QuestionsConcept extends Concept {
     @conceptHandler(QuestionsConcept.if_C)
     _If(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null))
-            context.Context.Add(new QuestionContext(this, this.if_C));
+            context.context.Add(new QuestionContext(this, this.if_C));
         return Promise.resolve(context);
     }
 

@@ -7,21 +7,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const Concept_1 = require("../core/Concept");
-let AdverbConcept = /** @class */ (() => {
-    class AdverbConcept extends Concept_1.default {
-        // --------------------------------------------------------------------------------------------------------------------
-        constructor(brain) {
-            super(brain);
-        }
-        // --------------------------------------------------------------------------------------------------------------------
-        _Adverb(context) {
-            return Promise.resolve(context);
-        }
+class AdverbConcept extends Concept_1.default {
+    // --------------------------------------------------------------------------------------------------------------------
+    constructor(brain) {
+        super(brain);
     }
-    __decorate([
-        Concept_1.conceptHandler("that", " * that^AV *") // (ex: "I would not go that far")
-    ], AdverbConcept.prototype, "_Adverb", null);
-    return AdverbConcept;
-})();
+    // --------------------------------------------------------------------------------------------------------------------
+    _Adverb(context) {
+        return Promise.resolve(context);
+    }
+}
+__decorate([
+    Concept_1.conceptHandler("that", " * that^AV *") // (ex: "I would not go that far")
+], AdverbConcept.prototype, "_Adverb", null);
 exports.default = AdverbConcept;
 //# sourceMappingURL=Adverbs.js.map

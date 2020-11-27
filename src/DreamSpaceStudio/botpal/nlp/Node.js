@@ -100,7 +100,7 @@ class MultiNode {
     */
     /// <param name="node"> . </param>
     /// <returns> A Node. </returns>
-    AddSibling(node) {
+    addSibling(node) {
         if (node == null)
             throw DS.Exception.argumentUndefinedOrNull('MultiNode.addSibling()', 'node');
         if (node._parent != null && node._parent != this)

@@ -39,8 +39,8 @@ export default class TimeConcept extends Concept {
     @conceptHandler("time", "time")
     _What_Unknown_Question(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious("what")) {
-            context.Context.Add(new SubjectContext(this.memory, this, this.time));
-            context.addIntentHandler(this._Time_Intent, context.Operation.MinConfidence);
+            context.context.Add(new SubjectContext(this.memory, this, this.time));
+            context.addIntentHandler(this._Time_Intent, context.operation.MinConfidence);
         }
         return Promise.resolve(context);
     }

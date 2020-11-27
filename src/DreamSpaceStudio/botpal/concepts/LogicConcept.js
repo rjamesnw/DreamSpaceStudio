@@ -11,24 +11,21 @@ const QuestionsConcept_1 = require("./QuestionsConcept");
 /**
  *  This concept coverts the idea of "when {some criteria} do {some action}" style statements.
  */
-let LogicConcept = /** @class */ (() => {
-    let LogicConcept = class LogicConcept extends Concept_1.default {
-        // --------------------------------------------------------------------------------------------------------------------
-        constructor(brain) {
-            super(brain);
-        }
-        // --------------------------------------------------------------------------------------------------------------------
-        _FindWhen(context) {
-            return Promise.resolve(context);
-        }
-    };
-    __decorate([
-        Concept_1.conceptHandler(QuestionsConcept_1.default.when_AV) //x "when^AV ^N/^PN ^V ^V/^T/^N/^PP ^V"
-    ], LogicConcept.prototype, "_FindWhen", null);
-    LogicConcept = __decorate([
-        Concept_1.concept()
-    ], LogicConcept);
-    return LogicConcept;
-})();
+let LogicConcept = class LogicConcept extends Concept_1.default {
+    // --------------------------------------------------------------------------------------------------------------------
+    constructor(brain) {
+        super(brain);
+    }
+    // --------------------------------------------------------------------------------------------------------------------
+    _FindWhen(context) {
+        return Promise.resolve(context);
+    }
+};
+__decorate([
+    Concept_1.conceptHandler(QuestionsConcept_1.default.when_AV) //x "when^AV ^N/^PN ^V ^V/^T/^N/^PP ^V"
+], LogicConcept.prototype, "_FindWhen", null);
+LogicConcept = __decorate([
+    Concept_1.concept()
+], LogicConcept);
 exports.default = LogicConcept;
 //# sourceMappingURL=LogicConcept.js.map

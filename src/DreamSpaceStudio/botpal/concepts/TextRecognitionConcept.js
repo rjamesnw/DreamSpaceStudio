@@ -1,5 +1,12 @@
 "use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.SplitTextOperation = void 0;
 const Concept_1 = require("../core/Concept");
 const ThoughtGraph_1 = require("../nlp/ThoughtGraph");
 const Operation_1 = require("../core/Operation");
@@ -100,14 +107,15 @@ class SplitTextOperation extends Operation_1.default {
         return true;
     }
 }
+exports.SplitTextOperation = SplitTextOperation;
 /**
- *  Ads a concept that recognizes user input text against the current dictionary.
+ *  Adds a concept that recognizes user input text against the current dictionary.
  *  When a user inputs text, it needs to be broken down into phrases and words.  This concept starts with all words and symbols
  *  as a single phrase. A special "group key" is made from the text for rapid lookups. This allows fast recognition of any
  *  existing phrases. A loop breaks own words and symbols by removing the right most entry until either a phrase, or single
  *  word or symbol remains. Each phrase, word, or symbol is added to the NLP via a ThoughtGrap root instance.
 */
-class TextRecognitionConcept extends Concept_1.default {
+let TextRecognitionConcept = class TextRecognitionConcept extends Concept_1.default {
     // --------------------------------------------------------------------------------------------------------------------
     constructor(brain) {
         super(brain);
@@ -116,13 +124,12 @@ class TextRecognitionConcept extends Concept_1.default {
     /** Executes once the after all core system concepts have been registered. */
     onAfterAllRegistered() { }
     onTextInput(text) {
-        this.brain.createTask(this._splitTextOperation.bind(this), new SplitTextState({ concept: this, text: text }));
-        this.brain.addOperation();
+        //x this.brain.createTask(this._splitTextOperation.bind(this), <ISplitTextState>{ concept: this, text: text });
+        this.brain.addOperation(new SplitTextOperation(this, { text: text }));
     }
-    async _splitTextOperation(task) {
-        await task.state.execute();
-        return; // (completed, end task and remove it)
-    }
-}
+};
+TextRecognitionConcept = __decorate([
+    Concept_1.concept()
+], TextRecognitionConcept);
 exports.default = TextRecognitionConcept;
 //# sourceMappingURL=TextRecognitionConcept.js.map

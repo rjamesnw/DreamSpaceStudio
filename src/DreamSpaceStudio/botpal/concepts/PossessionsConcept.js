@@ -23,16 +23,13 @@ var PossessionTypes;
 /**
  *  Holds connection and relationship information between concepts.
 */
-let PossessionsConcept = /** @class */ (() => {
-    let PossessionsConcept = class PossessionsConcept extends Concept_1.default {
-        constructor(brain) {
-            super(brain);
-        }
-    };
-    PossessionsConcept = __decorate([
-        Concept_1.concept()
-    ], PossessionsConcept);
-    return PossessionsConcept;
-})();
+let PossessionsConcept = class PossessionsConcept extends Concept_1.default {
+    constructor(brain) {
+        super(brain);
+    }
+};
+PossessionsConcept = __decorate([
+    Concept_1.concept()
+], PossessionsConcept);
 exports.default = PossessionsConcept;
 //# sourceMappingURL=PossessionsConcept.js.map

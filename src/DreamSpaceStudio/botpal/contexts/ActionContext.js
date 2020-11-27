@@ -4,7 +4,7 @@ const Context_1 = require("../core/Context");
 class ActionContext extends Context_1.default {
     // --------------------------------------------------------------------------------------------------------------------
     constructor(concept, actionName, parent = null) {
-        super(concept.memory, concept, parent);
+        super(concept, parent);
         this.Name = actionName;
     }
 }

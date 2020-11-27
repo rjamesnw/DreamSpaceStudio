@@ -13,27 +13,24 @@ const ColorContext_1 = require("../contexts/ColorContext");
  * @param Brain brain
  * @returns
  */
-let ColorConcept = /** @class */ (() => {
-    class ColorConcept extends Concept_1.default {
-        // --------------------------------------------------------------------------------------------------------------------
-        constructor(brain) {
-            super(brain);
-        }
-        // --------------------------------------------------------------------------------------------------------------------
-        _AssignColor(context) {
-            var currentContext = context.Context; // (get the current context)
-            var subject = currentContext.Get();
-            //x var subjectRootContext = currentContext.SubjectRootContext; // (get the root context with subjects)
-            var color = context.CurrentDictionaryItem; // (get the color dictionary entry that resulted in this handler call)
-            var colorContext = new ColorContext_1.default(this, color); // (add it to a new color context)
-            context.Context.Add(colorContext); // (connect it to the root subject context)
-            return Promise.resolve(context.SetConfidence(1));
-        }
+class ColorConcept extends Concept_1.default {
+    // --------------------------------------------------------------------------------------------------------------------
+    constructor(brain) {
+        super(brain);
     }
-    __decorate([
-        Concept_1.conceptHandler("red,green,blue,purple,yellow,black,white,brown,cyan,sky blue,magenta,gold")
-    ], ColorConcept.prototype, "_AssignColor", null);
-    return ColorConcept;
-})();
+    // --------------------------------------------------------------------------------------------------------------------
+    _AssignColor(context) {
+        var currentContext = context.context; // (get the current context)
+        var subject = currentContext.Get();
+        //x var subjectRootContext = currentContext.SubjectRootContext; // (get the root context with subjects)
+        var color = context.currentDictionaryItem; // (get the color dictionary entry that resulted in this handler call)
+        var colorContext = new ColorContext_1.default(this, color); // (add it to a new color context)
+        context.context.Add(colorContext); // (connect it to the root subject context)
+        return Promise.resolve(context.SetConfidence(1));
+    }
+}
+__decorate([
+    Concept_1.conceptHandler("red,green,blue,purple,yellow,black,white,brown,cyan,sky blue,magenta,gold")
+], ColorConcept.prototype, "_AssignColor", null);
 exports.default = ColorConcept;
 //# sourceMappingURL=ColorConcept.js.map

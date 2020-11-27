@@ -13,7 +13,7 @@ export default class ActionContext extends Context {
     // --------------------------------------------------------------------------------------------------------------------
 
     constructor(concept: Concept, actionName: DictionaryItem, parent: Context = null) {
-        super(concept.memory, concept, parent)
+        super(concept, parent)
         this.Name = actionName;
     }
 

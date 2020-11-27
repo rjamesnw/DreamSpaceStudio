@@ -109,29 +109,29 @@ export interface IntentHandler extends DS.IDelegate<Concept, { (context: Concept
 export class ConceptHandlerContext implements IMemoryObject {
     // --------------------------------------------------------------------------------------------------------------------
 
-    get memory(): Memory { return this.Operation.Memory; }
+    get memory(): Memory { return this.operation.Memory; }
     #_memory: Memory;
 
     /**
      *  The current brain task operation that is processing the concepts.
-    */
-    readonly Operation: ProcessConceptsOperation;
+     */
+    readonly operation: ProcessConceptsOperation;
 
     /**
      *  The new or existing context that is the result of various concept handlers. It is used to build the content of the user's intent.
      *  New contexts should be added or associated as required, or data loss will occur; causing much confusion.
      *  An intent context is shared globally within a single text-part-combination path and helps to build the over all intent of the user.
-    */
-    Context: IntentContext;
+     */
+    context: IntentContext;
 
     /**
      *  When a concept returns a context, it also sets a confidence level from 0.0 to 1.0 on how sure it is that it is the direction of intent by the user.
-    */
+     */
     Confidence: number;
 
     /**
      *  Upon return from a concept handler, the system keeps track of the confidence total to calculate an average later.
-    */
+     */
     ConfidenceSum: number;
 
     /** Gets the average confidence at the current <see cref="Index"/>. */
@@ -171,7 +171,7 @@ export class ConceptHandlerContext implements IMemoryObject {
 
     /** Gets the dictionary item that resulted in the current concept match. */
     /// <value> The dictionary item of the current concept match. </value>
-    get CurrentDictionaryItem(): DictionaryItem { return CurrentMatch?.Item.DictionaryItem; }
+    get currentDictionaryItem(): DictionaryItem { return this.currentMatch()?.Item.DictionaryItem; }
 
     /**
      *  For concept handlers, this is the concept matched to the immediate right.
@@ -181,8 +181,8 @@ export class ConceptHandlerContext implements IMemoryObject {
     // --------------------------------------------------------------------------------------------------------------------
 
     constructor(operation: ProcessConceptsOperation, index: number, initialMatchedConceptsCapacity: number = null) {
-        this.Operation = operation ?? throw new ArgumentNullException(nameof(operation));
-        this.Context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
+        this.operation = operation ?? throw new ArgumentNullException(nameof(operation));
+        this.context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
         this.Index = index;
         this.Confidence = 0.0;
         this.ConfidenceSum = 0.0;
@@ -192,8 +192,8 @@ export class ConceptHandlerContext implements IMemoryObject {
     }
 
     ConceptHandlerContext(operation: ProcessConceptsOperation, index: number, initialMatchedConcepts: Iterable<ConceptMatch>, probableIntentHandlers: Iterable<Iterable<Match<IntentHandler>>> = null) {
-        this.Operation = operation ?? throw new ArgumentNullException(nameof(operation));
-        this.Context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
+        this.operation = operation ?? throw new ArgumentNullException(nameof(operation));
+        this.context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
         this.Index = index;
         this.Confidence = 0.0;
         this.ConfidenceSum = 0.0;
@@ -204,8 +204,8 @@ export class ConceptHandlerContext implements IMemoryObject {
     }
 
     ConceptHandlerContext(operation: ProcessConceptsOperation, index: number, matchedConcept: ConceptMatch) {
-        this.Operation = operation ?? throw new ArgumentNullException(nameof(operation));
-        this.Context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
+        this.operation = operation ?? throw new ArgumentNullException(nameof(operation));
+        this.context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
         this.Index = index;
         this.Confidence = 0.0;
         this.ConfidenceSum = 0.0;
@@ -224,15 +224,15 @@ export class ConceptHandlerContext implements IMemoryObject {
     /// <returns>A new concept handler context to use with calling concept handlers.
     /// The clone is returned with a 0.0 Confidence value and the 'matchedConcept' reference added.</returns>
     Clone(index: number, matchedConcept: ConceptMatch): ConceptHandlerContext {
-        matchedConceptsCopy: Iterable < ConceptMatch > = MatchedConcepts;
+        var matchedConceptsCopy: Iterable<ConceptMatch> = MatchedConcepts;
 
         if (matchedConcept != null)
             matchedConceptsCopy = MatchedConcepts.Concat(new ConceptMatch[] { matchedConcept });
 
-        return new ConceptHandlerContext(Operation, index, matchedConceptsCopy, ProbableIntentHandlers)
+        return new ConceptHandlerContext(this.operation, index, matchedConceptsCopy, this.ProbableIntentHandlers)
         {
-            Context = Context,
-                ConfidenceSum = ConfidenceSum // (note: 'Confidence' is NEVER copied, as it must be 0 for each new concept handler call)
+            Context = this.context,
+                ConfidenceSum = this.ConfidenceSum // (note: 'Confidence' is NEVER copied, as it must be 0 for each new concept handler call)
         };
     }
 

@@ -2153,35 +2153,47 @@ declare namespace DS {
         /** Returns the time zone offset in milliseconds ({Date}.getTimezoneOffset() returns it in minutes). */
         static getTimeZoneOffset(): number;
         /** Creates a TimeSpan object from the current value returned by calling 'Date.now()', or 'new Date().getTime()' if 'now()' is not supported. */
-        static now(): ITimeSpan;
+        static now(): TimeSpan;
         static utcTimeToLocalYear(timeInMs: number): number;
         static utcTimeToLocalDayOfYear(timeInMs: number): number;
         static utcTimeToLocalHours(timeInMs: number): number;
         static utcTimeToLocalMinutes(timeInMs: number): number;
         static utcTimeToLocalSeconds(timeInMs: number): number;
         static utcTimeToLocalMilliseconds(timeInMs: number): number;
-        static utcTimeToLocalTime(timeInMs: number): ITimeSpan;
+        static utcTimeToLocalTime(timeInMs: number): TimeSpan;
         /** Creates and returns a TimeSpan that represents the date object.
            * This relates to the 'date.getTime()' function, which returns the internal date span in milliseconds (from Epoch) with the time zone added.
            * See also: fromLocalDateAsUTC().
            */
-        static fromDate(date: Date): ITimeSpan;
+        static fromDate(date: Date): TimeSpan;
         /**
            * Creates and returns a TimeSpan that represents the date object's localized time as Coordinated Universal Time (UTC).
            * Note: This removes the time zone added to 'date.getTime()' to make a TimeSpan with localized values, but remember that values in a TimeSpan
            * instance always represent UTC time by default.
            * See also: fromDate().
            */
-        static fromLocalDateAsUTC(date: Date): ITimeSpan;
+        static fromLocalDateAsUTC(date: Date): TimeSpan;
+        /** Creates and returns a TimeSpan that represents the given number of hours since Epoch.
+         */
+        static fromHours(hours: number): TimeSpan;
+        /** Creates and returns a TimeSpan that represents the given number of minutes since Epoch.
+         */
+        static fromMinutes(minutes: number): TimeSpan;
+        /** Creates and returns a TimeSpan that represents the given number of seconds since Epoch.
+         */
+        static fromSeconds(seconds: number): TimeSpan;
+        /** Creates and returns a TimeSpan that represents the given number of milliseconds since Epoch.
+         */
+        static fromMs(ms: number): TimeSpan;
         private static __parseSQLDateTime;
         /** Creates and returns a TimeSpan that represents the specified date string as the local time.
             * Note: The 'Date.parse()' function is used to parse the text, so any ISO-8601 formatted dates (YYYY-MM-DDTHH:mm:ss.sssZ) will be treated as UTC
             * based (no time zone applied). You can detect such cases using 'isISO8601()', or call 'parseLocal()' instead.
             * This function also supports the SQL standard Date/Time format (see 'isSQLDateTime()'), which is not supported in IE (yet).
             */
-        static parse(dateString: string): ITimeSpan;
+        static parse(dateString: string): TimeSpan;
         /** Creates and returns a TimeSpan that represents the specified date string as Coordinated Universal Time (UTC). */
-        static parseAsUTC(dateString: string): ITimeSpan;
+        static parseAsUTC(dateString: string): TimeSpan;
         /** Returns true if the specified date is in the ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ).
              * Since JavaScript 'Date' objects parse ISO strings as UTC based (not localized), this function help detect such cases.
              * Note: This returns true if the date string matches at least the first parts of the format (i.e. date, or date+time, or date+time+timezone).
@@ -2220,15 +2232,15 @@ declare namespace DS {
         /** Set the time of this TimeSpan, in milliseconds.
             * Note: This function assumes that milliseconds representing leap year days are included (same as the JavaScript 'Date' object).
             */
-        setTime(timeInMs: number): ITimeSpan;
+        setTime(timeInMs: number): TimeSpan;
         /** Returns the internal millisecond total for this TimeSpan.
             * Note:
             */
         getTime(): number;
-        add(timeInMS: number): ITimeSpan;
-        add(yearOffset: number, dayOfYearOffset: number, hoursOffset?: number, minutesOffset?: number, secondsOffset?: number, msOffset?: number): ITimeSpan;
-        subtract(timeInMS: number): ITimeSpan;
-        subtract(yearOffset: number, dayOfYearOffset: number, hoursOffset?: number, minutesOffset?: number, secondsOffset?: number, msOffset?: number): ITimeSpan;
+        add(timeInMS: number): TimeSpan;
+        add(yearOffset: number, dayOfYearOffset: number, hoursOffset?: number, minutesOffset?: number, secondsOffset?: number, msOffset?: number): TimeSpan;
+        subtract(timeInMS: number): TimeSpan;
+        subtract(yearOffset: number, dayOfYearOffset: number, hoursOffset?: number, minutesOffset?: number, secondsOffset?: number, msOffset?: number): TimeSpan;
         /** Returns the time span as a string (note: this is NOT a date string).
             * To exclude milliseconds, set 'includeMilliseconds' false.
             * @param {boolean} includeTime If true (default), the time part is included, otherwise only the date part is returned.
@@ -2547,7 +2559,9 @@ declare namespace DS {
         function getDirectories(path: string): Promise<string[]>;
         /**
          * Returns true if the given file or directory path exists.
-         * @param path
+         * @param path The path to check, with or without a filename.
+         * @param readAccess (optional; defaults to false) Check if we can read the contents.
+         * @param writeAccess (optional; defaults to false) Check if we can make changes.
          */
         function exists(path: string, readAccess?: boolean, writeAccess?: boolean): Promise<boolean>;
     }

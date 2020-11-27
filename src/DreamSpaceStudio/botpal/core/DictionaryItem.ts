@@ -64,11 +64,12 @@ export default class DictionaryItem extends TimeReferencedObject implements IMem
     conceptContexts(): Iterable<Context> { return this._ConceptContexts; }
     protected _ConceptContexts: Context[] = [];
 
-    ///**
-    // Holds a reference to all contexts where this entry is associated with.
-    // This is only relevant for contexts committed to memory and not during processing.
-    //*/
-    //#_usages: Context[] = [];
+    /**
+     Holds a reference to all contexts where this entry is associated with.
+     This is only relevant for contexts committed to memory and not during processing.
+    */
+    #_usages: Context[] = [];
+    get usageCount(): number { return this.#_usages?.length || 0; }
 
     /**
      * A list of entries that mean the same or similar thing as this entry.

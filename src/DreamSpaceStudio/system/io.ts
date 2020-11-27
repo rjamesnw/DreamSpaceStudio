@@ -226,11 +226,11 @@ namespace DS {
         export interface IResponse<TData = any> extends Response<TData> { }
 
         /** Attempts to get an HTTP resource from a URL. */
-        export function get<T = object>(url: string, type?: ResourceTypes.Application_JSON, method?: Methods = "GET", data?: any): Promise<T>;
+        export function get<T = object>(url: string, type?: ResourceTypes.Application_JSON, method?: Methods, data?: any): Promise<T>;
         /** Attempts to get an HTTP resource from a URL. */
-        export function get<T = string>(url: string, type?: ResourceTypes.Text_XML, method?: Methods = "GET", data?: any): Promise<T>;
+        export function get<T = string>(url: string, type?: ResourceTypes.Text_XML, method?: Methods, data?: any): Promise<T>;
         /** Attempts to get an HTTP resource from a URL. */
-        export function get<T = string>(url: string, type?: ResourceTypes.Text_Plain, method?: Methods = "GET", data?: any): Promise<T>;
+        export function get<T = string>(url: string, type?: ResourceTypes.Text_Plain, method?: Methods, data?: any): Promise<T>;
         /** Attempts to get an HTTP resource from a URL. */
         export function get<T = any>(url: string, type?: string, method?: Methods, data?: any): Promise<T>;
         export function get<T>(url: string, type: ResourceTypes, method: Methods = "GET", data?: any): Promise<T> {
@@ -256,9 +256,11 @@ namespace DS {
 
         /**
          * Returns true if the given file or directory path exists.
-         * @param path
+         * @param path The path to check, with or without a filename.
+         * @param readAccess (optional; defaults to false) Check if we can read the contents.
+         * @param writeAccess (optional; defaults to false) Check if we can make changes.
          */
-        export declare function exists(path: string, readAccess = false, writeAccess = false): Promise<boolean>;
+        export declare function exists(path: string, readAccess?: boolean, writeAccess?: boolean): Promise<boolean>;
     }
 }
 

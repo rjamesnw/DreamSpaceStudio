@@ -15,7 +15,7 @@ export default class DeterminerConcept extends Concept {
 
     @conceptHandler("A^DI", " * A^DI *") // (indefinite determiner, any such thing)
     _A(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
-        var currentContext = context.Context; // (get the current context)
+        var currentContext = context.context; // (get the current context)
         var timeContext = new FrequencyContext(this, currentContext);
         timeContext.relationshipType = RelationshipTypes.One;
         currentContext.Add(timeContext);
@@ -26,7 +26,7 @@ export default class DeterminerConcept extends Concept {
 
     @conceptHandler("The", "* The^D *") // (definite determiner, a specific/known thing)
     _The(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
-        var currentContext = context.Context; // (get the current context)
+        var currentContext = context.context; // (get the current context)
         var timeContext = new FrequencyContext(this, currentContext);
         timeContext.relationshipType = RelationshipTypes.One;
         currentContext.Add(timeContext);
@@ -37,7 +37,7 @@ export default class DeterminerConcept extends Concept {
 
     @conceptHandler("My^D", "* My^D *")
     _My(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
-        var currentContext = context.Context; // (get the current context)
+        var currentContext = context.context; // (get the current context)
         var timeContext = new FrequencyContext(this, currentContext);
         timeContext.relationshipType = RelationshipTypes.One;
         currentContext.Add(timeContext);
@@ -60,7 +60,7 @@ export default class DeterminerConcept extends Concept {
 
     @conceptHandler("those^D", " * those^D *")
     _Those(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
-        var currentContext = context.Context; // (get the current context)
+        var currentContext = context.context; // (get the current context)
         var timeContext = new FrequencyContext(this, currentContext);
         timeContext.relationshipType = RelationshipTypes.Many;
         currentContext.Add(timeContext);
@@ -71,7 +71,7 @@ export default class DeterminerConcept extends Concept {
 
     @conceptHandler("these^D", " * these^D *")
     _These(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
-        var currentContext = context.Context; // (get the current context)
+        var currentContext = context.context; // (get the current context)
         var timeContext = new FrequencyContext(this, currentContext);
         timeContext.relationshipType = RelationshipTypes.Many;
         currentContext.Add(timeContext);
@@ -82,7 +82,7 @@ export default class DeterminerConcept extends Concept {
 
     @conceptHandler("every^DI", " * every^DI *")
     _Every(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
-        var currentContext = context.Context; // (get the current context)
+        var currentContext = context.context; // (get the current context)
         var timeContext = new FrequencyContext(this, currentContext);
         timeContext.relationshipType = RelationshipTypes.Many;
         currentContext.Add(timeContext);
@@ -93,7 +93,7 @@ export default class DeterminerConcept extends Concept {
 
     @conceptHandler("all^DI", " * all^DI *")
     _All(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
-        var currentContext = context.Context; // (get the current context)
+        var currentContext = context.context; // (get the current context)
         var timeContext = new FrequencyContext(this, currentContext);
         timeContext.relationshipType = RelationshipTypes.Many;
         currentContext.Add(timeContext);

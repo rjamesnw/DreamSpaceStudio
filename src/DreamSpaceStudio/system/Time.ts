@@ -48,7 +48,7 @@ namespace DS {
         static getTimeZoneOffset() { return DS.Time.__localTimeZoneOffset; }
 
         /** Creates a TimeSpan object from the current value returned by calling 'Date.now()', or 'new Date().getTime()' if 'now()' is not supported. */
-        static now(): ITimeSpan { return Date.now ? new TimeSpan(Date.now()) : TimeSpan.fromDate(new Date()); }
+        static now(): TimeSpan { return Date.now ? new TimeSpan(Date.now()) : TimeSpan.fromDate(new Date()); }
 
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
 
@@ -79,7 +79,7 @@ namespace DS {
             return Math.floor(((timeInMs || 0) - DS.Time.__localTimeZoneOffset) / DS.Time.__millisecondsPerSecond % 1 * DS.Time.__millisecondsPerSecond);
         }
 
-        static utcTimeToLocalTime(timeInMs: number): ITimeSpan {
+        static utcTimeToLocalTime(timeInMs: number): TimeSpan {
             return new TimeSpan((timeInMs || 0) - DS.Time.__localTimeZoneOffset);
         }
 
@@ -87,7 +87,7 @@ namespace DS {
            * This relates to the 'date.getTime()' function, which returns the internal date span in milliseconds (from Epoch) with the time zone added.
            * See also: fromLocalDateAsUTC().
            */
-        static fromDate(date: Date): ITimeSpan {
+        static fromDate(date: Date): TimeSpan {
             if (!date.valueOf || isNaN(date.valueOf())) return null; // (date is invalid)
             return new TimeSpan(date.getTime()); // (note: 'getTime()' returns the UTC time)
         }
@@ -98,12 +98,36 @@ namespace DS {
            * instance always represent UTC time by default.
            * See also: fromDate().
            */
-        static fromLocalDateAsUTC(date: Date): ITimeSpan {
+        static fromLocalDateAsUTC(date: Date): TimeSpan {
             if (!date.valueOf || isNaN(date.valueOf())) return null; // (date is invalid)
             return TimeSpan.utcTimeToLocalTime(date.getTime()); // (note: 'getTime()' returns the UTC time)
         }
 
-        private static __parseSQLDateTime(dateString: string): ITimeSpan {
+        /** Creates and returns a TimeSpan that represents the given number of hours since Epoch.
+         */
+        static fromHours(hours: number): TimeSpan {
+            return new TimeSpan(hours * DS.Time.__millisecondsPerHour); // (note: 'getTime()' returns the UTC time)
+        }
+
+        /** Creates and returns a TimeSpan that represents the given number of minutes since Epoch.
+         */
+        static fromMinutes(minutes: number): TimeSpan {
+            return new TimeSpan(minutes * DS.Time.__millisecondsPerMinute); // (note: 'getTime()' returns the UTC time)
+        }
+
+        /** Creates and returns a TimeSpan that represents the given number of seconds since Epoch.
+         */
+        static fromSeconds(seconds: number): TimeSpan {
+            return new TimeSpan(seconds * DS.Time.__millisecondsPerSecond); // (note: 'getTime()' returns the UTC time)
+        }
+
+        /** Creates and returns a TimeSpan that represents the given number of milliseconds since Epoch.
+         */
+        static fromMs(ms: number): TimeSpan {
+            return new TimeSpan(ms); // (note: 'getTime()' returns the UTC time)
+        }
+
+        private static __parseSQLDateTime(dateString: string): TimeSpan {
             dateString = dateString.replace(' ', 'T'); // TODO: Make more compliant.
             var ms = Date.parse(dateString);
             ms += DS.Time.__localTimeZoneOffset;
@@ -115,7 +139,7 @@ namespace DS {
             * based (no time zone applied). You can detect such cases using 'isISO8601()', or call 'parseLocal()' instead.
             * This function also supports the SQL standard Date/Time format (see 'isSQLDateTime()'), which is not supported in IE (yet).
             */
-        static parse(dateString: string): ITimeSpan {
+        static parse(dateString: string): TimeSpan {
             if (TimeSpan.isSQLDateTime(dateString, true))
                 return TimeSpan.__parseSQLDateTime(dateString);
             var ms = Date.parse(dateString);
@@ -135,7 +159,7 @@ namespace DS {
         //}
 
         /** Creates and returns a TimeSpan that represents the specified date string as Coordinated Universal Time (UTC). */
-        static parseAsUTC(dateString: string): ITimeSpan {
+        static parseAsUTC(dateString: string): TimeSpan {
             var ms = Date.parse(dateString);
             if (isNaN(ms)) return null; // (date is invalid)
             return TimeSpan.utcTimeToLocalTime(ms);
@@ -234,14 +258,14 @@ namespace DS {
 
         private __ms: number;
         private __date: Date; // (this is only used if needed - such as when creating the date string; it caches the result for future reuse)
-        private __localTS: ITimeSpan; // (this is only used if needed - such as when creating the local TimeSpan string; it caches the result for future reuse)
+        private __localTS: TimeSpan; // (this is only used if needed - such as when creating the local TimeSpan string; it caches the result for future reuse)
 
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
 
         /** Set the time of this TimeSpan, in milliseconds.
             * Note: This function assumes that milliseconds representing leap year days are included (same as the JavaScript 'Date' object).
             */
-        setTime(timeInMs: number): ITimeSpan {
+        setTime(timeInMs: number): TimeSpan {
             if (!isNaN(timeInMs)) {
                 var ms = this.__ms = timeInMs || 0;
                 this.__date = null;
@@ -267,9 +291,9 @@ namespace DS {
 
         //  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
 
-        add(timeInMS: number): ITimeSpan;
-        add(yearOffset: number, dayOfYearOffset: number, hoursOffset?: number, minutesOffset?: number, secondsOffset?: number, msOffset?: number): ITimeSpan;
-        add(yearOrTimeInMS: number = 0, dayOfYearOffset: number = 0, hoursOffset: number = 0, minutesOffset: number = 0, secondsOffset: number = 0, msOffset: number = 0): ITimeSpan {
+        add(timeInMS: number): TimeSpan;
+        add(yearOffset: number, dayOfYearOffset: number, hoursOffset?: number, minutesOffset?: number, secondsOffset?: number, msOffset?: number): TimeSpan;
+        add(yearOrTimeInMS: number = 0, dayOfYearOffset: number = 0, hoursOffset: number = 0, minutesOffset: number = 0, secondsOffset: number = 0, msOffset: number = 0): TimeSpan {
             if (arguments.length == 1)
                 this.setTime(this.__ms += (yearOrTimeInMS || 0));
             else
@@ -277,9 +301,9 @@ namespace DS {
             return this;
         }
 
-        subtract(timeInMS: number): ITimeSpan;
-        subtract(yearOffset: number, dayOfYearOffset: number, hoursOffset?: number, minutesOffset?: number, secondsOffset?: number, msOffset?: number): ITimeSpan;
-        subtract(yearOrTimeInMS: number = 0, dayOfYearOffset: number = 0, hoursOffset: number = 0, minutesOffset: number = 0, secondsOffset: number = 0, msOffset: number = 0): ITimeSpan {
+        subtract(timeInMS: number): TimeSpan;
+        subtract(yearOffset: number, dayOfYearOffset: number, hoursOffset?: number, minutesOffset?: number, secondsOffset?: number, msOffset?: number): TimeSpan;
+        subtract(yearOrTimeInMS: number = 0, dayOfYearOffset: number = 0, hoursOffset: number = 0, minutesOffset: number = 0, secondsOffset: number = 0, msOffset: number = 0): TimeSpan {
             if (arguments.length == 1)
                 this.setTime(this.__ms -= (yearOrTimeInMS || 0));
             else

@@ -29,7 +29,7 @@ export default class NamesConcept extends Concept {
     _Names(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
         if (context.WasPrevious(null)) {
             (<NamesConcept>context.currentMatch.item.Concept).CurrentName = context.currentMatch.item.DictionaryItem;
-            context.addIntentHandler(new DS.Delegate(this, this._Name_Intent), context.Operation.MinConfidence);
+            context.addIntentHandler(new DS.Delegate(this, this._Name_Intent), context.operation.MinConfidence);
         }
         return Promise.resolve(context);
     }

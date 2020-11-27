@@ -7,21 +7,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const Concept_1 = require("../core/Concept");
-let AdjectiveConcept = /** @class */ (() => {
-    class AdjectiveConcept extends Concept_1.default {
-        // --------------------------------------------------------------------------------------------------------------------
-        constructor(brain) {
-            super(brain);
-        }
-        // --------------------------------------------------------------------------------------------------------------------
-        _Adjective(context) {
-            return Promise.resolve(context);
-        }
+class AdjectiveConcept extends Concept_1.default {
+    // --------------------------------------------------------------------------------------------------------------------
+    constructor(brain) {
+        super(brain);
     }
-    __decorate([
-        Concept_1.conceptHandler(null, "* ^AD ^N *") // (ex: "I would not go that far")
-    ], AdjectiveConcept.prototype, "_Adjective", null);
-    return AdjectiveConcept;
-})();
+    // --------------------------------------------------------------------------------------------------------------------
+    _Adjective(context) {
+        return Promise.resolve(context);
+    }
+}
+__decorate([
+    Concept_1.conceptHandler(null, "* ^AD ^N *") // (ex: "I would not go that far")
+], AdjectiveConcept.prototype, "_Adjective", null);
 exports.default = AdjectiveConcept;
 //# sourceMappingURL=Adjectives.js.map

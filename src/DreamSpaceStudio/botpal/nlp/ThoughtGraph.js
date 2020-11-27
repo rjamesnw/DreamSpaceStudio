@@ -53,6 +53,10 @@ class ThoughtGraph extends Node_1.default {
         }
         return this;
     }
+    clone() {
+        var copy = new ThoughtGraph();
+        return copy;
+    }
 }
 exports.default = ThoughtGraph;
 __current = new WeakMap();

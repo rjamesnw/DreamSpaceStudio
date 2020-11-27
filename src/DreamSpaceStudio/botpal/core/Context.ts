@@ -281,7 +281,7 @@ export default class Context extends TimeReferencedObject implements IMemoryObje
     /// <typeparam name="T"> The context types to include in the enumeration. </typeparam>
     /// <param name="includeGroups"> (Optional) True to include grouped contexts in the search. </param>
     /// <returns> An enumeration of all contexts found matching type <typeparamref name="T"/>. </returns>
-    *Flatten<T extends Context>(type: IType<T>, includeGroups = true): Iterable<T> {
+    *flatten<T extends Context>(type: IType<T>, includeGroups = true): Iterable<T> {
         var subjects = this.get(type);
         yield* subjects;
 

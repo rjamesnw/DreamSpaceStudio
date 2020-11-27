@@ -244,19 +244,18 @@ export default class Dictionary implements IMemoryObject {
             // ... schedule a refresh; if already scheduled, this will cancel the existing one and start a new one ...
             this.memory.brain.createTask((bt) => {
                 this.UpdateUsageFactor(true);
-                return Task.CompletedTask;
-            }).Start(TimeSpan.FromSeconds(1), "Dictionary", "UpdateUsageFactor");
+                return Promise.resolve();
+            }).start(DS.TimeSpan.fromSeconds(1), "Dictionary", "UpdateUsageFactor");
         }
-        else lock(_Entries)
-        {
-            double totalCount = 0;
+        else {
+            let totalCount: number = 0;
             // ... pass 1: get overall totals to calculate all contexts relative to each other ...
-            foreach(var entry in _Entries.Values)
-            totalCount += entry._Usages.Count;
+            for (var entry of this._entries.values())
+                totalCount += entry.usageCount;
             // ... pass 2: calculate all contexts relative usage factors ...
             if (totalCount > 0)
-                foreach(var entry in _Entries.Values)
-            entry.UsageFactor = (double)entry._Usages.Count / totalCount;
+                for (var entry of this._entries.values())
+                    entry['_usageFactor'] = entry.usageCount / totalCount;
         }
     }
 
@@ -362,7 +361,7 @@ export default class Dictionary implements IMemoryObject {
 
         // ... return a sorted list such that the best match is at the front ...
 
-        matches.Sort(Match<DictionaryItem>.DefaultComparer);
+        matches.sort(Match.Comparer);
 
         return matches;
     }
@@ -370,18 +369,18 @@ export default class Dictionary implements IMemoryObject {
     // --------------------------------------------------------------------------------------------------------------------
 
     /**
-     *  Loads the default "dictionary.json" file, so the text is populated with known English texts, which can help with user input errors starting out.
-    */
-    /// <param name="filename">The name of the dictionary file. By default this is "dictionary.json".</param>
-    /// <param name="body">The dictionary JSON contents if the file is already loaded, otherwise leave this null to load the contents.</param>
-    /// <returns>'null' if the dictionary file was loaded successfully, or an error otherwise.</returns>
-    async loadDefaultWords(filename = "dictionary.json", body: string = null): DS.Exception {
+     * Loads the default "dictionary.json" file, so the text is populated with known English texts, which can help with user input errors starting out.
+     * @param filename The name of the dictionary file. By default this is "dictionary.json".
+     * @param body The dictionary JSON contents if the file is already loaded, otherwise leave this null to load the contents.
+     * @returns 'null' if the dictionary file was loaded successfully, or an error otherwise.
+     */
+    async loadDefaultWords(filename = "dictionary.json", body: string = null): Promise<DS.Exception> {
         if (DS.StringUtils.isEmptyOrWhitespace(body)) {
             var libPath = DS.Path.combine(DS.webRoot, filename);
             if (DS.IO.exists(libPath))
                 body = await DS.IO.get<string>(libPath);
             else
-                return new FileNotFoundException(libPath);
+                return DS.Exception.error("Words file not found.", libPath, this);
         }
 
         if (!DS.StringUtils.isEmptyOrWhitespace(body))
@@ -393,7 +392,7 @@ export default class Dictionary implements IMemoryObject {
             }
             catch (ex) { return new DS.Exception(ex); }
 
-        return new InvalidDataException("No data is available to be parsed - the body content may be empty.");
+        return DS.Exception.error("No data is available to be parsed - the body content may be empty.", libPath, this);
     }
 
     //// --------------------------------------------------------------------------------------------------------------------
@@ -759,5 +758,4 @@ export default class Dictionary implements IMemoryObject {
     //}
 
     // --------------------------------------------------------------------------------------------------------------------
-}
 }

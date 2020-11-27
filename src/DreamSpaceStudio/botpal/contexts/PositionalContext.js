@@ -1,33 +1,15 @@
-using;
-BotPal.Utilities;
-using;
-System;
-using;
-System.Collections.Generic;
-using;
-System.Linq;
-using;
-System.Text;
-var BotPal;
-(function (BotPal) {
-    /**
-     *  Represents the position of subjects in a scene. Positions assume that positive Z is forward, positive Y is up, and
-     *  positive X is right (left handed coordinate system).
-    */
-    class PositionalContext {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const Context_1 = require("../core/Context");
+/**
+ *  Represents the position of subjects in a scene. Positions assume that positive Z is forward, positive Y is up, and
+ *  positive X is right (left handed coordinate system).
+*/
+class PositionalContext extends Context_1.default {
+    // --------------------------------------------------------------------------------------------------------------------
+    constructor(concept, parent = null) {
+        super(concept, parent);
     }
-    Context;
-    {
-        Point3D ? Location : ;
-        PositionalContext(Memory, memory, Concept, concept, Context, parent = null);
-        base(memory, concept, parent);
-        {
-        }
-        PositionalContext(Concept, concept, Context, parent = null);
-        this(concept.Memory, concept, parent);
-        {
-        }
-        // --------------------------------------------------------------------------------------------------------------------
-    }
-})(BotPal || (BotPal = {}));
+}
+exports.default = PositionalContext;
 //# sourceMappingURL=PositionalContext.js.map

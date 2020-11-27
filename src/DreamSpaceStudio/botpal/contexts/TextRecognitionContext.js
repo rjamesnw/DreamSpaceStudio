@@ -10,24 +10,21 @@ const Context_1 = require("../core/Context");
 /**
  *  Holds details about a question.
  */
-let TextRecognitionContext = /** @class */ (() => {
-    let TextRecognitionContext = class TextRecognitionContext extends Context_1.default {
-        // --------------------------------------------------------------------------------------------------------------------
-        constructor(concept, question, parent = null) {
-            super(concept, parent);
-            this.question = question;
-        }
-    };
+let TextRecognitionContext = class TextRecognitionContext extends Context_1.default {
     // --------------------------------------------------------------------------------------------------------------------
-    /**
-     * Returns the tag that will represent this concept context.
-     * @returns A tag name string.
-     */
-    TextRecognitionContext.tag = new Context_1.ContextTag("textRecognition", 1);
-    TextRecognitionContext = __decorate([
-        Context_1.context()
-    ], TextRecognitionContext);
-    return TextRecognitionContext;
-})();
+    constructor(concept, text, parent = null) {
+        super(concept, parent);
+        this.text = text;
+    }
+};
+// --------------------------------------------------------------------------------------------------------------------
+/**
+ * Returns the tag that will represent this concept context.
+ * @returns A tag name string.
+ */
+TextRecognitionContext.tag = new Context_1.ContextTag("textRecognition", 1);
+TextRecognitionContext = __decorate([
+    Context_1.context()
+], TextRecognitionContext);
 exports.default = TextRecognitionContext;
 //# sourceMappingURL=TextRecognitionContext.js.map

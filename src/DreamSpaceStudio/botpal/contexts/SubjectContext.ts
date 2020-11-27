@@ -28,8 +28,8 @@ export default class SubjectContext extends Context implements IUnderlyingContex
     get last(): SubjectContext { return this; }
 
     ///**
-     * // Returns this context or the nearest parent context that has subjects (the root context of one or more subjects).
-    // *  If no root contexts are found with subjects, the top most context in the hierarchy is returned.
+    //// * Returns this context or the nearest parent context that has subjects (the root context of one or more subjects).
+    //// *  If no root contexts are found with subjects, the top most context in the hierarchy is returned.
     ///// <para>Note this does NOT return nodes of 'SubjectContext' type, but only contexts that have subjects as child nodes.
     ///// This allows focusing on a single or group of subjects in a context.</para>
     //*/

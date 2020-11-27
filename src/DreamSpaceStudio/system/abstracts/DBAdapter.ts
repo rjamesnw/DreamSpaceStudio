@@ -202,9 +202,8 @@
 
                 return new Promise<IModifyTableResult>((res, rej) => {
                     try {
-                        this.connect((err: any) => {
-                            if (err)
-                                return reject(rej, this.adapter.getSQLErrorMessage(err));
+                        this.connect().then(() => {
+
 
                             console.log(`Connected to database. Building database query information to update table '${tableName}' ...`);
 
@@ -261,7 +260,9 @@
                                         });
                                 },
                                     (reason) => { this.end(); reject(rej, reason, "Failed to build query information."); }); // (in case the query info building fails)
-                        });
+                        },
+                            (err) => reject(rej, this.adapter.getSQLErrorMessage(err))
+                        );
                     }
                     catch (err) { console.log(err); rej(err); }
 

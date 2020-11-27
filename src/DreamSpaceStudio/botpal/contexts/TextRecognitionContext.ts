@@ -18,16 +18,16 @@ export default class TextRecognitionContext extends Context {
     static readonly tag = new ContextTag("textRecognition", 1);
 
     /** The original user input text. */
-    text: string;
+    text: DictionaryItem;
 
     /** The root thought graph where the user's input text is pla*/
     thoughtGraphRoot: ThoughtGraph;
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    constructor(concept: Concept, question: DictionaryItem, parent: Context = null) {
+    constructor(concept: Concept, text: DictionaryItem, parent: Context = null) {
         super(concept, parent)
-        this.question = question;
+        this.text = text;
     }
 
     // --------------------------------------------------------------------------------------------------------------------

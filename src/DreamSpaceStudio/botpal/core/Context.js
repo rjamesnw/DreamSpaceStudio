@@ -224,7 +224,7 @@ class Context extends TimeReferencedObject_1.default {
     /// <typeparam name="T"> The context types to include in the enumeration. </typeparam>
     /// <param name="includeGroups"> (Optional) True to include grouped contexts in the search. </param>
     /// <returns> An enumeration of all contexts found matching type <typeparamref name="T"/>. </returns>
-    *Flatten(type, includeGroups = true) {
+    *flatten(type, includeGroups = true) {
         var subjects = this.get(type);
         yield* subjects;
         var subjectGroups = this.get(GroupContext_1.default);

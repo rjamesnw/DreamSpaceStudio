@@ -14,7 +14,7 @@ export class DefaultTTSService implements ITTSService {
 
     /**
      *  Plays the given MP3 file.
-    */
+     */
     /// <param name="filepath">The MP3 file to play.</param>
     PlayMP3File(filepath: string) {
         var reader = new Mp3FileReader(filepath);
@@ -86,7 +86,7 @@ export class DefaultTTSService implements ITTSService {
 
         var voiceCodeValues = this._VoiceCodeParts(voiceCode);
         var ttsEngineType = voiceCodeValues[0];
-        var voiceID = voiceCodeValues.Length > 1 ? voiceCodeValues[1] : null;
+        var voiceID = voiceCodeValues.length > 1 ? voiceCodeValues[1] : null;
 
         if (ttsEngineType == "ivona") {
             if (DS.StringUtils.isEmptyOrWhitespace(voiceID))
@@ -160,8 +160,8 @@ export class DefaultTTSService implements ITTSService {
     GetOutputAudioFilePath(ttsEngineName: string, text: string, voiceID: string): string {
         text = ttsEngineName + "_" + voiceID + "_" + text;
         var filename = text.split(DS.Path.restrictedFilenameRegex).filter(s => !!s).join('_').trimRightChar('.').replace(/'\s'/g, '_');
-        if (filename.Length > 50)
-            filename = filename.Substring(0, 50);
+        if (filename.length > 50)
+            filename = filename.substr(0, 50);
         // (note: the first name part gives a small glimpse in what the audio is without needing the database; also, if the
         // filename is too long, the file cannot be loaded by the browser)
         return filename + "_" + DS.Utilities.createGUID(false); // (finally, use a GUID to make sure the file is unique, since it may have been truncated if too long and cause conflicts)

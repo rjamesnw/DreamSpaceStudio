@@ -175,14 +175,8 @@ export default class TextRecognitionConcept extends Concept {
     protected onAfterAllRegistered() { }
 
     onTextInput(text: string) {
-        //x this.brain.createTask(this._splitTextOperation.bind(this), <ISplitTextState>{ concept: this, text: text });
         this.brain.addOperation(new SplitTextOperation(this, { text: text }));
     }
-
-    //x private async _splitTextOperation(task: BrainTask<ISplitTextState>): Promise<void> {
-    //x     await task.state.execute();
-    //x     return; // (completed, end task and remove it)
-    //x }
 
     // --------------------------------------------------------------------------------------------------------------------
 }

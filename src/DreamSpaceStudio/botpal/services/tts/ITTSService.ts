@@ -6,4 +6,3 @@ export default interface ITTSService {
     PlayMP3File(filepath: string): Promise<void>;
     Say(text: string, voiceCode?: string | "ivona"): Promise<void>;
 }
-}

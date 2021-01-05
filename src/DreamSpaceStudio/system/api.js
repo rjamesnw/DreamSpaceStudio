@@ -717,6 +717,20 @@ var DS;
             }
         }
         Utilities.parseJsonElseKeepAsIs = parseJsonElseKeepAsIs;
+        function getPropertiesOfType(o, typeNames, ownProperties = false) {
+            var _p = [];
+            if (Array.isArray(typeNames))
+                for (let p in o) {
+                    if ((!ownProperties || Object.prototype.hasOwnProperty.call(o, p)) && typeNames.indexOf(typeof o[p]) >= 0)
+                        _p.push(p);
+                }
+            else
+                for (let p in o)
+                    if ((!ownProperties || Object.prototype.hasOwnProperty.call(o, p)) && typeof o[p] == typeNames)
+                        _p.push(p);
+            return _p;
+        }
+        Utilities.getPropertiesOfType = getPropertiesOfType;
     })(Utilities = DS.Utilities || (DS.Utilities = {}));
 })(DS || (DS = {}));
 // ############################################################################################################################

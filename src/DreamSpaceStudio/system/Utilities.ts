@@ -319,6 +319,29 @@
             }
             catch (err) { return value; }
         }
+
+        type PrimitiveJSTypes = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'undefined' | 'object' | 'function';
+
+        /**
+         * Returns the propery names of the values that match the given type.
+         * @param o The object to check.
+         * @param typeName The type to filter on.
+         * @param ownProperties
+         */
+        export function getPropertiesOfType(o: IndexedObject, typeName: PrimitiveJSTypes, ownProperties?: boolean): string[];
+        export function getPropertiesOfType(o: IndexedObject, typeNames: PrimitiveJSTypes[], ownProperties?: boolean): string[];
+        export function getPropertiesOfType(o: IndexedObject, typeNames: PrimitiveJSTypes | PrimitiveJSTypes[], ownProperties = false): string[] {
+            var _p: string[] = [];
+            if (Array.isArray(typeNames))
+                for (let p in o) {
+                    if ((!ownProperties || Object.prototype.hasOwnProperty.call(o, p)) && typeNames.indexOf(typeof o[p]) >= 0)
+                        _p.push(p);
+                } else
+                for (let p in o)
+                    if ((!ownProperties || Object.prototype.hasOwnProperty.call(o, p)) && typeof o[p] == typeNames)
+                        _p.push(p);
+            return _p;
+        }
     }
 }
 

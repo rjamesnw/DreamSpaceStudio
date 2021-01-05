@@ -121,10 +121,10 @@ export default class Brain {
      *  This is required so that each concept can register and expose the words it recognizes,
      *  complete with lexical details about the word (or text/phrase).
     */
-    readonly _Concepts = new Map<IType<Concept>, Concept>();
-    get Concepts(): Iterable<Concept> { return this._Concepts.values(); }
+    readonly _concepts = new Map<IType<Concept>, Concept>();
+    get concepts(): Iterable<Concept> { return this._concepts.values(); }
 
-    readonly ConceptHandlerLoadErrors: Exception[] = []; // (one place for all concepts to log errors on registration - the UI should display this on first load)
+    readonly conceptHandlerLoadErrors: DS.Exception[] = []; // (one place for all concepts to log errors on registration - the UI should display this on first load)
     // TODO: Consider adding this as something the bot should ask (and remember): "There was a problem loading some concepts."
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -136,20 +136,20 @@ export default class Brain {
         for (var conceptType of conceptTypes) {
             // ... iterate over the concept methods and store them for text matching later ...
             var conceptInstance = new conceptType(this);
-            this._Concepts.set(conceptType, conceptInstance);
+            this._concepts.set(conceptType, conceptInstance);
             conceptInstance.RegisterHandlers();
         }
 
         // ... let all concepts know the core concepts are loaded and ready ...
 
-        for (var conceptInstance of this._Concepts.values())
+        for (var conceptInstance of this._concepts.values())
             conceptInstance['onAfterAllRegistered']();
     }
 
     /** Returns a registered concept singleton. 
      * The most common use is to get a reference to the words that a concept registers.
      */
-    getConcept<T extends Concept>(type: IType<T>): T { return <T>this._Concepts.get(type); }
+    getConcept<T extends Concept>(type: IType<T>): T { return <T>this._concepts.get(type); }
 
     ///**
     //* Registers a concept for given text to watch for, and also creates and returns the dictionary word that will be associated with the watched text.
@@ -204,7 +204,7 @@ export default class Brain {
 
     findConceptContexts(text: string, threshold = 0.8): Match<ConceptContext>[] {
         var dicItems = threshold == 1 ? // (if 'threshold' is 1.0 then do a similar [near exact] match [using group keys], otherwise find close partial matches instead.
-            this.memory.dictionary.findSimilarEntriesByGroupKey(Memory.Brain.ToGroupKey(text)).SelectMany(i => i.ConceptContexts.Select(c => new Match<ConceptContext>(c, 1.0)))
+            this.memory.dictionary.findSimilarEntriesByGroupKey(this.memory.brain.toGroupKey(text)).SelectMany(i => i.ConceptContexts.Select(c => new Match<ConceptContext>(c, 1.0)))
             : this.memory.dictionary.findMatchingEntries(text, threshold).SelectMany(m => m.Item.ConceptContexts.Select(c => new Match<ConceptContext>(c, m.Score)));
         return dicItems.ToArray();
     }

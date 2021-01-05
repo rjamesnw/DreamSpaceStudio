@@ -142,7 +142,7 @@ class Context extends TimeReferencedObject_1.default {
     getContexts() { return __classPrivateFieldGet(this, __contexts).slice(0); }
     // --------------------------------------------------------------------------------------------------------------------
     ///**
-    * // Get the current instance or a parent instance that is a subject context (<see cref="SubjectContext"/> instance).
+    // // Get the current instance or a parent instance that is a subject context (<see cref="SubjectContext"/> instance).
     //*/
     //x public bool IsSubjectContext => this is SubjectContext;
     ///** Returns true if this object is question context (<see cref="QuestionContext"/> instance). */
@@ -153,8 +153,7 @@ class Context extends TimeReferencedObject_1.default {
      *  things is like something else (i.e. John is nice), or as part of a question (who are they? what time is it?).
      *  Other examples may be "John *drove* away" or "Pat *ran* to the store.".
     */
-    get() { }
-    Actions() { return this.get(ActionContext_1.default); }
+    get Actions() { return this.get(ActionContext_1.default); }
     /**
      *  True if this context has actions (typically because of verbs).
     */
@@ -234,6 +233,16 @@ class Context extends TimeReferencedObject_1.default {
         //    foreach (var s in Parent.FlattenSubjects())
         //        yield return s;
     }
+    // --------------------------------------------------------------------------------------------------------------------
+    ///**
+    //// * Get the current instance or a parent instance that is a context of the requested type, or null if nothing was found.
+    //*/
+    //public T GetContext<T>() where T : Context
+    //{
+    //    return (this is T) ? (T)this : Parent?.GetContext<T>();
+    //}
+    ///**
+    ////* Ignores the current instance and looks for a parent instance that is a context of the requested type, or null if nothing was found.
     //*/
     //public T GetParentContext<T>() where T : Context
     //{
@@ -241,7 +250,7 @@ class Context extends TimeReferencedObject_1.default {
     //}
     // --------------------------------------------------------------------------------------------------------------------
     ///**
-    * // Create a split point from this scene to process separately, but in relation to this one.
+    //* Create a split point from this scene to process separately, but in relation to this one.
     //*/
     //? public virtual Context Fork()
     //{

@@ -6,6 +6,7 @@ import Brain from "./Brain";
 import Dictionary from "./Dictionary";
 import POS, { PartOfSpeech } from "./POS";
 import Context, { ContextTag } from "./Context";
+import IntentContext from "../contexts/IntentContext";
 
 /** An array of all concept types registered by applying the '@concept()' decorator to register them. */
 export const conceptTypes: IType<Concept>[] = [];
@@ -24,12 +25,14 @@ export function concept(enabled = true) {
 
 type ContextTypeWithTag = IType<Context> & { tag: ContextTag }
 
+interface IHandlerFunction extends Function { (context: ConceptHandlerContext): Promise<ConceptHandlerContext>; triggerWords: DictionaryItem[]; }
+
 /**
  *  Associates a method on a derived 'Concept' class with words that will trigger it.
  */
 export function conceptHandler(...args: (DictionaryItem | string)[]) {
     return (target: IndexedObject, propertyName: string, descriptor: PropertyDescriptor): any => { // (target: Either the constructor function of the class for a static member, or the prototype of the class for an instance member.)
-        const originalFunction = descriptor.value;
+        const originalFunction = <IHandlerFunction>descriptor.value;
         // (note: good tool to use to check for POS: https://foxtype.com/sentence-tree)
         /// <param name="triggerWords">Words that will trigger this concept.  You can append a caret (^) to a word to set a part of speech (i.e. "w1^N,w2^V" makes w1 a noun and w2 a verb).</param>
         /// <param name="pattern">(not yet supported) A pattern to use for ALL trigger words, which is just a more complex criteria that must be settled for running the handler.
@@ -88,7 +91,7 @@ export class ConceptMatch extends Match<ConceptContext>
  */
 /// <param name="context">A context struct to hold the context for a handler call.</param>
 /// <returns>The return should be the same or updated copy of the given context.</returns>
-export interface ConceptHandler extends DS.IDelegate<Concept, { (context: ConceptHandlerContext): Promise<ConceptHandlerContext> }> { }
+export interface ConceptHandler extends DS.IDelegate<Concept, IHandlerFunction> { }
 
 /**
  *  A handler to execute on a concept to process the most likely intent that was detected.
@@ -132,88 +135,88 @@ export class ConceptHandlerContext implements IMemoryObject {
     /**
      *  Upon return from a concept handler, the system keeps track of the confidence total to calculate an average later.
      */
-    ConfidenceSum: number;
+    confidenceSum: number;
 
     /** Gets the average confidence at the current <see cref="Index"/>. */
     /// <value> The average confidence. </value>
-    get AvergeConfidence(): number { return this.ConfidenceSum / (this.Index + 1); }
+    get avergeConfidence(): number { return this.confidenceSum / (this.index + 1); }
 
     /**
      *  A match to a handler that might be able to process the most likely intent of the user.
     */
-    ProbableIntentHandlers: Match<IntentHandler>[][];
+    probableIntentHandlers: Match<IntentHandler>[][];
 
     /**
      *  Returns true if this context has any callbacks to handler intents (user input meanings).
     */
-    get HasProbableIntentHandlers(): boolean { return this.ProbableIntentHandlers?.Any(i => i.Count > 0) ?? false; }
+    get hasProbableIntentHandlers(): boolean { return this.probableIntentHandlers?.Any(i => i.Count > 0) ?? false; }
 
     /**
      *  A growing list of executing concepts that were matched against user input.
      *  The list is growing because the final list is not known until initial handlers execute early to catch any invalid combinations.
     */
-    MatchedConcepts: ConceptMatch[];
+    matchedConcepts: ConceptMatch[];
 
     /**
      *  The current index of the current matched concept in relation to other handlers being executed.
     */
-    Index: number;
+    index: number;
 
     /**
      *  For concept handlers, this is the concept matched to the immediate left.
     */
-    LeftHandlerMatch(): ConceptMatch { return this.Index > 0 && this.Index <= MatchedConcepts?.Count ? MatchedConcepts[this.Index - 1] : null; }
+    leftHandlerMatch(): ConceptMatch { return this.index > 0 && this.index <= this.matchedConcepts?.length ? this.matchedConcepts[this.index - 1] : null; }
 
     /**
      *  For concept handlers, this is the current concept match details (the one the handler belongs to).
     */
-    get currentMatch(): ConceptMatch { return this.Index >= 0 && this.Index < MatchedConcepts?.Count ? MatchedConcepts[this.Index] : null; }
+    get currentMatch(): ConceptMatch { return this.index >= 0 && this.index < this.matchedConcepts?.length ? this.matchedConcepts[this.index] : null; }
 
     /** Gets the dictionary item that resulted in the current concept match. */
     /// <value> The dictionary item of the current concept match. </value>
-    get currentDictionaryItem(): DictionaryItem { return this.currentMatch()?.Item.DictionaryItem; }
+    get currentDictionaryItem(): DictionaryItem { return this.currentMatch?.item.DictionaryItem; }
 
     /**
      *  For concept handlers, this is the concept matched to the immediate right.
     */
-    get RightHandlerMatch(): ConceptMatch { return this.Index >= -1 && this.Index + 1 < MatchedConcepts?.Count ? MatchedConcepts[this.Index + 1] : null; }
+    get RightHandlerMatch(): ConceptMatch { return this.index >= -1 && this.index + 1 < this.matchedConcepts?.length ? this.matchedConcepts[this.index + 1] : null; }
 
     // --------------------------------------------------------------------------------------------------------------------
 
     constructor(operation: ProcessConceptsOperation, index: number, initialMatchedConceptsCapacity: number = null) {
-        this.operation = operation ?? throw new ArgumentNullException(nameof(operation));
+        if (!operation) throw DS.Exception.argumentUndefinedOrNull(DS.Utilities.nameof(() => ConceptHandlerContext), 'operation');
+        this.operation = operation;
         this.context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
-        this.Index = index;
+        this.index = index;
         this.Confidence = 0.0;
-        this.ConfidenceSum = 0.0;
-        this.MatchedConcepts = initialMatchedConceptsCapacity != null
-            ? [initialMatchedConceptsCapacity.Value] : [];
-        this.ProbableIntentHandlers = [];
+        this.confidenceSum = 0.0;
+        this.matchedConcepts = initialMatchedConceptsCapacity != null ? Array(initialMatchedConceptsCapacity) : [];
+        this.probableIntentHandlers = [];
     }
 
-    ConceptHandlerContext(operation: ProcessConceptsOperation, index: number, initialMatchedConcepts: Iterable<ConceptMatch>, probableIntentHandlers: Iterable<Iterable<Match<IntentHandler>>> = null) {
-        this.operation = operation ?? throw new ArgumentNullException(nameof(operation));
-        this.context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
-        this.Index = index;
-        this.Confidence = 0.0;
-        this.ConfidenceSum = 0.0;
-        this.MatchedConcepts = initialMatchedConcepts != null ? [initialMatchedConcepts] : [];
-        this.ProbableIntentHandlers = probableIntentHandlers != null
-            ? [...probableIntentHandlers.Select(h => h != null ? [h].SortMatches() : null)]
-            : [];
-    }
+    //ConceptHandlerContext(operation: ProcessConceptsOperation, index: number, initialMatchedConcepts: Iterable<ConceptMatch>, probableIntentHandlers: Iterable<Iterable<Match<IntentHandler>>> = null) {
+    //    this.operation = operation ?? throw new ArgumentNullException(nameof(operation));
+    //    this.context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
+    //    this.Index = index;
+    //    this.Confidence = 0.0;
+    //    this.ConfidenceSum = 0.0;
+    //    this.MatchedConcepts = initialMatchedConcepts != null ? [initialMatchedConcepts] : [];
+    //    this.ProbableIntentHandlers = probableIntentHandlers != null
+    //        ? [...probableIntentHandlers.Select(h => h != null ? [h].SortMatches() : null)]
+    //        : [];
+    //}
 
-    ConceptHandlerContext(operation: ProcessConceptsOperation, index: number, matchedConcept: ConceptMatch) {
-        this.operation = operation ?? throw new ArgumentNullException(nameof(operation));
-        this.context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
-        this.Index = index;
-        this.Confidence = 0.0;
-        this.ConfidenceSum = 0.0;
-        this.MatchedConcepts = [];
-        this.ProbableIntentHandlers = [];
-        if (matchedConcept != null)
-            this.MatchedConcepts.Add(matchedConcept);
-    }
+    //ConceptHandlerContext(operation: ProcessConceptsOperation, index: number, matchedConcept: ConceptMatch) {
+    //    this.operation = operation ?? throw new ArgumentNullException(nameof(operation));
+    //    this.context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
+    //    this.Index = index;
+    //    this.Confidence = 0.0;
+    //    this.ConfidenceSum = 0.0;
+    //    this.MatchedConcepts = [];
+    //    this.ProbableIntentHandlers = [];
+    //    if (matchedConcept != null)
+    //        this.MatchedConcepts.Add(matchedConcept);
+    //}
 
     // --------------------------------------------------------------------------------------------------------------------
 
@@ -224,16 +227,16 @@ export class ConceptHandlerContext implements IMemoryObject {
     /// <returns>A new concept handler context to use with calling concept handlers.
     /// The clone is returned with a 0.0 Confidence value and the 'matchedConcept' reference added.</returns>
     Clone(index: number, matchedConcept: ConceptMatch): ConceptHandlerContext {
-        var matchedConceptsCopy: Iterable<ConceptMatch> = MatchedConcepts;
+        var matchedConceptsCopy: Iterable<ConceptMatch> = this.matchedConcepts;
 
         if (matchedConcept != null)
-            matchedConceptsCopy = MatchedConcepts.Concat(new ConceptMatch[] { matchedConcept });
+            matchedConceptsCopy = [...this.matchedConcepts, matchedConcept];
 
-        return new ConceptHandlerContext(this.operation, index, matchedConceptsCopy, this.ProbableIntentHandlers)
-        {
-            Context = this.context,
-                ConfidenceSum = this.ConfidenceSum // (note: 'Confidence' is NEVER copied, as it must be 0 for each new concept handler call)
-        };
+        var ctx = new ConceptHandlerContext(this.operation, index, matchedConceptsCopy, this.probableIntentHandlers)
+        ctx.context = this.context;
+        ctx.confidenceSum = this.confidenceSum // (note: 'Confidence' is NEVER copied, as it must be 0 for each new concept handler call)
+
+        return ctx;
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -258,17 +261,17 @@ export class ConceptHandlerContext implements IMemoryObject {
     addIntentHandler(handler: IntentHandler, confidence: number) {
         // ... Keep added handlers at the same position of this current context index ...
 
-        for (var i = 0; i <= this.Index; ++i)
-            this.ProbableIntentHandlers.push(null);
+        for (var i = 0; i <= this.index; ++i)
+            this.probableIntentHandlers.push(null);
 
         var handlers: Array<Match<IntentHandler>>;
 
         // ... get the sorted intent handler set, or create a new entry ...
 
-        if (this.ProbableIntentHandlers[this.Index] == null)
-            this.ProbableIntentHandlers[this.Index] = handlers = [];
+        if (this.probableIntentHandlers[this.index] == null)
+            this.probableIntentHandlers[this.index] = handlers = [];
         else
-            handlers = this.ProbableIntentHandlers[this.Index];
+            handlers = this.probableIntentHandlers[this.index];
 
         handlers.push(new Match<IntentHandler>(handler, confidence));
 
@@ -290,11 +293,11 @@ export class ConceptHandlerContext implements IMemoryObject {
         if (this.RightHandlerMatch == null)
             return DS.StringUtils.isEmptyOrWhitespace(text);
         if (exactMatch) {
-            return (text ?? "") == (this.RightHandlerMatch?.item.DictionaryItem.TextPart.Text ?? "");
+            return (text ?? "") == (this.RightHandlerMatch?.item.DictionaryItem.textPart.text ?? "");
         }
         else {
             var grpkey = DS.StringUtils.isEmptyOrWhitespace(text) ? null : this.memory?.brain.toGroupKey(text);
-            return grpkey == this.RightHandlerMatch.item.DictionaryItem.TextPart.GroupKey;
+            return grpkey == this.RightHandlerMatch.item.DictionaryItem.textPart.groupKey;
         }
     }
 
@@ -308,13 +311,13 @@ export class ConceptHandlerContext implements IMemoryObject {
     /// <param name="exactMatch">If false (default) then a group key is used to match similar text (such as removing letter casing and reducing spaces, etc.).</param>
     /// <returns></returns>
     WasPrevious(text: string, exactMatch = false): boolean {
-        if (this.LeftHandlerMatch == null)
+        if (this.leftHandlerMatch == null)
             return DS.StringUtils.isEmptyOrWhitespace(text);
         if (exactMatch)
-            return (text ?? "") == (this.LeftHandlerMatch?.Item.DictionaryItem.TextPart.Text ?? "");
+            return (text ?? "") == (this.leftHandlerMatch?.Item.DictionaryItem.TextPart.Text ?? "");
         else {
             var grpkey = DS.StringUtils.isEmptyOrWhitespace(text) ? null : this.#_memory?.brain.toGroupKey(text);
-            return grpkey == this.LeftHandlerMatch.Item.DictionaryItem.TextPart.GroupKey;
+            return grpkey == this.leftHandlerMatch.Item.DictionaryItem.TextPart.GroupKey;
         }
     }
 
@@ -393,27 +396,26 @@ export class MatchedConcepts extends Array<ConceptMatch>
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    /**
-     *  Sorts all items in this list and returns the list.
-    */
-    Sort(): MatchedConcepts {
-        this.Sort(ConceptMatch.DefaultComparer);
-        return this;
-    }
+    ///**
+    // *  Sorts all items in this list and returns the list.
+    // */
+    //sort(): this {
+    //    super.sort(ConceptMatch.DefaultComparer);
+    //    return this;
+    //}
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    public void Add(ConceptContext c, double? score = null) {
-        base.Add(new ConceptMatch(this, c, score));
+    add(c: ConceptContext, score: number = null): void {
+        this.push(new ConceptMatch(this, c, score));
     }
 
-    public void Add(Match <ConceptContext > match)
-{
-    Add(match.Item, match.Score);
+    AddMatch(match: Match<ConceptContext>): void {
+        this.add(match.item, match.score);
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------
 }
-
-        // --------------------------------------------------------------------------------------------------------------------
-    }
 
 /**
  *  A concept is a mapping to some sort of understanding or intention. For instance, if the user wants to find a file on their computer,
@@ -525,34 +527,26 @@ export default abstract class Concept extends TimeReferencedObject implements IM
      *  Called by the system when it is ready for this concept to register any handlers on it.
     */
     RegisterHandlers() {
-        var methods = GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
-        for (var method of methods) {
-            // ... since a handler can have many trigger words and/or patterns, look for and process multiple attributes ...
-            var attributes = method.GetCustomAttributes<ConceptHandlerAttribute>();
+        var methods = DS.Utilities.getPropertiesOfType(this, 'function');
+        var hf: IHandlerFunction;
+        for (var method of methods) if ((hf = <IHandlerFunction>(<IndexedObject>this)[method]).triggerWords && hf.triggerWords.length) {
+            // ... since a handler can have many trigger words and/or patterns, look for and process multiple trigger patterns ...
 
-            if (!(attributes?.Any() ?? false)) continue;
+            //? if (_Concepts.ContainsKey(attr.Pattern))
+            //?     System.Diagnostics.Debug.WriteLine("The concept type '" + concept.Name + "' contains pattern '" + attr.Pattern + "' which matches another pattern on concept '" + _Concepts[attr.Pattern].GetType().Name + "'. Try to avoid duplicate patterns and be more specific if possible.", "Warning");
 
-            foreach(var attr in attributes)
-            {
-                if (DS.StringUtils.isEmptyOrWhitespace(attr.TriggerWords)) continue;
-                // ... else this method is a handler for this concept; register the method with the text ...
-
-                //? if (_Concepts.ContainsKey(attr.Pattern))
-                //?     System.Diagnostics.Debug.WriteLine("The concept type '" + concept.Name + "' contains pattern '" + attr.Pattern + "' which matches another pattern on concept '" + _Concepts[attr.Pattern].GetType().Name + "'. Try to avoid duplicate patterns and be more specific if possible.", "Warning");
-
+            for (var pattern in hf.triggerWords)
                 try {
-                    AddConceptTriggerWords(attr.TriggerWords, (ConceptHandler)method.CreateDelegate(typeof (ConceptHandler), this));
+                    this.addConceptTriggerWords(pattern, new DS.Delegate(this, hf));
                 }
-                catch (Exception ex)
-                {
-                    Brain.ConceptHandlerLoadErrors.Add(new Exception("Failed to register concept handler " + method.ToString() + ": \r\n" + ex.Message, ex));
+                catch (ex) {
+                    this.brain.conceptHandlerLoadErrors.push(new DS.Exception("Failed to register concept handler " + method + ": \r\n" + ex.Message, this, ex));
                 }
 
-                //? if (_Concepts[attr.Pattern] == null)
-                //?     _Concepts[attr.Pattern] = new List<Concept>();
+            //? if (_Concepts[attr.Pattern] == null)
+            //?     _Concepts[attr.Pattern] = new List<Concept>();
 
-                //? _Concepts[attr.Pattern].Add(conceptInstance);
-            }
+            //? _Concepts[attr.Pattern].Add(conceptInstance);
         }
     }
 
@@ -797,14 +791,14 @@ export default abstract class Concept extends TimeReferencedObject implements IM
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    IsMatch(DictionaryItem left, DictionaryItem item, DictionaryItem right): boolean {
+    IsMatch(left: DictionaryItem, item: DictionaryItem, right: DictionaryItem): boolean {
         return false;
     }
 
     // --------------------------------------------------------------------------------------------------------------------
 
     ///**
-    * // Called when ready to trigger the concept to analyze it's position with other concepts in the scene instance.
+    // * Called when ready to trigger the concept to analyze it's position with other concepts in the scene instance.
     //*/
     ///// <param name="scene">The scene to trigger this concept against.</param>
     ///// <param name="textPartIndex">The position of the concept list in the '{Scene}.MatchedConceptLists' list that contains this concept.</param>

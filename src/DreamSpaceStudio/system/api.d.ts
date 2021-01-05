@@ -356,21 +356,21 @@ declare namespace DS {
     /** One or more utility functions to ease development within DreamSpace environments. */
     namespace Utilities {
         /** Escapes a RegEx string so it behaves like a normal string. This is useful for RexEx string based operations, such as 'replace()'. */
-        function escapeRegex(regExStr: string): string;
+        export function escapeRegex(regExStr: string): string;
         /** This locates names of properties where only a reference and the object context is known.
         * If a reference match is found, the property name is returned, otherwise the result is 'undefined'.
         */
-        function getReferenceName(obj: IndexedObject, reference: object): string;
+        export function getReferenceName(obj: IndexedObject, reference: object): string;
         /** Erases all properties on the object, instead of deleting them (which takes longer).
         * @param {boolean} ignore An optional list of properties to ignore when erasing. The properties to ignore should equate to 'true'.
         * This parameter expects an object type because that is faster for lookups than arrays, and developers can statically store these in most cases.
         */
-        function erase(obj: IndexedObject, ignore?: {
+        export function erase(obj: IndexedObject, ignore?: {
             [name: string]: boolean;
         }): {};
         /** Makes a deep copy of the specified value and returns it. If the value is not an object, it is returned immediately.
         * For objects, the deep copy is made by */
-        function clone(value: any): any;
+        export function clone(value: any): any;
         /** Dereferences a property path in the form "A.B.C[*].D..." and returns the right most property value, if exists, otherwise
         * 'undefined' is returned.  If path is invalid, an exception will be thrown.
         * @param {string} path The delimited property path to parse.
@@ -381,13 +381,13 @@ declare namespace DS {
         *                         Note: The 'eval' that is used is 'DS.eval()', which is closed over the global scope (and not the DS module's private scope).
         *                         'window.eval()' is not called directly in this function.
         */
-        function dereferencePropertyPath(path: string, origin?: IndexedObject, unsafe?: boolean): any;
+        export function dereferencePropertyPath(path: string, origin?: IndexedObject, unsafe?: boolean): any;
         /** Waits until a property of an object becomes available (i.e. is no longer 'undefined').
           * @param {Object} obj The object for the property.
           * @param {string} propertyName The object property.
           * @param {number} timeout The general amount of timeout to wait before failing, or a negative value to wait indefinitely.
           */
-        function waitReady(obj: IndexedObject, propertyName: string, callback: Function, timeout?: number, timeoutCallback?: Function): void;
+        export function waitReady(obj: IndexedObject, propertyName: string, callback: Function, timeout?: number, timeoutCallback?: Function): void;
         /** Helps support cases where 'apply' is missing for a host function object (i.e. IE7 'setTimeout', etc.).  This function
         * will attempt to call '.apply()' on the specified function, and fall back to a work around if missing.
         * @param {Function} func The function to call '.apply()' on.
@@ -395,7 +395,7 @@ declare namespace DS {
         * Note: This must be null for special host functions, such as 'setTimeout' in IE7.
         * @param {any} args The arguments to apply to given function reference (the 'func' argument).
         */
-        function apply(func: Function, _this: Object, args: any[]): any;
+        export function apply(func: Function, _this: Object, args: any[]): any;
         /**
          * Creates and returns a new version-4 (randomized) GUID/UUID (unique identifier). The uniqueness of the result
          * is enforced by locking the first part down to the current local date/time (not UTC) in milliseconds, along with
@@ -404,12 +404,12 @@ declare namespace DS {
          * This function is also supported server side; however, the "agent" string and document location are fixed values.
          * @param {boolean} hyphens If true (default) then hyphens (-) are inserted to separate the GUID parts.
          */
-        function createGUID(hyphens?: boolean): string;
+        export function createGUID(hyphens?: boolean): string;
         /** Returns the name of a namespace or variable reference at runtime. */
-        function nameof(selector: () => any, fullname?: boolean): string;
-        var FUNC_NAME_REGEX: RegExp;
+        export function nameof(selector: () => any, fullname?: boolean): string;
+        export var FUNC_NAME_REGEX: RegExp;
         /** Attempts to pull the function name from the function object, and returns an empty string if none could be determined. */
-        function getFunctionName(func: Function): string;
+        export function getFunctionName(func: Function): string;
         /** Returns the type name for an object instance registered with 'AppDomain.registerType()'.  If the object does not have
         * type information, and the object is a function, then an attempt is made to pull the function name (if one exists).
         * Note: This function returns the type name ONLY (not the FULL type name [no namespace path]).
@@ -420,12 +420,12 @@ declare namespace DS {
         * @param {boolean} cacheTypeName (optional) If true (default), the name is cached using the 'ITypeInfo' interface via the '$__name' property.
         * This helps to speed up future calls.
         */
-        function getTypeName(object: object, cacheTypeName?: boolean): string;
+        export function getTypeName(object: object, cacheTypeName?: boolean): string;
         /**
          * Returns the full type name of the type or namespace, if available, or the name o the object itself if the full name (with namespaces) is not known.
          * @see getTypeName()
          */
-        function getFullTypeName(object: object, cacheTypeName?: boolean): string;
+        export function getFullTypeName(object: object, cacheTypeName?: boolean): string;
         /** An utility to extend a TypeScript namespace, which returns a string to be executed using 'eval()'.
          * When executed BEFORE the namespace to be added, it creates a pre-existing namespace reference that forces typescript to update.
          * Example 1: extendNS(()=>Local.NS, "Imported.NS");
@@ -433,13 +433,23 @@ declare namespace DS {
          * @param selector The local namespace that will extend the target.
          * @param name A selector or dotted identifier path to the target namespace name to extend from.
          */
-        function extendNS(selector: () => any, name: string | (() => any)): string;
-        function ciIndexOf(arr: Array<any>, value: any): number;
+        export function extendNS(selector: () => any, name: string | (() => any)): string;
+        export function ciIndexOf(arr: Array<any>, value: any): number;
         /** Attempts to parse a string as JSON and returns the result.  If the value is not a string, or the conversion fails,
          * the value is returned as is.
          * This is used mainly to convert JSON strings to objects, while allowing all other values to pass through as is.
          */
-        function parseJsonElseKeepAsIs<T = any>(value: any): T;
+        export function parseJsonElseKeepAsIs<T = any>(value: any): T;
+        type PrimitiveJSTypes = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'undefined' | 'object' | 'function';
+        /**
+         * Returns the propery names of the values that match the given type.
+         * @param o The object to check.
+         * @param typeName The type to filter on.
+         * @param ownProperties
+         */
+        export function getPropertiesOfType(o: IndexedObject, typeName: PrimitiveJSTypes, ownProperties?: boolean): string[];
+        export function getPropertiesOfType(o: IndexedObject, typeNames: PrimitiveJSTypes[], ownProperties?: boolean): string[];
+        export {};
     }
 }
 declare namespace DS {

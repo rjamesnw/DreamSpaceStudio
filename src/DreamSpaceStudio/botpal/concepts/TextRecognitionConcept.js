@@ -124,7 +124,6 @@ let TextRecognitionConcept = class TextRecognitionConcept extends Concept_1.defa
     /** Executes once the after all core system concepts have been registered. */
     onAfterAllRegistered() { }
     onTextInput(text) {
-        //x this.brain.createTask(this._splitTextOperation.bind(this), <ISplitTextState>{ concept: this, text: text });
         this.brain.addOperation(new SplitTextOperation(this, { text: text }));
     }
 };

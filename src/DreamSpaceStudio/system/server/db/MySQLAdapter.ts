@@ -57,8 +57,28 @@ namespace DS.DB.MySQL {
     };
 
     export class MySQLAdapter extends DBAdapter<ConnectionConfig> {
+        constructor(config = _defaultConfig) {
+            super(config);
+        }
+
         async createConnection() {
             return new MySQLConnection(this, await getMySQLConnection(this.configuration)); // (create from the default pool)
+        }
+
+        /**
+         * Query shortcut that simply creates a connection, runs the query, closes the connection, and returns the result.
+         * @param statement
+         * @param values
+         */
+        async query<T>(statement: string, values?: any): Promise<IQueryResult<T>> {
+            var conn = await this.createConnection();
+            await conn.connect();
+            try {
+                return await conn.query<T>(statement, values);
+            }
+            finally {
+                await conn.end();
+            }
         }
 
         getSQLErrorMessage(err: MysqlError) {
@@ -98,7 +118,7 @@ namespace DS.DB.MySQL {
             else throw DS.Exception.error("MSSQLConnection.connect()", "No connection reference was set.");
         }
 
-        query(statement: string, values?: any): Promise<IQueryResult> {
+        query<T>(statement: string, values?: any): Promise<IQueryResult<T>> {
             return new Promise<any>((res, rej) => {
                 if (values !== void 0)
                     return this.connection.query(statement, values, (err, result, fields) => {

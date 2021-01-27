@@ -1,7 +1,10 @@
 {
   "extends": "../tsconfig-client-base.json",
-  "references": [ { "path": "../system/client" } ],
-  "references": [ { "path": "../actions/_client" } ],
+  "references": [
+    { "path": "../system" },
+    { "path": "../system/client" },
+    { "path": "../actions/_client" }
+  ],
   "compilerOptions": {
     "lib": [ "es6", "dom" ],
     "types": [

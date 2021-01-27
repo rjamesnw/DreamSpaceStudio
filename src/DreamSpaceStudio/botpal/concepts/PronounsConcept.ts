@@ -53,14 +53,14 @@ export default class PronounsConceptConcept extends Concept {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    @conceptHandler("it")
-    async _It_Exclamation(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
-        if (context.context.HasQuestion(_QuestionsConcept.What)) {
-            if (context.WasPrevious("is") && context.context.AllSubjects().Any(s => s.NameOrTitle == _TimeConcept.Time))
-                context.addIntentHandler(new DS.Delegate(this, this._What_Time_Is_It_Intent), context.operation.MaxConfidence);
-        }
-        return Promise.resolve(context);
-    }
+    //@conceptHandler("it")
+    //async _It_Exclamation(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+    //    if (context.context.HasQuestion(_QuestionsConcept.What)) {
+    //        if (context.WasPrevious("is") && context.context.AllSubjects().Any(s => s.NameOrTitle == _TimeConcept.Time))
+    //            context.addIntentHandler(new DS.Delegate(this, this._What_Time_Is_It_Intent), context.operation.MaxConfidence);
+    //    }
+    //    return Promise.resolve(context);
+    //}
 
     async _What_Time_Is_It_Intent(context: ConceptHandlerContext): Promise<boolean> {
         await this.brain.doResponse("The time is " + new Date().toUTCString());

@@ -25,6 +25,7 @@
     "monaco-editor": "^0.15.6",
     "mssql": "^6.2.0",
     "mysql": "^2.18.1",
+    "node-lame": "^1.2.2",
     "node-xhrstub": "^1.1.1",
     "nodemon": "^1.19.1",
     "popper.js": "^1.16.1",

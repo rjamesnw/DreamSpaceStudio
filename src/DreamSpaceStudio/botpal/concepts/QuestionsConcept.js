@@ -17,11 +17,12 @@ let QuestionsConcept = QuestionsConcept_1 = class QuestionsConcept extends Conce
         super(brain);
     }
     // --------------------------------------------------------------------------------------------------------------------
-    _Who(context) {
-        if (context.WasPrevious(null))
-            context.context.Add(new QuestionContext_1.default(this, this.who_PN));
-        return Promise.resolve(context);
-    }
+    //@conceptHandler(QuestionsConcept.who_PN)
+    //_Who(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+    //    if (context.WasPrevious(null))
+    //        context.context.Add(new QuestionContext(this, this.who_PN));
+    //    return Promise.resolve(context);
+    //}
     // --------------------------------------------------------------------------------------------------------------------
     _GetName(context) {
         return Promise.resolve(context);
@@ -34,70 +35,52 @@ let QuestionsConcept = QuestionsConcept_1 = class QuestionsConcept extends Conce
         await this.brain.doResponse("Why so surprised?");
         return true;
     }
-    _What_Unknown_Question(context) {
-        if (context.WasPrevious(null)) {
-            context.context.Add(new QuestionContext_1.default(this, this.what_PN));
-            context.addIntentHandler(new DS.Delegate(this, this._What_Intent), context.operation.MinConfidence); // (this is like a fall-back plan if nothing else better is found)
-        }
-        return Promise.resolve(context);
-    }
+    //@conceptHandler(QuestionsConcept.what)
+    //_What_Unknown_Question(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+    //    if (context.WasPrevious(null)) {
+    //        context.context.Add(new QuestionContext(this, this.what_PN));
+    //        context.addIntentHandler(new DS.Delegate(this, this._What_Intent), context.operation.MinConfidence); // (this is like a fall-back plan if nothing else better is found)
+    //    }
+    //    return Promise.resolve(context);
+    //}
     async _What_Intent(context) {
         await this.brain.doResponse("What about what?");
         return true;
     }
     // --------------------------------------------------------------------------------------------------------------------
-    _When(context) {
-        if (context.WasPrevious(null))
-            context.context.Add(new QuestionContext_1.default(this, this.when_AV));
-        return Promise.resolve(context);
-    }
+    //@conceptHandler(QuestionsConcept.when_AV)
+    //_When(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+    //    if (context.WasPrevious(null))
+    //        context.context.Add(new QuestionContext(this, this.when_AV));
+    //    return Promise.resolve(context);
+    //}
     // --------------------------------------------------------------------------------------------------------------------
-    _Where(context) {
-        if (context.WasPrevious(null))
-            context.context.Add(new QuestionContext_1.default(this, this.where_AV));
-        return Promise.resolve(context);
-    }
+    //@conceptHandler(QuestionsConcept.where_AV)
+    //_Where(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+    //    if (context.WasPrevious(null))
+    //        context.context.Add(new QuestionContext(this, this.where_AV));
+    //    return Promise.resolve(context);
+    //}
     // --------------------------------------------------------------------------------------------------------------------
-    _Why(context) {
-        if (context.WasPrevious(null))
-            context.context.Add(new QuestionContext_1.default(this, this.why_AV));
-        return Promise.resolve(context);
-    }
+    //@conceptHandler(QuestionsConcept.why_AV)
+    //_Why(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+    //    if (context.WasPrevious(null))
+    //        context.context.Add(new QuestionContext(this, this.why_AV));
+    //    return Promise.resolve(context);
+    //}
     // --------------------------------------------------------------------------------------------------------------------
-    _How(context) {
-        if (context.WasPrevious(null)) {
-            context.context.Add(new QuestionContext_1.default(this, this.how_AV));
-            context.addIntentHandler(new DS.Delegate(this, this._How_Intent), context.operation.MinConfidence);
-        }
-        return Promise.resolve(context);
-    }
+    //@conceptHandler(QuestionsConcept.how_AV)
+    //_How(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+    //    if (context.WasPrevious(null)) {
+    //        context.context.Add(new QuestionContext(this, this.how_AV));
+    //        context.addIntentHandler(new DS.Delegate(this, this._How_Intent), context.operation.MinConfidence);
+    //    }
+    //    return Promise.resolve(context);
+    //}
     async _How_Intent(context) {
         if (context.WasPrevious(null))
             await this.brain.doResponse("How what?");
         return true;
-    }
-    // --------------------------------------------------------------------------------------------------------------------
-    _Can(context) {
-        if (context.WasPrevious(null))
-            context.context.Add(new QuestionContext_1.default(this, this.can_V));
-        return Promise.resolve(context);
-    }
-    // --------------------------------------------------------------------------------------------------------------------
-    _Is(context) {
-        if (context.WasPrevious(null))
-            context.context.Add(new QuestionContext_1.default(this, this.is_V));
-        return Promise.resolve(context);
-    }
-    _Are(context) {
-        if (context.WasPrevious(null))
-            context.context.Add(new QuestionContext_1.default(this, this.are_V));
-        return Promise.resolve(context);
-    }
-    // --------------------------------------------------------------------------------------------------------------------
-    _If(context) {
-        if (context.WasPrevious(null))
-            context.context.Add(new QuestionContext_1.default(this, this.if_C));
-        return Promise.resolve(context);
     }
 };
 // --------------------------------------------------------------------------------------------------------------------
@@ -119,9 +102,6 @@ QuestionsConcept.Name_N = new DictionaryItem_1.default("name", POS_1.default.Nou
 QuestionsConcept.Name_V = new DictionaryItem_1.default("name", POS_1.default.Verb); // (naming)
 QuestionsConcept.Name_A = new DictionaryItem_1.default("name", POS_1.default.Adjective); // (named)
 __decorate([
-    Concept_1.conceptHandler(QuestionsConcept_1.who_PN)
-], QuestionsConcept.prototype, "_Who", null);
-__decorate([
     Concept_1.conceptHandler(QuestionsConcept_1.Name_N, QuestionsConcept_1.Name_V, QuestionsConcept_1.Name_A) //"what^PN is^V ^PN name"
     ,
     Concept_1.contexts(QuestionContext_1.default, SubjectContext_1.default, 'tobe|is') //"what^PN is^V ^PN name"
@@ -130,35 +110,8 @@ __decorate([
     Concept_1.conceptHandler(QuestionsConcept_1.what_PN, QuestionsConcept_1.what_D, QuestionsConcept_1.what_AV, "!")
 ], QuestionsConcept.prototype, "_What_Exclamation", null);
 __decorate([
-    Concept_1.conceptHandler(QuestionsConcept_1.what)
-], QuestionsConcept.prototype, "_What_Unknown_Question", null);
-__decorate([
-    Concept_1.conceptHandler(QuestionsConcept_1.when_AV)
-], QuestionsConcept.prototype, "_When", null);
-__decorate([
-    Concept_1.conceptHandler(QuestionsConcept_1.where_AV)
-], QuestionsConcept.prototype, "_Where", null);
-__decorate([
-    Concept_1.conceptHandler(QuestionsConcept_1.why_AV)
-], QuestionsConcept.prototype, "_Why", null);
-__decorate([
-    Concept_1.conceptHandler(QuestionsConcept_1.how_AV)
-], QuestionsConcept.prototype, "_How", null);
-__decorate([
     Concept_1.intentHandler(QuestionsConcept_1.how_AV)
 ], QuestionsConcept.prototype, "_How_Intent", null);
-__decorate([
-    Concept_1.conceptHandler(QuestionsConcept_1.can_V)
-], QuestionsConcept.prototype, "_Can", null);
-__decorate([
-    Concept_1.conceptHandler(QuestionsConcept_1.is_V)
-], QuestionsConcept.prototype, "_Is", null);
-__decorate([
-    Concept_1.conceptHandler(QuestionsConcept_1.are_V)
-], QuestionsConcept.prototype, "_Are", null);
-__decorate([
-    Concept_1.conceptHandler(QuestionsConcept_1.if_C)
-], QuestionsConcept.prototype, "_If", null);
 QuestionsConcept = QuestionsConcept_1 = __decorate([
     Concept_1.concept()
 ], QuestionsConcept);

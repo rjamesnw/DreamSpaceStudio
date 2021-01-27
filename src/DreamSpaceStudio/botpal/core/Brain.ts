@@ -202,12 +202,12 @@ export default class Brain {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    findConceptContexts(text: string, threshold = 0.8): Match<ConceptContext>[] {
-        var dicItems = threshold == 1 ? // (if 'threshold' is 1.0 then do a similar [near exact] match [using group keys], otherwise find close partial matches instead.
-            this.memory.dictionary.findSimilarEntriesByGroupKey(this.memory.brain.toGroupKey(text)).SelectMany(i => i.ConceptContexts.Select(c => new Match<ConceptContext>(c, 1.0)))
-            : this.memory.dictionary.findMatchingEntries(text, threshold).SelectMany(m => m.Item.ConceptContexts.Select(c => new Match<ConceptContext>(c, m.Score)));
-        return dicItems.ToArray();
-    }
+    //findConceptContexts(text: string, threshold = 0.8): Match<ConceptContext>[] {
+    //    var dicItems = threshold == 1 ? // (if 'threshold' is 1.0 then do a similar [near exact] match [using group keys], otherwise find close partial matches instead.
+    //        this.memory.dictionary.findSimilarEntriesByGroupKey(this.memory.brain.toGroupKey(text)).SelectMany(i => i.ConceptContexts.Select(c => new Match<ConceptContext>(c, 1.0)))
+    //        : this.memory.dictionary.findMatchingEntries(text, threshold).SelectMany(m => m.Item.ConceptContexts.Select(c => new Match<ConceptContext>(c, m.Score)));
+    //    return dicItems.ToArray();
+    //}
 
     // --------------------------------------------------------------------------------------------------------------------
 
@@ -221,7 +221,7 @@ export default class Brain {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    async  _processOperations(btask: BrainTask) {
+    async _processOperations(btask: BrainTask) {
         if (btask != null) {
             var ops: Operation[] = this.#_operations; // (since the list may update, get a snapshot of the list as it is now)
             var op: Operation;
@@ -236,8 +236,10 @@ export default class Brain {
                 if (completed)
                     this.#_operations.remove(op);
 
-                if (op.IsCompletedWithErrors)
-                    await this.doResponse(new Response("Hmmm. Sorry, it looks like I had an internal error with one of my operations. Please contact support and pass along the following details.", null, string.Join(Environment.NewLine, op.Errors.Select(er => Exceptions.GetFullErrorMessage(er)))));
+                if (op.IsCompletedWithErrors) {
+                    let errors = op.errors.map(ex => DS.getErrorMessage(ex)).join('\r\n');
+                    await this.doResponse(new Response("Hmmm. Sorry, it looks like I had an internal error with one of my operations. Please contact support and pass along the following details.", null, errors));
+                }
                 else if (op.Next != null)
                     this.#_operations.push(op.Next);
             }

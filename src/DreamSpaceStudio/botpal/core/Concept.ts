@@ -118,7 +118,7 @@ export class ConceptHandlerContext implements IMemoryObject {
     /**
      *  The current brain task operation that is processing the concepts.
      */
-    readonly operation: ProcessConceptsOperation;
+    readonly operation: any; //ProcessConceptsOperation;
 
     /**
      *  The new or existing context that is the result of various concept handlers. It is used to build the content of the user's intent.
@@ -146,10 +146,10 @@ export class ConceptHandlerContext implements IMemoryObject {
     */
     probableIntentHandlers: Match<IntentHandler>[][];
 
-    /**
-     *  Returns true if this context has any callbacks to handler intents (user input meanings).
-    */
-    get hasProbableIntentHandlers(): boolean { return this.probableIntentHandlers?.Any(i => i.Count > 0) ?? false; }
+    ///**
+    // *  Returns true if this context has any callbacks to handler intents (user input meanings).
+    //*/
+    //get hasProbableIntentHandlers(): boolean { return this.probableIntentHandlers?.Any(i => i.Count > 0) ?? false; }
 
     /**
      *  A growing list of executing concepts that were matched against user input.
@@ -183,10 +183,10 @@ export class ConceptHandlerContext implements IMemoryObject {
 
     // --------------------------------------------------------------------------------------------------------------------
 
-    constructor(operation: ProcessConceptsOperation, index: number, initialMatchedConceptsCapacity: number = null) {
+    constructor(operation: any/*ProcessConceptsOperation*/, index: number, initialMatchedConceptsCapacity: number = null) {
         if (!operation) throw DS.Exception.argumentUndefinedOrNull(DS.Utilities.nameof(() => ConceptHandlerContext), 'operation');
         this.operation = operation;
-        this.context = new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
+        this.context = null; //?new IntentContext(operation.Memory); // (try to always start with a default root context when possible; the Concept reference is null since this root context was not created by a concept)
         this.index = index;
         this.Confidence = 0.0;
         this.confidenceSum = 0.0;
@@ -226,18 +226,18 @@ export class ConceptHandlerContext implements IMemoryObject {
     */
     /// <returns>A new concept handler context to use with calling concept handlers.
     /// The clone is returned with a 0.0 Confidence value and the 'matchedConcept' reference added.</returns>
-    Clone(index: number, matchedConcept: ConceptMatch): ConceptHandlerContext {
-        var matchedConceptsCopy: Iterable<ConceptMatch> = this.matchedConcepts;
+    //Clone(index: number, matchedConcept: ConceptMatch): ConceptHandlerContext {
+    //    var matchedConceptsCopy: Iterable<ConceptMatch> = this.matchedConcepts;
 
-        if (matchedConcept != null)
-            matchedConceptsCopy = [...this.matchedConcepts, matchedConcept];
+    //    if (matchedConcept != null)
+    //        matchedConceptsCopy = [...this.matchedConcepts, matchedConcept];
 
-        var ctx = new ConceptHandlerContext(this.operation, index, matchedConceptsCopy, this.probableIntentHandlers)
-        ctx.context = this.context;
-        ctx.confidenceSum = this.confidenceSum // (note: 'Confidence' is NEVER copied, as it must be 0 for each new concept handler call)
+    //    var ctx = new ConceptHandlerContext(this.operation, index, matchedConceptsCopy, this.probableIntentHandlers)
+    //    ctx.context = this.context;
+    //    ctx.confidenceSum = this.confidenceSum // (note: 'Confidence' is NEVER copied, as it must be 0 for each new concept handler call)
 
-        return ctx;
-    }
+    //    return ctx;
+    //}
 
     // --------------------------------------------------------------------------------------------------------------------
 
@@ -311,14 +311,15 @@ export class ConceptHandlerContext implements IMemoryObject {
     /// <param name="exactMatch">If false (default) then a group key is used to match similar text (such as removing letter casing and reducing spaces, etc.).</param>
     /// <returns></returns>
     WasPrevious(text: string, exactMatch = false): boolean {
-        if (this.leftHandlerMatch == null)
-            return DS.StringUtils.isEmptyOrWhitespace(text);
-        if (exactMatch)
-            return (text ?? "") == (this.leftHandlerMatch?.Item.DictionaryItem.TextPart.Text ?? "");
-        else {
-            var grpkey = DS.StringUtils.isEmptyOrWhitespace(text) ? null : this.#_memory?.brain.toGroupKey(text);
-            return grpkey == this.leftHandlerMatch.Item.DictionaryItem.TextPart.GroupKey;
-        }
+        throw DS.Exception.notImplemented("WasPrevious");
+        //if (this.leftHandlerMatch == null)
+        //    return DS.StringUtils.isEmptyOrWhitespace(text);
+        //if (exactMatch)
+        //    return (text ?? "") == (this.leftHandlerMatch?.Item.DictionaryItem.TextPart.Text ?? "");
+        //else {
+        //    var grpkey = DS.StringUtils.isEmptyOrWhitespace(text) ? null : this.#_memory?.brain.toGroupKey(text);
+        //    return grpkey == this.leftHandlerMatch.Item.DictionaryItem.TextPart.GroupKey;
+        //}
     }
 
     // --------------------------------------------------------------------------------------------------------------------
@@ -327,7 +328,7 @@ export class ConceptHandlerContext implements IMemoryObject {
 /**
  *  Created when concept handlers are found that match a text part that was parsed from user input.
 */
-public class ConceptContext<TConcept extends Concept = Concept> {
+export class ConceptContext<TConcept extends Concept = Concept> {
     /**
      *  The dictionary item when the concept was found.
     */

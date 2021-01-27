@@ -10,7 +10,7 @@ class ModifierContext extends Context_1.default {
      * @param {Context = null} parent An optional parent context, of applicable.
      */
     constructor(concept, name, parent = null) {
-        super(concept.memory, concept, parent);
+        super(concept, parent);
         this.name = name;
     }
 }

@@ -90,6 +90,10 @@
             abstract getColumnDetails(tableName: string): Promise<IColumnInfo[]>;
             abstract end(): Promise<void>;
 
+            createQueryBuilder(tableName: string, columnInfo?: IColumnInfoMap): QueryBuilder {
+                return new QueryBuilder(this, tableName, columnInfo);
+            }
+
             /**
              * Constructs the columns and values from a JSON object, table name, and optional translation array.
              * This is used in building the final statement, such as 'insert', or 'update'.
@@ -117,7 +121,7 @@
                 for (var i = 0, n = colResults.length; i < n; ++i)
                     colResIndex[colResults[i].Field.toLowerCase()] = colResults[i];
 
-                var q: QueryBuilder = new QueryBuilder(this, tableName);
+                var q = this.createQueryBuilder(tableName);
                 q.columnInfo = colResIndex;
 
                 // ... for each property of the object, create an array of column names and values ...
@@ -144,7 +148,7 @@
                 return q;
             }
 
-            updateOrInsert(data: string | IndexedObject, tableName: string, onQueryBuilderReady: { (q: QueryBuilder): void },
+            updateOrInsert(data: string | IndexedObject, tableName: string, onQueryBuilderReady?: { (q: QueryBuilder): void },
                 columnTranslations?: IColumnTranslations, calculatedColumns?: ICalculatedColumns): Promise<IModifyTableResult> {
 
                 console.log(`*** Insert or update requested for table '${tableName}' ...`);
@@ -186,16 +190,18 @@
                                     else if (keys.length > 1)
                                         console.warn("Since the insert was done using a composite key (multiple columns) no insert ID could be returned from the execution (it only works for single auto-increment key fields).");
 
+                                this.end();
+
                                 resolve(res, <IModifyTableResult>{ builder: qbInfo, success: true, message: msg }, msg);
                             },
-                                (err) => { reject(rej, this.adapter.getSQLErrorMessage(err)); });
+                                (err) => { this.end(); reject(rej, this.adapter.getSQLErrorMessage(err)); });
                         }
                     }, (err) => { rej(err); });
                 });
             }
 
             /** Only performs an update of existing data. If no data exists, null is returned. */
-            update(data: string | IndexedObject, tableName: string, onQueryBuilderReady: { (q: QueryBuilder): void },
+            update(data: string | IndexedObject, tableName: string, onQueryBuilderReady?: { (q: QueryBuilder): void },
                 columnTranslations?: IColumnTranslations, calculatedColumns?: ICalculatedColumns): Promise<IModifyTableResult> {
 
                 console.log(`*** Update requested for table '${tableName}' ...`);
@@ -245,7 +251,7 @@
                                             this.query(st).then((result: IUpdaeQueryResult) => {
                                                 var msg = `Success: existing entry in table '${tableName}' updated.`
                                                     + "\r\nResult: " + JSON.stringify(result);
-
+                                                this.end();
                                                 resolve(res, { builder: qbInfo, success: true, message: msg }, msg);
                                             },
                                                 (err) => { reject(rej, this.adapter.getSQLErrorMessage(err)); });

@@ -1,6 +1,7 @@
 ﻿import ITTSService from "./ITTSService";
 import TTSFile from "../../db/TTSFile";
 import Ivona from "../apis/tts/Ivona";
+import { Lame } from "node-lame";
 
 export class DefaultTTSService implements ITTSService {
     // --------------------------------------------------------------------------------------------------------------------
@@ -8,19 +9,28 @@ export class DefaultTTSService implements ITTSService {
     static get CurrentAppPath() { return DS.webRoot; }
     static get CurrentTTSPath() { return DS.Path.combine(this.CurrentAppPath, "TTS"); }
 
-    _BotPalDB = new BotPalDB();
+    _BotPalDB = new DS.DB.MySQL.MySQLAdapter();
+    _BotPalConn: DS.DB.MySQL.MySQLConnection;
+
+    // --------------------------------------------------------------------------------------------------------------------
+
+    async _getConnection() {
+        //if (this._BotPalConn && (this._BotPalConn.connection.state == 'connected' || this._BotPalConn.connection.state == 'authenticated'))
+        //    return this._BotPalConn;
+        return this._BotPalConn || (this._BotPalConn = await this._BotPalDB.createConnection()); // (uses the environment default values)
+    }
 
     // --------------------------------------------------------------------------------------------------------------------
 
     /**
-     *  Plays the given MP3 file.
+     *  Sends the given MP3 file to the specified channel.
+     *  @param filepath  The MP3 file to play.
      */
-    /// <param name="filepath">The MP3 file to play.</param>
-    PlayMP3File(filepath: string) {
-        var reader = new Mp3FileReader(filepath);
-        var waveOut = new WaveOut(); // or WaveOutEvent()
-        waveOut.Init(reader);
-        waveOut.Play();
+    PlayMP3File(filepath: string, channelID: string) {
+        //var reader = new Mp3FileReader(filepath);
+        //var waveOut = new WaveOut(); // or WaveOutEvent()
+        //waveOut.Init(reader);
+        //waveOut.Play();
         return Promise.resolve();
     }
 
@@ -33,34 +43,34 @@ export class DefaultTTSService implements ITTSService {
     /**
      *  Gets and plays the audio file associated with the given text and voice code.
      *  If the voice code is not supplied, or null, then the default 'ivona' TTS engine is assumed.
+     *  @param text The text to get a voice audio file for.
+     *  @param voiceCode The voice code for the expected audio.
     */
-    /// <param name="text">The text to get a voice audio file for.</param>
-    /// <param name="voiceCode">The voice code for the expected audio.</param>
-    async Say(text: string, voiceCode = "ivona"): Promise<void> {
+    async Say(text: string, channelID: string, voiceCode = "ivona"): Promise<void> {
         if (voiceCode == null) voiceCode = "ivona";
         var filepath = await this.GetTTSAudioFilePath(text, voiceCode);
-        await this.PlayMP3File(filepath);
+        await this.PlayMP3File(filepath, channelID);
     }
 
-    GetTTSFileEntry(text: string, voiceCode: string): TTSFile {
+    async GetTTSFileEntry(text: string, voiceCode: string): Promise<TTSFile> {
         text = text.toLowerCase();
 
         voiceCode = this._VoiceCodeParts(voiceCode).join('-');
 
-        return this._BotPalDB.TTSFiles.filter(f => f.text.ToLower() == text && f.voice_code == voiceCode)[0];
+        var result = await this._BotPalDB.query<TTSFile>("SELECT * FROM tts_files where lcase(text) = ? and voice_code = ?", [text, voiceCode]);
+
+        return result.response;
     }
 
     /**
      *  Gets a cached audio file, or creates a new one.
      *  If the voice code is not supplied, or null, then the default 'ivona' TTS engine is assumed.
+     *  @param text The text to get an audio file for.
+     *  @param voiceCode The voice code is used to select a supported TTS engine and voice profile to use when generating the audio.
+     *  @param The format is '{TTS Engine Type}-{Voice Name/Code/ID}'; where second value after the hyphen is optional (so a default voice profile should be used).
+     *  For example, the default voice profile for 'ivona-Joanna' is "Joanna", so only the 'ivona' TTS engine name is required.
+     *  Note: An empty TTS Engine Type value will select the operating system's default TTS engine if one exists.
     */
-    /// <param name="text">The text to get an audio file for.</param>
-    /// <param name="voiceCode">The voice code is used to select a supported TTS engine and voice profile to use when generating the audio.
-    /// <para>The format is '{TTS Engine Type}-{Voice Name/Code/ID}'; where second value after the hyphen is optional (so a default voice profile should be used). </para>
-    /// <para>For example, the default voice profile for 'ivona-Joanna' is "Joanna", so only the 'ivona' TTS engine name is required.</para>
-    /// <para>Note: An empty TTS Engine Type value will select the operating system's default TTS engine if one exists.</para>
-    /// </param>
-    /// <returns></returns>
     async GetTTSAudioFilePath(text: string, voiceCode = "ivona"): Promise<string> {
         if (voiceCode == null) voiceCode = "ivona";
 
@@ -97,53 +107,55 @@ export class DefaultTTSService implements ITTSService {
 
             var ivona = new Ivona();
 
-            targetFilename = DS.Path.combine(this.CurrentTTSPath, this.GetOutputAudioFilePath(ttsEngineType, text, voiceID) + ".mp3");
+            targetFilename = DS.Path.combine(DefaultTTSService.CurrentTTSPath, this.GetOutputAudioFilePath(ttsEngineType, text, voiceID) + ".mp3");
 
             if (!DS.IO.exists(targetFilename))
                 await ivona.CreateSpeech(text, voiceID, targetFilename);
         }
-        else {
-            voiceCode = ttsEngineType + (DS.StringUtils.isEmptyOrWhitespace(voiceID) ? null : '-' + voiceID); // (fix the voice code first)
-            if (tryGetExistingFile()) return targetFilename;
+        //else {
+        //    voiceCode = ttsEngineType + (DS.StringUtils.isEmptyOrWhitespace(voiceID) ? null : '-' + voiceID); // (fix the voice code first)
+        //    if (tryGetExistingFile()) return targetFilename;
 
-            var synth = this.Synthesizer;
+        //    var synth = this.Synthesizer;
 
-            var voice = this.InstalledVoices.FirstOrDefault(v => v.VoiceInfo.Id == voiceID);
-            if (voice != null && voice.Enabled && voice.VoiceInfo.Name != synth.Voice.Name)
-                synth.SelectVoice(voice.VoiceInfo.Name);
+        //    var voice = this.InstalledVoices.FirstOrDefault(v => v.VoiceInfo.Id == voiceID);
+        //    if (voice != null && voice.Enabled && voice.VoiceInfo.Name != synth.Voice.Name)
+        //        synth.SelectVoice(voice.VoiceInfo.Name);
 
-            targetFilename = DS.Path.combine(this.CurrentTTSPath, this.GetOutputAudioFilePath("windows", text, synth.Voice.Id) + ".mp3");
+        //    targetFilename = DS.Path.combine(DefaultTTSService.CurrentTTSPath, this.GetOutputAudioFilePath("windows", text, synth.Voice.Id) + ".mp3");
 
-            if (!File.Exists(targetFilename)) {
-                //set some settings
-                synth.Volume = 100;
-                synth.Rate = 0; //medium
+        //    if (!File.Exists(targetFilename)) {
+        //        //set some settings
+        //        synth.Volume = 100;
+        //        synth.Rate = 0; //medium
 
-                //save to memory stream
-                var ms = new MemoryStream();
-                synth.SetOutputToWaveStream(ms);
+        //        //save to memory stream
+        //        var ms = new MemoryStream();
+        //        synth.SetOutputToWaveStream(ms);
 
-                //do speaking
-                synth.Speak(text);
+        //        //do speaking
+        //        synth.Speak(text);
 
-                //now convert to mp3 using LameEncoder or shell out to audio grabber
-                await this.ConvertWavStreamToMp3File(ms, targetFilename);
-            }
-        }
+        //        //now convert to mp3 using LameEncoder or shell out to audio grabber
+        //        await this.ConvertWavStreamToMp3File(ms, targetFilename);
+        //    }
+        //}
 
         if (DS.StringUtils.isEmptyOrWhitespace(targetFilename))
             throw new DS.Exception("DefaultTTSService.GetTTSAudioFilePath()", "Invalid target output audio file path.");
         else {
             // ... save the audio file details and return the audio ...
-            if (exisitngTTSFile == null)
-                this._BotPalDB.TTSFiles.Add(exisitngTTSFile = new TTSFile());
+            if (exisitngTTSFile == null) {
+                let newFile = new TTSFile();
 
-            exisitngTTSFile.filename = DS.Path.getName(targetFilename);
-            exisitngTTSFile.voice_code = DS.StringUtils.isEmptyOrWhitespace(voiceCode) ? null : voiceCode;
-            exisitngTTSFile.location = DS.Path.getPath(targetFilename);
-            exisitngTTSFile.text = text;
+                newFile.filename = DS.Path.getName(targetFilename);
+                newFile.voice_code = DS.StringUtils.isEmptyOrWhitespace(voiceCode) ? null : voiceCode;
+                newFile.location = DS.Path.getPath(targetFilename);
+                newFile.text = text;
 
-            this._BotPalDB.SaveChanges();
+                var conn = await this._getConnection();
+                await conn.updateOrInsert(newFile, "tts_files");
+            }
 
             return targetFilename;
         }
@@ -153,10 +165,9 @@ export class DefaultTTSService implements ITTSService {
 
     /**
      *  Generates a path and filename for the given text and voice code that will be used to created the final MP3 audio file.
+     *  @param text The text that represents the contents of the audio file.
+     *  @param voiceID The voice profile identifier used by the TTS engine to generate the audio data (typically this is the name of the voice actor selected).
     */
-    /// <param name="text">The text that represents the contents of the audio file.</param>
-    /// <param name="voiceID">The voice profile identifier used by the TTS engine to generate the audio data (typically this is the name of the voice actor selected).</param>
-    /// <returns></returns>
     GetOutputAudioFilePath(ttsEngineName: string, text: string, voiceID: string): string {
         text = ttsEngineName + "_" + voiceID + "_" + text;
         var filename = text.split(DS.Path.restrictedFilenameRegex).filter(s => !!s).join('_').trimRightChar('.').replace(/'\s'/g, '_');
@@ -171,51 +182,56 @@ export class DefaultTTSService implements ITTSService {
 
     /**
      *  Converts a given memory stream, representing a WAV file, into an MP3 file.
+     *  @param stream The WAV memory stream to convert.
+     *  @param savetofilename The output path and filename for the resulting MP4 file.
     */
-    /// <param name="ms">The WAV memory stream to convert.</param>
-    /// <param name="savetofilename">The output path and filename for the resulting MP4 file.</param>
     async ConvertWavStreamToMp3File(stream: Buffer, savetofilename: string): Promise<void> {
-        //rewind to beginning of stream
-        stream.Seek(0, SeekOrigin.Begin);
 
-        var rdr = new WaveFileReader(stream);
-        var wtr = new LameMP3FileWriter(savetofilename, rdr.WaveFormat, LAMEPreset.VBR_90);
-        await rdr.CopyToAsync(wtr);
+        let encoder = new Lame({
+            output: savetofilename,
+            bitrate: 192
+        }).setBuffer(stream);
+
+        await encoder.encode().then(() => {
+            // Encoding finished
+        }).catch(error => {
+            // Something went wrong
+            throw error;
+        });
     }
 
     // --------------------------------------------------------------------------------------------------------------------
     // The OS voices are used mainly as backups in case the web service is not available.
-
     // TODO: Put this in a different class under a new TTS "default fallback" plugin.
 
-    static Synthesizer: SpeechSynthesizer;
-    static InstalledVoices: InstalledVoice[];
-    static DefaultVoice: VoiceInfo;
+    //static Synthesizer: SpeechSynthesizer;
+    //static InstalledVoices: InstalledVoice[];
+    //static DefaultVoice: VoiceInfo;
 
-    private static _DefaultTTSService_ctor = (function (this: typeof DefaultTTSService) { // (static constructor)
-        // ... setup TTS synthesizer before initializing, otherwise requests may hang (it spawns its own threads) ...
+    //private static _DefaultTTSService_ctor = (function (this: typeof DefaultTTSService) { // (static constructor)
+    //    // ... setup TTS synthesizer before initializing, otherwise requests may hang (it spawns its own threads) ...
 
-        this.Synthesizer = new SpeechSynthesizer();
-        this.InstalledVoices = this.Synthesizer.GetInstalledVoices().ToArray();
+    //    this.Synthesizer = new SpeechSynthesizer();
+    //    this.InstalledVoices = this.Synthesizer.GetInstalledVoices().ToArray();
 
-        // ... select the default best voices, in best to least order ...
+    //    // ... select the default best voices, in best to least order ...
 
-        if (!this.TryChangeDefaultVoice("Zira") && !this.TryChangeDefaultVoice("Helen"))
-            this.DefaultVoice = this.Synthesizer.Voice; // (if cannot change it, just use the existing one as is)
-    }).call(DefaultTTSService);
+    //    if (!this.TryChangeDefaultVoice("Zira") && !this.TryChangeDefaultVoice("Helen"))
+    //        this.DefaultVoice = this.Synthesizer.Voice; // (if cannot change it, just use the existing one as is)
+    //}).call(DefaultTTSService);
 
-    static TryChangeDefaultVoice(name: string): boolean {
-        var defaultInstalledVoice = (from v in this.InstalledVoices where v.VoiceInfo.Name.Contains(name) select v).FirstOrDefault();
-        if (defaultInstalledVoice != null && defaultInstalledVoice.Enabled) {
-            this.DefaultVoice = defaultInstalledVoice.VoiceInfo;
-            this.Synthesizer.SelectVoice(this.DefaultVoice.Name);
-            return true;
-        }
-        else {
-            this.DefaultVoice = this.Synthesizer.Voice;
-            return false;
-        }
-    }
+    //static TryChangeDefaultVoice(name: string): boolean {
+    //    var defaultInstalledVoice = (from v in this.InstalledVoices where v.VoiceInfo.Name.Contains(name) select v).FirstOrDefault();
+    //    if (defaultInstalledVoice != null && defaultInstalledVoice.Enabled) {
+    //        this.DefaultVoice = defaultInstalledVoice.VoiceInfo;
+    //        this.Synthesizer.SelectVoice(this.DefaultVoice.Name);
+    //        return true;
+    //    }
+    //    else {
+    //        this.DefaultVoice = this.Synthesizer.Voice;
+    //        return false;
+    //    }
+    //}
 
     // --------------------------------------------------------------------------------------------------------------------
 }

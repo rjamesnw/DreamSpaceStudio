@@ -40,13 +40,14 @@ class PronounsConceptConcept extends Concept_1.default {
         return Promise.resolve(context);
     }
     // --------------------------------------------------------------------------------------------------------------------
-    async _It_Exclamation(context) {
-        if (context.context.HasQuestion(_QuestionsConcept.What)) {
-            if (context.WasPrevious("is") && context.context.AllSubjects().Any(s => s.NameOrTitle == _TimeConcept.Time))
-                context.addIntentHandler(new DS.Delegate(this, this._What_Time_Is_It_Intent), context.operation.MaxConfidence);
-        }
-        return Promise.resolve(context);
-    }
+    //@conceptHandler("it")
+    //async _It_Exclamation(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+    //    if (context.context.HasQuestion(_QuestionsConcept.What)) {
+    //        if (context.WasPrevious("is") && context.context.AllSubjects().Any(s => s.NameOrTitle == _TimeConcept.Time))
+    //            context.addIntentHandler(new DS.Delegate(this, this._What_Time_Is_It_Intent), context.operation.MaxConfidence);
+    //    }
+    //    return Promise.resolve(context);
+    //}
     async _What_Time_Is_It_Intent(context) {
         await this.brain.doResponse("The time is " + new Date().toUTCString());
         return Promise.resolve(true);
@@ -60,8 +61,5 @@ __decorate([
 __decorate([
     Concept_1.conceptHandler("she,he", "* she^N|he^N *") // (ex: "He is", "She is",  "Is that a he or she?")
 ], PronounsConceptConcept.prototype, "_Noun_he_she", null);
-__decorate([
-    Concept_1.conceptHandler("it")
-], PronounsConceptConcept.prototype, "_It_Exclamation", null);
 exports.default = PronounsConceptConcept;
 //# sourceMappingURL=PronounsConcept.js.map

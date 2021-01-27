@@ -3076,6 +3076,7 @@ declare namespace DS {
             abstract query(statement: string, values?: any): Promise<IQueryResult>;
             abstract getColumnDetails(tableName: string): Promise<IColumnInfo[]>;
             abstract end(): Promise<void>;
+            createQueryBuilder(tableName: string, columnInfo?: IColumnInfoMap): QueryBuilder;
             /**
              * Constructs the columns and values from a JSON object, table name, and optional translation array.
              * This is used in building the final statement, such as 'insert', or 'update'.
@@ -3084,11 +3085,11 @@ declare namespace DS {
              * @param columnTranslations An optional object whose properties are JSON property names set to the names of the table columns they map to. If a property doesn't get mapped, a warning is logged.
              */
             buildQueryInfo(json: string | IndexedObject, tableName: string, columnTranslations?: IColumnTranslations): Promise<QueryBuilder>;
-            updateOrInsert(data: string | IndexedObject, tableName: string, onQueryBuilderReady: {
+            updateOrInsert(data: string | IndexedObject, tableName: string, onQueryBuilderReady?: {
                 (q: QueryBuilder): void;
             }, columnTranslations?: IColumnTranslations, calculatedColumns?: ICalculatedColumns): Promise<IModifyTableResult>;
             /** Only performs an update of existing data. If no data exists, null is returned. */
-            update(data: string | IndexedObject, tableName: string, onQueryBuilderReady: {
+            update(data: string | IndexedObject, tableName: string, onQueryBuilderReady?: {
                 (q: QueryBuilder): void;
             }, columnTranslations?: IColumnTranslations, calculatedColumns?: ICalculatedColumns): Promise<IModifyTableResult>;
         }

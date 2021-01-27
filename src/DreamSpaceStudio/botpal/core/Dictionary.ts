@@ -550,7 +550,7 @@ export default class Dictionary implements IMemoryObject {
     normalizeText(text: string, optionalTextRemovalRegex: RegExp = null): string {
         if (text == null) text = "";
         if (optionalTextRemovalRegex != null)
-            text = optionalTextRemovalRegex.Replace(text, "");
+            text = text.replace(optionalTextRemovalRegex, "");
         return text.toLowerCase().replace("n't", " not"); // TODO: Think more about "'s", which is complicated to deal with, and may be context based.
     }
 

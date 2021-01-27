@@ -63,13 +63,13 @@ export default abstract class Operation extends TimeReferencedObject implements 
     get completed() { return this._completed; }
     protected _completed: boolean;
 
-    get Errors() { return this._errors; }
+    get errors() { return this._errors; }
     protected _errors: DS.Exception[];
 
     /**
      *  Will be true if the operation completed successfully, but there were errors in the process.
     */
-    get IsCompletedWithErrors() { return this.completed && this?.Errors?.length > 0; }
+    get IsCompletedWithErrors() { return this.completed && this?.errors?.length > 0; }
 
     /**
      *  A list of commands to execute for this command, if any.

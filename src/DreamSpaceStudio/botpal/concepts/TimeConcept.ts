@@ -36,14 +36,14 @@ export default class TimeConcept extends Concept {
     //        return Promise.resolve(context);
     //    }
 
-    @conceptHandler("time", "time")
-    _What_Unknown_Question(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
-        if (context.WasPrevious("what")) {
-            context.context.Add(new SubjectContext(this.memory, this, this.time));
-            context.addIntentHandler(this._Time_Intent, context.operation.MinConfidence);
-        }
-        return Promise.resolve(context);
-    }
+    //@conceptHandler("time", "time")
+    //_What_Unknown_Question(context: ConceptHandlerContext): Promise<ConceptHandlerContext> {
+    //    if (context.WasPrevious("what")) {
+    //        context.context.Add(new SubjectContext(this.memory, this, this.time));
+    //        context.addIntentHandler(this._Time_Intent, context.operation.MinConfidence);
+    //    }
+    //    return Promise.resolve(context);
+    //}
 
     async  _Time_Intent(context: ConceptHandlerContext): Promise<boolean> {
         return Promise.resolve(true);

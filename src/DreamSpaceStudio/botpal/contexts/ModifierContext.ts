@@ -23,7 +23,7 @@ export default class ModifierContext extends Context {
      * @param {Context = null} parent An optional parent context, of applicable.
      */
     constructor(concept: Concept, name: DictionaryItem, parent: Context = null) {
-        super(concept.memory, concept, parent)
+        super(concept, parent)
         this.name = name;
     }
 

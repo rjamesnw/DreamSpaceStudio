@@ -425,7 +425,7 @@ class Dictionary {
         if (text == null)
             text = "";
         if (optionalTextRemovalRegex != null)
-            text = optionalTextRemovalRegex.Replace(text, "");
+            text = text.replace(optionalTextRemovalRegex, "");
         return text.toLowerCase().replace("n't", " not"); // TODO: Think more about "'s", which is complicated to deal with, and may be context based.
     }
     fixWord(word) {

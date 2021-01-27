@@ -29,11 +29,11 @@ class Operation extends TimeReferencedObject_1.default {
      *  Should be set to true when the operation completes successfully.
     */
     get completed() { return this._completed; }
-    get Errors() { return this._errors; }
+    get errors() { return this._errors; }
     /**
      *  Will be true if the operation completed successfully, but there were errors in the process.
     */
-    get IsCompletedWithErrors() { var _a; return this.completed && ((_a = this === null || this === void 0 ? void 0 : this.Errors) === null || _a === void 0 ? void 0 : _a.length) > 0; }
+    get IsCompletedWithErrors() { var _a; return this.completed && ((_a = this === null || this === void 0 ? void 0 : this.errors) === null || _a === void 0 ? void 0 : _a.length) > 0; }
     /**
      *  Execute the operation. If true is returned, the instruction can be removed, otherwise it must be left, and the next instruction executed.
      *  This occurs in a cycle, keeping all operations "alive" until they are all completed.

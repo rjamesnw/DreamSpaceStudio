@@ -211,10 +211,13 @@ namespace DS {
       * Note: By default, parameter indexes 0-9 are automatically assigned to parameter identifiers 'p0' through 'p9' for easy reference.
       */
     export function safeEval(x: string, ...args: any[]) {
-        var params: string[] = [];
-        for (var i = 0; i <= 9 && i < args.length; ++i)
-            params.push("p" + i + " = args[" + i + "]");
-        return eval("var " + params.join(', ') + ";\r\n" + x);
+        var params: string[] = [], paramStr = "";
+        if (args.length) {
+            for (var i = 0; i <= 9 && i < args.length; ++i)
+                params.push("p" + i + " = args[" + i + "]");
+            paramStr = "var " + params.join(', ') + ";\r\n"
+        }
+        return eval(paramStr + x);
     };
     // (note: this allows executing 'eval' outside the private DreamSpace scope, but still within a function scope to prevent polluting the global scope,
     //  and also allows passing arguments scoped only to the request).

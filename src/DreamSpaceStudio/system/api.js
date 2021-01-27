@@ -121,10 +121,13 @@ var DS;
       * Note: By default, parameter indexes 0-9 are automatically assigned to parameter identifiers 'p0' through 'p9' for easy reference.
       */
     function safeEval(x, ...args) {
-        var params = [];
-        for (var i = 0; i <= 9 && i < args.length; ++i)
-            params.push("p" + i + " = args[" + i + "]");
-        return eval("var " + params.join(', ') + ";\r\n" + x);
+        var params = [], paramStr = "";
+        if (args.length) {
+            for (var i = 0; i <= 9 && i < args.length; ++i)
+                params.push("p" + i + " = args[" + i + "]");
+            paramStr = "var " + params.join(', ') + ";\r\n";
+        }
+        return eval(paramStr + x);
     }
     DS.safeEval = safeEval;
     ;
@@ -6424,6 +6427,9 @@ var DS;
                 this.adapter = adapter;
                 this.connection = connection;
             }
+            createQueryBuilder(tableName, columnInfo) {
+                return new QueryBuilder(this, tableName, columnInfo);
+            }
             /**
              * Constructs the columns and values from a JSON object, table name, and optional translation array.
              * This is used in building the final statement, such as 'insert', or 'update'.
@@ -6443,7 +6449,7 @@ var DS;
                 var colResIndex = {}; // (named index for quick lookups)
                 for (var i = 0, n = colResults.length; i < n; ++i)
                     colResIndex[colResults[i].Field.toLowerCase()] = colResults[i];
-                var q = new QueryBuilder(this, tableName);
+                var q = this.createQueryBuilder(tableName);
                 q.columnInfo = colResIndex;
                 // ... for each property of the object, create an array of column names and values ...
                 var unmatchedProperties = [];
@@ -6494,8 +6500,9 @@ var DS;
                                     }
                                     else if (keys.length > 1)
                                         console.warn("Since the insert was done using a composite key (multiple columns) no insert ID could be returned from the execution (it only works for single auto-increment key fields).");
+                                this.end();
                                 DS.resolve(res, { builder: qbInfo, success: true, message: msg }, msg);
-                            }, (err) => { DS.reject(rej, this.adapter.getSQLErrorMessage(err)); });
+                            }, (err) => { this.end(); DS.reject(rej, this.adapter.getSQLErrorMessage(err)); });
                         }
                     }, (err) => { rej(err); });
                 });
@@ -6531,6 +6538,7 @@ var DS;
                                         this.query(st).then((result) => {
                                             var msg = `Success: existing entry in table '${tableName}' updated.`
                                                 + "\r\nResult: " + JSON.stringify(result);
+                                            this.end();
                                             DS.resolve(res, { builder: qbInfo, success: true, message: msg }, msg);
                                         }, (err) => { DS.reject(rej, this.adapter.getSQLErrorMessage(err)); });
                                     }

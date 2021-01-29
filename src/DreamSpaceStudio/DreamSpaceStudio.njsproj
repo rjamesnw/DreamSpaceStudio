@@ -81,6 +81,7 @@
     <TypeScriptCompile Include="botpal\core\DictionaryItem.ts" />
     <TypeScriptCompile Include="botpal\core\Match.ts" />
     <TypeScriptCompile Include="botpal\core\BrainTask.ts" />
+    <TypeScriptCompile Include="features\mirandus\index.ts" />
     <TypeScriptCompile Include="system\abstracts\DBAdapter.ts" />
     <TypeScriptCompile Include="system\client\Utilities.ts" />
     <TypeScriptCompile Include="system\client\Views.ts" />
@@ -198,6 +199,8 @@
     <Content Include="botpal\services\apis\tts\ITTSSAPI.ts" />
     <Content Include="botpal\services\apis\tts\Ivona.ts" />
     <Content Include="botpal\utility\Point3D.ts" />
+    <Content Include="features\ide\components\icon.t.html" />
+    <Content Include="features\mirandus\index.t.html" />
     <Content Include="system\!readme.txt" />
     <Content Include="system\abstracts\!readme.txt" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\project_1.json" />
@@ -262,6 +265,7 @@
     <Folder Include="features\ide\_modules_\" />
     <Folder Include="actions\" />
     <Folder Include="botpal\" />
+    <Folder Include="features\mirandus\" />
     <Folder Include="solutions\" />
     <Folder Include="system\server\db\" />
     <Folder Include="versions\" />

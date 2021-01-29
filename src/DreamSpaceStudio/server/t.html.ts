@@ -21,7 +21,7 @@ interface IViewAttributeFunction {
 
 export function createCallableViewAttributes(): IViewAttributeFunction {
     var attributes: IndexedObject = {};
-    var attributesObject: IViewAttributeFunction = <any>function (p1: any, p2: any, p3: any) {
+    var attributesObject: IViewAttributeFunction = <any>function (p1: any, p2: any, p3: any) { // (p2 inserts string value before attribute p1's value, and p3 inserts after)
         var s = "", value: any;
         if (typeof p1 == 'string') {
             let attrName: string = p1;
@@ -30,11 +30,11 @@ export function createCallableViewAttributes(): IViewAttributeFunction {
             let p2Defined = !isNullOrUndefined(p2);
             let p3Defined = !isNullOrUndefined(p3);
             if (p2Defined || p3Defined) {
-                if (!isNullOrUndefined(p2))
+                if (p2Defined)
                     s = DS.StringUtils.append(DS.nud(p2, ''), DS.nud(value, ''), ' ');
                 else
                     s = '' + value;
-                if (!isNullOrUndefined(p3))
+                if (p3Defined)
                     s = DS.StringUtils.append(s, DS.nud(p3, ''), ' ');
             }
             else return {
@@ -73,7 +73,7 @@ export function createCallableViewAttributes(): IViewAttributeFunction {
             };
 
         } else {
-            // ... render the name=value attributes ...
+            // ... render the name=value attributes; assume p1 is an attribute array to ignore and p2 is one to include ...
             let attributesToIgnore: string[] = p1;
             let attributesToInclude: string[] = p2;
             for (var p in attributes) {
@@ -221,7 +221,9 @@ function _processExpression(httpContext: IHttpContext, expr: string, dataContext
         var compiledExpression = expr.replace(/({){|(})}/g, "$1$2").replace(/\[@]\./g, "$['@'].attributes.").replace(/\[@]\(/g, "$['@'](")
             .replace(/(\[\[[^\]]*]]|'(?:\\'|[^'])*'|"(?:\\"|[^"])*")|(^|[^a-z0-9_$.)[\]'"`\/\\])(\.|\[(?!\[))/gmi,
                 function (match, p1, p2, p3, offset: number, src: string) {
-                    return p1 ? p1 : p2 + '$' + p3; // (when p1 exists it is a string to be skipped (or special double square bracket token ([[...]]), otherwise it is valid view data property reference)
+                    return p1 ? p1 : p2 + '$' + p3;
+                    // (when p1 exists it is a string to be skipped (or special double square bracket token ([[...]]), otherwise it is valid view data property reference)
+                    // (p2 and p3 match when there's no valid identifier in p1 and only "." or "[]" exists in p2)
                 });
         var value = evalExpr(dataContext || {}, compiledExpression, httpContext); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
 
@@ -345,7 +347,7 @@ export var __express = function (this: IExpressViewContext, filePath: string, ht
 
                             try {
                                 switch (_cmd) {
-                                    case "#": expr = argStr; processExpr = true; outputExpr = false; removeEOL = true; break;
+                                    case "#": expr = argStr; processExpr = true; outputExpr = false; removeEOL = true; break; // (process expression, but don't render the result)
                                     case "#layout":
                                         if (layoutViewName)
                                             throw new DS.Exception(`A layout was already specified.`);

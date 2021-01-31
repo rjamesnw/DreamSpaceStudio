@@ -8,7 +8,7 @@
     <LastActiveSolutionConfig>Debug|Any CPU</LastActiveSolutionConfig>
     <SaveNodeJsSettingsInProjectFile>True</SaveNodeJsSettingsInProjectFile>
     <TypeScriptBuildMode>true</TypeScriptBuildMode>
-    <LaunchUrl>http://localhost:45000/ide/editor</LaunchUrl>
+    <LaunchUrl>http://localhost:45000/mirandus</LaunchUrl>
     <NodeExePath>
     </NodeExePath>
     <NodeExeArguments>
@@ -199,7 +199,7 @@
     <Content Include="botpal\services\apis\tts\ITTSSAPI.ts" />
     <Content Include="botpal\services\apis\tts\Ivona.ts" />
     <Content Include="botpal\utility\Point3D.ts" />
-    <Content Include="features\ide\components\icon.t.html" />
+    <Content Include="features\components\icon.t.html" />
     <Content Include="features\mirandus\index.t.html" />
     <Content Include="system\!readme.txt" />
     <Content Include="system\abstracts\!readme.txt" />
@@ -231,11 +231,11 @@
     <Content Include="users\readme.txt" />
     <Content Include="vfs.json" />
     <Content Include="features\error.t.html" />
-    <Content Include="features\ide\components\inputbox.t.html" />
-    <Content Include="features\ide\components\form.t.html" />
-    <Content Include="features\ide\components\label.t.html" />
-    <Content Include="features\ide\components\button.t.html" />
-    <Content Include="features\ide\components\panel.t.html" />
+    <Content Include="features\components\inputbox.t.html" />
+    <Content Include="features\components\form.t.html" />
+    <Content Include="features\components\label.t.html" />
+    <Content Include="features\components\button.t.html" />
+    <Content Include="features\components\panel.t.html" />
     <Content Include="features\ide\login.t.html" />
     <Content Include="features\ide\workflow\index.t.html" />
     <Content Include="features\layout.t.html" />
@@ -291,7 +291,7 @@
     <Folder Include="users\F7E1685E6F654C2A84EBF34A9FDE5DB4\" />
     <Folder Include="features\" />
     <Folder Include="features\ide\" />
-    <Folder Include="features\ide\components\" />
+    <Folder Include="features\components\" />
     <Folder Include="features\ide\workflow\" />
   </ItemGroup>
   <!-- Do not delete the following Import Project.  While this appears to do nothing it is a marker for setting TypeScript properties before our import that depends on them. -->

@@ -368,9 +368,19 @@ declare namespace DS {
         export function erase(obj: IndexedObject, ignore?: {
             [name: string]: boolean;
         }): {};
+        export enum RecursionMode {
+            /** Don't detect cyclical cloning. */
+            None = 0,
+            /** Detect cyclical cloning by writing to the object and testing for instances already cloned. */
+            Fast = 1,
+            /** Same as 'Fast', except the special added property used to detect recursion is deleted. This is a much slower process, but cleans the added propery from the original object. */
+            Clean = 2
+        }
         /** Makes a deep copy of the specified value and returns it. If the value is not an object, it is returned immediately.
-        * For objects, the deep copy is made by */
-        export function clone(value: any): any;
+        * @param value The view to clone.
+        * @param recursionMode The method used to detect recursion.
+        */
+        export function clone(value: any, recursionMode?: RecursionMode): any;
         /** Dereferences a property path in the form "A.B.C[*].D..." and returns the right most property value, if exists, otherwise
         * 'undefined' is returned.  If path is invalid, an exception will be thrown.
         * @param {string} path The delimited property path to parse.
@@ -1547,8 +1557,8 @@ declare namespace DS {
         var restrictedFilenameRegex: RegExp;
         /** Returns true if a given filename contains invalid characters. */
         function isValidFileName(name: string): boolean;
-        /** Splits and returns the path parts, validating each one and throwing an exception if any are invalid. */
-        function getPathParts(path: string): string[];
+        /** Splits and returns the path parts, optionally validating each one and throwing an exception if any path name is invalid. */
+        function getPathParts(path: string, validate?: boolean): string[];
         /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator).
          * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
          * Examples:

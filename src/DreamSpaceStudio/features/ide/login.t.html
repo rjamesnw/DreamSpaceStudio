@@ -1,8 +1,9 @@
-${#layout components/panel}
+${#base "^" "../components" }
+${#layout ^/panel}
 ${# .title='Login' }
 
 <div id="logreg-forms">
-    <$:view $path="components/form" class="form-signin">
+    <$:view $path="^/form" class="form-signin">
         <h1 class="h3 mb-3 font-weight-normal" style="text-align: center"> Sign in</h1>
         <div class="social-login">
             <$:view $path="button" class="facebook-btn social-btn">
@@ -25,12 +26,12 @@ ${# .title='Login' }
             <i class="fas fa-user-plus"></i> Sign up New Account
         </$:view>
     </$:view>
-    <$:view $path="components/form" action="/reset/password/" class="form-reset">
+    <$:view $path="^/form" action="/reset/password/" class="form-reset">
         <$:view $path="inputbox" type="email" id="resetEmail" placeholder="Email address" required="" autofocus="" />
         <$:view $path="button" type="submit" class="btn-primary btn-block">Reset Password</$:view>
         <a href="#" id="cancel_reset"><i class="fas fa-angle-left"></i> Back</a>
     </$:view>
-    <$:view $path="components/form" action="/signup/" class="form-signup">
+    <$:view $path="^/form" action="/signup/" class="form-signup">
         <div class="social-login">
             <$:view $path="button" type="button" class="facebook-btn social-btn"><span><i class="fab fa-facebook-f"></i> Sign up with Facebook</span></$:view>
         </div>

@@ -75,32 +75,44 @@ var fm = DS.VirtualFileSystem.FileManager.current;
         console.log("Static Solutions Folder: " + solutionsRoot);
         app.use(express.static(solutionsRoot));
 
-        app.use('/ide', function (req, res, next) {
-            // .. this endpoint will handle work-flow requests ...
-            var viewPath = DS.Path.combine('ide', req.path);
-            var indexViewPath = DS.Path.combine(viewPath, "index");
-            res.render(indexViewPath, new HttpContext(req, res, new ViewData()));
+        app.use(function (req, res, next) {
+            //?var pathParts = DS.Path.getPathParts(req.path.toLowerCase());
+            //?var lastName = pathParts[pathParts.length - 1];
+            //?var indexViewPath = lastName != "index" && lastName.indexOf('.') < 0 ? DS.Path.combine(req.path, "index") : req.path; // (only add "index" if not already index, and doesn't contain a period typically used for extensions)
+            res.render(req.path.trimLeftChar('/'), { context: new HttpContext(req, res, new ViewData()) });
+            //try {
+            //    res.render(indexViewPath, new HttpContext(req, res, new ViewData()));
+            //} catch (ex) {
+            //    next();
+            //}
         });
+
+        //app.use('/ide', function (req, res, next) {
+        //    // .. this endpoint will handle work-flow requests ...
+        //    var viewPath = DS.Path.combine('ide', req.path);
+        //    var indexViewPath = DS.Path.combine(viewPath, "index");
+        //    res.render(indexViewPath, new HttpContext(req, res, new ViewData()));
+        //});
 
         //x app.use('/', indexRoutes);
-        app.use('/ide', function (req, res, next) {
-            res.render('ide/index', new HttpContext(req, res, new ViewData()));
-            //// ... force load the IDE project as the startup and serve it ...
-            //var _ideSolution = solutions.get('31C541D23F2047389256AA479909B8E5');
+        //app.use('/ide', function (req, res, next) {
+        //    res.render('ide/index', new HttpContext(req, res, new ViewData()));
+        //    //// ... force load the IDE project as the startup and serve it ...
+        //    //var _ideSolution = solutions.get('31C541D23F2047389256AA479909B8E5');
 
-            //if (_ideSolution)
-            //    startupSolution = _ideSolution;
-            //else
-            //    console.warn('Warning: The IDE solution was not found.'); // (allow this, in case people want to rename/delete the folder for security on prod releases)
+        //    //if (_ideSolution)
+        //    //    startupSolution = _ideSolution;
+        //    //else
+        //    //    console.warn('Warning: The IDE solution was not found.'); // (allow this, in case people want to rename/delete the folder for security on prod releases)
 
-            //if (startupSolution)
-            //    startupSolution.refreshProjects().then((startingProject: DS.Project) => {
-            //        startupProject = startingProject;
-            //        next();
-            //    }, (err) => next(err));
-            //else
-            //    next(new DS.Exception("No startup solution could be found."));
-        });
+        //    //if (startupSolution)
+        //    //    startupSolution.refreshProjects().then((startingProject: DS.Project) => {
+        //    //        startupProject = startingProject;
+        //    //        next();
+        //    //    }, (err) => next(err));
+        //    //else
+        //    //    next(new DS.Exception("No startup solution could be found."));
+        //});
 
         app.use(function (req, res, next) {
             if (!startupProject)
@@ -142,7 +154,7 @@ var fm = DS.VirtualFileSystem.FileManager.current;
                         err['status'] = status; // (copy over to root error, just in case)
                 }
                 res.status(status);
-                res.render('error', new templateEngine.HttpContext(req, res, err));
+                res.render('error', { context: new templateEngine.HttpContext(req, res, err) });
             }));
         }
         else {
@@ -156,7 +168,7 @@ var fm = DS.VirtualFileSystem.FileManager.current;
                         err['status'] = status; // (copy over to root error, just in case)
                 }
                 res.status(status);
-                res.render('error', new templateEngine.HttpContext(req, res, err));
+                res.render('error', { context: new templateEngine.HttpContext(req, res, err) });
             }));
         }
 

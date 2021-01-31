@@ -15,7 +15,7 @@
 <br />
 <span class="label">Message:</span>
 <div style="font-family: 'Courier New', Consolas;">
-    ${DS.HTML.encodeHTML(.message && .message || .toString && .toString() || "Uknown error: " + $, "\r\n", true).replace(/\r\n/gm, "<br />\r\n").replace(/\[\[ERROR\]\]/gm, "<span class=\"error\">&#187;").replace(/\[\[\/ERROR\]\]/gm, "&#171;</span>")}
+    ${DS.HTML.encodeHTML(.toString && .toString() || .message || "Uknown error: " + $, "\r\n", true).replace(/\r\n/gm, "<br />\r\n").replace(/\[\[ERROR\]\]/gm, "<span class=\"error\">&#187;").replace(/\[\[\/ERROR\]\]/gm, "&#171;</span>")}
 </div>
 <span class="label">Stack:</span><pre>
 ${.error&&.error.stack&&(Array.isArray(.error.stack)&&.error.stack.join('<br />\r\n')||.error.stack)}

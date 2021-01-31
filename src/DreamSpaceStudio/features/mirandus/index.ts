@@ -1,8 +1,8 @@
-export class Deed {
+class Deed {
 }
 
 /** The place upon which deeds are placed. */
-export class Land {
+class Land {
     defaultColor: "#A0E031";
     defaultTexture: ""; // (link to a grass image perhaps)
     showGrid: true;
@@ -25,13 +25,13 @@ enum PlotTypes {
     Decoration
 }
 
-export interface IPlot {
+interface IPlot {
     x: number; y: number;
     w: number; h: number;
     type: PlotTypes;
 }
 
-export class Homestead extends Deed {
+class Homestead extends Deed {
     private _layout: IPlot[] = [
         { x: 0, y: 0, w: 10, h: 10, type: PlotTypes.Main },
         { x: 11, y: 0, w: 5, h: 5, type: PlotTypes.Farming },
@@ -58,6 +58,8 @@ export class Homestead extends Deed {
     }
 }
 
-export class Manager {
+class Manager {
     land = new Land("output");
 }
+
+alert("!");

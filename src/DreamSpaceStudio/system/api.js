@@ -472,28 +472,43 @@ var DS;
             return obj;
         }
         Utilities.erase = erase;
+        let RecursionMode;
+        (function (RecursionMode) {
+            /** Don't detect cyclical cloning. */
+            RecursionMode[RecursionMode["None"] = 0] = "None";
+            /** Detect cyclical cloning by writing to the object and testing for instances already cloned. */
+            RecursionMode[RecursionMode["Fast"] = 1] = "Fast";
+            /** Same as 'Fast', except the special added property used to detect recursion is deleted. This is a much slower process, but cleans the added propery from the original object. */
+            RecursionMode[RecursionMode["Clean"] = 2] = "Clean";
+        })(RecursionMode = Utilities.RecursionMode || (Utilities.RecursionMode = {}));
         /** Makes a deep copy of the specified value and returns it. If the value is not an object, it is returned immediately.
-        * For objects, the deep copy is made by */
-        function clone(value) {
+        * @param value The view to clone.
+        * @param recursionMode The method used to detect recursion.
+        */
+        function clone(value, recursionMode = RecursionMode.Fast) {
             if (typeof value !== 'object')
                 return value;
             var newObject, p, rcCount, v;
-            if (clone.arguments.length > 1) {
-                rcCount = clone.arguments[clone.arguments.length - 1];
-                if (value['@__recursiveCheck'] === rcCount)
-                    return value; // (this object has already been cloned for this request, which makes it a cyclical reference, so skip)
+            if (recursionMode == RecursionMode.Fast || recursionMode == RecursionMode.Clean) {
+                if (arguments.length == 3) {
+                    rcCount = arguments[2];
+                    if (value['@__recursiveCheck'] === rcCount)
+                        return value; // (this object has already been cloned for this request, which makes it a cyclical reference, so skip)
+                }
+                else
+                    rcCount = (value['@__recursiveCheck'] || 0) + 1; // (initially, rcCount will be set to the root __recursiveCheck value, +1, rather than re-creating all properties over and over for each clone request [much faster]) 
+                value['@__recursiveCheck'] = rcCount;
             }
-            else
-                rcCount = (value['@__recursiveCheck'] || 0) + 1; // (initially, rcCount will be set to the root __recursiveCheck value, +1, rather than re-creating all properties over and over for each clone request [much faster]) 
-            value['@__recursiveCheck'] = rcCount;
             newObject = {};
             for (p in value) { // (note: not using "hasOwnProperty()" here because replicating any inheritance is not supported (nor usually needed), so all properties will be flattened for the new object instance)
                 v = value[p];
                 if (typeof v !== 'object')
                     newObject[p] = v; // (faster to test and set than to call a function)
                 else
-                    newObject[p] = clone(v, rcCount);
+                    newObject[p] = clone(v, recursionMode, rcCount);
             }
+            if (recursionMode == RecursionMode.Clean)
+                delete value['@__recursiveCheck'];
             return newObject;
         }
         Utilities.clone = clone;
@@ -3308,15 +3323,20 @@ var DS;
         Path.restrictedFilenameRegex = /\/\\\?%\*:\|"<>/g;
         /** Returns true if a given filename contains invalid characters. */
         function isValidFileName(name) {
-            return name && Path.restrictedFilenameRegex.test(name);
+            return name && !Path.restrictedFilenameRegex.test(name);
         }
         Path.isValidFileName = isValidFileName;
-        /** Splits and returns the path parts, validating each one and throwing an exception if any are invalid. */
-        function getPathParts(path) {
+        /** Splits and returns the path parts, optionally validating each one and throwing an exception if any path name is invalid. */
+        function getPathParts(path, validate = true) {
             var parts = (typeof path !== 'string' ? '' + path : path).replace(/\\/g, '/').split('/');
-            for (var i = 0, n = parts.length; i < n; ++i)
-                if (!isValidFileName(parts[i]))
-                    throw "The path '" + path + "' contains invalid characters in '" + parts[i] + "'.";
+            if (parts.length && !parts[0])
+                parts.shift(); // (remove empty entries from the start)
+            if (parts.length && !parts[parts.length - 1])
+                parts.pop(); // (remove empty entries from the end)
+            if (validate)
+                for (var i = 0, n = parts.length; i < n; ++i)
+                    if (!isValidFileName(parts[i]))
+                        throw "The path '" + path + "' contains invalid characters in '" + parts[i] + "'.";
             return parts;
         }
         Path.getPathParts = getPathParts;

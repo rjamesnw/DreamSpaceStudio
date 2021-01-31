@@ -27,14 +27,17 @@ namespace DS {
 
         /** Returns true if a given filename contains invalid characters. */
         export function isValidFileName(name: string) {
-            return name && restrictedFilenameRegex.test(name);
+            return name && !restrictedFilenameRegex.test(name);
         }
 
-        /** Splits and returns the path parts, validating each one and throwing an exception if any are invalid. */
-        export function getPathParts(path: string) {
+        /** Splits and returns the path parts, optionally validating each one and throwing an exception if any path name is invalid. */
+        export function getPathParts(path: string, validate = true) {
             var parts = (typeof path !== 'string' ? '' + path : path).replace(/\\/g, '/').split('/');
-            for (var i = 0, n = parts.length; i < n; ++i)
-                if (!isValidFileName(parts[i])) throw "The path '" + path + "' contains invalid characters in '" + parts[i] + "'.";
+            if (parts.length && !parts[0]) parts.shift(); // (remove empty entries from the start)
+            if (parts.length && !parts[parts.length - 1]) parts.pop(); // (remove empty entries from the end)
+            if (validate)
+                for (var i = 0, n = parts.length; i < n; ++i)
+                    if (!isValidFileName(parts[i])) throw "The path '" + path + "' contains invalid characters in '" + parts[i] + "'.";
             return parts;
         }
 

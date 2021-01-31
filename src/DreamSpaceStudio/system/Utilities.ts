@@ -73,25 +73,40 @@
             return obj;
         }
 
+        export enum RecursionMode {
+            /** Don't detect cyclical cloning. */
+            None,
+            /** Detect cyclical cloning by writing to the object and testing for instances already cloned. */
+            Fast,
+            /** Same as 'Fast', except the special added property used to detect recursion is deleted. This is a much slower process, but cleans the added propery from the original object. */
+            Clean
+        }
+
         /** Makes a deep copy of the specified value and returns it. If the value is not an object, it is returned immediately.
-        * For objects, the deep copy is made by */
-        export function clone(value: any) {
+        * @param value The view to clone.
+        * @param recursionMode The method used to detect recursion.
+        */
+        export function clone(value: any, recursionMode = RecursionMode.Fast) {
             if (typeof value !== 'object') return value;
             var newObject: IndexedObject, p: string, rcCount: number, v: any;
-            if (clone.arguments.length > 1) {
-                rcCount = clone.arguments[clone.arguments.length - 1];
-                if (value['@__recursiveCheck'] === rcCount) return value; // (this object has already been cloned for this request, which makes it a cyclical reference, so skip)
+            if (recursionMode == RecursionMode.Fast || recursionMode == RecursionMode.Clean) {
+                if (arguments.length == 3) {
+                    rcCount = arguments[2];
+                    if (value['@__recursiveCheck'] === rcCount) return value; // (this object has already been cloned for this request, which makes it a cyclical reference, so skip)
+                }
+                else rcCount = (value['@__recursiveCheck'] || 0) + 1; // (initially, rcCount will be set to the root __recursiveCheck value, +1, rather than re-creating all properties over and over for each clone request [much faster]) 
+                value['@__recursiveCheck'] = rcCount;
             }
-            else rcCount = (value['@__recursiveCheck'] || 0) + 1; // (initially, rcCount will be set to the root __recursiveCheck value, +1, rather than re-creating all properties over and over for each clone request [much faster]) 
-            value['@__recursiveCheck'] = rcCount;
             newObject = {};
             for (p in value) { // (note: not using "hasOwnProperty()" here because replicating any inheritance is not supported (nor usually needed), so all properties will be flattened for the new object instance)
                 v = value[p];
                 if (typeof v !== 'object')
                     newObject[p] = v; // (faster to test and set than to call a function)
                 else
-                    newObject[p] = (<Function>clone)(v, rcCount);
+                    newObject[p] = (<Function>clone)(v, recursionMode, rcCount);
             }
+            if (recursionMode == RecursionMode.Clean)
+                delete value['@__recursiveCheck'];
             return newObject;
         };
 

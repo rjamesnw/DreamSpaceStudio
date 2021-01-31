@@ -107,19 +107,43 @@ export class HttpContext {
     request: Request;
     /** The response object for the current request. */
     response: Response;
-    /** The path to the view being rendered. */
+    /** The expanded path to the view being rendered. This is simply a shortcut to calling 'this.expandViewPath(this.viewPath)'. */
+    get finalViewPath(): string {
+        return this.expandViewPath(this.viewPath);
+    }
+    /** The unexpanded path to the view being rendered.
+     * @see finalViewPath
+     */
     viewPath?: string;
+    /** Maps a name to a path. If 'viewPath' starts with any of the names it will be expanded in place. This allows using shorter paths for resources. */
+    basePaths?: IndexedObject<string> = {};
     /** Optional data for the view being rendered. */
     viewData?: ViewData;
     /** An accumulation of named contexts while parsing a previous view. */
     sectionManager?: SectionManager;
+
+    /** Expands the path against the registered base paths in this view context. 
+     * Only the first name in the relative path is expanded if a match is found in 'basePaths'.
+     */
+    expandViewPath(viewPath: string): string {
+        if (typeof viewPath != 'string' || viewPath[0] == '/' || viewPath[0] == '\\')
+            return viewPath;
+        var i = viewPath.indexOf('/');
+        i < 0 && (i = viewPath.indexOf('\\'));
+        if (i > 0) { // ('i' can't be 0, otherwise the name is empty)
+            var name = viewPath.substr(0, i);
+            if (name in this.basePaths)
+                return this.basePaths[name] + viewPath.substr(i);
+        }
+        return viewPath;
+    }
 
     /** Constructs a new HTTP context using another existing context.
      * @param viewData The data to use for this view.  If not specified, then the view data on the context will be used instead.
      * @param viewBasePath The relative path to the view being rendered.  This will set a new ROOT path for the view to find other related content (could be useful for theme development)
      * Note: This does not change where the initial view is found, only any included views.
      */
-    constructor(httpContext: IHttpContext, viewData?: ViewData, viewBasePath?: string);
+    constructor(httpContext: HttpContext, viewData?: ViewData, viewBasePath?: string);
     /** Constructs a new HTTP context.
      * @param request The request object for the current request.
      * @param response The response object for the current request.
@@ -128,18 +152,19 @@ export class HttpContext {
      * Note: This does not change where the initial view is found, only any included views.
      */
     constructor(request: Request, response: Response, viewData?: ViewData, viewBasePath?: string);
-    constructor(requestOrCtx: Request & IHttpContext, responseOrVewData?: Response | any, viewDataOrBasePath?: any | string, viewBasePath?: string) {
+    constructor(requestOrCtx: Request & HttpContext, responseOrVewData?: Response | any, viewDataOrBasePath?: any | string, viewBasePath?: string) {
         var isHttpCtx = !!(requestOrCtx.request || requestOrCtx.response || 'viewData' in requestOrCtx);
         this.request = isHttpCtx ? requestOrCtx.request : requestOrCtx;
         this.response = isHttpCtx ? requestOrCtx.response : responseOrVewData;
         this.viewData = (isHttpCtx ? responseOrVewData || requestOrCtx.viewData : viewDataOrBasePath) || new ViewData();
         this.viewPath = isHttpCtx ? viewDataOrBasePath && DS.Path.combine(viewDataOrBasePath, '/') || requestOrCtx.viewPath : viewBasePath && DS.Path.combine(viewBasePath, '/');
-        if (isHttpCtx && requestOrCtx.sectionManager)
-            this.sectionManager = requestOrCtx.sectionManager;
+        if (isHttpCtx) {
+            if (requestOrCtx.sectionManager)
+                this.sectionManager = requestOrCtx.sectionManager; // (inherit the same section manager if exists; this is global to all views)
+            this.basePaths = DS.Utilities.clone(requestOrCtx.basePaths, DS.Utilities.RecursionMode.None); // (inherit the base path mappings also)
+        }
     }
 }
-
-export interface IHttpContext extends HttpContext { }
 
 export interface Renderer { (): string | Promise<string> }
 
@@ -216,7 +241,7 @@ export class SectionManager {
     hasSection(name: string) { return this.sections && name in this.sections }
 }
 
-function _processExpression(httpContext: IHttpContext, expr: string, dataContext?: object): any {
+function _processExpression(httpContext: HttpContext, expr: string, dataContext?: object): any {
     try {
         var compiledExpression = expr.replace(/({){|(})}/g, "$1$2").replace(/\[@]\./g, "$['@'].attributes.").replace(/\[@]\(/g, "$['@'](")
             .replace(/(\[\[[^\]]*]]|'(?:\\'|[^'])*'|"(?:\\"|[^"])*")|(^|[^a-z0-9_$.)[\]'"`\/\\])(\.|\[(?!\[))/gmi,
@@ -255,8 +280,9 @@ export interface IExpressViewContext {
  * Note: Using this method means, however, you may also have to set up the view folder. It is recommended to call 'apply(expressApp)'
  * to have the defaults configured for most cases.
  */
-export var __express = function (this: IExpressViewContext, filePath: string, httpContext: IHttpContext, callback: { (err: any, response?: any): void }) { // define the template engine
+export var __express = function (this: IExpressViewContext, filePath: string, options: { context: HttpContext }, callback: { (err: any, response?: any): void }) { // define the template engine
     try {
+        var httpContext = options.context;
         if (!httpContext.request)
             throw new DS.Exception("'httpContext.request' (of module type 'express-serve-static-core'.request) is required. If rendering a view, it is recommended to create and pass a 'HttpContext' object instance.");
         if (!httpContext.response)
@@ -348,6 +374,16 @@ export var __express = function (this: IExpressViewContext, filePath: string, ht
                             try {
                                 switch (_cmd) {
                                     case "#": expr = argStr; processExpr = true; outputExpr = false; removeEOL = true; break; // (process expression, but don't render the result)
+                                    case "#base": // (maps a name to another path; any names starting with the mapped name is automatically expanded)
+                                        let parts = argStr.split(/\s+/g);
+                                        if (parts.length != 2)
+                                            throw new DS.Exception(`#base expects 2 arguments: one for the name, and one for the path.`);
+                                        let viewData = httpContext.viewData || new ViewData();
+                                        let name = _processExpression(httpContext, parts[0], viewData);
+                                        let basePath = _processExpression(httpContext, parts[1], viewData);
+                                        httpContext.basePaths[name] = basePath;
+                                        removeEOL = true;
+                                        break;
                                     case "#layout":
                                         if (layoutViewName)
                                             throw new DS.Exception(`A layout was already specified.`);
@@ -488,14 +524,14 @@ export var __express = function (this: IExpressViewContext, filePath: string, ht
                                         if (!viewPath)
                                             throw new DS.Exception("No view path was specified. For server tags, use '$path=\"path/to/view\". For inline tokens, the path should immediately follow the '#view' or '#include' commands (i.e. '${#view path/to/view | optional expressions}').");
 
-                                        viewHttpContext.viewPath = DS.Path.combine(DS.Path.getPath(httpContext.viewPath), viewPath);
+                                        viewHttpContext.viewPath = DS.Path.combine(DS.Path.getPath(httpContext.finalViewPath), httpContext.expandViewPath(viewPath));
 
                                         let _viewScope = viewScope;
 
                                         value = () => {
                                             return new Promise<string>((res, rej) => {
                                                 // ... request to load and render a view in the token's position ...
-                                                _viewScope.httpContext.response.render(viewHttpContext.viewPath, viewHttpContext, (err, html) => {
+                                                _viewScope.httpContext.response.render(viewHttpContext.finalViewPath, { context: viewHttpContext }, (err, html) => {
                                                     if (err) return rej(err);
                                                     // ... this HTML is the parent template to this view that is resolved by now and must be returned ...
                                                     res(html);
@@ -539,8 +575,9 @@ export var __express = function (this: IExpressViewContext, filePath: string, ht
 
                 if (layoutViewName) {
                     // ... get arguments: view:section
-                    let viewPath = layoutViewName[0] == '/' ? layoutViewName.substr(1) : DS.Path.combine(DS.Path.getPath(httpContext.viewPath), layoutViewName);
-                    httpContext.response.render(viewPath, new HttpContext(httpContext, void 0, viewPath), (err, html) => {
+                    let finalViewPath = layoutViewName[0] == '/' ? layoutViewName.substr(1) // (ignore absolute paths)
+                        : DS.Path.combine(DS.Path.getPath(httpContext.finalViewPath), httpContext.expandViewPath(layoutViewName)); // (add relative layout path to the current view final path)
+                    httpContext.response.render(finalViewPath, { context: new HttpContext(httpContext, void 0, finalViewPath) }, (err, html) => {
                         if (err) return callback(err);
                         // ... this HTML is the parent template to this view that is resolved by now and must be returned ...
                         callback(null, html);

@@ -17,7 +17,7 @@
     "@types/mysql": "^2.15.10",
     "@types/popper.js": "^1.11.0",
     "@types/request": "^2.48.1",
-    "@types/requirejs": "^2.1.31",
+    "@types/requirejs": "^2.1.32",
     "aws-sdk": "^2.659.0",
     "bootstrap": "^4.3.1",
     "debug": "^2.2.0",

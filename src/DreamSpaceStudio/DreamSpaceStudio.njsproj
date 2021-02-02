@@ -81,6 +81,7 @@
     <TypeScriptCompile Include="botpal\core\DictionaryItem.ts" />
     <TypeScriptCompile Include="botpal\core\Match.ts" />
     <TypeScriptCompile Include="botpal\core\BrainTask.ts" />
+    <TypeScriptCompile Include="features\mirandus\Manager.ts" />
     <TypeScriptCompile Include="features\mirandus\index.ts" />
     <TypeScriptCompile Include="system\abstracts\DBAdapter.ts" />
     <TypeScriptCompile Include="system\client\Utilities.ts" />

@@ -1,11 +1,12 @@
 ﻿// ###########################################################################################################################
 // These are functions for creating global scope variables/references that eliminate/minimize collisions between conflicting scripts.
-// Normally, each manifest and module gets its own local-global scope; however, in some cases, 3rd-party libraries do not 
+// Normally, each DS module gets its own local-global scope; however, in some cases, 3rd-party libraries do not 
 // expect or support dot-delimited object paths, so unfortunately a root global callback reference may be required in such cases.
-// DreamSpace.Globals contains functions to help deal with this as it relates to loading modules.
-// Note: There's no need to use any of these functions directly from within manifest and module scripts.  Each has a local reference
-// using the identifiers 'this', 'manifest', or 'module' (accordingly), which provides functions for local-global scope storage.
+// DS.Globals contains functions to help deal with this as it relates to being able to use callbacks witin module scopes.
+// Note: There's no need to use any of these functions directly from within module scripts.  Each has a local reference
+// using the identifiers 'this' or 'module', which provides functions for local-global scope storage.
 // ###########################################################################################################################
+//TODO: Above may no longer be applicable, as it has/will be changed to use requirejs or a native module solution. //?
 
 /**
  * An empty object whose sole purpose is to store global properties by resource namespace (usual a URL). It exists as an

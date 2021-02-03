@@ -8,7 +8,7 @@
     <LastActiveSolutionConfig>Debug|Any CPU</LastActiveSolutionConfig>
     <SaveNodeJsSettingsInProjectFile>True</SaveNodeJsSettingsInProjectFile>
     <TypeScriptBuildMode>true</TypeScriptBuildMode>
-    <LaunchUrl>http://localhost:45000/mirandus</LaunchUrl>
+    <LaunchUrl>http://localhost:45000/safepoint/support</LaunchUrl>
     <NodeExePath>
     </NodeExePath>
     <NodeExeArguments>
@@ -81,8 +81,12 @@
     <TypeScriptCompile Include="botpal\core\DictionaryItem.ts" />
     <TypeScriptCompile Include="botpal\core\Match.ts" />
     <TypeScriptCompile Include="botpal\core\BrainTask.ts" />
-    <TypeScriptCompile Include="features\mirandus\Manager.ts" />
+    <TypeScriptCompile Include="features\safepoint\support\api\analyze.ts" />
+    <TypeScriptCompile Include="features\safepoint\support\SupportWizard.ts" />
     <TypeScriptCompile Include="features\mirandus\index.ts" />
+    <TypeScriptCompile Include="features\safepoint\support\index.ts" />
+    <TypeScriptCompile Include="features\mirandus\Manager.ts" />
+    <TypeScriptCompile Include="server\environment.ts" />
     <TypeScriptCompile Include="system\abstracts\DBAdapter.ts" />
     <TypeScriptCompile Include="system\client\Utilities.ts" />
     <TypeScriptCompile Include="system\client\Views.ts" />
@@ -164,6 +168,7 @@
     <Content Include="..\..\README.md">
       <Link>README.md</Link>
     </Content>
+    <Content Include=".env" />
     <Content Include="actions\IDE\Monaco\Monaco.json" />
     <Content Include="botpal\contexts\ActionContext.ts" />
     <Content Include="botpal\contexts\AttributeContext.ts" />
@@ -202,6 +207,10 @@
     <Content Include="botpal\utility\Point3D.ts" />
     <Content Include="features\components\icon.t.html" />
     <Content Include="features\mirandus\index.t.html" />
+    <Content Include="features\safepoint\support\api\tsconfig.json" />
+    <Content Include="features\safepoint\support\index.t.html" />
+    <Content Include="public\stylesheets\mirandus.css" />
+    <Content Include="public\stylesheets\safepoint.css" />
     <Content Include="system\!readme.txt" />
     <Content Include="system\abstracts\!readme.txt" />
     <Content Include="solutions\31C541D23F2047389256AA479909B8E5\Projects\A0B9F8AF038F470BA2B56800CC3C42AA\project_1.json" />
@@ -267,6 +276,9 @@
     <Folder Include="actions\" />
     <Folder Include="botpal\" />
     <Folder Include="features\mirandus\" />
+    <Folder Include="features\safepoint\support\api\" />
+    <Folder Include="features\safepoint\" />
+    <Folder Include="features\safepoint\support\" />
     <Folder Include="solutions\" />
     <Folder Include="system\server\db\" />
     <Folder Include="versions\" />

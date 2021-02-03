@@ -76,6 +76,22 @@
 
             abstract createConnection(): Promise<DBConnection>;
 
+            /**
+             * Query shortcut that simply creates a connection, runs the query, closes the connection, and returns the result.
+             * @param statement
+             * @param values
+             */
+            async query<T>(statement: string, values?: any): Promise<IQueryResult<T>> {
+                var conn = await this.createConnection();
+                await conn.connect();
+                try {
+                    return await conn.query<T>(statement, values);
+                }
+                finally {
+                    await conn.end();
+                }
+            }
+
             /** Returns a basic error message. Override this to provide a more detailed error message for the database type. */
             getSQLErrorMessage(err: any) {
                 return `SQL failed:  ${err}`;
@@ -86,7 +102,7 @@
             constructor(public readonly adapter: DBAdapter, public readonly connection: TConnection) { }
             /** Attempts to make a connection. If already connected the function should execute immediately.*/
             abstract connect(): Promise<void>;
-            abstract query(statement: string, values?: any): Promise<IQueryResult>;
+            abstract query<T>(statement: string, values?: any): Promise<IQueryResult<T>>;
             abstract getColumnDetails(tableName: string): Promise<IColumnInfo[]>;
             abstract end(): Promise<void>;
 

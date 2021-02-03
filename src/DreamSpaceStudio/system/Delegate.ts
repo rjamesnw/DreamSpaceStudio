@@ -58,8 +58,8 @@ namespace DS {
 
         protected static __validate(callername: string, object: Object, func: DelegateFunction): boolean { // (returns 'true' if static)
             var isstaticctx: boolean = object === void 0 || object === null; // ('$__fullname' exists on modules and registered type objects)
-            if (!isstaticctx && typeof (<TrackableObject>object)._id != 'number')
-                throw Exception.error("Delegate." + callername, "The object for this delegate does not contain a numerical '_uid' value (used as a global object reference for serialization), or '$__fullname' value (for static type references).  See 'AppDomain.registerClass()'.", this);
+            if (!isstaticctx && DS.isEmpty((<TrackableObject>object)._id)) //? Is this still needed?
+                throw Exception.error("Delegate." + callername, "The object for this delegate does not contain an '_id' value (used as a global object reference for serialization).  See 'DS.TrackableObject' for more details.", this);
             return isstaticctx;
         }
 

@@ -30,8 +30,10 @@ namespace DS {
             return name && !restrictedFilenameRegex.test(name);
         }
 
-        /** Splits and returns the path parts, optionally validating each one and throwing an exception if any path name is invalid. */
-        export function getPathParts(path: string, validate = true) {
+        /** Splits and returns the directory names in the path, optionally validating each one and throwing an exception if any path name is invalid. 
+         * Note: Since leading or trailing path delimiters can cause empty names, they will be removed. Use 'isAbsolute()' if you need to test for absolute paths.
+         */
+        export function getPathNames(path: string, validate = true) {
             var parts = (typeof path !== 'string' ? '' + path : path).replace(/\\/g, '/').split('/');
             if (parts.length && !parts[0]) parts.shift(); // (remove empty entries from the start)
             if (parts.length && !parts[parts.length - 1]) parts.pop(); // (remove empty entries from the end)

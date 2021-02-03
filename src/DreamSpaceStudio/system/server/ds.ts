@@ -7,7 +7,7 @@ namespace NodeJS {
     }
 }
 
-eval("var DS = require('../api').DS;")
+eval("var DS = require('../../public/js/api').DS;")
 
 global.DS = DS;
 

@@ -21,6 +21,7 @@
     "aws-sdk": "^2.659.0",
     "bootstrap": "^4.3.1",
     "debug": "^2.2.0",
+    "dotenv": "^8.2.0",
     "express": "^4.14.0",
     "monaco-editor": "^0.15.6",
     "mssql": "^6.2.0",

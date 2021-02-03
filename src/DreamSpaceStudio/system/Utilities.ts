@@ -323,6 +323,12 @@
             return -1;
         }
 
+        export const sensitivePropertiesFilter = "pass|secret|key";
+        /** Use in places to prevent logging sensitive data; this does a partial name match, so 'pass' matches 'password; as well. */
+        export function hideSensitiveData(text: string) {
+            return StringUtils.toString(text).replace(new RegExp('(".*?(?:' + sensitivePropertiesFilter + ').*?":\s*)(".*?")', 'gi'), '$1"******"');
+        }
+
         /** Attempts to parse a string as JSON and returns the result.  If the value is not a string, or the conversion fails,
          * the value is returned as is. 
          * This is used mainly to convert JSON strings to objects, while allowing all other values to pass through as is.

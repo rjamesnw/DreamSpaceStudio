@@ -18,7 +18,6 @@
     "./_global.ts",
     "./io.ts",
     "./Utilities.ts",
-    "./db/dbutilities.ts",
     "./**/*.ts"
   ],
   "exclude": [

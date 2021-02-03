@@ -8,7 +8,7 @@ namespace DS.DB.MySQL {
     export declare var mysql: typeof import("mysql");
     var _mysql: typeof import("mysql");
 
-    Object.defineProperty(DS.DB, 'mysql', {
+    Object.defineProperty(MySQL, 'mysql', {
         get: () => {
             return _mysql || (_mysql = require("mysql"));
         },
@@ -24,17 +24,19 @@ namespace DS.DB.MySQL {
     export type Pool = import("mysql").Pool;
     export type PoolConnection = import("mysql").PoolConnection;
 
-    var _defaultConfig = <ConnectionConfig>{
-        host: process.env.MYSQL_HOST || "localhost",
-        port: +process.env.MYSQL_PORT || void 0,
-        user: process.env.MYSQL_USER,
-        password: process.env.MYSQL_PASS,
-        database: process.env.MYSQL_DB_NAME
+    function _defaultConfig(): ConnectionConfig {
+        return {
+            host: process.env.MYSQL_HOST || "localhost",
+            port: +process.env.MYSQL_PORT || void 0,
+            user: process.env.MYSQL_USER,
+            password: process.env.MYSQL_PASS,
+            database: process.env.MYSQL_DB_NAME
+        };
     }
 
     export var connectionPool: Pool;
 
-    export async function configureConnectionPool(config = _defaultConfig) {
+    export async function configureConnectionPool(config = _defaultConfig()) {
         connectionPool = mysql.createPool(config);
     }
 
@@ -42,7 +44,7 @@ namespace DS.DB.MySQL {
      * Returns a MySQL connection from the connection pool using the specified configuration, or a default one if not specified.
      * @returns
      */
-    export async function getMySQLConnection(config = _defaultConfig) {
+    export async function getMySQLConnection(config = _defaultConfig()) {
         if (!connectionPool)
             configureConnectionPool(config);
         return new Promise<PoolConnection>((res, rej) =>
@@ -57,28 +59,12 @@ namespace DS.DB.MySQL {
     };
 
     export class MySQLAdapter extends DBAdapter<ConnectionConfig> {
-        constructor(config = _defaultConfig) {
+        constructor(config = _defaultConfig()) {
             super(config);
         }
 
         async createConnection() {
             return new MySQLConnection(this, await getMySQLConnection(this.configuration)); // (create from the default pool)
-        }
-
-        /**
-         * Query shortcut that simply creates a connection, runs the query, closes the connection, and returns the result.
-         * @param statement
-         * @param values
-         */
-        async query<T>(statement: string, values?: any): Promise<IQueryResult<T>> {
-            var conn = await this.createConnection();
-            await conn.connect();
-            try {
-                return await conn.query<T>(statement, values);
-            }
-            finally {
-                await conn.end();
-            }
         }
 
         getSQLErrorMessage(err: MysqlError) {

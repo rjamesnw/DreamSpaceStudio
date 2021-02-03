@@ -721,6 +721,12 @@ var DS;
             return -1;
         }
         Utilities.ciIndexOf = ciIndexOf;
+        Utilities.sensitivePropertiesFilter = "pass|secret|key";
+        /** Use in places to prevent logging sensitive data; this does a partial name match, so 'pass' matches 'password; as well. */
+        function hideSensitiveData(text) {
+            return DS.StringUtils.toString(text).replace(new RegExp('(".*?(?:' + Utilities.sensitivePropertiesFilter + ').*?":\s*)(".*?")', 'gi'), '$1"******"');
+        }
+        Utilities.hideSensitiveData = hideSensitiveData;
         /** Attempts to parse a string as JSON and returns the result.  If the value is not a string, or the conversion fails,
          * the value is returned as is.
          * This is used mainly to convert JSON strings to objects, while allowing all other values to pass through as is.
@@ -1131,13 +1137,13 @@ var DS;
          * Logs an error with a title and message, and returns an associated 'Exception' object for the caller to throw.
          * The source of the exception object will be associated with the 'LogItem' object (if 'System.Diagnostics' is loaded).
          */
-        static error(title, message, source) {
+        static error(title, message, source, innerException) {
             if (DS.Diagnostics && DS.Diagnostics.log) {
                 var logItem = DS.Diagnostics.log(title, message, DS.LogTypes.Error);
                 return new Exception(logItem, source);
             }
             else
-                return new Exception(DS.error(title, message, source, false, false), source);
+                return new Exception(DS.error(title, message, source, false, false), source, innerException);
         }
         /**
          * Logs a "Not Implemented" error message with an optional title, and returns an associated 'Exception' object for the caller to throw.
@@ -2778,8 +2784,8 @@ var DS;
         }
         static __validate(callername, object, func) {
             var isstaticctx = object === void 0 || object === null; // ('$__fullname' exists on modules and registered type objects)
-            if (!isstaticctx && typeof object._id != 'number')
-                throw DS.Exception.error("Delegate." + callername, "The object for this delegate does not contain a numerical '_uid' value (used as a global object reference for serialization), or '$__fullname' value (for static type references).  See 'AppDomain.registerClass()'.", this);
+            if (!isstaticctx && DS.isEmpty(object._id)) //? Is this still needed?
+                throw DS.Exception.error("Delegate." + callername, "The object for this delegate does not contain an '_id' value (used as a global object reference for serialization).  See 'DS.TrackableObject' for more details.", this);
             return isstaticctx;
         }
         //? static readonly $Type = $Delegate;
@@ -2917,12 +2923,13 @@ var DS;
 })(DS || (DS = {}));
 // ###########################################################################################################################
 // These are functions for creating global scope variables/references that eliminate/minimize collisions between conflicting scripts.
-// Normally, each manifest and module gets its own local-global scope; however, in some cases, 3rd-party libraries do not 
+// Normally, each DS module gets its own local-global scope; however, in some cases, 3rd-party libraries do not 
 // expect or support dot-delimited object paths, so unfortunately a root global callback reference may be required in such cases.
-// DreamSpace.Globals contains functions to help deal with this as it relates to loading modules.
-// Note: There's no need to use any of these functions directly from within manifest and module scripts.  Each has a local reference
-// using the identifiers 'this', 'manifest', or 'module' (accordingly), which provides functions for local-global scope storage.
+// DS.Globals contains functions to help deal with this as it relates to being able to use callbacks witin module scopes.
+// Note: There's no need to use any of these functions directly from within module scripts.  Each has a local reference
+// using the identifiers 'this' or 'module', which provides functions for local-global scope storage.
 // ###########################################################################################################################
+//TODO: Above may no longer be applicable, as it has/will be changed to use requirejs or a native module solution. //?
 /**
  * An empty object whose sole purpose is to store global properties by resource namespace (usual a URL). It exists as an
  * alternative to using the global JavaScript host environment, but also supports it as well.  The get/set methods always use
@@ -3326,8 +3333,10 @@ var DS;
             return name && !Path.restrictedFilenameRegex.test(name);
         }
         Path.isValidFileName = isValidFileName;
-        /** Splits and returns the path parts, optionally validating each one and throwing an exception if any path name is invalid. */
-        function getPathParts(path, validate = true) {
+        /** Splits and returns the directory names in the path, optionally validating each one and throwing an exception if any path name is invalid.
+         * Note: Since leading or trailing path delimiters can cause empty names, they will be removed. Use 'isAbsolute()' if you need to test for absolute paths.
+         */
+        function getPathNames(path, validate = true) {
             var parts = (typeof path !== 'string' ? '' + path : path).replace(/\\/g, '/').split('/');
             if (parts.length && !parts[0])
                 parts.shift(); // (remove empty entries from the start)
@@ -3339,7 +3348,7 @@ var DS;
                         throw "The path '" + path + "' contains invalid characters in '" + parts[i] + "'.";
             return parts;
         }
-        Path.getPathParts = getPathParts;
+        Path.getPathNames = getPathNames;
         /** Returns the directory path minus the filename (up to the last name that is followed by a directory separator).
          * Since the file API does not support special character such as '.' or '..', these are ignored as directory characters (but not removed).
          * Examples:
@@ -3717,8 +3726,8 @@ var DS;
             this.method = method;
             this.delay = delay;
             this.async = async;
-            this.$__index = ResourceRequest._resourceRequests.length;
-            ResourceRequest._resourceRequests.push(this);
+            //? this.$__index = ResourceRequest._resourceRequests.length;
+            //? ResourceRequest._resourceRequests.push(this);
             ResourceRequest._resourceRequestByURL[this.url] = this;
         }
         /** See the 'cacheBusting' property. */
@@ -3726,6 +3735,7 @@ var DS;
         ; // (note: ResourceInfo.cs uses this same default)
         static set cacheBustingVar(value) { this._cacheBustingVar = DS.StringUtils.toString(value) || '_v_'; }
         ;
+        //? private $__index: number;
         /** The requested resource URL. If the URL string starts with '~/' then it becomes relative to the content type base path. */
         get url() {
             if (typeof this._url == 'string' && this._url.charAt(0) == "~") {
@@ -3737,9 +3747,14 @@ var DS;
         set url(value) { this._url = value; }
         /** This gets the transformed response as a result of callback handlers (if any).
           * If no transformations were made, then the value in 'response' is returned as is.
+          * If the type of the request is 'appication/json', then the initial response will be converted to an object automatically.
           */
         get transformedResponse() {
-            return this.$__transformedData === DS.noop ? this.response : this.$__transformedData;
+            if (this.$__transformedData === DS.noop) {
+                return this.type == DS.ResourceTypes.Application_JSON
+                    ? DS.Data.JSON.toObjectOrValue(this.response) : this.response;
+            }
+            return this.$__transformedData;
         }
         /**
          * A progress/error message related to the status (may not be the same as the response message).
@@ -3756,6 +3771,8 @@ var DS;
             else
                 DS.log("ResourceRequest (" + this.url + ")", this._message, DS.LogTypes.Normal, this);
         }
+        /** Return a bullet list of the message log. */
+        getMessages() { return "· " + this.messageLog.join("\r\n· ") + "\r\n"; }
         _queueDoNext(data) {
             setTimeout(() => {
                 // ... before this, fire any handlers that would execute before this ...
@@ -3883,14 +3900,15 @@ var DS;
                     this._parentRequests[i].start();
             var url = this.url;
             var xhr = this._xhr;
-            function loaded(status, statusText, response, responseType) {
+            var loaded = (status, statusText, response, responseType) => {
                 if (status == 200 || status == 304) {
                     this.response = response;
                     this.status == DS.RequestStatuses.Loaded;
                     this.message = status == 304 ? "Loading completed (from browser cache)." : "Loading completed.";
                     // ... check if the expected mime type matches, otherwise throw an error to be safe ...
-                    if (this.type && responseType && this.type != responseType) {
+                    if (this.type && responseType && this.type != responseType.split(';')[0]) {
                         this.setError("Resource type mismatch: expected type was '" + this.type + "', but received '" + responseType + "' (XHR type '" + xhr.responseType + "').\r\n");
+                        this._doError();
                     }
                     else {
                         if (!DS.isDebugging && typeof DS.global.Storage !== void 0)
@@ -3911,9 +3929,11 @@ var DS;
                 }
                 else {
                     this.setError("There was a problem loading the resource (status code " + status + ": " + statusText + ").\r\n");
+                    if (response)
+                        this.setError("Response: " + DS.StringUtils.toString(response));
+                    this._doError();
                 }
-            }
-            ;
+            };
             if (this.status == DS.RequestStatuses.Pending) {
                 this.status = DS.RequestStatuses.Loading; // (do this first to protect against any possible cyclical calls)
                 this.message = "Loading resource ...";
@@ -3945,7 +3965,7 @@ var DS;
                 // ... next, determine the best way to load the resource ...
                 if (XMLHttpRequest) {
                     if (!this._xhr) {
-                        this._xhr = isNode ? new (require("xhr2"))() : new XMLHttpRequest();
+                        this._xhr = xhr = isNode ? new (require("xhr2"))() : new XMLHttpRequest();
                         // ... this script is not cached, so load it ...
                         xhr.onreadystatechange = () => {
                             switch (xhr.readyState) {
@@ -3963,8 +3983,8 @@ var DS;
                             }
                         };
                         xhr.onerror = (ev) => { this.setError(void 0, ev); this._doError(); };
-                        xhr.onabort = () => { this.setError("Request aborted."); };
-                        xhr.ontimeout = () => { this.setError("Request timed out."); };
+                        xhr.onabort = () => { this.setError("Request aborted."); this._doError(); };
+                        xhr.ontimeout = () => { this.setError("Request timed out."); this._doError(); };
                         xhr.onprogress = (evt) => {
                             this.message = Math.round(evt.loaded / evt.total * 100) + "% loaded ...";
                             if (this._onProgress && this._onProgress.length)
@@ -4069,6 +4089,7 @@ var DS;
                 this._doError(); // (still in an error state, so pass on to trigger error handlers in case new ones were added)
                 return;
             }
+            delete ResourceRequest._resourceRequestByURL[this.url]; // (request completed, release it from the active list)
             if (this._onProgress && this._onProgress.length) {
                 this._doOnProgress(100);
                 this._onProgress.length = 0;
@@ -4132,6 +4153,7 @@ var DS;
             this._doReady(); // (this triggers in dependency order)
         }
         _doReady() {
+            delete ResourceRequest._resourceRequestByURL[this.url]; // (request completed, release it from the active list)
             if (this._paused)
                 return;
             if (this.status < DS.RequestStatuses.Waiting)
@@ -4179,19 +4201,22 @@ var DS;
             }
         }
         _doError() {
+            var _a;
+            delete ResourceRequest._resourceRequestByURL[this.url]; // (request completed, release it from the active list)
             if (this._paused)
                 return;
             if (this.status != DS.RequestStatuses.Error) {
                 this._doNext(); // (still in an error state, so pass on to trigger error handlers in case new ones were added)
                 return;
             }
+            this.setError("Error loading resource " + (typeof this.type == 'string' ? (_a = DS.ResourceTypes[this.type]) !== null && _a !== void 0 ? _a : this.type : this.type) + " from '" + this.url + "'.");
             for (var n = this._promiseChain.length; this._promiseChainIndex < n; ++this._promiseChainIndex) {
                 if (this._paused)
                     return;
-                var handlers = this._promiseChain[this._promiseChainIndex];
-                if (handlers.onError) {
+                var handler = this._promiseChain[this._promiseChainIndex];
+                if (handler.onError) {
                     try {
-                        var newData = handlers.onError.call(this, this, this.message); // (this handler should "fix" the situation and return valid data)
+                        var newData = handler.onError.call(this, this, this.getMessages()); // (this handler should "fix" the situation and return valid data)
                     }
                     catch (e) {
                         this.setError("Error handler failed.", e);
@@ -4211,17 +4236,20 @@ var DS;
                             }
                         }
                     }
-                    // ... continue with the value from the error handler (even if none) ...
-                    this.status = DS.RequestStatuses.Loaded;
-                    this._message = void 0; // (clear the current message [but keep history])
-                    ++this._promiseChainIndex; // (pass on to next handler in the chain)
-                    this.$__transformedData = newData;
-                    this._doNext();
-                    return;
+                    // ... if the error handler gives anything except undefined then use that value and continue ...
+                    if (newData !== void 0) {
+                        // ... continue with the value from the error handler ...
+                        this.status = DS.RequestStatuses.Loaded;
+                        this._message = void 0; // (clear the current message [but keep history])
+                        ++this._promiseChainIndex; // (pass on to next handler in the chain)
+                        this.$__transformedData = newData;
+                        this._doNext();
+                        return;
+                    } // else the expected data is undefined, so continue with the default error ...
                 }
-                else if (handlers.onFinally) {
+                else if (handler.onFinally) {
                     try {
-                        handlers.onFinally.call(this);
+                        handler.onFinally.call(this);
                     }
                     catch (e) {
                         this.setError("Cleanup handler failed.", e);
@@ -4230,12 +4258,7 @@ var DS;
             }
             // ... if this is reached, then there are no following error handlers, so throw the existing message ...
             if (this.status == DS.RequestStatuses.Error) {
-                var msgs = this.messageLog.join("\r\n· ");
-                if (msgs)
-                    msgs = ":\r\n· " + msgs;
-                else
-                    msgs = ".";
-                throw new Error("Unhandled error loading resource " + (typeof this.type == 'string' ? DS.ResourceTypes[this.type] : this.type) + " from '" + this.url + "'" + msgs + "\r\n");
+                throw DS.Exception.error("Unhandled Error", this.getMessages(), this);
             }
         }
         /** Resets the current resource data, and optionally all dependencies, and restarts the whole loading process.
@@ -4272,8 +4295,12 @@ var DS;
      */
     ResourceRequest.cacheBusting = true;
     ResourceRequest._cacheBustingVar = '_v_';
-    ResourceRequest._resourceRequests = []; // (requests are loaded in parallel, but executed in order of request)
-    ResourceRequest._resourceRequestByURL = {}; // (a quick named index lookup into '__loadRequests')
+    //? static _resourceRequests: IResourceRequest[] = []; // (requests are loaded in parallel, but executed in order of request)
+    /**
+     * Provides a quick lookup for active requests by URL so all requests can be grouped.
+     * Once a request completes, it is removed from this list.
+     */
+    ResourceRequest._resourceRequestByURL = {};
     DS.ResourceRequest = ResourceRequest;
     // ===============================================================================================================================
 })(DS || (DS = {}));
@@ -4325,6 +4352,8 @@ var DS;
         ResourceTypes["Video_WMV"] = "video/x-ms-wmv";
         ResourceTypes["Video_FLV"] = "video/x-flv";
     })(ResourceTypes = DS.ResourceTypes || (DS.ResourceTypes = {}));
+    for (let p in ResourceTypes)
+        ResourceTypes[ResourceTypes[p]] = p; // (make the values also reference the property names)
     /** A map of popular resource extensions to resource enum type names.
       * Example 1: ResourceTypes[ResourceExtensions[ResourceExtensions.Application_Script]] === "application/javascript"
       * Example 2: ResourceTypes[ResourceExtensions[<ResourceExtensions><any>'.JS']] === "application/javascript"
@@ -4373,6 +4402,8 @@ var DS;
     })(ResourceExtensions = DS.ResourceExtensions || (DS.ResourceExtensions = {}));
     ResourceExtensions['.tpl.html'] = ResourceExtensions[ResourceExtensions.Text_JQueryTemplate]; // (map to the same 'Text_JQueryTemplate' target)
     ResourceExtensions['.tpl'] = ResourceExtensions[ResourceExtensions.Text_JQueryTemplate]; // (map to the same 'Text_JQueryTemplate' target)
+    for (let p in ResourceExtensions)
+        ResourceExtensions[ResourceExtensions[p]] = p; // (make the values also reference the property names)
     function getResourceTypeFromExtension(ext) {
         if (ext === void 0 || ext === null)
             return void 0;
@@ -5611,11 +5642,11 @@ var DS;
             }
         }
         IO.Response = Response;
-        function get(url, type, method = "GET", data) {
+        function get(url, type = DS.ResourceTypes.Application_JSON, method = "GET", data) {
             return new Promise((resolve, reject) => {
                 var request = new DS.ResourceRequest(url, type);
                 request.ready((req) => { resolve(req.transformedResponse); });
-                request.catch((req, err) => { reject(err); });
+                request.catch((req, err) => { reject(err); return null; });
                 request.start();
             });
         }
@@ -5728,7 +5759,7 @@ var DS;
             resolve(itemPath, typeFilter) {
                 if (itemPath === void 0 || itemPath === null || !this.hasChildren)
                     return null;
-                var parts = DS.Path.getPathParts(itemPath), t = this;
+                var parts = DS.Path.getPathNames(itemPath), t = this;
                 for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
                     // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
                     var item = t._childItemsByName[parts[i]];
@@ -5781,7 +5812,7 @@ var DS;
                 createDirectory(path) {
                     if (path === void 0 || path === null || !this.hasChildren)
                         return null;
-                    var parts = DS.Path.getPathParts(path), item = this; // (if path is empty it should default to this directory)
+                    var parts = DS.Path.getPathNames(path), item = this; // (if path is empty it should default to this directory)
                     for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
                         // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
                         var childItem = item._childItemsByName[parts[i]];
@@ -6436,6 +6467,21 @@ var DS;
         /** A base class to help support various databases. */
         class DBAdapter {
             constructor(config) { this.configuration = config; }
+            /**
+             * Query shortcut that simply creates a connection, runs the query, closes the connection, and returns the result.
+             * @param statement
+             * @param values
+             */
+            async query(statement, values) {
+                var conn = await this.createConnection();
+                await conn.connect();
+                try {
+                    return await conn.query(statement, values);
+                }
+                finally {
+                    await conn.end();
+                }
+            }
             /** Returns a basic error message. Override this to provide a more detailed error message for the database type. */
             getSQLErrorMessage(err) {
                 return `SQL failed:  ${err}`;

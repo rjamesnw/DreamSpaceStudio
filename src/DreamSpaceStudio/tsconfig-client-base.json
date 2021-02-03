@@ -8,7 +8,7 @@
     "noImplicitAny": true,
     "incremental": true,
     "outDir": "./public/js",
-    "target": "es6",
+    "target": "es2017",
     "rootDir": ".",
     "experimentalDecorators": true,
     "module": "amd",

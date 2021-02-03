@@ -25,6 +25,7 @@ monaco-editor/
 old_*
 old-*
 .old
+.env
 
 # User-specific files
 *.suo

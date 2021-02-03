@@ -14,7 +14,7 @@ namespace DS.DB.MSSQL {
     export declare var mssql: typeof import("mssql");
     var _mssql: typeof import("mssql");
 
-    Object.defineProperty(DS.DB, 'mssql', {
+    Object.defineProperty(MSSQL, 'mssql', {
         get: () => {
             return _mssql || (_mssql = require("mssql"));
         },
@@ -33,25 +33,27 @@ namespace DS.DB.MSSQL {
 
     export var connectionPool: ConnectionPool;
 
-    const _defaultConfig: ConnectionConfig = {
-        user: process.env.MSSQL_USER,
-        password: process.env.MSSQL_PASS,
-        server: process.env.MSSQL_HOST + (process.env.MSSQL_INSTANCE ? '\\' + process.env.MSSQL_INSTANCE : ''), // You can use 'localhost\\instance' to connect to named instance
-        database: process.env.MSSQL_DB_NAME,
+    function _defaultConfig(): ConnectionConfig {
+        return {
+            user: process.env.MSSQL_USER,
+            password: process.env.MSSQL_PASS,
+            server: process.env.MSSQL_HOST + (process.env.MSSQL_INSTANCE ? '\\' + process.env.MSSQL_INSTANCE : ''), // You can use 'localhost\\instance' to connect to named instance
+            database: process.env.MSSQL_DB_NAME,
 
-        options: {
-            encrypt: true // Use this if you're on Windows Azure
-        }
+            options: {
+                encrypt: false // Set this to true if you're on Windows Azure (default is false)
+            }
+        };
     }
 
-    export async function configureConnectionPool(config = _defaultConfig) {
+    export function configureConnectionPool(config = _defaultConfig()) {
         connectionPool = new mssql.ConnectionPool(config);
     }
 
-    export async function getMSSQLConnection(config?: typeof _defaultConfig) {
+    export async function getMSSQLConnection(config = _defaultConfig()) {
         try {
             if (!connectionPool)
-                await configureConnectionPool(config);
+                configureConnectionPool(config);
 
             if (!connectionPool.connected)
                 await connectionPool.connect();
@@ -60,11 +62,16 @@ namespace DS.DB.MSSQL {
 
             return connectionPool;
         } catch (err) {
-            throw await error('getMSSQLConnection()', 'Error connecting to MSSQL database.', void 0, err);
+            console.error(err);
+            throw Exception.error('getMSSQLConnection()', 'Error connecting to MSSQL database.', this, err);
         }
     }
 
     export class MSSQLAdapter extends DBAdapter<ConnectionConfig> {
+        constructor(config = _defaultConfig()) {
+            super(config);
+        }
+
         async createConnection() {
             return new MSSQLConnection(this, await getMSSQLConnection(this.configuration)); // (create from the default pool)
         }
@@ -131,6 +138,7 @@ namespace DS.DB.MSSQL {
                     sql = sql.split('{parameters}').join(params.join(', '));
                     sql = sql.split('{assignments}').join(assignments.join(', '));
                 }
+                else sql = statement;
 
                 var queryResult = await request.query(sql);
                 return <ISelectQueryResult>{ response: queryResult.recordset, fields: queryResult.recordset.columns };

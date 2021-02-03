@@ -46,6 +46,8 @@ namespace DS {
         Video_FLV = "video/x-flv"
     }
 
+    for (let p in ResourceTypes) (<any>ResourceTypes)[(<any>ResourceTypes)[p]] = p; // (make the values also reference the property names)
+
     /** A map of popular resource extensions to resource enum type names.
       * Example 1: ResourceTypes[ResourceExtensions[ResourceExtensions.Application_Script]] === "application/javascript"
       * Example 2: ResourceTypes[ResourceExtensions[<ResourceExtensions><any>'.JS']] === "application/javascript"
@@ -93,6 +95,8 @@ namespace DS {
     }
     (<IndexedObject<string>>ResourceExtensions)['.tpl.html'] = (<IndexedObject<string>>ResourceExtensions)[ResourceExtensions.Text_JQueryTemplate]; // (map to the same 'Text_JQueryTemplate' target)
     (<IndexedObject<string>>ResourceExtensions)['.tpl'] = (<IndexedObject<string>>ResourceExtensions)[ResourceExtensions.Text_JQueryTemplate]; // (map to the same 'Text_JQueryTemplate' target)
+
+    for (let p in ResourceExtensions) (<any>ResourceExtensions)[(<any>ResourceExtensions)[p]] = p; // (make the values also reference the property names)
 
     /** Return the resource (MIME) type of a given extension (with or without the period). */
     export function getResourceTypeFromExtension(ext: string): ResourceTypes;

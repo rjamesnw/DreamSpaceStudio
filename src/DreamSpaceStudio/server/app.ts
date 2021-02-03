@@ -22,8 +22,7 @@ var cwd = global.process.cwd(); // (current working directory, which should be t
 
 DS.webRoot = cwd;
 
-//x import debug = require('debug');
-//x import path = require('path');
+import * as env from "./environment";
 import fs = require('fs');
 import express = require('express');
 import { Socket } from "net";
@@ -75,7 +74,31 @@ var fm = DS.VirtualFileSystem.FileManager.current;
         console.log("Static Solutions Folder: " + solutionsRoot);
         app.use(express.static(solutionsRoot));
 
+        async function _APIHandler(req: express.Request, res: express.Response, next: express.NextFunction) {
+            // .. this endpoint will handle work-flow requests ...
+            var pathNames = DS.Path.getPathNames(req.path);
+            if (pathNames.length > 1) {
+                pathNames.shift();
+                pathNames[pathNames.length] = pathNames[pathNames.length - 1];
+                pathNames[pathNames.length - 2] = "api";
+                var apiPath = DS.Path.combine(templateEngine.viewsRoot, pathNames.join('/'));
+                try {
+                    var method = req.method.toLowerCase();
+                    var module = require(apiPath + ".js");
+                    if (typeof module[method] == 'function')
+                        await module[method](req, res);
+                    else {
+                        next(DS.Exception.error("API", `Module at ${apiPath} does not contain an '${method}()' handler function.`));
+                    }
+                } catch (err) {
+                    next(DS.Exception.error("API", `Failed to load API module from '${apiPath}'.`, this, err));
+                }
+            }
+        }
+
         app.use(function (req, res, next) {
+            if (req.path.startsWith("/api/"))
+                return _APIHandler(req, res, next);
             //?var pathParts = DS.Path.getPathParts(req.path.toLowerCase());
             //?var lastName = pathParts[pathParts.length - 1];
             //?var indexViewPath = lastName != "index" && lastName.indexOf('.') < 0 ? DS.Path.combine(req.path, "index") : req.path; // (only add "index" if not already index, and doesn't contain a period typically used for extensions)
@@ -132,7 +155,7 @@ var fm = DS.VirtualFileSystem.FileManager.current;
         });
 
         // ... allow exiting the server when in dev mode ...
-        if (app.get('env') === 'development')
+        if (env.isDevelopment)
             app.get("/exit", async (req, res, next) => { shutDown(); });
 
         // catch 404 and forward to error handler
@@ -142,7 +165,7 @@ var fm = DS.VirtualFileSystem.FileManager.current;
             next(err);
         });
 
-        if (app.get('env') === 'development') {
+        if (env.isDevelopment) {
 
             // development error handler
             // will print stacktrace

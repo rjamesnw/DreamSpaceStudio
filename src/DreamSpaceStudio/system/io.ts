@@ -233,11 +233,11 @@ namespace DS {
         export function get<T = string>(url: string, type?: ResourceTypes.Text_Plain, method?: Methods, data?: any): Promise<T>;
         /** Attempts to get an HTTP resource from a URL. */
         export function get<T = any>(url: string, type?: string, method?: Methods, data?: any): Promise<T>;
-        export function get<T>(url: string, type: ResourceTypes, method: Methods = "GET", data?: any): Promise<T> {
+        export function get<T>(url: string, type = ResourceTypes.Application_JSON, method: Methods = "GET", data?: any): Promise<T> {
             return new Promise<any>((resolve, reject) => {
                 var request = new ResourceRequest(url, type);
                 request.ready((req) => { resolve(req.transformedResponse); })
-                request.catch((req, err) => { reject(err); })
+                request.catch((req, err) => { reject(err); return null; })
                 request.start();
             });
         }

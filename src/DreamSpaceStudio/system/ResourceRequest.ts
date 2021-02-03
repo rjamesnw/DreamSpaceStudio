@@ -48,13 +48,13 @@ namespace DS {
             this.delay = delay;
             this.async = async;
 
-            this.$__index = ResourceRequest._resourceRequests.length;
+            //? this.$__index = ResourceRequest._resourceRequests.length;
 
-            ResourceRequest._resourceRequests.push(this);
+            //? ResourceRequest._resourceRequests.push(this);
             ResourceRequest._resourceRequestByURL[this.url] = this;
         }
 
-        private $__index: number;
+        //? private $__index: number;
 
         /** The requested resource URL. If the URL string starts with '~/' then it becomes relative to the content type base path. */
         get url() {
@@ -107,9 +107,14 @@ namespace DS {
 
         /** This gets the transformed response as a result of callback handlers (if any).
           * If no transformations were made, then the value in 'response' is returned as is.
+          * If the type of the request is 'appication/json', then the initial response will be converted to an object automatically.
           */
         get transformedResponse(): any {
-            return this.$__transformedData === DS.noop ? this.response : this.$__transformedData;
+            if (this.$__transformedData === DS.noop) {
+                return this.type == ResourceTypes.Application_JSON
+                    ? DS.Data.JSON.toObjectOrValue(this.response) : this.response
+            }
+            return this.$__transformedData;
         }
         private $__transformedData: any = DS.noop;
 
@@ -140,6 +145,9 @@ namespace DS {
 
         /** Includes the current message and all previous messages. Use this to trace any silenced errors in the request process. */
         messageLog: string[] = [];
+
+        /** Return a bullet list of the message log. */
+        getMessages() { return "· " + this.messageLog.join("\r\n· ") + "\r\n"; }
 
         /** 
          * If true (default), them this request is non-blocking, otherwise the calling script will be blocked until the request
@@ -318,15 +326,16 @@ namespace DS {
             var url = this.url;
             var xhr: XMLHttpRequest = <any>this._xhr;
 
-            function loaded(status: number, statusText: string, response: any, responseType: string) {
+            var loaded = (status: number, statusText: string, response: any, responseType: string) => {
                 if (status == 200 || status == 304) {
                     this.response = response;
                     this.status == RequestStatuses.Loaded;
                     this.message = status == 304 ? "Loading completed (from browser cache)." : "Loading completed.";
 
                     // ... check if the expected mime type matches, otherwise throw an error to be safe ...
-                    if (this.type && responseType && <string><any>this.type != responseType) {
+                    if (this.type && responseType && <string><any>this.type != responseType.split(';')[0]) {
                         this.setError("Resource type mismatch: expected type was '" + this.type + "', but received '" + responseType + "' (XHR type '" + xhr.responseType + "').\r\n");
+                        this._doError();
                     }
                     else {
                         if (!DS.isDebugging && typeof DS.global.Storage !== void 0)
@@ -346,6 +355,9 @@ namespace DS {
                 }
                 else {
                     this.setError("There was a problem loading the resource (status code " + status + ": " + statusText + ").\r\n");
+                    if (response)
+                        this.setError("Response: " + DS.StringUtils.toString(response));
+                    this._doError();
                 }
             };
 
@@ -387,7 +399,7 @@ namespace DS {
 
                 if (XMLHttpRequest) {
                     if (!this._xhr) {
-                        this._xhr = isNode ? new (<typeof XMLHttpRequest>require("xhr2"))() : new XMLHttpRequest();
+                        this._xhr = xhr = isNode ? new (<typeof XMLHttpRequest>require("xhr2"))() : new XMLHttpRequest();
 
                         // ... this script is not cached, so load it ...
 
@@ -402,8 +414,8 @@ namespace DS {
                         };
 
                         xhr.onerror = (ev: ProgressEvent) => { this.setError(void 0, ev); this._doError(); };
-                        xhr.onabort = () => { this.setError("Request aborted."); };
-                        xhr.ontimeout = () => { this.setError("Request timed out."); };
+                        xhr.onabort = () => { this.setError("Request aborted."); this._doError(); };
+                        xhr.ontimeout = () => { this.setError("Request timed out."); this._doError(); };
                         xhr.onprogress = (evt: ProgressEvent) => {
                             this.message = Math.round(evt.loaded / evt.total * 100) + "% loaded ...";
                             if (this._onProgress && this._onProgress.length)
@@ -518,6 +530,8 @@ namespace DS {
                 return;
             }
 
+            delete ResourceRequest._resourceRequestByURL[this.url]; // (request completed, release it from the active list)
+
             if (this._onProgress && this._onProgress.length) {
                 this._doOnProgress(100);
                 this._onProgress.length = 0;
@@ -585,6 +599,8 @@ namespace DS {
         }
 
         private _doReady(): void {
+            delete ResourceRequest._resourceRequestByURL[this.url]; // (request completed, release it from the active list)
+
             if (this._paused) return;
 
             if (this.status < RequestStatuses.Waiting) return; // (the 'ready' event must only trigger after the resource loads, AND all handlers have been called)
@@ -633,6 +649,8 @@ namespace DS {
         }
 
         private _doError(): void { // (note: the following event link handles the preceding error, skipping first any and all 'finally' handlers)
+            delete ResourceRequest._resourceRequestByURL[this.url]; // (request completed, release it from the active list)
+
             if (this._paused) return;
 
             if (this.status != RequestStatuses.Error) {
@@ -640,14 +658,16 @@ namespace DS {
                 return;
             }
 
+            this.setError("Error loading resource " + (typeof this.type == 'string' ? (<IndexedObject<string>>ResourceTypes)[this.type] ?? this.type : this.type) + " from '" + this.url + "'.");
+
             for (var n = this._promiseChain.length; this._promiseChainIndex < n; ++this._promiseChainIndex) {
                 if (this._paused) return;
 
-                var handlers = this._promiseChain[this._promiseChainIndex];
+                var handler = this._promiseChain[this._promiseChainIndex];
 
-                if (handlers.onError) {
+                if (handler.onError) {
                     try {
-                        var newData = handlers.onError.call(this, this, this.message); // (this handler should "fix" the situation and return valid data)
+                        var newData = handler.onError.call(this, this, this.getMessages()); // (this handler should "fix" the situation and return valid data)
                     } catch (e) {
                         this.setError("Error handler failed.", e);
                     }
@@ -666,16 +686,21 @@ namespace DS {
                             }
                         }
                     }
-                    // ... continue with the value from the error handler (even if none) ...
-                    this.status = RequestStatuses.Loaded;
-                    this._message = void 0; // (clear the current message [but keep history])
-                    ++this._promiseChainIndex; // (pass on to next handler in the chain)
-                    this.$__transformedData = newData;
-                    this._doNext();
-                    return;
-                } else if (handlers.onFinally) {
+
+                    // ... if the error handler gives anything except undefined then use that value and continue ...
+
+                    if (newData !== void 0) {
+                        // ... continue with the value from the error handler ...
+                        this.status = RequestStatuses.Loaded;
+                        this._message = void 0; // (clear the current message [but keep history])
+                        ++this._promiseChainIndex; // (pass on to next handler in the chain)
+                        this.$__transformedData = newData;
+                        this._doNext();
+                        return;
+                    } // else the expected data is undefined, so continue with the default error ...
+                } else if (handler.onFinally) {
                     try {
-                        handlers.onFinally.call(this);
+                        handler.onFinally.call(this);
                     } catch (e) {
                         this.setError("Cleanup handler failed.", e);
                     }
@@ -685,9 +710,7 @@ namespace DS {
             // ... if this is reached, then there are no following error handlers, so throw the existing message ...
 
             if (this.status == RequestStatuses.Error) {
-                var msgs = this.messageLog.join("\r\n· ");
-                if (msgs) msgs = ":\r\n· " + msgs; else msgs = ".";
-                throw new Error("Unhandled error loading resource " + (typeof this.type == 'string' ? (<IndexedObject<string>>ResourceTypes)[this.type] : this.type) + " from '" + this.url + "'" + msgs + "\r\n");
+                throw Exception.error("Unhandled Error", this.getMessages(), this);
             }
         }
 
@@ -722,8 +745,13 @@ namespace DS {
             return this;
         }
 
-        static _resourceRequests: IResourceRequest[] = []; // (requests are loaded in parallel, but executed in order of request)
-        static _resourceRequestByURL: { [url: string]: IResourceRequest } = {}; // (a quick named index lookup into '__loadRequests')
+        //? static _resourceRequests: IResourceRequest[] = []; // (requests are loaded in parallel, but executed in order of request)
+
+        /**
+         * Provides a quick lookup for active requests by URL so all requests can be grouped.
+         * Once a request completes, it is removed from this list.
+         */
+        static _resourceRequestByURL: { [url: string]: IResourceRequest } = {};
     }
 
     export interface IResourceRequest extends ResourceRequest { }

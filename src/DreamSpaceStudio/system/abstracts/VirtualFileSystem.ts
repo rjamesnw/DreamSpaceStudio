@@ -112,7 +112,7 @@
               */
             resolve<T extends DirectoryItem>(itemPath: string, typeFilter?: new (...args: any[]) => T): T {
                 if (itemPath === void 0 || itemPath === null || !this.hasChildren) return null;
-                var parts = Path.getPathParts(itemPath), t: DirectoryItem = this;
+                var parts = Path.getPathNames(itemPath), t: DirectoryItem = this;
                 for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
                     // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
                     var item = t._childItemsByName[parts[i]];
@@ -179,7 +179,7 @@
                 /** Creates a directory under the user root endpoint. */
                 createDirectory(path: string): Directory {
                     if (path === void 0 || path === null || !this.hasChildren) return null;
-                    var parts = Path.getPathParts(path), item: Directory = this; // (if path is empty it should default to this directory)
+                    var parts = Path.getPathNames(path), item: Directory = this; // (if path is empty it should default to this directory)
                     for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
                         // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
                         var childItem = item._childItemsByName[parts[i]];

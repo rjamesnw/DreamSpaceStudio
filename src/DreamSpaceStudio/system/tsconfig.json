@@ -7,7 +7,7 @@
     "sourceMap": true,
     "noImplicitAny": true,
     "incremental": true,
-    "outFile": "api.js",
+    "outFile": "../public/js/api.js",
     "target": "ES2017",
     "lib": [ "ES2017", "dom" ],
     "types": [ "node", "request" ] // (include only types we need; prevents node types from being included)

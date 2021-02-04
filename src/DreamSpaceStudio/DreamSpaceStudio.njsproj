@@ -82,6 +82,7 @@
     <TypeScriptCompile Include="botpal\core\Match.ts" />
     <TypeScriptCompile Include="botpal\core\BrainTask.ts" />
     <TypeScriptCompile Include="features\safepoint\support\api\analyze.ts" />
+    <TypeScriptCompile Include="features\safepoint\support\cds.ts" />
     <TypeScriptCompile Include="features\safepoint\support\SupportWizard.ts" />
     <TypeScriptCompile Include="features\mirandus\index.ts" />
     <TypeScriptCompile Include="features\safepoint\support\index.ts" />

@@ -6,11 +6,12 @@
     { "path": "../../../../system/server" }
   ],
   "compilerOptions": {
-    "rootDir": "./",
+    "rootDir": "../",
     "declarationDir": "./decl"
   },
   "include": [
     //"server/globals.d.ts",
+    "../cds.ts",
     "./**/*.ts"
     //"./System/**/*.ts"
   ]

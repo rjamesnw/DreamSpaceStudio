@@ -85,13 +85,17 @@ var fm = DS.VirtualFileSystem.FileManager.current;
                 try {
                     var method = req.method.toLowerCase();
                     var module = require(apiPath + ".js");
+                } catch (err) {
+                    return next(DS.Exception.error("API", `Failed to load API module from '${apiPath}'.`, this, err));
+                }
+                try {
                     if (typeof module[method] == 'function')
                         await module[method](req, res);
                     else {
                         next(DS.Exception.error("API", `Module at ${apiPath} does not contain an '${method}()' handler function.`));
                     }
                 } catch (err) {
-                    next(DS.Exception.error("API", `Failed to load API module from '${apiPath}'.`, this, err));
+                    return next(DS.Exception.error("API", `'${method}()' in module '${apiPath}' threw an error.`, this, err));
                 }
             }
         }

@@ -1,3 +1,4 @@
+import type { IAnalysis } from './cds';
 
 export class SupportWizard {
     username: HTMLInputElement;
@@ -26,11 +27,12 @@ export class SupportWizard {
     async analyze() {
         // ... all the backend to do the analysis ...
         // ... connect to the database ...
-        var result = await DS.IO.get<any>("/api/safepoint/support/analyze", void 0, void 0, {
+        var result = await DS.IO.get<IAnalysis[]>("/api/safepoint/support/analyze", void 0, void 0, {
             username: this.username.value,
             incidentNum: this.incidentNum.value
         });
 
-        alert("Result: " + JSON.stringify(result));
+        if (result.length)
+            alert("Result:\r\n" + result[0]?.messages?.join('\r\n'));
     }
 }

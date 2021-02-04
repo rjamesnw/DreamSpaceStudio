@@ -82,7 +82,7 @@ namespace DS.DB.MSSQL {
         }
     }
 
-    export interface IMSSQLSelectQueryResult extends ISelectQueryResult {
+    export interface IMSSQLSelectQueryResult<TRecord = any> extends ISelectQueryResult<IRecordSet<TRecord>> {
         fields?: IColumnMetadata[];
     }
 

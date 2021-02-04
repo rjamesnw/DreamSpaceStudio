@@ -3750,6 +3750,7 @@ var DS;
           * If the type of the request is 'appication/json', then the initial response will be converted to an object automatically.
           */
         get transformedResponse() {
+            debugger;
             if (this.$__transformedData === DS.noop) {
                 return this.type == DS.ResourceTypes.Application_JSON
                     ? DS.Data.JSON.toObjectOrValue(this.response) : this.response;
@@ -3998,6 +3999,28 @@ var DS;
                 return;
             if (xhr && xhr.readyState != 0)
                 xhr.abort(); // (abort existing, just in case)
+            if (!_method)
+                _method = this.method || "GET";
+            var payload = _body || this.body;
+            if (typeof payload == 'object' && payload.__proto__ == Object.prototype) {
+                // (can't send object literals! convert to something else ...)
+                if (_method == 'GET') {
+                    var q = new DS.Query(payload);
+                    url = q.appendTo(url);
+                    payload = null; // the spec says body must be null for GET requests.
+                }
+                else {
+                    if (this.type == DS.ResourceTypes.Application_JSON) {
+                        if (typeof payload == 'object')
+                            payload = JSON.stringify(payload);
+                        xhr.setRequestHeader("Content-Type", DS.ResourceTypes.Application_JSON + ";charset=UTF-8");
+                    }
+                    var formData = new FormData(); // TODO: Test if "multipart/form-data" is needed.
+                    for (var p in payload)
+                        formData.append(p, payload[p]);
+                    payload = formData;
+                }
+            }
             try {
                 // ... check if we need to bust the cache ...
                 if (this.cacheBusting) {
@@ -4005,33 +4028,12 @@ var DS;
                     if (bustVar.indexOf(" ") >= 0)
                         DS.log("start()", "There is a space character in the cache busting query name for resource '" + url + "'.", DS.LogTypes.Warning);
                 }
-                if (!_method)
-                    _method = this.method || "GET";
                 xhr.open(_method, url, this.async, _username || this.username || void 0, _password || this.password || void 0);
             }
             catch (ex) {
                 DS.error("start()", "Failed to load resource from URL '" + url + "': " + (ex.message || ex), this);
             }
             try {
-                var payload = _body || this.body;
-                if (typeof payload == 'object' && payload.__proto__ == Object.prototype) {
-                    // (can't send object literals! convert to something else ...)
-                    if (_method == 'GET') {
-                        var q = new DS.Query(payload);
-                        payload = q.toString(false);
-                    }
-                    else {
-                        if (this.type == DS.ResourceTypes.Application_JSON) {
-                            if (typeof payload == 'object')
-                                payload = JSON.stringify(payload);
-                            xhr.setRequestHeader("Content-Type", DS.ResourceTypes.Application_JSON + ";charset=UTF-8");
-                        }
-                        var formData = new FormData(); // TODO: Test if "multipart/form-data" is needed.
-                        for (var p in payload)
-                            formData.append(p, payload[p]);
-                        payload = formData;
-                    }
-                }
                 xhr.send(payload);
             }
             catch (ex) {
@@ -5644,7 +5646,7 @@ var DS;
         IO.Response = Response;
         function get(url, type = DS.ResourceTypes.Application_JSON, method = "GET", data) {
             return new Promise((resolve, reject) => {
-                var request = new DS.ResourceRequest(url, type);
+                var request = new DS.ResourceRequest(url, type, method, data);
                 request.ready((req) => { resolve(req.transformedResponse); });
                 request.catch((req, err) => { reject(err); return null; });
                 request.start();

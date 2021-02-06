@@ -7,7 +7,13 @@ namespace DS {
     export namespace IO {
         // Contains DreamSpace API functions and types that user code can use to work with the system.
         // This API will be a layer of abstraction that keeps things similar between server and client sides.
-        export type Methods = "GET" | "POST" | "PUT" | "DELETE";
+        export enum Methods {
+            GET = "GET",
+            POST = "POST",
+            PUT = "PUT",
+            PATCH = "PATCH",
+            DELETE = "DELETE"
+        }
 
         export const enum HttpStatus {
 
@@ -215,10 +221,8 @@ namespace DS {
             setViewInfo(viewPath?: string): this { this.viewPath = viewPath; return this; }
 
             static fromError(message: string, error: string | Error | Exception, httpStatusCode = HttpStatus.OK, data?: any) {
-                if (!(error instanceof Exception))
-                    error = new Exception(error);
                 if (message)
-                    error = new Exception(message, void 0, <Exception>error);
+                    error = new Exception(message, error);
                 return new Response(getErrorMessage(error, false), data, httpStatusCode, void 0, <Exception>error);
             }
         }
@@ -233,7 +237,7 @@ namespace DS {
         export function get<T = string>(url: string, type?: ResourceTypes.Text_Plain, method?: Methods, data?: any): Promise<T>;
         /** Attempts to get an HTTP resource from a URL. */
         export function get<T = any>(url: string, type?: string, method?: Methods, data?: any): Promise<T>;
-        export function get<T>(url: string, type = ResourceTypes.Application_JSON, method: Methods = "GET", data?: any): Promise<T> {
+        export function get<T>(url: string, type = ResourceTypes.Application_JSON, method = Methods.GET, data?: any): Promise<T> {
             return new Promise<any>((resolve, reject) => {
                 var request = new ResourceRequest(url, type, method, data);
                 request.ready((req) => { resolve(req.transformedResponse); })

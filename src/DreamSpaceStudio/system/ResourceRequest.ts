@@ -110,7 +110,6 @@ namespace DS {
           * If the type of the request is 'appication/json', then the initial response will be converted to an object automatically.
           */
         get transformedResponse(): any {
-            debugger;
             if (this.$__transformedData === DS.noop) {
                 return this.type == ResourceTypes.Application_JSON
                     ? DS.Data.JSON.toObjectOrValue(this.response) : this.response
@@ -442,16 +441,13 @@ namespace DS {
                     url = q.appendTo(url);
                     payload = null; // the spec says body must be null for GET requests.
                 } else {
-                    if (this.type == ResourceTypes.Application_JSON) {
-                        if (typeof payload == 'object')
-                            payload = JSON.stringify(payload);
-                        xhr.setRequestHeader("Content-Type", ResourceTypes.Application_JSON + ";charset=UTF-8");
+                    if (/*this.type == ResourceTypes.Application_JSON && */typeof payload == 'object') {
+                        var formData = new FormData(); // TODO: Test if "multipart/form-data" is needed.
+                        for (var p in payload)
+                            formData.append(p, payload[p]);
+                        payload = formData;
                     }
-
-                    var formData = new FormData(); // TODO: Test if "multipart/form-data" is needed.
-                    for (var p in payload)
-                        formData.append(p, payload[p]);
-                    payload = formData;
+                    //payload = JSON.stringify(payload);
                 }
             }
 
@@ -463,6 +459,9 @@ namespace DS {
                 }
 
                 xhr.open(_method, url, this.async, _username || this.username || void 0, _password || this.password || void 0);
+
+                if (this.type == ResourceTypes.Application_JSON)
+                    xhr.setRequestHeader("Content-Type", ResourceTypes.Application_JSON + ";charset=UTF-8");
             }
             catch (ex) {
                 error("start()", "Failed to load resource from URL '" + url + "': " + ((<Error>ex).message || ex), this);

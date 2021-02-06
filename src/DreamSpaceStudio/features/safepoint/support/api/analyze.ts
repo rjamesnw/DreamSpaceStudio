@@ -2,7 +2,10 @@
  * Connects to the SafePoint database to analyze for issues.
  */
 import express = require('express');
-import { Analysis, Director, IDepartment, IDelegate, ISpecialAuthority, Staff, Supervisor } from '../cds';
+import {
+    Analysis, Director, IDepartment, IDelegate, ISpecialAuthority, IIncident, Staff, Supervisor, Severities,
+    IncidentStatus, IInvolvedUnitDepartment, ISpecialAuthorityAssignees, AnalysisMessageState, IAnalysis
+} from '../cds';
 
 var cds_db = new DS.DB.MSSQL.MSSQLAdapter({
     user: process.env.CDS_MSSQL_USER,
@@ -49,18 +52,27 @@ async function _getSPConnection() {
 //await conn.updateOrInsert(newFile, "tts_files");
 
 export async function get(req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> {
-    var json: string, results: Analysis[] = [];
+    var json: string, results: Analysis[] = [], state: AnalysisMessageState;
 
     try {
-        var staffResuts = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<Staff>>cds_db.query("SELECT * FROM staff where sites_id = @site and username=@username", {
-            site: 1,
-            username: req.query.username
+        var username = <string>req.query.username;
+        var incidentNum = +req.query.incidentNum;
+        var sites_id = 1;
+
+        var staffResuts = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<Staff>>cds_db.query("SELECT * FROM staff where sites_id = @sites_id and username=@username", {
+            sites_id,
+            username
         });
 
         //if (staff.response)
 
         for (var staff of staffResuts.response) {
             let analysis = results[results.length] = new Analysis(staff);
+
+            analysis.username = staff.username;
+            analysis.staff_id = staff.id;
+            analysis.incidentNum = incidentNum;
+
             console.log("Checking staff:" + staff.display + "...");
 
             var directors = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IDepartment>>cds_db.query(`select map_directors_units_departments.directors_id, map_directors_units_departments.units_departments_id, programs.display as program, units_departments.display as department
@@ -78,34 +90,121 @@ export async function get(req: express.Request, res: express.Response, next: exp
                 { staff_id: staff.id });
 
             if (directors.response.length) {
-                analysis.messages.push("User is a director.");
+                analysis.add("User is a director.");
                 analysis.directorOf = directors.response;
             }
 
             if (supervisors.response.length) {
-                analysis.messages.push("User is a supervisor.");
+                analysis.add("User is a supervisor.");
                 analysis.supervisorOf = supervisors.response;
             }
 
             if (!analysis.directorOf && !analysis.supervisorOf)
-                analysis.messages.push("User is not a supervisor or director.");
+                analysis.add("User is not a supervisor or director.");
 
             var delegates = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IDelegate>>sp_db.query(`select * from InvolvedUnitsDepartmentsDelegates where StaffID = @staff_id`,
-                { staff_id: staff.id });
+                { staff_id: staff.id, sites_id });
 
             if (!delegates.response.length)
-                analysis.messages.push("User is not a delegate.");
+                analysis.add("User is not a delegate.");
             else
-                analysis.messages.push("User is a delegate.");
+                analysis.add("User is a delegate.");
 
             var specAuthUsers = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<ISpecialAuthority>>sp_db.query(`select * from SpecialAuthorityUsers where StaffID = @staff_id`,
                 { staff_id: staff.id });
+            let sa = specAuthUsers.response[0];
 
-            if (!specAuthUsers.response.length)
-                analysis.messages.push("User is not a special authority.");
-            else
-                analysis.messages.push("User is a special authority.");
+            interface IIncidentResult {
+                IncidentID: number;
+                Status: string;
+                IsInactive: boolean;
+                SeverityDescription: string;
+                Severity: string;
+                SeverityDisplay: string;
+            }
 
+            var incidents = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IIncidentResult>>sp_db.query(`select IncidentID, Status, IsInactive, IncidentSeverities.Description as SeverityDescription, IncidentSeverityGroups.Name as Severity, IncidentSeverityGroups.Display as SeverityDisplay FROM Incidents
+                  left join IncidentSeverities on IncidentSeverities.IncidentSeverityID=Incidents.IncidentSeverityID
+                  left join IncidentSeverityGroups on IncidentSeverityGroups.IncidentSeverityGroupID=IncidentSeverities.IncidentSeverityGroupID
+                  where Incidents.IncidentID=@incidentid and SiteID=@sites_id`,
+                { incidentid: incidentNum, sites_id });
+            var incident = incidents.response?.length ? incidents.response[0] : null;
+
+            if (incident) {
+                var involvedUnitDepartments = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IInvolvedUnitDepartment & { Department: string; Program: string; }>>sp_db.query(
+                    `select InvolvedUnitsDepartments.*, dep.display as Department, prog.display as Program FROM InvolvedUnitsDepartments
+                    left join srhccardiac6.cds.dbo.units_departments as dep on dep.id=UnitDepartmentID
+                    left join srhccardiac6.cds.dbo.programs as prog on prog.id=programs_id
+                    where IncidentID=@incidentid`,
+                    { incidentid: incidentNum });
+                if (!involvedUnitDepartments?.response?.length)
+                    analysis.warning("There are no units or departments associated with that incident. No one will be able to open it.");
+                else {
+                    var msg = "These are the only departments allowed to access this incident:";
+                    involvedUnitDepartments.response.forEach(i => msg += "\r\n * " + i.Department + ` (${i.Program})`);
+                    analysis.add(msg);
+
+                    var authorized = !analysis.directorOf ? false : analysis.directorOf.some(d => involvedUnitDepartments.response.some(i => i.UnitDepartmentID == d.units_departments_id));
+                    var authorized = authorized || !analysis.supervisorOf ? authorized : analysis.supervisorOf.some(d => involvedUnitDepartments.response.some(i => i.UnitDepartmentID == d.units_departments_id));
+                    if (authorized) {
+                        state = AnalysisMessageState.NoIssue;
+
+                        var msg = "User is a part of at least one unit or department associated with the incident";
+
+                        var specialAuthorityAssignees = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<ISpecialAuthorityAssignees>>sp_db.query(`select * from SpecialAuthorityAssignees
+                            where IncidentID=@incidentid and SpecialAuthorityID=@specialAuthorityID`,
+                            { incidentid: incidentNum, specialAuthorityID: sa.SpecialAuthorityID });
+
+                        if (specialAuthorityAssignees.response.length) {
+                            msg += " and should be able to open it.";
+                            if (specialAuthorityAssignees.response[0].DoneReviewing)
+                                msg += " User is also done reviewing the incident.";
+                            else {
+                                state = AnalysisMessageState.Warning;
+                                msg += " User has not yet completed reviewing the incident.";
+                            }
+                        }
+                        else {
+                            state = AnalysisMessageState.Error;
+                            msg += ` but will not be able to open it, as they were not part of any related department when the incident was created (<a href="#" onclick="${analysis.actionLink('fixMissingSpecialAuth')}">correct this</a>).`;
+                        }
+
+                        analysis.add(msg, state);
+                    }
+                    else
+                        analysis.warning("User is not part of any unit or department associated with the incident and will not be able to open it.");
+                }
+            }
+
+            if (!sa)
+                analysis.add("User is not a special authority.");
+            else {
+                analysis.add("User is a special authority.");
+                if (authorized) {
+                    analysis.add(`User will not get notifications unless the severity is '${sa.MinimumAlertSeverityRequired}' or greater.`);
+                    if (incident) {
+                        state = AnalysisMessageState.NoIssue;
+
+                        var msg = `The incident has a severity of '${incident.SeverityDisplay}'.`
+                        var incidentSL = Severities[<any>incident.Severity];
+                        var saSL = Severities[<any>sa.MinimumAlertSeverityRequired];
+                        if (incidentSL < saSL) {
+                            msg += ` Since the severity is less than what the special authority notification level, they will not get a notification.`;
+                            state = AnalysisMessageState.Warning;
+                        } else
+                            msg += ` Since the severity is equal or greater than the special authority notification level, they should have gotten a notification.`;
+
+                        analysis.add(msg, state);
+                    }
+                }
+            }
+
+            if (!incident)
+                analysis.error(`Unable to analyze incident: No incident with ID '${incidentNum}' could be found.`);
+            else {
+                if (incident.IsInactive == true)
+                    analysis.warning(" The incident is inactive and can no longer be opened.");
+            }
         }
 
         res.status(200).json(results);
@@ -118,3 +217,22 @@ export async function get(req: express.Request, res: express.Response, next: exp
     }
 };
 
+export async function post(req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> {
+    var cmd = req.query.cmd;
+    try {
+        switch (cmd) {
+            case "fixMissingSpecialAuth": {
+                var analysis = <IAnalysis>req.body;
+                if (!analysis.id) return next(DS.Exception.error("analysis.post()", "'id' missing."));
+                if (!analysis.incidentNum) return next(DS.Exception.error("analysis.post()", "'incidentNum' missing."));
+                if (!analysis.staff_id) return next(DS.Exception.error("analysis.post()", "'staff_id' missing."));
+
+                res.status(200).send(new DS.IO.Response(null).toJSON());
+                break;
+            }
+        }
+    }
+    catch (ex) {
+        res.status(200).send(DS.IO.Response.fromError(null, ex).toJSON());
+    }
+}

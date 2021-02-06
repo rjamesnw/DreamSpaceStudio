@@ -59,11 +59,101 @@ export interface ISpecialAuthority {
     ReadOnly: string;
 }
 
+export interface IIncident {
+    IncidentID: number;
+    IncidentContextID: number;
+    IncidentTypeID: number;
+    IncidentSeverityID: number;
+    OccurredOn: string;
+    ReportCreatedOn: string;
+    Description: string;
+    SiteID: number;
+    Status: string;
+    Guid: string;
+    IncidentReportVersion: string;
+    IsInactive: string;
+}
+
+export interface IInvolvedUnitDepartment {
+    InvolvedUnitDepartmentID: number;
+    IncidentID: number;
+    UnitDepartmentID: number;
+    AssignedOn: string;
+    DoneReviewing: string;
+    LastReminderNotificationOn: string;
+    InvestigationNotes: string;
+    ViewedOn: string;
+}
+
+export interface ISpecialAuthorityAssignees {
+    SpecialAuthorityAssigneeID: number;
+    IncidentID: number;
+    SpecialAuthorityID: number;
+    ViewedOn: string;
+    InvestigationNotes: string;
+    DoneReviewing: boolean;
+}
+
+
+export enum AnalysisMessageState {
+    NoIssue,
+    Warning,
+    Error
+}
+
+export interface IAnalysisMessage {
+    message: string;
+    state: AnalysisMessageState;
+}
+
 export class Analysis {
-    messages: string[] = [];
+    id = DS.Utilities.createGUID(false)
+    username: string;
+    staff_id: number;
+    incidentNum: number;
+    messages: IAnalysisMessage[] = [];
     directorOf: IDepartment[];
     supervisorOf: IDepartment[];
+
+    state = AnalysisMessageState.NoIssue; // (global result state)
+
     constructor(public staff: Staff) {
+    }
+
+    add(message: string, state = AnalysisMessageState.NoIssue) {
+        if (state > this.state) this.state = state;
+        this.messages.push({ message, state });
+    }
+
+    error(message: string) {
+        this.add(message, AnalysisMessageState.Error);
+    }
+
+    warning(message: string) {
+        this.add(message, AnalysisMessageState.Warning);
+    }
+
+    actionLink(funcName: string) {
+        return `DS.Globals.getValue('SupportWizard', '${funcName}')('${this.id}', '${funcName}')`;
     }
 }
 export interface IAnalysis extends Analysis { }
+
+export enum Severities {
+    NoHarm,
+    LostTime,
+    FirstAid,
+    MedicalAid,
+    Mild,
+    Minor,
+    Moderate,
+    Severe,
+    Critical,
+    Death
+}
+
+export enum IncidentStatus {
+    Closed,
+    Assigned,
+    Completed,
+}

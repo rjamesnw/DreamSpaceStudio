@@ -3750,7 +3750,6 @@ var DS;
           * If the type of the request is 'appication/json', then the initial response will be converted to an object automatically.
           */
         get transformedResponse() {
-            debugger;
             if (this.$__transformedData === DS.noop) {
                 return this.type == DS.ResourceTypes.Application_JSON
                     ? DS.Data.JSON.toObjectOrValue(this.response) : this.response;
@@ -4010,15 +4009,13 @@ var DS;
                     payload = null; // the spec says body must be null for GET requests.
                 }
                 else {
-                    if (this.type == DS.ResourceTypes.Application_JSON) {
-                        if (typeof payload == 'object')
-                            payload = JSON.stringify(payload);
-                        xhr.setRequestHeader("Content-Type", DS.ResourceTypes.Application_JSON + ";charset=UTF-8");
+                    if ( /*this.type == ResourceTypes.Application_JSON && */typeof payload == 'object') {
+                        var formData = new FormData(); // TODO: Test if "multipart/form-data" is needed.
+                        for (var p in payload)
+                            formData.append(p, payload[p]);
+                        payload = formData;
                     }
-                    var formData = new FormData(); // TODO: Test if "multipart/form-data" is needed.
-                    for (var p in payload)
-                        formData.append(p, payload[p]);
-                    payload = formData;
+                    //payload = JSON.stringify(payload);
                 }
             }
             try {
@@ -4029,6 +4026,8 @@ var DS;
                         DS.log("start()", "There is a space character in the cache busting query name for resource '" + url + "'.", DS.LogTypes.Warning);
                 }
                 xhr.open(_method, url, this.async, _username || this.username || void 0, _password || this.password || void 0);
+                if (this.type == DS.ResourceTypes.Application_JSON)
+                    xhr.setRequestHeader("Content-Type", DS.ResourceTypes.Application_JSON + ";charset=UTF-8");
             }
             catch (ex) {
                 DS.error("start()", "Failed to load resource from URL '" + url + "': " + (ex.message || ex), this);
@@ -5614,6 +5613,16 @@ var DS;
     /** Contains operations for working with data loading and communication. */
     let IO;
     (function (IO) {
+        // Contains DreamSpace API functions and types that user code can use to work with the system.
+        // This API will be a layer of abstraction that keeps things similar between server and client sides.
+        let Methods;
+        (function (Methods) {
+            Methods["GET"] = "GET";
+            Methods["POST"] = "POST";
+            Methods["PUT"] = "PUT";
+            Methods["PATCH"] = "PATCH";
+            Methods["DELETE"] = "DELETE";
+        })(Methods = IO.Methods || (IO.Methods = {}));
         //interface IResponse<TData = any> {
         //    status: HttpStatus;
         //    message?: string;
@@ -5636,15 +5645,13 @@ var DS;
             toJSON() { return JSON.stringify(this); }
             setViewInfo(viewPath) { this.viewPath = viewPath; return this; }
             static fromError(message, error, httpStatusCode = 200 /* OK */, data) {
-                if (!(error instanceof DS.Exception))
-                    error = new DS.Exception(error);
                 if (message)
-                    error = new DS.Exception(message, void 0, error);
+                    error = new DS.Exception(message, error);
                 return new Response(DS.getErrorMessage(error, false), data, httpStatusCode, void 0, error);
             }
         }
         IO.Response = Response;
-        function get(url, type = DS.ResourceTypes.Application_JSON, method = "GET", data) {
+        function get(url, type = DS.ResourceTypes.Application_JSON, method = Methods.GET, data) {
             return new Promise((resolve, reject) => {
                 var request = new DS.ResourceRequest(url, type, method, data);
                 request.ready((req) => { resolve(req.transformedResponse); });

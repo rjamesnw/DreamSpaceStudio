@@ -23,6 +23,16 @@ namespace DS.DB.MySQL {
     export type Connection = import("mysql").Connection;
     export type Pool = import("mysql").Pool;
     export type PoolConnection = import("mysql").PoolConnection;
+    export type OkPacket = import("mysql").OkPacket;
+
+    export interface IMySQLColumnInfo {
+        Field: string, // (name)
+        Type: string; //(example: 'int(11) unsigned')
+        Null: 'YES' | 'NO'; //('YES/'NO')
+        Key: 'PRI' | 'MUL'; //('PRI'/'NUL')
+        Default: string; // (NULL/0/default value)
+        Extra: 'auto_increment'; //('auto_increment')
+    }
 
     function _defaultConfig(): ConnectionConfig {
         return {
@@ -77,16 +87,22 @@ namespace DS.DB.MySQL {
         fields?: FieldInfo[];
     }
 
-    export interface IMySQLInsertResult extends IInsertResult {
-        fieldCount: number;
-        serverStatus: number;
-        warningCount: number;
-        message: string;
-        protocol41: boolean;
+    export interface IMySQLInsertResult extends IInsertResult, OkPacket {
     }
 
     export interface IMySQLInsertQueryResult extends IInsertQueryResult<IMySQLInsertResult> {
         fields?: FieldInfo[];
+    }
+
+    export function typeFromMySQLType(type: string): ColumnDataTypes | undefined {
+        var typeStr = type.toLowerCase();
+        if (typeStr.includes('bit') || typeStr.includes('bool')) return ColumnDataTypes.Boolean;
+        if (typeStr.includes('int') || typeStr.includes('dec'/*decimal*/) || typeStr.includes('double')
+            || typeStr.includes('money') || typeStr.includes('float') || typeStr.includes('real') || typeStr.includes('year')) return ColumnDataTypes.Number;
+        if (typeStr.includes('date') || typeStr.includes('time')) return ColumnDataTypes.DateTime;
+        if (typeStr.includes('char') || typeStr.includes('text') || typeStr.includes('enum') || typeStr.includes('set')) return ColumnDataTypes.String;
+        if (typeStr.includes('blob')) return ColumnDataTypes.Binary;
+        return void 0;
     }
 
     export class MySQLConnection extends DBConnection<Connection> {
@@ -104,12 +120,23 @@ namespace DS.DB.MySQL {
             else throw DS.Exception.error("MSSQLConnection.connect()", "No connection reference was set.");
         }
 
-        query<T>(statement: string, values?: any): Promise<IQueryResult<T>> {
+        query<T extends IQueryResult>(statement: string, values?: any): Promise<T> {
             return new Promise<any>((res, rej) => {
                 if (values !== void 0)
                     return this.connection.query(statement, values, (err, result, fields) => {
                         if (err) rej(err);
-                        else res(<ISelectQueryResult>{ response: result, fields: fields });
+                        else {
+                            var isInsert = statement.includes("insert") && statement.includes("into");
+                            if (isInsert)
+                                res(<IInsertQueryResult>{
+                                    response: result,
+                                    fields: fields,
+                                    changedRows: (<IMySQLInsertResult>result.response)?.changedRows,
+                                    insertId: (<IMySQLInsertResult>result.response)?.insertId
+                                });
+                            else
+                                res(<ISelectQueryResult>{ response: result, fields: fields });
+                        }
                     });
                 else
                     return this.connection.query(statement, (err, result, fields) => {
@@ -119,14 +146,27 @@ namespace DS.DB.MySQL {
             });
         }
 
-        getColumnDetails(tableName: string): Promise<IColumnInfo[]> {
-            return new Promise<IColumnInfo[]>((res, rej) => {
-                this.query('SHOW COLUMNS FROM ' + tableName).then((result: ISelectQueryResult) => {
-                    resolve(res, result.response, `Column details received for table '${tableName}': ${JSON.stringify(result)}`);
-                }, (err) => {
-                    reject(rej, err, `Failed to get column details for table '${tableName}'.`);
-                });
-            });
+        async getColumnDetails(tableName: string): Promise<IColumnInfo[]> {
+            try {
+                var result = await this.query<ISelectQueryResult>('SHOW COLUMNS FROM ' + tableName);
+                log('getColumnDetails()', `Column details received for table '${tableName}': ${JSON.stringify(result)}`);
+                var cols: IMySQLColumnInfo[] = result.response, columns: IColumnInfo[] = [];
+                for (var i = 0, n = cols.length; i < n; ++i) {
+                    var col = cols[i];
+                    columns.push({
+                        Field: col.Field,
+                        Key: /PRI|MUL/gi.test(col.Key),
+                        Null: col.Null.toLocaleUpperCase() == 'YES' ? true : col.Null.toLocaleUpperCase() == 'NO' ? false : void 0,
+                        Type: typeFromMySQLType(col.Type),
+                        Default: col.Default,
+                        AutoIncrement: col.Extra.includes('auto_increment')
+                    });
+                }
+                return columns;
+            }
+            catch (err) {
+                throw Exception.error('getColumnDetails()', `Failed to get column details for table '${tableName}'.`, this, err);
+            }
         }
 
         async end() {

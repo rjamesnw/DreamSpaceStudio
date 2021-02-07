@@ -109,7 +109,7 @@ namespace DS {
      * @param reason The reason for the rejection.  This is also logged if 'logmsg' is undefined/null/empty.
      * @param logmsg The message to log (using console.error()). This defaults to 'reason' if undefined/null/empty.
      */
-    export function reject(rej: (reason?: any) => void, reason: any, logmsg?: string): string {
+    export function reject<T = any>(rej: (reason?: T) => void, reason: T, logmsg?: string): string {
         if (logmsg === void 0 || logmsg === null || logmsg === "")
             logmsg = JSON.stringify(reason);
         error('Promise rejected', logmsg);
@@ -123,7 +123,7 @@ namespace DS {
      * @param value The value for the resolution.  This is also logged if 'logmsg' is undefined/null/empty.
      * @param logmsg The message to log (using console.error()). This defaults to 'reason' if undefined/null/empty.
      */
-    export function resolve(res: (value?: any) => void, value?: any, logmsg?: string): string {
+    export function resolve<T = any>(res: (value?: T) => void, value?: T, logmsg?: string): string {
         if ((logmsg === void 0 || logmsg === null || logmsg === "") && value !== void 0)
             logmsg = JSON.stringify(value);
         log('Promise resolved', logmsg);

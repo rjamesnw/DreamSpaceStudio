@@ -372,6 +372,33 @@ namespace DS {
     export namespace HTML {
         // --------------------------------------------------------------------------------------------------------------------
 
+        export enum InputElementTypes {
+            button = "button",
+            checkbox = "checkbox",
+            color = "color",
+            date = "date",
+            datetimeLocal = "local",
+            email = "email",
+            file = "file",
+            hidden = "hidden",
+            image = "image",
+            month = "month",
+            number = "number",
+            password = "password",
+            radio = "radio",
+            range = "range",
+            reset = "reset",
+            search = "search",
+            submit = "submit",
+            tel = "tel",
+            text = "text",
+            time = "time",
+            url = "url",
+            week = "week",
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
         /** Removes the '<!-- -->' comment sequence from the ends of the specified HTML. */
         export function uncommentHTML(html: string): string { // TODO: Consider using regex
             var content = ("" + html).trim();

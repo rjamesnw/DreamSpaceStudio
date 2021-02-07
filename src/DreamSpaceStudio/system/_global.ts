@@ -270,11 +270,14 @@ namespace DS {
 
     // =======================================================================================================================
 
-    /** Returns true if the given object is empty, or an invalid value (eg. NaN, or an empty object, array, or string). */
+    /** Returns true if the given object is empty, or an invalid value (eg. NaN, or an empty object, array, or string).
+     * Note: Strings with only whitespace are considered empty as well.
+     */
     export function isEmpty(obj: any): boolean {
         if (obj === void 0 || obj === null) return true;
         // (note 'DontEnum flag' enumeration bug in IE<9 [on toString, valueOf, etc.])
-        if (typeof obj == 'string' || Array.isArray(obj)) return !obj.length;
+        if (typeof obj == 'string') return !obj || !obj.trim();
+        if (Array.isArray(obj)) return !obj.length;
         if (typeof obj != 'object') return isNaN(obj);
         for (var key in obj)
             if (global.Object.prototype.hasOwnProperty.call(obj, key)) return false;
@@ -291,7 +294,7 @@ namespace DS {
      * @param value Value to check.
      * @param defaultVal New value if "value" is undefined or null.
      */
-    export function nud(value: any, defaultVal: any) { return value === void 0 || value === null ? defaultVal : value; }
+    export function nud<T = any>(value: T, defaultVal: T): T { return value === void 0 || value === null ? defaultVal : value; }
 
     // ========================================================================================================================================
 

@@ -182,12 +182,16 @@ var DS;
         }).toString() == "class { }"; // (if targeting ES6 in the configuration, 'class' will be output as a function instead)
     })();
     // =======================================================================================================================
-    /** Returns true if the given object is empty, or an invalid value (eg. NaN, or an empty object, array, or string). */
+    /** Returns true if the given object is empty, or an invalid value (eg. NaN, or an empty object, array, or string).
+     * Note: Strings with only whitespace are considered empty as well.
+     */
     function isEmpty(obj) {
         if (obj === void 0 || obj === null)
             return true;
         // (note 'DontEnum flag' enumeration bug in IE<9 [on toString, valueOf, etc.])
-        if (typeof obj == 'string' || Array.isArray(obj))
+        if (typeof obj == 'string')
+            return !obj || !obj.trim();
+        if (Array.isArray(obj))
             return !obj.length;
         if (typeof obj != 'object')
             return isNaN(obj);
@@ -755,6 +759,25 @@ var DS;
             return _p;
         }
         Utilities.getPropertiesOfType = getPropertiesOfType;
+        // --------------------------------------------------------------------------------------------------------------------
+        /**
+         * Returns true if the value equates to 'true', 'yes', 'y', 1, 'ok', 'pass', 'on'.
+         * Returns false if the value equates to 'fase', 'no', 'n', 0, 'cancel', 'fail', 'off'.
+         * Note: This does NOT use "truthy" or "falsy" to equate true and false. The value has to be explicitly stated.
+         * @param value The value to check for true or false meanings.
+         * @param defaultValue The default boolean value if nothing is a match.
+         */
+        function toBoolean(value, defaultValue) {
+            if (typeof value == 'boolean')
+                return value;
+            var txt = ('' + DS.nud(value, "")).toLowerCase(); // (convert to string and test for 'true' state equivalent)
+            if (txt == "true" || txt == "yes" || txt == "y" || txt == "1" || txt == "ok" || txt == "pass" || txt == "on")
+                return true;
+            if (txt == "false" || txt == "no" || txt == "n" || txt == "0" || txt == "cancel" || txt == "fail" || txt == "off")
+                return false;
+            return defaultValue;
+        }
+        Utilities.toBoolean = toBoolean;
     })(Utilities = DS.Utilities || (DS.Utilities = {}));
 })(DS || (DS = {}));
 // ############################################################################################################################
@@ -968,10 +991,10 @@ var DS;
                 return msg;
             }
             else
-                return '' + errorSource;
+                return '' + DS.nud(errorSource, '');
         }
         else
-            return '' + errorSource;
+            return '' + DS.nud(errorSource, '');
     }
     DS.getErrorMessage = getErrorMessage;
     // ========================================================================================================================================
@@ -1069,16 +1092,19 @@ var DS;
                     catch (ex) {
                         err = ex;
                     }
+                var createdError = true;
             }
-            if (err.stack) { //Firefox
+            if (err.stack) { //Firefox or Chrome
                 var lines = err.stack.split('\n');
                 for (var i = 0, len = lines.length; i < len; ++i) {
-                    if (lines[i].match(/^\s*[A-Za-z0-9\-_\$]+\(/)) {
+                    if (lines[i].match(/^[A-Za-z0-9\-_\$. ]+\(/)) {
                         callstack.push(lines[i]);
                     }
                 }
-                //Remove call to printStackTrace()
-                callstack.shift();
+                if (createdError) {
+                    //Remove call to printStackTrace()
+                    callstack.shift();
+                }
                 isCallstackPopulated = true;
             }
             else if (DS.global["opera"] && err.message) { //Opera
@@ -1094,8 +1120,10 @@ var DS;
                         callstack.push(entry);
                     }
                 }
-                //Remove call to printStackTrace()
-                callstack.shift();
+                if (createdError) {
+                    //Remove call to printStackTrace()
+                    callstack.shift();
+                }
                 isCallstackPopulated = true;
             }
             if (!isCallstackPopulated) { //IE and Safari
@@ -1140,7 +1168,7 @@ var DS;
         static error(title, message, source, innerException) {
             if (DS.Diagnostics && DS.Diagnostics.log) {
                 var logItem = DS.Diagnostics.log(title, message, DS.LogTypes.Error);
-                return new Exception(logItem, source);
+                return new Exception(logItem, source, innerException);
             }
             else
                 return new Exception(DS.error(title, message, source, false, false), source, innerException);
@@ -1436,9 +1464,14 @@ var DS;
     if (!isNode && typeof window !== 'undefined') {
         // If a window error event callback is available, hook into it to provide some visual feedback in case of errors.
         // (Note: Supports the Bootstrap UI, though it may not be available if an error occurs too early)
-        window.onerror = function (eventOrMessage, source, fileno) {
+        function onUnhandledError(eventOrMessage, source, fileno) {
             // ... create a log entry of this first ...
-            Diagnostics.log("window.onerror", eventOrMessage + " in '" + source + "' on line " + fileno + ".", DS.LogTypes.Error);
+            var msg = eventOrMessage;
+            if (source)
+                msg += " in '" + (source !== null && source !== void 0 ? source : "[NA]") + "'";
+            if (fileno >= 0)
+                msg += " on line " + (fileno !== null && fileno !== void 0 ? fileno : "[NA]");
+            Diagnostics.log("window.onerror", msg + ".", DS.LogTypes.Error);
             // ... make sure the body is visible ...
             document.body.style.display = ""; // (show the body in case it's hidden)
             // ... format the error ...
@@ -1449,6 +1482,11 @@ var DS;
                 + eventOrMessage.replace(/\r\n/g, "<br/>\r\n") + "<br/>\r\nError source: '" + source + "' on line " + fileno + "<br/>\r\n</strong>\r\n";
             msgElement.className = "alert alert-danger";
             document.body.appendChild(msgElement);
+        }
+        ;
+        window.onerror = onUnhandledError;
+        window.onunhandledrejection = function (ev) {
+            onUnhandledError(ev.reason, void 0, void 0);
         };
         // Add a simple keyboard hook to display debug information.
         document.onkeypress = document.onkeydown = function (e) {
@@ -2705,6 +2743,133 @@ var DS;
             }
         }
         Data.Binding = Binding;
+        // ========================================================================================================================
+        let Validations;
+        (function (Validations) {
+            function isNumeric(text) {
+                return /^[+|-]?\d+\.?\d*$/.test(text);
+                //decimal d; return decimal.TryParse(text, out d);
+            }
+            Validations.isNumeric = isNumeric;
+            function isSimpleNumeric(text) {
+                // http://derekslager.com/blog/posts/2007/09/a-better-dotnet-regular-expression-tester.ashx
+                return /^(?:\+|\-)?\d+\.?\d*$/.test(text);
+            }
+            Validations.isSimpleNumeric = isSimpleNumeric;
+            // ---------------------------------------------------------------------------------------------------------------------
+            /// <summary>
+            /// Returns true if the string is only letters.
+            /// </summary>
+            function isAlpha(s) {
+                if (s.length == 0)
+                    return false;
+                for (var i = 0; i < s.length; ++i)
+                    if ((s[i] < 'a' || s[i] > 'z') && (s[i] < 'A' || s[i] > 'Z'))
+                        return false;
+                return true;
+            }
+            Validations.isAlpha = isAlpha;
+            /// <summary>
+            /// Returns true if the string is only letters or numbers.
+            /// </summary>
+            function isAlphaNumeric(s) {
+                if (s.length == 0)
+                    return false;
+                for (var i = 0; i < s.length; i++)
+                    if ((s[i] < 'a' || s[i] > 'z') && (s[i] < 'A' || s[i] > 'Z') && (s[i] < '0' || s[i] > '9'))
+                        return false;
+                return true;
+            }
+            Validations.isAlphaNumeric = isAlphaNumeric;
+            /// <summary>
+            /// Returns true if the string is only letters, numbers, or underscores, and the first character is not a number.
+            /// This is useful to validate strings to be used as code-based identifiers, database column names, etc.
+            /// </summary>
+            function isIdent(s) {
+                if (s.length == 0 || (s[0] >= '0' && s[0] <= '9'))
+                    return false;
+                for (var i = 0; i < s.length; i++)
+                    if ((s[i] < 'a' || s[i] > 'z') && (s[i] < 'A' || s[i] > 'Z') && (s[i] < '0' || s[i] > '9') && s[i] != '_')
+                        return false;
+                return true;
+            }
+            Validations.isIdent = isIdent;
+            /// <summary>
+            /// Returns true if the string is only numbers.
+            /// </summary>
+            function isDigits(s) {
+                if (s.length == 0)
+                    return false;
+                for (var i = 0; i < s.length; i++)
+                    if (s[i] < '0' || s[i] > '9')
+                        return false;
+                return true;
+            }
+            Validations.isDigits = isDigits;
+            // ---------------------------------------------------------------------------------------------------------------------
+            function isDatePartOnly(date) {
+                if (!date)
+                    return false;
+                var dt = new Date(date);
+                if (isNaN(dt))
+                    return false;
+                date = date.toLowerCase();
+                return !date.includes(":") && !date.includes("am") && !date.includes("pm");
+            }
+            Validations.isDatePartOnly = isDatePartOnly;
+            // ---------------------------------------------------------------------------------------------------------------------
+            function isTimePartOnly(time) {
+                return /(^\s*((([01]?\d)|(2[0-3])):((0?\d)|([0-5]\d))(:((0?\d)|([0-5]\d)))?)\s*$)|(^\s*((([1][0-2])|\d)(:((0?\d)|([0-5]\d)))?(:((0?\d)|([0-5]\d)))?)\s*[apAP][mM]\s*$)/.test(time);
+            }
+            Validations.isTimePartOnly = isTimePartOnly;
+            // ---------------------------------------------------------------------------------------------------------------------
+            // (Test Here: http://derekslager.com/blog/posts/2007/09/a-better-dotnet-regular-expression-tester.ashx)
+            function isValidURL(url) {
+                return !!url && /^(?:http:\/\/|https:\/\/)\w{2,}.\w{2,}/.test(url);
+            }
+            Validations.isValidURL = isValidURL;
+            // ---------------------------------------------------------------------------------------------------------------------
+            function isValidEmailAddress(email) {
+                if (email) {
+                    let nFirstAT = email.indexOf('@');
+                    let nLastAT = email.lastIndexOf('@');
+                    if ((nFirstAT > 0) && (nLastAT == nFirstAT) && (nFirstAT < (email.length - 1))) {
+                        // (address is ok regarding the single @ sign; faster to check that first)
+                        return /^(?:[A-Za-z0-9_\-]+\.)*(?:[A-Za-z0-9_\-]+)@(?:[A-Za-z0-9_\-]+)(?:\.[A-Za-z]+)+$/.test(email);
+                    }
+                }
+                return false;
+            }
+            Validations.isValidEmailAddress = isValidEmailAddress;
+            // ---------------------------------------------------------------------------------------------------------------------
+            function isValidPhoneNumber(number) {
+                return !!number && /^((\+?\d{1,3}(-|.| )?\(?\d\)?(-|.| )?\d{1,5})|(\(?\d{2,6}\)?))(-|.| )?(\d{3,4})(-|.| )?(\d{4})(( x| ext)( |\d)?\d{1,5}){0,1}$/.test(number);
+            }
+            Validations.isValidPhoneNumber = isValidPhoneNumber;
+            // --------------------------------------------------------------------------------------------------------------------- 
+            function isValidPasword(password, minCharacters = 8, maxCharacters = 20, requireOneUpperCase = true, requireDigit = true, validSymbols = `~!@#$%^&_-+=|\\:;',./?`) {
+                var requiredCharacters = "";
+                if (requireOneUpperCase)
+                    requiredCharacters += `(?=.*[a-z])(?=.*[A-Z])`;
+                else
+                    requiredCharacters += `(?=.*[A-Za-z])`;
+                if (requireDigit)
+                    requiredCharacters += `(?=.*\\d)`;
+                if (validSymbols) {
+                    validSymbols = DS.StringUtils.replace(DS.StringUtils.replace(validSymbols, `\\`, `\\\\`), ` - `, `\\-`);
+                    requiredCharacters += `(?=.*[` + validSymbols + `])`;
+                }
+                return password && password.length <= maxCharacters
+                    && new RegExp(`^.*(?=.{${minCharacters},})${requiredCharacters}.*$`).test(password);
+                // http://nilangshah.wordpress.com/2007/06/26/password-validation-via-regular-expression/
+                /*
+                 * - Must be at least 6 characters.
+                 * - Must contain at least one letter, one digit, and one special character.
+                 * - Valid special characters are: `~!@#$%^&_-+=|\:;',./?
+                 */
+            }
+            Validations.isValidPasword = isValidPasword;
+        })(Validations = Data.Validations || (Data.Validations = {}));
         // ========================================================================================================================
     })(Data = DS.Data || (DS.Data = {}));
 })(DS || (DS = {}));
@@ -4009,13 +4174,16 @@ var DS;
                     payload = null; // the spec says body must be null for GET requests.
                 }
                 else {
-                    if ( /*this.type == ResourceTypes.Application_JSON && */typeof payload == 'object') {
-                        var formData = new FormData(); // TODO: Test if "multipart/form-data" is needed.
-                        for (var p in payload)
-                            formData.append(p, payload[p]);
-                        payload = formData;
-                    }
-                    //payload = JSON.stringify(payload);
+                    if (typeof payload == 'object')
+                        if (this.type == DS.ResourceTypes.Application_JSON) {
+                            payload = JSON.stringify(payload);
+                        }
+                        else {
+                            var formData = new FormData(); // TODO: Test if "multipart/form-data" is needed.
+                            for (var p in payload)
+                                formData.append(p, payload[p]);
+                            payload = formData;
+                        }
                 }
             }
             try {
@@ -4815,6 +4983,32 @@ var DS;
     }
     DS.HTML = HTML;
     (function (HTML) {
+        // --------------------------------------------------------------------------------------------------------------------
+        let InputElementTypes;
+        (function (InputElementTypes) {
+            InputElementTypes["button"] = "button";
+            InputElementTypes["checkbox"] = "checkbox";
+            InputElementTypes["color"] = "color";
+            InputElementTypes["date"] = "date";
+            InputElementTypes["datetimeLocal"] = "local";
+            InputElementTypes["email"] = "email";
+            InputElementTypes["file"] = "file";
+            InputElementTypes["hidden"] = "hidden";
+            InputElementTypes["image"] = "image";
+            InputElementTypes["month"] = "month";
+            InputElementTypes["number"] = "number";
+            InputElementTypes["password"] = "password";
+            InputElementTypes["radio"] = "radio";
+            InputElementTypes["range"] = "range";
+            InputElementTypes["reset"] = "reset";
+            InputElementTypes["search"] = "search";
+            InputElementTypes["submit"] = "submit";
+            InputElementTypes["tel"] = "tel";
+            InputElementTypes["text"] = "text";
+            InputElementTypes["time"] = "time";
+            InputElementTypes["url"] = "url";
+            InputElementTypes["week"] = "week";
+        })(InputElementTypes = HTML.InputElementTypes || (HTML.InputElementTypes = {}));
         // --------------------------------------------------------------------------------------------------------------------
         /** Removes the '<!-- -->' comment sequence from the ends of the specified HTML. */
         function uncommentHTML(html) {
@@ -5635,14 +5829,22 @@ var DS;
         class Response {
             constructor(message, data, httpStatusCode = 200 /* OK */, notSerializable, error) {
                 this.status = +httpStatusCode || 0;
-                this.message = '' + message;
+                this.message = '' + (message !== null && message !== void 0 ? message : '');
                 this.data = data;
                 this.notSerializable = !!notSerializable;
-                this.error = error;
+                this.error = error !== null && error !== void 0 ? error : void 0;
             }
             toString() { return `(${this.status}): ${this.message}`; }
             toValue() { return this.toString(); }
-            toJSON() { return JSON.stringify(this); }
+            toJSON() {
+                if (this.notSerializable)
+                    throw DS.Exception.error("Response.toJSON()", "This instance is not allowed to be serialized.");
+                var objToSend = {}, ignored = ['notSerializable'];
+                for (var p in this)
+                    if (ignored.indexOf(p) < 0)
+                        objToSend[p] = this[p];
+                return objToSend;
+            }
             setViewInfo(viewPath) { this.viewPath = viewPath; return this; }
             static fromError(message, error, httpStatusCode = 200 /* OK */, data) {
                 if (message)
@@ -6473,6 +6675,14 @@ var DS;
     let DB;
     (function (DB) {
         //import { reject, escapeString, IndexedObject, resolve } from '../utilities';
+        let ColumnDataTypes;
+        (function (ColumnDataTypes) {
+            ColumnDataTypes[ColumnDataTypes["String"] = 0] = "String";
+            ColumnDataTypes[ColumnDataTypes["Number"] = 1] = "Number";
+            ColumnDataTypes[ColumnDataTypes["Boolean"] = 2] = "Boolean";
+            ColumnDataTypes[ColumnDataTypes["DateTime"] = 3] = "DateTime";
+            ColumnDataTypes[ColumnDataTypes["Binary"] = 4] = "Binary";
+        })(ColumnDataTypes = DB.ColumnDataTypes || (DB.ColumnDataTypes = {}));
         /** A base class to help support various databases. */
         class DBAdapter {
             constructor(config) { this.configuration = config; }
@@ -6570,14 +6780,17 @@ var DS;
                                     if (keys.length == 1) {
                                         if (!qbInfo.existingTableData)
                                             qbInfo.existingTableData = {};
-                                        console.log("Insert Key Result: " + keys[0] + "=" + result.response.insertId);
-                                        qbInfo.existingTableData[keys[0]] = result.response.insertId;
+                                        console.log("Insert Key Result: " + keys[0] + "=" + result.insertId);
+                                        qbInfo.existingTableData[keys[0]] = result.insertId;
                                     }
                                     else if (keys.length > 1)
                                         console.warn("Since the insert was done using a composite key (multiple columns) no insert ID could be returned from the execution (it only works for single auto-increment key fields).");
                                 this.end();
                                 DS.resolve(res, { builder: qbInfo, success: true, message: msg }, msg);
-                            }, (err) => { this.end(); DS.reject(rej, this.adapter.getSQLErrorMessage(err)); });
+                            }, (err) => {
+                                this.end();
+                                DS.reject(rej, this.adapter.getSQLErrorMessage(err));
+                            });
                         }
                     }, (err) => { rej(err); });
                 });
@@ -6594,9 +6807,11 @@ var DS;
                                 .then((qbInfo) => {
                                 console.log(`Created initial layout from existing table schema for table '${tableName}'.`);
                                 onQueryBuilderReady && onQueryBuilderReady(qbInfo);
-                                var existingWhere = qbInfo.getKeyNameValues().join(' AND ');
-                                if (!existingWhere)
-                                    return DS.reject(rej, "insertOrUpdate(): Could not determine a key on the table in order to check existing data.");
+                                var existingWhere = qbInfo.getKeyNameValues(false).join(' AND ');
+                                if (!existingWhere) {
+                                    var msg = "update(): No key values found in order to check existing data, so assuming no data exists.";
+                                    return DS.resolve(res, { builder: qbInfo, success: false, message: msg }, msg);
+                                }
                                 var st = qbInfo.getSelectStatement(["*"]) + ` where ` + existingWhere;
                                 console.log(`Query to find existing records: '${st}'.`);
                                 this.query(st).then((result) => {
@@ -6723,7 +6938,7 @@ var DS;
             getPrimaryKeys() {
                 var v = [];
                 for (var p in this.columnInfo)
-                    if (this.columnInfo[p].Key == "PRI")
+                    if (this.columnInfo[p].Key)
                         v.push(p);
                 return v;
             }
@@ -6755,7 +6970,7 @@ var DS;
             /** Returns true if the specified name is recognized as a unique column for the table. */
             isKey(name) {
                 var ci;
-                return this._indexOf(this.alternateKeys, name) >= 0 || (ci = this.getColumnInfo(name)) && ci.Key == "PRI"; // TODO: 'PRI', etc., needs to more abstracted.
+                return this._indexOf(this.alternateKeys, name) >= 0 || (ci = this.getColumnInfo(name)) && ci.Key; // TODO: 'PRI', etc., needs to more abstracted.
             }
             /** Returns true if the specified name is recognized as a primary key that auto increments.
              * This can only work if the table schema was already pulled for reference.
@@ -6763,31 +6978,42 @@ var DS;
              */
             isAutoIncKey(name) {
                 var ci;
-                return (ci = this.getColumnInfo(name)) && ci.Key == "PRI" && ci.Extra && ci.Extra.indexOf('auto') >= 0; // TODO: 'PRI', etc., needs to more abstracted.
+                return (ci = this.getColumnInfo(name)) && ci.Key && ci.AutoIncrement; // TODO: 'PRI', etc., needs to more abstracted.
             }
             /** Returns a '{ name: value, ... }' object based on the primary keys and values in the query builder, or 'undefined' if there are no keys.
              * Note: The value of the key returned is taken from the first non-undefined value, starting with the existing
              * table data, then the current values being set (since keys are rarely, if ever, updated).
+             * @param required If true (default), an error is thrown if key names are found, but all key values are missing. Typicall this is set to false internally for inserts when first checking if an update operation is required instead.
+             * An error is still thrown if one key has a value and other keys do not.
+             * @returns An object with key:value properties, or undefined if
              */
-            getKeyValues() {
-                var kvs;
-                var keys = this.getKeys();
+            getKeyValues(required = true) {
+                var kvs, keys = this.getKeys(), valueCount = 0;
                 for (var i = 0, n = keys.length, k; i < n; ++i) {
                     var v = this.getExistingValue(k = keys[i]);
-                    if (v === void 0)
-                        throw `getKeyValues() Error: There is no value for primary key '${k}' in the query builder (associated with table '${this.tableName}'). You may have to explicitly set key names using the 'alternateKeys' property.`;
-                    if (!kvs)
-                        kvs = {};
-                    kvs[k] = v;
+                    if (v === void 0) {
+                        if (required)
+                            throw DS.Exception.error('getKeyValues()', `There is no value for primary key '${k}' in the query builder (associated with table '${this.tableName}'). If needed, you may have to explicitly set key names using the 'alternateKeys' property.`);
+                    }
+                    else {
+                        if (!kvs)
+                            kvs = {};
+                        kvs[k] = v;
+                        ++valueCount;
+                    }
                 }
+                if (valueCount && valueCount != keys.length) // (all key values must exist, otherwise throw an error)
+                    throw DS.Exception.error('getKeyValues()', `If you provide one key value in the query builder, all other key values must be set as well (associated with table '${this.tableName}'). If needed, you may have to explicitly set key names using the 'alternateKeys' property.`);
                 return kvs;
             }
             /** Returns an array of 'keyName=keyValue' strings that can be joined for query statements, or an empty array if no keys can be determined.
              * Note: The value of the key returned is taken from the first non-undefined value, starting with the existing
              * table data, then the current values being set (since keys are rarely, if ever, updated).
+             * @param required If true (default), an error is thrown if key names are found, but all key values are missing. Typicall this is set to false internally for inserts when first checking if an update operation is required instead.
+             * An error is still thrown if one key has a value and other keys do not.
              */
-            getKeyNameValues() {
-                var values = this.getKeyValues();
+            getKeyNameValues(required = true) {
+                var values = this.getKeyValues(required);
                 var knv = [];
                 for (var p in values)
                     knv.push(p + `=${valueToStr(values[p], this.columnInfo[p])}`);
@@ -6907,23 +7133,23 @@ var DS;
             if (DS.isNullOrUndefined(val))
                 return 'null';
             if (colInfo) {
-                var type = colInfo.Type.toLowerCase();
-                if (type.indexOf('timestamp') >= 0 || type.indexOf('datetime') >= 0) {
+                var type = colInfo.Type;
+                if (type == ColumnDataTypes.DateTime) {
                     return "'" + DS.StringUtils.escapeString(DS.StringUtils.toString(val).trim(), true) + "'";
                 }
-                else if (type.indexOf('int') >= 0 || type.indexOf('bigint') >= 0) {
+                else if (type == ColumnDataTypes.Number) {
                     var i = +val;
                     if (isNaN(i))
-                        throw `Cannot convert value ${JSON.stringify(val)} to 'int'.`;
+                        throw `Cannot convert value ${JSON.stringify(val)} to a number.`;
                     return DS.StringUtils.toString(val).trim();
                 }
-                else if (type.indexOf('varchar') >= 0 || type.indexOf('nchar') >= 0 || type.indexOf('text') >= 0 || type.indexOf('tinytext') >= 0) {
+                else if (type == ColumnDataTypes.String) {
                     val = `'${DS.StringUtils.escapeString(val, true)}'`;
                     if (val.indexOf('?') >= 0)
                         val = "concat(" + val.replace(/\?/g, "',char(63),'") + ")"; // (question chars, used as input params by the mysql module, will break the process, so add these a special way)
                     return val;
                 }
-                else if (type.indexOf('bit') >= 0) {
+                else if (type == ColumnDataTypes.Boolean) {
                     val = val !== false && (typeof val != 'string' || val.toLowerCase() != "false" && val.toLowerCase() != "no") && val !== '0' && val !== 0;
                     return val ? '1' : '0';
                 }

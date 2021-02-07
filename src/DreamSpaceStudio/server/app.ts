@@ -89,9 +89,11 @@ var fm = DS.VirtualFileSystem.FileManager.current;
                     return next(DS.Exception.error("API", `Failed to load API module from '${apiPath}'.`, this, err));
                 }
                 try {
-                    if (typeof module[method] == 'function')
-                        await module[method](req, res);
-                    else {
+                    if (typeof module[method] == 'function') {
+                        let result = module[method](req, res, next);
+                        if (result instanceof Promise) // (support functions that are not async)
+                            await result;
+                    } else {
                         next(DS.Exception.error("API", `Module at ${apiPath} does not contain an '${method}()' handler function.`));
                     }
                 } catch (err) {

@@ -269,9 +269,12 @@ namespace DS {
         // If a window error event callback is available, hook into it to provide some visual feedback in case of errors.
         // (Note: Supports the Bootstrap UI, though it may not be available if an error occurs too early)
 
-        window.onerror = function (eventOrMessage: any, source: string, fileno: number): any {
+        function onUnhandledError(eventOrMessage: any, source: string, fileno: number): any {
             // ... create a log entry of this first ...
-            Diagnostics.log("window.onerror", eventOrMessage + " in '" + source + "' on line " + fileno + ".", LogTypes.Error);
+            var msg = eventOrMessage;
+            if (source) msg += " in '" + (source ?? "[NA]") + "'";
+            if (fileno >= 0) msg += " on line " + (fileno ?? "[NA]");
+            Diagnostics.log("window.onerror", msg + ".", LogTypes.Error);
             // ... make sure the body is visible ...
             document.body.style.display = ""; // (show the body in case it's hidden)
             // ... format the error ...
@@ -281,6 +284,12 @@ namespace DS {
                 + (<string>eventOrMessage).replace(/\r\n/g, "<br/>\r\n") + "<br/>\r\nError source: '" + source + "' on line " + fileno + "<br/>\r\n</strong>\r\n";
             msgElement.className = "alert alert-danger";
             document.body.appendChild(msgElement);
+        };
+
+        window.onerror = onUnhandledError;
+
+        window.onunhandledrejection = function (this: Window, ev: PromiseRejectionEvent) {
+            onUnhandledError(ev.reason, void 0, void 0);
         };
 
         // Add a simple keyboard hook to display debug information.

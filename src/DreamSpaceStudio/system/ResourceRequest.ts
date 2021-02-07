@@ -441,13 +441,15 @@ namespace DS {
                     url = q.appendTo(url);
                     payload = null; // the spec says body must be null for GET requests.
                 } else {
-                    if (/*this.type == ResourceTypes.Application_JSON && */typeof payload == 'object') {
-                        var formData = new FormData(); // TODO: Test if "multipart/form-data" is needed.
-                        for (var p in payload)
-                            formData.append(p, payload[p]);
-                        payload = formData;
-                    }
-                    //payload = JSON.stringify(payload);
+                    if (typeof payload == 'object')
+                        if (this.type == ResourceTypes.Application_JSON) {
+                            payload = JSON.stringify(payload);
+                        } else {
+                            var formData = new FormData(); // TODO: Test if "multipart/form-data" is needed.
+                            for (var p in payload)
+                                formData.append(p, payload[p]);
+                            payload = formData;
+                        }
                 }
             }
 

@@ -3,8 +3,8 @@ ${#base "^" "../components"}
 ${# .title='SafePoint Support Wizard'}
 <div>
     Use this support wizard to help you find possible issues with SafePoint incidents.<br /><br />
-    ${#view ^/inputbox|[@].type='text'; [@].name="userID"; [@].id="$userID"; [@].placeholder="Enter the user's Windows username"; [@].value="SBeatty";}<br />
-    ${#view ^/inputbox|[@].type='text'; [@].name="incidentID"; [@].id="$incidentID"; [@].placeholder="Enter the incident number"; [@].value="58952"}<br />
+    ${#view ^/inputbox|[@].type='text'; [@].name="userID"; [@].id="$userID"; [@].placeholder="Enter the user's Windows username"; [@].value="";}<br />
+    ${#view ^/inputbox|[@].type='text'; [@].name="incidentID"; [@].id="$incidentID"; [@].placeholder="Enter the incident number"; [@].value=""}<br />
 
     <$:view $path="^/button" name="analyze" id='$analyze' class='btn-success btn-block'>
         <i class="fas fa-magic"></i> Analyze

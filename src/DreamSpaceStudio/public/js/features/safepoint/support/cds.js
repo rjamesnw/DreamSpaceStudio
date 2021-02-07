@@ -17,6 +17,7 @@ define(["require", "exports"], function (require, exports) {
         AnalysisMessageState[AnalysisMessageState["NoIssue"] = 0] = "NoIssue";
         AnalysisMessageState[AnalysisMessageState["Warning"] = 1] = "Warning";
         AnalysisMessageState[AnalysisMessageState["Error"] = 2] = "Error";
+        AnalysisMessageState[AnalysisMessageState["Fixed"] = 3] = "Fixed";
     })(AnalysisMessageState = exports.AnalysisMessageState || (exports.AnalysisMessageState = {}));
     class Analysis {
         constructor(staff) {
@@ -37,8 +38,9 @@ define(["require", "exports"], function (require, exports) {
             this.add(message, AnalysisMessageState.Warning);
         }
         actionLink(funcName) {
-            return `DS.Globals.getValue('SupportWizard', '${funcName}')('${this.id}', '${funcName}')`;
+            return `DS.Globals.getValue('SupportWizard', '${funcName}')('${this.id}', ${this.messages.length}, '${funcName}')`;
         }
+        correctThisLink(funcName) { return `(<a href="#" onclick="${this.actionLink(funcName)}">correct this</a>)`; }
     }
     exports.Analysis = Analysis;
     var Severities;

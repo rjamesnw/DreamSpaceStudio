@@ -207,20 +207,27 @@ namespace DS {
 
             constructor(message?: string, data?: any, httpStatusCode = HttpStatus.OK, notSerializable?: boolean, error?: Exception) {
                 this.status = +httpStatusCode || 0;
-                this.message = '' + message;
+                this.message = '' + (message ?? '');
                 this.data = data;
                 this.notSerializable = !!notSerializable;
-                this.error = error;
+                this.error = error ?? void 0;
             }
 
             toString() { return `(${this.status}): ${this.message}`; }
             toValue() { return this.toString(); }
 
-            toJSON() { return JSON.stringify(this); }
+            toJSON() {
+                if (this.notSerializable) throw DS.Exception.error("Response.toJSON()", "This instance is not allowed to be serialized.");
+                var objToSend = <IndexedObject>{}, ignored = ['notSerializable'];
+                for (var p in this)
+                    if (ignored.indexOf(p) < 0)
+                        objToSend[p] = this[p];
+                return objToSend;
+            }
 
             setViewInfo(viewPath?: string): this { this.viewPath = viewPath; return this; }
 
-            static fromError(message: string, error: string | Error | Exception, httpStatusCode = HttpStatus.OK, data?: any) {
+            static fromError(message: string, error?: string | Error | Exception, httpStatusCode = HttpStatus.OK, data?: any) {
                 if (message)
                     error = new Exception(message, error);
                 return new Response(getErrorMessage(error, false), data, httpStatusCode, void 0, <Exception>error);

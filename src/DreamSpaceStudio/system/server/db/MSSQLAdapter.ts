@@ -30,6 +30,7 @@ namespace DS.DB.MSSQL {
     export type IColumnMetadata = import("mssql").IColumnMetadata;
     export type IColumn = import("mssql").IColumn;
     export type IColumnOptions = import("mssql").IColumnOptions;
+    export type ISqlType = import("mssql").ISqlType;
 
     export var connectionPool: ConnectionPool;
 
@@ -98,6 +99,17 @@ namespace DS.DB.MSSQL {
         fields?: IColumnMetadata[];
     }
 
+    export function typeFromMSSQLType(type: (() => ISqlType) | ISqlType): ColumnDataTypes | undefined {
+        var typeStr = ('' + ((<any>type).name ?? type)).toLowerCase();
+        if (typeStr.includes('bit')) return ColumnDataTypes.Boolean;
+        if (typeStr.includes('int') || typeStr.includes('decimal') || typeStr.includes('numeric')
+            || typeStr.includes('money') || typeStr.includes('float') || typeStr.includes('real')) return ColumnDataTypes.Number;
+        if (typeStr.includes('date') || typeStr.includes('time')) return ColumnDataTypes.DateTime;
+        if (typeStr.includes('char') || typeStr.includes('text') || typeStr.includes('xml')) return ColumnDataTypes.String;
+        if (typeStr.includes('binary') || typeStr.includes('image') || typeStr.includes('xml')) return ColumnDataTypes.Binary;
+        return void 0;
+    }
+
     export class MSSQLConnection extends DBConnection<ConnectionPool> {
         constructor(public readonly adapter: MSSQLAdapter, connection: ConnectionPool) {
             super(adapter, connection);
@@ -113,7 +125,7 @@ namespace DS.DB.MSSQL {
             else throw DS.Exception.error("MSSQLConnection.connect()", "No connection pool reference was set.");
         }
 
-        async query(statement: string, parameters?: Object & IndexedObject): Promise<IQueryResult> {
+        async query<T extends IQueryResult | IMSSQLSelectQueryResult | IMSSQLInsertResult>(statement: string, parameters?: Object & IndexedObject): Promise<T> {
 
             try {
                 await log('MSSQLConnection.query()', statement, void 0, parameters);
@@ -140,8 +152,21 @@ namespace DS.DB.MSSQL {
                 }
                 else sql = statement;
 
+                var isInsert = sql.includes("insert") && sql.includes("into");
+                if (isInsert)
+                    sql += "; select SCOPE_IDENTITY() as [$insertId];"; // (return the insert ID once the insert completes)
+
                 var queryResult = await request.query(sql);
-                return <ISelectQueryResult>{ response: queryResult.recordset, fields: queryResult.recordset.columns };
+
+                if (isInsert)
+                    return <any><IInsertResult>{
+                        response: queryResult.recordset,
+                        fields: queryResult.recordset?.columns,
+                        changedRows: queryResult.rowsAffected && queryResult.rowsAffected[0],
+                        insertId: isInsert ? (<any>queryResult.recordset[0])?.$insertId : void 0
+                    };
+                else
+                    return <any><IQueryResult>{ response: queryResult.recordset, fields: queryResult.recordset?.columns };
             }
             catch (err) {
                 throw await error('executeQuery(): Failed to execute query.', err, sql);
@@ -150,19 +175,19 @@ namespace DS.DB.MSSQL {
 
         async getColumnDetails(tableName: string): Promise<IColumnInfo[]> {
             try {
-                var result = await this.query("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'" + tableName + "'");
-                log('getColumnDetails(()', `Column details received for table '${tableName}': ${JSON.stringify(result)}`);
-                var colInfo: Object & IColumnMetadata = result.response, columns: IColumnInfo[] = [];
+                //var result = await this.query("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'" + tableName + "'");
+                var result = await this.query<IMSSQLSelectQueryResult>(`SELECT top 0 * FROM [${tableName}]`);
+                log('getColumnDetails(()', `Column details received for table '${tableName}': ${JSON.stringify(result.fields)}`);
+                var colInfo: Object & IColumnMetadata = <any>result.fields, columns: IColumnInfo[] = [];
                 for (var p in colInfo)
                     if (colInfo.hasOwnProperty(p)) {
                         var col = colInfo[p];
-                        columns.push({ Field: col.name, Key: StringUtils.toString(col.identity), Null: DS.StringUtils.toString(col.nullable), Type: DS.StringUtils.toString(col.type), Default: void 0, Extra: void 0 });
+                        columns.push({ Field: col.name, Key: col.identity, Null: col.nullable, Type: typeFromMSSQLType(col.type), Default: void 0, AutoIncrement: col.identity });
                     }
-
                 return columns;
             }
             catch (err) {
-                throw Exception.error('getColumnDetails(()', `Failed to get column details for table '${tableName}'.`, this);
+                throw Exception.error('getColumnDetails()', `Failed to get column details for table '${tableName}'.`, this, err);
             }
         }
 

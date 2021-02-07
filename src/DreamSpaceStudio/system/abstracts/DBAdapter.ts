@@ -13,13 +13,21 @@
          * Note: The name index is the name of the target table column (the name translated to, if translation is used). */
         export interface ICalculatedColumns { [name: string]: { (value?: any): any } }
 
+        export enum ColumnDataTypes {
+            String,
+            Number,
+            Boolean,
+            DateTime,
+            Binary
+        }
+
         export interface IColumnInfo {
-            Field: string, // (name)
-            Type: string; //(example: 'int(11) unsigned')
-            Null: string; //('YES/'NO')
-            Key: string; //('PRI')
-            Default: string; // (default value)
-            Extra: string; //('auto_increment')
+            Field: string;
+            Type: ColumnDataTypes;
+            Null: boolean;
+            Key: boolean;
+            Default: string;
+            AutoIncrement: boolean;
         }
 
         /** A set of column names and the column details as queried from a database. */
@@ -36,7 +44,7 @@
         export interface ISelectQueryResult<T extends IRecordSet = IRecordSet> extends IQueryResult<T> {
         }
 
-        export interface IInsertResult {
+        export interface IInsertResult<T = any> extends IQueryResult<T> {
             /** The number of rows changed by the query. */
             changedRows: number;
             /** The ID of the last record inserted, if auto numbers are used with a single primary key.
@@ -45,14 +53,14 @@
             insertId: number;
         }
 
-        export interface IInsertQueryResult<T extends IInsertResult = IInsertResult> extends IQueryResult<T> {
+        export interface IInsertQueryResult<T = any> extends IInsertResult<T> {
         }
 
         export interface IUpdateResult {
             changedRows: number;
         }
 
-        export interface IUpdaeQueryResult<T extends IUpdateResult = IUpdateResult> extends IQueryResult<T> {
+        export interface IUpdaeQueryResult<T = any> extends IQueryResult<T> {
         }
 
         export interface IRecordSet<T = any> extends Array<T> { }
@@ -200,8 +208,8 @@
                                     if (keys.length == 1) {
                                         if (!qbInfo.existingTableData)
                                             qbInfo.existingTableData = {};
-                                        console.log("Insert Key Result: " + keys[0] + "=" + result.response.insertId);
-                                        qbInfo.existingTableData[keys[0]] = result.response.insertId;
+                                        console.log("Insert Key Result: " + keys[0] + "=" + result.insertId);
+                                        qbInfo.existingTableData[keys[0]] = result.insertId;
                                     }
                                     else if (keys.length > 1)
                                         console.warn("Since the insert was done using a composite key (multiple columns) no insert ID could be returned from the execution (it only works for single auto-increment key fields).");
@@ -210,7 +218,10 @@
 
                                 resolve(res, <IModifyTableResult>{ builder: qbInfo, success: true, message: msg }, msg);
                             },
-                                (err) => { this.end(); reject(rej, this.adapter.getSQLErrorMessage(err)); });
+                                (err) => {
+                                    this.end();
+                                    reject(rej, this.adapter.getSQLErrorMessage(err));
+                                });
                         }
                     }, (err) => { rej(err); });
                 });
@@ -238,10 +249,12 @@
 
                                     onQueryBuilderReady && onQueryBuilderReady(qbInfo);
 
-                                    var existingWhere = qbInfo.getKeyNameValues().join(' AND ');
+                                    var existingWhere = qbInfo.getKeyNameValues(false).join(' AND ');
 
-                                    if (!existingWhere)
-                                        return reject(rej, "insertOrUpdate(): Could not determine a key on the table in order to check existing data.");
+                                    if (!existingWhere) {
+                                        var msg = "update(): No key values found in order to check existing data, so assuming no data exists.";
+                                        return resolve(res, { builder: qbInfo, success: false, message: msg }, msg);
+                                    }
 
                                     var st = qbInfo.getSelectStatement(["*"]) + ` where ` + existingWhere;
 
@@ -410,7 +423,7 @@
             getPrimaryKeys(): string[] {
                 var v: string[] = [];
                 for (var p in this.columnInfo)
-                    if (this.columnInfo[p].Key == "PRI")
+                    if (this.columnInfo[p].Key)
                         v.push(p);
                 return v;
             }
@@ -442,7 +455,7 @@
             /** Returns true if the specified name is recognized as a unique column for the table. */
             isKey(name: string): boolean {
                 var ci: IColumnInfo;
-                return this._indexOf(this.alternateKeys, name) >= 0 || (ci = this.getColumnInfo(name)) && ci.Key == "PRI"; // TODO: 'PRI', etc., needs to more abstracted.
+                return this._indexOf(this.alternateKeys, name) >= 0 || (ci = this.getColumnInfo(name)) && ci.Key; // TODO: 'PRI', etc., needs to more abstracted.
             }
 
             /** Returns true if the specified name is recognized as a primary key that auto increments. 
@@ -451,32 +464,43 @@
              */
             isAutoIncKey(name: string): boolean {
                 var ci: IColumnInfo;
-                return (ci = this.getColumnInfo(name)) && ci.Key == "PRI" && ci.Extra && ci.Extra.indexOf('auto') >= 0; // TODO: 'PRI', etc., needs to more abstracted.
+                return (ci = this.getColumnInfo(name)) && ci.Key && ci.AutoIncrement; // TODO: 'PRI', etc., needs to more abstracted.
             }
 
             /** Returns a '{ name: value, ... }' object based on the primary keys and values in the query builder, or 'undefined' if there are no keys.
              * Note: The value of the key returned is taken from the first non-undefined value, starting with the existing
              * table data, then the current values being set (since keys are rarely, if ever, updated).
+             * @param required If true (default), an error is thrown if key names are found, but all key values are missing. Typicall this is set to false internally for inserts when first checking if an update operation is required instead.
+             * An error is still thrown if one key has a value and other keys do not.
+             * @returns An object with key:value properties, or undefined if 
              */
-            getKeyValues(): IKeys {
-                var kvs: IKeys;
-                var keys = this.getKeys();
+            getKeyValues(required = true): IKeys | undefined {
+                var kvs: IKeys, keys = this.getKeys(), valueCount = 0;
                 for (var i = 0, n = keys.length, k; i < n; ++i) {
                     var v = this.getExistingValue(k = keys[i]);
-                    if (v === void 0)
-                        throw `getKeyValues() Error: There is no value for primary key '${k}' in the query builder (associated with table '${this.tableName}'). You may have to explicitly set key names using the 'alternateKeys' property.`;
-                    if (!kvs) kvs = {};
-                    kvs[k] = v;
+                    if (v === void 0) {
+                        if (required)
+                            throw Exception.error('getKeyValues()', `There is no value for primary key '${k}' in the query builder (associated with table '${this.tableName}'). If needed, you may have to explicitly set key names using the 'alternateKeys' property.`);
+                    }
+                    else {
+                        if (!kvs) kvs = {};
+                        kvs[k] = v;
+                        ++valueCount;
+                    }
                 }
+                if (valueCount && valueCount != keys.length) // (all key values must exist, otherwise throw an error)
+                    throw Exception.error('getKeyValues()', `If you provide one key value in the query builder, all other key values must be set as well (associated with table '${this.tableName}'). If needed, you may have to explicitly set key names using the 'alternateKeys' property.`);
                 return kvs;
             }
 
             /** Returns an array of 'keyName=keyValue' strings that can be joined for query statements, or an empty array if no keys can be determined. 
              * Note: The value of the key returned is taken from the first non-undefined value, starting with the existing
              * table data, then the current values being set (since keys are rarely, if ever, updated).
+             * @param required If true (default), an error is thrown if key names are found, but all key values are missing. Typicall this is set to false internally for inserts when first checking if an update operation is required instead.
+             * An error is still thrown if one key has a value and other keys do not.
              */
-            getKeyNameValues(): string[] {
-                var values = this.getKeyValues();
+            getKeyNameValues(required = true): string[] {
+                var values = this.getKeyValues(required);
                 var knv: string[] = [];
                 for (var p in values)
                     knv.push(p + `=${valueToStr(values[p], this.columnInfo[p])}`);
@@ -614,19 +638,19 @@
         export function valueToStr(val: any, colInfo: IColumnInfo) {
             if (isNullOrUndefined(val)) return 'null';
             if (colInfo) {
-                var type = colInfo.Type.toLowerCase();
-                if (type.indexOf('timestamp') >= 0 || type.indexOf('datetime') >= 0) {
+                var type = colInfo.Type;
+                if (type == ColumnDataTypes.DateTime) {
                     return "'" + DS.StringUtils.escapeString(StringUtils.toString(val).trim(), true) + "'";
-                } else if (type.indexOf('int') >= 0 || type.indexOf('bigint') >= 0) {
+                } else if (type == ColumnDataTypes.Number) {
                     var i = +val;
-                    if (isNaN(i)) throw `Cannot convert value ${JSON.stringify(val)} to 'int'.`;
+                    if (isNaN(i)) throw `Cannot convert value ${JSON.stringify(val)} to a number.`;
                     return StringUtils.toString(val).trim();
-                } else if (type.indexOf('varchar') >= 0 || type.indexOf('nchar') >= 0 || type.indexOf('text') >= 0 || type.indexOf('tinytext') >= 0) {
+                } else if (type == ColumnDataTypes.String) {
                     val = `'${DS.StringUtils.escapeString(val, true)}'`;
                     if ((<string>val).indexOf('?') >= 0)
                         val = "concat(" + val.replace(/\?/g, "',char(63),'") + ")"; // (question chars, used as input params by the mysql module, will break the process, so add these a special way)
                     return val;
-                } else if (type.indexOf('bit') >= 0) {
+                } else if (type == ColumnDataTypes.Boolean) {
                     val = val !== false && (typeof val != 'string' || val.toLowerCase() != "false" && val.toLowerCase() != "no") && val !== '0' && val !== 0;
                     return val ? '1' : '0';
                 }

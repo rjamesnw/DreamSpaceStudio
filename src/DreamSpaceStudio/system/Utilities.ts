@@ -363,6 +363,24 @@
                         _p.push(p);
             return _p;
         }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
+        /**
+         * Returns true if the value equates to 'true', 'yes', 'y', 1, 'ok', 'pass', 'on'.
+         * Returns false if the value equates to 'fase', 'no', 'n', 0, 'cancel', 'fail', 'off'.
+         * Note: This does NOT use "truthy" or "falsy" to equate true and false. The value has to be explicitly stated.
+         * @param value The value to check for true or false meanings.
+         * @param defaultValue The default boolean value if nothing is a match.
+         */
+        export function toBoolean(value: any, defaultValue?: boolean): boolean {
+            if (typeof value == 'boolean') return value;
+            var txt = ('' + DS.nud(value, "")).toLowerCase(); // (convert to string and test for 'true' state equivalent)
+            if (txt == "true" || txt == "yes" || txt == "y" || txt == "1" || txt == "ok" || txt == "pass" || txt == "on") return true;
+            if (txt == "false" || txt == "no" || txt == "n" || txt == "0" || txt == "cancel" || txt == "fail" || txt == "off") return false;
+            return defaultValue;
+
+        }
     }
 }
 

@@ -283,8 +283,131 @@ namespace DS {
         }
 
         // ========================================================================================================================
-    }
 
+        export namespace Validations {
+            export function isNumeric(text: string): boolean {
+                return /^[+|-]?\d+\.?\d*$/.test(text);
+                //decimal d; return decimal.TryParse(text, out d);
+            }
+
+            export function isSimpleNumeric(text: string): boolean {
+                // http://derekslager.com/blog/posts/2007/09/a-better-dotnet-regular-expression-tester.ashx
+                return /^(?:\+|\-)?\d+\.?\d*$/.test(text);
+            }
+
+            // ---------------------------------------------------------------------------------------------------------------------
+
+            /// <summary>
+            /// Returns true if the string is only letters.
+            /// </summary>
+            export function isAlpha(s: string): boolean {
+                if (s.length == 0) return false;
+                for (var i = 0; i < s.length; ++i)
+                    if ((s[i] < 'a' || s[i] > 'z') && (s[i] < 'A' || s[i] > 'Z'))
+                        return false;
+                return true;
+            }
+
+            /// <summary>
+            /// Returns true if the string is only letters or numbers.
+            /// </summary>
+            export function isAlphaNumeric(s: string): boolean {
+                if (s.length == 0) return false;
+                for (var i = 0; i < s.length; i++)
+                    if ((s[i] < 'a' || s[i] > 'z') && (s[i] < 'A' || s[i] > 'Z') && (s[i] < '0' || s[i] > '9'))
+                        return false;
+                return true;
+            }
+
+            /// <summary>
+            /// Returns true if the string is only letters, numbers, or underscores, and the first character is not a number.
+            /// This is useful to validate strings to be used as code-based identifiers, database column names, etc.
+            /// </summary>
+            export function isIdent(s: string): boolean {
+                if (s.length == 0 || (s[0] >= '0' && s[0] <= '9')) return false;
+                for (var i = 0; i < s.length; i++)
+                    if ((s[i] < 'a' || s[i] > 'z') && (s[i] < 'A' || s[i] > 'Z') && (s[i] < '0' || s[i] > '9') && s[i] != '_')
+                        return false;
+                return true;
+            }
+
+            /// <summary>
+            /// Returns true if the string is only numbers.
+            /// </summary>
+            export function isDigits(s: string): boolean {
+                if (s.length == 0) return false;
+                for (var i = 0; i < s.length; i++)
+                    if (s[i] < '0' || s[i] > '9')
+                        return false;
+                return true;
+            }
+
+            // ---------------------------------------------------------------------------------------------------------------------
+
+            export function isDatePartOnly(date: string): boolean {
+                if (!date) return false;
+                var dt = new Date(date);
+                if (isNaN(<any>dt)) return false;
+                date = date.toLowerCase();
+                return !date.includes(":") && !date.includes("am") && !date.includes("pm");
+            }
+
+            // ---------------------------------------------------------------------------------------------------------------------
+
+            export function isTimePartOnly(time: string): boolean {
+                return /(^\s*((([01]?\d)|(2[0-3])):((0?\d)|([0-5]\d))(:((0?\d)|([0-5]\d)))?)\s*$)|(^\s*((([1][0-2])|\d)(:((0?\d)|([0-5]\d)))?(:((0?\d)|([0-5]\d)))?)\s*[apAP][mM]\s*$)/.test(time);
+            }
+
+            // ---------------------------------------------------------------------------------------------------------------------
+            // (Test Here: http://derekslager.com/blog/posts/2007/09/a-better-dotnet-regular-expression-tester.ashx)
+
+            export function isValidURL(url: string): boolean {
+                return !!url && /^(?:http:\/\/|https:\/\/)\w{2,}.\w{2,}/.test(url)
+            }
+
+            // ---------------------------------------------------------------------------------------------------------------------
+
+            export function isValidEmailAddress(email: string): boolean {
+                if (email) {
+                    let nFirstAT = email.indexOf('@');
+                    let nLastAT = email.lastIndexOf('@');
+                    if ((nFirstAT > 0) && (nLastAT == nFirstAT) && (nFirstAT < (email.length - 1))) {
+                        // (address is ok regarding the single @ sign; faster to check that first)
+                        return /^(?:[A-Za-z0-9_\-]+\.)*(?:[A-Za-z0-9_\-]+)@(?:[A-Za-z0-9_\-]+)(?:\.[A-Za-z]+)+$/.test(email);
+                    }
+                }
+                return false;
+            }
+
+            // ---------------------------------------------------------------------------------------------------------------------
+
+            export function isValidPhoneNumber(number: string): boolean {
+                return !!number && /^((\+?\d{1,3}(-|.| )?\(?\d\)?(-|.| )?\d{1,5})|(\(?\d{2,6}\)?))(-|.| )?(\d{3,4})(-|.| )?(\d{4})(( x| ext)( |\d)?\d{1,5}){0,1}$/.test(number);
+            }
+
+            // --------------------------------------------------------------------------------------------------------------------- 
+
+            export function isValidPasword(password: string, minCharacters = 8, maxCharacters = 20, requireOneUpperCase = true, requireDigit = true, validSymbols = `~!@#$%^&_-+=|\\:;',./?`): boolean {
+                var requiredCharacters = "";
+                if (requireOneUpperCase) requiredCharacters += `(?=.*[a-z])(?=.*[A-Z])`; else requiredCharacters += `(?=.*[A-Za-z])`;
+                if (requireDigit) requiredCharacters += `(?=.*\\d)`;
+                if (validSymbols) {
+                    validSymbols = DS.StringUtils.replace(DS.StringUtils.replace(validSymbols, `\\`, `\\\\`), ` - `, `\\-`);
+                    requiredCharacters += `(?=.*[` + validSymbols + `])`;
+                }
+                return password && password.length <= maxCharacters
+                    && new RegExp(`^.*(?=.{${minCharacters},})${requiredCharacters}.*$`).test(password);
+                // http://nilangshah.wordpress.com/2007/06/26/password-validation-via-regular-expression/
+                /*
+                 * - Must be at least 6 characters.
+                 * - Must contain at least one letter, one digit, and one special character.
+                 * - Valid special characters are: `~!@#$%^&_-+=|\:;',./?
+                 */
+            }
+        }
+
+        // ========================================================================================================================
+    }
 }
 
 // ############################################################################################################################

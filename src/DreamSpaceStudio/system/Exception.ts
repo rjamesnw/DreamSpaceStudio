@@ -107,17 +107,20 @@ namespace DS {
                     } catch (ex) {
                         err = ex;
                     }
+                var createdError = true;
             }
 
-            if (err.stack) { //Firefox
+            if (err.stack) { //Firefox or Chrome
                 var lines = err.stack.split('\n');
                 for (var i = 0, len = lines.length; i < len; ++i) {
-                    if (lines[i].match(/^\s*[A-Za-z0-9\-_\$]+\(/)) {
+                    if (lines[i].match(/^[A-Za-z0-9\-_\$. ]+\(/)) {
                         callstack.push(lines[i]);
                     }
                 }
-                //Remove call to printStackTrace()
-                callstack.shift();
+                if (createdError) {
+                    //Remove call to printStackTrace()
+                    callstack.shift();
+                }
                 isCallstackPopulated = true;
             }
             else if (DS.global["opera"] && err.message) { //Opera
@@ -133,8 +136,10 @@ namespace DS {
                         callstack.push(entry);
                     }
                 }
-                //Remove call to printStackTrace()
-                callstack.shift();
+                if (createdError) {
+                    //Remove call to printStackTrace()
+                    callstack.shift();
+                }
                 isCallstackPopulated = true;
             }
 
@@ -183,7 +188,7 @@ namespace DS {
         static error(title: string, message: string, source?: any, innerException?: Exception): Exception {
             if (Diagnostics && Diagnostics.log) {
                 var logItem = Diagnostics.log(title, message, LogTypes.Error);
-                return new Exception(logItem, source);
+                return new Exception(logItem, source, innerException);
             }
             else return new Exception(error(title, message, source, false, false), source, innerException);
         }

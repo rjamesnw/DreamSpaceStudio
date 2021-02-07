@@ -1,25 +1,25 @@
 // CDS specific types.
 
 export class Staff {
-    id: number;
+    id?: number;
     username: string;
-    prefix: string;
+    prefix?: string;
     first_name: string;
-    middle_name: string;
+    middle_name?: string;
     last_name: string;
-    title: string;
-    __title: string;
-    __department: string;
-    employee_number: string;
+    title?: string;
+    __title?: string;
+    __department?: string;
+    employee_number?: string;
     email: string;
-    extension: string;
-    phone_number: string;
-    secondary_phone_number: string;
-    tertiary_phone_number: string;
-    staff_type: string;
-    employment_types_id: string;
+    extension?: string;
+    phone_number?: string;
+    secondary_phone_number?: string;
+    tertiary_phone_number?: string;
+    staff_type?: string;
+    employment_types_id?: string;
     sites_id: number;
-    is_inactive: string;
+    is_inactive?: boolean;
     name: string;
     display: string;
 }
@@ -98,7 +98,8 @@ export interface ISpecialAuthorityAssignees {
 export enum AnalysisMessageState {
     NoIssue,
     Warning,
-    Error
+    Error,
+    Fixed
 }
 
 export interface IAnalysisMessage {
@@ -109,11 +110,18 @@ export interface IAnalysisMessage {
 export class Analysis {
     id = DS.Utilities.createGUID(false)
     username: string;
-    staff_id: number;
     incidentNum: number;
+
     messages: IAnalysisMessage[] = [];
+
     directorOf: IDepartment[];
     supervisorOf: IDepartment[];
+
+    staff_id?: number;
+    specialAuthorityID?: number;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
 
     state = AnalysisMessageState.NoIssue; // (global result state)
 
@@ -134,8 +142,10 @@ export class Analysis {
     }
 
     actionLink(funcName: string) {
-        return `DS.Globals.getValue('SupportWizard', '${funcName}')('${this.id}', '${funcName}')`;
+        return `DS.Globals.getValue('SupportWizard', '${funcName}')('${this.id}', ${this.messages.length}, '${funcName}')`;
     }
+
+    correctThisLink(funcName: string) { return `(<a href="#" onclick="${this.actionLink(funcName)}">correct this</a>)`; }
 }
 export interface IAnalysis extends Analysis { }
 

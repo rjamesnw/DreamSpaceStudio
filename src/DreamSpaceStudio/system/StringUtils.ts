@@ -395,6 +395,8 @@ namespace DS {
             time = "time",
             url = "url",
             week = "week",
+            list = "list", // (special type - will create a select list)
+            multilist = "multilist" // (special type - will create a multiple selection list)
         }
 
         // --------------------------------------------------------------------------------------------------------------------

@@ -2,6 +2,7 @@
  * Connects to the SafePoint database to analyze for issues.
  */
 import express = require('express');
+import { isArray } from 'util';
 import {
     Analysis, Director, IDepartment, IDelegate, ISpecialAuthority, IIncident, Staff, Supervisor, Severities,
     IncidentStatus, IInvolvedUnitDepartment, ISpecialAuthorityAssignees, AnalysisMessageState, IAnalysis
@@ -81,14 +82,23 @@ export async function get(req: express.Request, res: express.Response, next: exp
 
                 console.log("Checking staff:" + staff.display + "...");
 
-                var directors = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IDepartment>>cds_db.query(`select map_directors_units_departments.directors_id, map_directors_units_departments.units_departments_id, programs.display as program, units_departments.display as department
+                var allDepartments = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IDepartment>>cds_db.query(`select units_departments.id, units_departments.name, units_departments.display as department, programs.display as program
+                FROM units_departments 
+                LEFT OUTER JOIN programs ON programs.id = units_departments.programs_id
+                where units_departments.sites_id=@sites_id and not units_departments.is_inactive=1
+                order by department`,
+                    { sites_id });
+
+                analysis.departments = allDepartments.response;
+
+                var directors = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IDepartment>>cds_db.query(`select map_directors_units_departments.directors_id, map_directors_units_departments.units_departments_id as id, programs.display as program, units_departments.display as department
                 FROM map_directors_units_departments LEFT OUTER JOIN units_departments ON units_departments.id = map_directors_units_departments.units_departments_id 
                 LEFT OUTER JOIN staff ON staff.id = map_directors_units_departments.directors_id
                 LEFT OUTER JOIN programs ON programs.id = units_departments.programs_id
                 where staff.id = @staff_id`,
                     { staff_id: staff.id });
 
-                var supervisors = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IDepartment>>cds_db.query(`select map_supervisors_units_departments.supervisors_id, map_supervisors_units_departments.units_departments_id, programs.display as program, units_departments.display as department
+                var supervisors = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IDepartment>>cds_db.query(`select map_supervisors_units_departments.supervisors_id, map_supervisors_units_departments.units_departments_id as id, programs.display as program, units_departments.display as department
                 FROM map_supervisors_units_departments LEFT OUTER JOIN units_departments ON units_departments.id = map_supervisors_units_departments.units_departments_id 
                 LEFT OUTER JOIN staff ON staff.id = map_supervisors_units_departments.supervisors_id
                 LEFT OUTER JOIN programs ON programs.id = units_departments.programs_id
@@ -155,8 +165,8 @@ export async function get(req: express.Request, res: express.Response, next: exp
                         involvedUnitDepartments.response.forEach(i => msg += "\r\n * " + i.Department + ` (${i.Program})`);
                         analysis.add(msg);
 
-                        var authorized = !analysis.directorOf ? false : analysis.directorOf.some(d => involvedUnitDepartments.response.some(i => i.UnitDepartmentID == d.units_departments_id));
-                        var authorized = authorized || !analysis.supervisorOf ? authorized : analysis.supervisorOf.some(d => involvedUnitDepartments.response.some(i => i.UnitDepartmentID == d.units_departments_id));
+                        var authorized = !analysis.directorOf ? false : analysis.directorOf.some(d => involvedUnitDepartments.response.some(i => i.UnitDepartmentID == d.id));
+                        var authorized = authorized || !analysis.supervisorOf ? authorized : analysis.supervisorOf.some(d => involvedUnitDepartments.response.some(i => i.UnitDepartmentID == d.id));
                         if (authorized) {
                             state = AnalysisMessageState.NoIssue;
 
@@ -278,6 +288,121 @@ export async function post(req: express.Request, res: express.Response, next: ex
                 };
 
                 var updateResult = await conn.updateOrInsert(newStaff, "staff");
+
+                res.status(200).json(new DS.IO.Response(null));
+
+                break;
+            }
+
+            case "fixSupDirAsDel": {
+                if (!analysis.staff_id) return next(DS.Exception.error("analysis.post()", "'staff_id' missing."));
+
+                await sp_db.query(`delete from InvolvedUnitsDepartmentsDelegates where StaffID=@staff_id`,
+                    { staff_id: analysis.staff_id });
+
+                res.status(200).json(new DS.IO.Response(null));
+
+                break;
+            }
+
+            case "updateAsSupervisorDirector": {
+                if (!analysis.staff_id) return next(DS.Exception.error("analysis.post()", "'staff_id' missing."));
+                if (!isArray(analysis.directorDepartments)) return next(DS.Exception.error("analysis.post()", "'directorDepartments' array missing."));
+                if (!isArray(analysis.supervisorDepartments)) return next(DS.Exception.error("analysis.post()", "'supervisorDepartments' array missing."));
+
+                // ... first get the updated list of what departments they are of ...
+
+                var directorOf = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IDepartment>>cds_db.query(`select map_directors_units_departments.directors_id, map_directors_units_departments.units_departments_id as id, programs.display as program, units_departments.display as department
+                FROM map_directors_units_departments LEFT OUTER JOIN units_departments ON units_departments.id = map_directors_units_departments.units_departments_id 
+                LEFT OUTER JOIN staff ON staff.id = map_directors_units_departments.directors_id
+                LEFT OUTER JOIN programs ON programs.id = units_departments.programs_id
+                where staff.id = @staff_id`,
+                    { staff_id: analysis.staff_id });
+
+                var supervisorOf = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IDepartment>>cds_db.query(`select map_supervisors_units_departments.supervisors_id, map_supervisors_units_departments.units_departments_id as id, programs.display as program, units_departments.display as department
+                FROM map_supervisors_units_departments LEFT OUTER JOIN units_departments ON units_departments.id = map_supervisors_units_departments.units_departments_id 
+                LEFT OUTER JOIN staff ON staff.id = map_supervisors_units_departments.supervisors_id
+                LEFT OUTER JOIN programs ON programs.id = units_departments.programs_id
+                where staff.id = @staff_id`,
+                    { staff_id: analysis.staff_id });
+
+                // ... remove the missing ones ....
+
+                if (directorOf.response?.length) {
+                    let removeCount = 0;
+                    await Promise.all(
+                        directorOf.response.map(async d => {
+                            if (analysis.directorDepartments.indexOf(d.id) < 0) {
+                                // ... missing from the list, so remove it ...
+                                await cds_db.query(`delete from map_directors_units_departments where directors_id=@staff_id and units_departments_id=@units_departments_id`,
+                                    { staff_id: analysis.staff_id, units_departments_id: d.id });
+                                ++removeCount;
+                            }
+                        })
+                    );
+                    if (removeCount == directorOf.response.length) {
+                        // ... no longer a director of anything, so remove that also ...
+                        await cds_db.query(`delete from directors where staff_id=@staff_id`,
+                            { staff_id: analysis.staff_id });
+                    }
+                }
+
+                if (supervisorOf.response?.length) {
+                    let removeCount = 0;
+                    await Promise.all(
+                        supervisorOf.response.map(async d => {
+                            if (analysis.supervisorDepartments.indexOf(d.id) < 0) {
+                                // ... missing from the list, so remove it ...
+                                await cds_db.query(`delete from map_supervisors_units_departments where supervisors_id=@staff_id and units_departments_id=@units_departments_id`,
+                                    { staff_id: analysis.staff_id, units_departments_id: d.id });
+                                ++removeCount;
+                            }
+                        })
+                    );
+                    if (removeCount == supervisorOf.response.length) {
+                        // ... no longer a supervisor of anything, so remove that also ...
+                        await cds_db.query(`delete from supervisors where staff_id=@staff_id`,
+                            { staff_id: analysis.staff_id });
+                    }
+                }
+
+                // ... add the missing ones ...
+
+                if (analysis.directorDepartments.length) {
+                    var exists = !!(await cds_db.query<DS.DB.IRecordSet<{ staff_id: number }>>(`select staff_id from directors where staff_id=@staff_id`, { staff_id: analysis.staff_id })).response?.length;
+                    if (!exists)
+                        await cds_db.query(`insert into directors ({fields}) values ({parameters})`, { staff_id: analysis.staff_id, is_inactive: 0 });
+                    else
+                        await cds_db.query(`update directors set is_inactive=0 where staff_id=@staff_id`, { staff_id: analysis.staff_id });
+
+                    await Promise.all(
+                        analysis.directorDepartments.map(async id => {
+                            if (!directorOf.response?.some(d => d.id == id)) {
+                                // ... missing from the list, so remove it ...
+                                await cds_db.query(`insert into map_directors_units_departments ({fields}) values ({parameters})`,
+                                    { directors_id: analysis.staff_id, units_departments_id: id });
+                            }
+                        })
+                    );
+                }
+
+                if (analysis.supervisorDepartments.length) {
+                    var exists = !!(await cds_db.query<DS.DB.IRecordSet<{ staff_id: number }>>(`select staff_id from supervisors where staff_id=@staff_id`, { staff_id: analysis.staff_id })).response?.length;
+                    if (!exists)
+                        await cds_db.query(`insert into supervisors ({fields}) values ({parameters})`, { staff_id: analysis.staff_id, is_inactive: 0 });
+                    else
+                        await cds_db.query(`update supervisors set is_inactive=0 where staff_id=@staff_id`, { staff_id: analysis.staff_id });
+
+                    await Promise.all(
+                        analysis.supervisorDepartments.map(async id => {
+                            if (!supervisorOf.response?.some(d => d.id == id)) {
+                                // ... missing from the list, so remove it ...
+                                await cds_db.query(`insert into map_supervisors_units_departments ({fields}) values ({parameters})`,
+                                    { supervisors_id: analysis.staff_id, units_departments_id: id });
+                            }
+                        })
+                    );
+                }
 
                 res.status(200).json(new DS.IO.Response(null));
 

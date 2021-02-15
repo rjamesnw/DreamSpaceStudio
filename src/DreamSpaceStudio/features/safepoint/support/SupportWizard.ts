@@ -1,4 +1,4 @@
-import { AnalysisMessageState, IAnalysis, IAnalysisMessage } from './cds';
+import { Analysis, AnalysisMessageState, IAnalysis, IAnalysisMessage } from './cds';
 
 interface IAnalysisMap {
     element?: any; // (the element on the browser where this analysis is rendered [HTMLElement])
@@ -9,7 +9,7 @@ interface IMessageMap {
     formElement?: any; // (if a form was required it gets appended on request and referenced here)
 }
 
-var analytics: { [index: string]: IAnalysis } = {};
+var analytics: { [index: string]: Analysis } = {};
 var uiMapping = new WeakMap();
 
 async function fixit(id: string, msgIndex: number, serverFuncName: string, apiPath: string, prompt: string, data?: (a: IAnalysis) => IndexedObject | Error, getForm?: (a: IAnalysis, msg: IAnalysisMessage) => HTMLElement) {
@@ -62,16 +62,43 @@ async function fixit(id: string, msgIndex: number, serverFuncName: string, apiPa
     }
 };
 
-function buildForm(title: string, inputs: { name: string, caption?: string, placeHolder?: string, type?: DS.HTML.InputElementTypes }[], buttonCaption: string,
+interface ISelection { name: string, id?: string, caption: string, value: string, tag?: any, selected?: boolean }
+
+interface IFormControl { name: string, id?: string, caption?: string, placeHolder?: string, type?: DS.HTML.InputElementTypes, selections?: ISelection[] }
+
+function makeFormControl(ctrl: IFormControl): string {
+    var body = "", groupType = "form-group", label = true;
+
+    if (ctrl?.type == DS.HTML.InputElementTypes.list) {
+        if (ctrl.selections)
+            ctrl.selections.forEach(s =>
+                body += `<button type="button" class="list-group-item list-group-item-action ${s.selected ? 'active' : ''}" id="${s.id ?? s.name}" name="${s.name ?? s.id}">${s.caption ?? ""}</button>\r\n`
+            );
+        groupType = "list-group";
+    } else if (ctrl?.type == DS.HTML.InputElementTypes.multilist) {
+        if (ctrl.selections)
+            ctrl.selections.forEach(s =>
+                body += `<div class="form-check"><input type="checkbox" class="form-check-input" id="${s.id ?? s.name}" name="${s.name ?? ctrl.name ?? ctrl.id}" value="${DS.StringUtils.toString(s.value)}" ${s.selected ? 'checked' : ''}><label class="form-check-label" for="${s.id ?? s.name}">${s.caption ?? ""}</label></div>\r\n`
+            );
+        groupType = "list-group";
+    } else {
+        body = `<input class="form-control" type="${ctrl.type}" id="${ctrl.id ?? ctrl.name}" name="${ctrl.name ?? ctrl.id}" placeholder="${ctrl.placeHolder ?? ""}">\r\nd`;
+    }
+
+    var html = `<div class="${groupType}">\r\n`;
+
+    if (label)
+        html += ctrl.caption ? `<label for="${ctrl.name}" style="font-weight: bold">${ctrl.caption}</label>\r\n` : "";
+
+    return html + body + `</div>\r\n`;
+}
+
+function buildForm(title: string, inputs: IFormControl[], buttonCaption: string,
     id: string, msgIndex: number, serverFuncName: string) {
     let formDiv = document.createElement('div');
     formDiv.className = "panel panel-default";
-    formDiv.innerHTML = `<div class="panel-heading"><h4>${title}</h4></div><div class="panel-body">${inputs.map(i =>
-        `<div class="form-group">`
-        + (i.caption ? `<label for="${i.name}">${i.caption}</label>` : "")
-        + `<input class="form-control" type="${i.type}" id="${i.name}" name="${i.name}" placeholder="${i.placeHolder ?? ""}">`
-        + `</div>`)}</div>`
-        + `<button type="button" class="btn btn-success" onclick="DS.Globals.getValue('SupportWizard', '${serverFuncName}')('${id}', ${msgIndex}, '${serverFuncName}'); return false;">${buttonCaption}</button>`;
+    formDiv.innerHTML = `<div class="panel-heading"><h4>${title}</h4></div><div class="panel-body">${inputs.map(i => makeFormControl(i)).join('<br/>\r\n')}</div>`
+        + `<br/><button type="button" class="btn btn-success" onclick="DS.Globals.getValue('SupportWizard', '${serverFuncName}')('${id}', ${msgIndex}, '${serverFuncName}'); return false;">${buttonCaption}</button>`;
     return formDiv;
 }
 
@@ -102,6 +129,30 @@ DS.Globals.setValue("SupportWizard", "fixMissingCDSUser", async (id: string, msg
             { name: "lastName", placeHolder: "Last Name" },
             { name: "email", placeHolder: "Email" }
         ], "Add", id, msgIndex, serverFuncName);
+    });
+});
+
+DS.Globals.setValue("SupportWizard", "updateAsSupervisorDirector", async (id: string, msgIndex: number, serverFuncName: string) => {
+    await fixit(id, msgIndex, serverFuncName, `support/analyze?cmd=${serverFuncName}`, "Change departments for this user?", () => {
+        var directorDpts: number[] = [], supervisorDpts: number[] = [];
+        document.querySelectorAll<HTMLInputElement>("input[name='directorFor']:checked").forEach(e => +e.value ? directorDpts.push(+e.value) : void 0);
+        document.querySelectorAll<HTMLInputElement>("input[name='supervisorFor']:checked").forEach(e => +e.value ? supervisorDpts.push(+e.value) : void 0);
+        let data = {
+            directorDepartments: directorDpts,
+            supervisorDepartments: supervisorDpts
+        };
+        return data;
+    }, (analysis, msg) => {
+        return buildForm(`Change Units/Departments for ${analysis.staff?.display}`, [
+            {
+                name: "directorFor", caption: "Director For", type: DS.HTML.InputElementTypes.multilist,
+                selections: analysis.departments.map(d => <ISelection>{ id: '' + (d.name ?? '') + '_' + d.id, caption: d.department + ` (${d.program})`, value: '' + d.id, selected: !!analysis.directorOf?.some(d2 => d2.id == d.id) })
+            },
+            {
+                name: "supervisorFor", caption: "Supervisor For", type: DS.HTML.InputElementTypes.multilist,
+                selections: analysis.departments.map(d => <ISelection>{ id: '' + (d.name ?? '') + '_' + d.id, caption: d.department + ` (${d.program})`, value: '' + d.id, selected: !!analysis.supervisorOf?.some(d2 => d2.id == d.id) })
+            }
+        ], "Update", id, msgIndex, serverFuncName);
     });
 });
 
@@ -147,48 +198,44 @@ export class SupportWizard {
             this.resultsContainer.innerHTML = ""; // (clear)
 
             for (let result of results) {
-                analytics[result.id] = result; // (keep track in order to refer back)
+                var analysis = Analysis.from(result);
+                analytics[analysis.id] = analysis; // (keep track in order to refer back)
 
                 var adiv = document.createElement("div");
-                if (result.staff)
-                    adiv.innerHTML = `<h4>${result.staff.display} (${result.staff.email})</h4>`;
+                if (analysis.staff)
+                    adiv.innerHTML = `<h4>${analysis.staff.display} (ID: ${analysis.staff.id}, ${analysis.staff.email})</h4>`;
 
-                uiMapping.set(result, <IAnalysisMap>{ element: adiv });
+                uiMapping.set(analysis, <IAnalysisMap>{ element: adiv });
 
-                adiv.className = "alert alert-" + (result.state == AnalysisMessageState.Error ? "danger" : result.state == AnalysisMessageState.Warning ? "warning" : "success");
+                adiv.className = "alert alert-" + (analysis.state == AnalysisMessageState.Error ? "danger" : analysis.state == AnalysisMessageState.Warning ? "warning" : "success");
 
-                result.messages.forEach(v => {
+                let msg: string;
+
+                if (analysis.directorOf) {
+                    msg = "<br/><bold>Departments user is a director for:</bold><ul>";
+                    analysis.directorOf.forEach(v => {
+                        msg += `${v.id} - ${v.department} (${v.program})\r\n`;
+                    });
+                    analysis.messages.push({ message: msg + "</ul>", state: AnalysisMessageState.NoIssue })
+                }
+
+                if (analysis.supervisorOf) {
+                    msg = "<br/><bold>Departments user is a supervisor for:</bold><ul>";
+                    analysis.supervisorOf.forEach(v => {
+                        msg += `${v.id} - ${v.department} (${v.program})\r\n`;
+                    });
+                    analysis.messages.push({ message: msg + "</ul>", state: AnalysisMessageState.NoIssue })
+                }
+
+                msg = `<bold><a href="#" onclick="${analysis.actionLink('updateAsSupervisorDirector')}">Change Units/Departments</a></bold>`;
+                analysis.messages.push({ message: msg, state: AnalysisMessageState.NoIssue })
+
+                analysis.messages.forEach(v => {
                     let msgDiv = document.createElement("div");
                     msgDiv.innerHTML = v.message.replace(/\n/g, "<br/>\r\n");
                     adiv.appendChild(msgDiv);
                     uiMapping.set(v, <IMessageMap>{ element: msgDiv });
                 });
-
-                if (result.directorOf) {
-                    let div = document.createElement("div");
-                    div.innerHTML = "<br/><bold>Departments user is a director for:</bold>";
-                    let ul = document.createElement("ul");
-                    div.appendChild(ul);
-                    result.directorOf.forEach(v => {
-                        let li = document.createElement("li");
-                        li.innerHTML = `${v.units_departments_id} - ${v.department} (${v.program})<br/>\r\n`;
-                        ul.appendChild(li);
-                    });
-                    adiv.appendChild(div);
-                }
-
-                if (result.supervisorOf) {
-                    let div = document.createElement("div");
-                    div.innerHTML = "<br/><bold>Departments user is a supervisor for:</bold>";
-                    let ul = document.createElement("ul");
-                    div.appendChild(ul);
-                    result.supervisorOf.forEach(v => {
-                        let li = document.createElement("li");
-                        li.innerHTML = `${v.units_departments_id} - ${v.department} (${v.program})<br/>\r\n`;
-                        ul.appendChild(li);
-                    });
-                    adiv.appendChild(div);
-                }
 
                 this.resultsContainer.appendChild(adiv);
             }

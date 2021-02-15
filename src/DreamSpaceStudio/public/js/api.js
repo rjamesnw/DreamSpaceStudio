@@ -4166,8 +4166,8 @@ var DS;
             if (!_method)
                 _method = this.method || "GET";
             var payload = _body || this.body;
-            if (typeof payload == 'object' && payload.__proto__ == Object.prototype) {
-                // (can't send object literals! convert to something else ...)
+            if (typeof payload == 'object') {
+                // (can't send objects, convert to something else ...)
                 if (_method == 'GET') {
                     var q = new DS.Query(payload);
                     url = q.appendTo(url);
@@ -5008,6 +5008,8 @@ var DS;
             InputElementTypes["time"] = "time";
             InputElementTypes["url"] = "url";
             InputElementTypes["week"] = "week";
+            InputElementTypes["list"] = "list";
+            InputElementTypes["multilist"] = "multilist"; // (special type - will create a multiple selection list)
         })(InputElementTypes = HTML.InputElementTypes || (HTML.InputElementTypes = {}));
         // --------------------------------------------------------------------------------------------------------------------
         /** Removes the '<!-- -->' comment sequence from the ends of the specified HTML. */

@@ -434,8 +434,8 @@ namespace DS {
 
             if (!_method) _method = this.method || "GET";
             var payload: any = _body || this.body;
-            if (typeof payload == 'object' && payload.__proto__ == Object.prototype) {
-                // (can't send object literals! convert to something else ...)
+            if (typeof payload == 'object') {
+                // (can't send objects, convert to something else ...)
                 if (_method == 'GET') {
                     var q = new Query(payload);
                     url = q.appendTo(url);

@@ -35,9 +35,10 @@ export class Supervisor {
 }
 
 export interface IDepartment {
-    units_departments_id: number;
-    program: string;
+    id: number;
+    name: string;
     department: string;
+    program: string;
 }
 
 export interface IDelegate {
@@ -114,6 +115,8 @@ export class Analysis {
 
     messages: IAnalysisMessage[] = [];
 
+    departments: IDepartment[];
+
     directorOf: IDepartment[];
     supervisorOf: IDepartment[];
 
@@ -123,7 +126,16 @@ export class Analysis {
     lastName?: string;
     email?: string;
 
+    directorDepartments?: number[];
+    supervisorDepartments?: number[];
+
     state = AnalysisMessageState.NoIssue; // (global result state)
+
+    static from(analysis: IAnalysis) {
+        var analysisClassInstance = new Analysis(Object.assign(new Staff(), analysis?.staff));
+        Object.assign(analysisClassInstance, analysis);
+        return analysisClassInstance;
+    }
 
     constructor(public staff: Staff) {
     }

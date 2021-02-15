@@ -163,6 +163,7 @@
     <TypeScriptCompile Include="server\app.ts" />
     <TypeScriptCompile Include="server\routes\index.ts" />
     <TypeScriptCompile Include="server\routes\user.ts" />
+    <Content Include=".srhc.env" />
     <Content Include="..\..\LICENSE">
       <Link>LICENSE</Link>
     </Content>

@@ -26,6 +26,11 @@ define(["require", "exports"], function (require, exports) {
             this.messages = [];
             this.state = AnalysisMessageState.NoIssue; // (global result state)
         }
+        static from(analysis) {
+            var analysisClassInstance = new Analysis(Object.assign(new Staff(), analysis === null || analysis === void 0 ? void 0 : analysis.staff));
+            Object.assign(analysisClassInstance, analysis);
+            return analysisClassInstance;
+        }
         add(message, state = AnalysisMessageState.NoIssue) {
             if (state > this.state)
                 this.state = state;

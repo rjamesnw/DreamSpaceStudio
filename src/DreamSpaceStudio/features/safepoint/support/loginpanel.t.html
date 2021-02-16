@@ -1,0 +1,62 @@
+${#base "^" "../../components" }
+${#layout ^/panel}
+${# .title='Login' }
+
+<div id="logreg-forms">
+    <$:view $path="^/form" class="form-signin">
+        <h1 class="h3 mb-3 font-weight-normal" style="text-align: center"> Sign in</h1>
+
+        <$:view $path="select" name="site" ; id="site">
+            <option value="" selected>Please select a site:</option>
+            <option value="1">Southlake Regional Health Centre (SRHC)</option>
+            <option value="3">Stevenson Memorial Hospital (SMH)</option>
+        </$:view>
+        <br />
+
+        ${#view inputbox|[@].type='text'; [@].name="username"; [@].id="username"; [@].placeholder='Windows Username'}<br />
+        ${#view inputbox|[@].type='password'; [@].name="password"; [@].id="password"; [@].placeholder='Password'}
+
+        <br />
+
+        <$:view $path="button" name="login" id='btn-login' class='btn-success btn-block'>
+            <i class="fas fa-sign-in-alt"></i> Sign in
+        </$:view>
+        <a href="#" id="forgot_pswd">Forgot password?</a>
+        <hr>
+        <$:view $path="button" class='btn-primary btn-block' id='btn-signup'>
+            <i class="fas fa-user-plus"></i> Sign up New Account
+        </$:view>
+    </$:view>
+    <$:view $path="^/form" action="/reset/password/" class="form-reset">
+        <$:view $path="inputbox" type="email" id="resetEmail" placeholder="Email address" required="" autofocus="" />
+        <$:view $path="button" type="submit" class="btn-primary btn-block">Reset Password</$:view>
+        <a href="#" id="cancel_reset"><i class="fas fa-angle-left"></i> Back</a>
+    </$:view>
+    <$:view $path="^/form" action="/signup/" class="form-signup">
+        <div class="social-login">
+            <$:view $path="button" type="button" class="facebook-btn social-btn"><span><i class="fab fa-facebook-f"></i> Sign up with Facebook</span></$:view>
+        </div>
+        <div class="social-login">
+            <$:view $path="button" type="button" class="google-btn social-btn"><span><i class="fab fa-google-plus-g"></i> Sign up with Google+</span></$:view>
+        </div>
+
+        <p style="text-align:center">OR</p>
+
+        <$:view $path="inputbox" type="text" id="user-name" placeholder="Full name" required autofocus />
+        <$:view $path="inputbox" type="email" id="user-email" placeholder="Email address" required autofocus />
+        <$:view $path="inputbox" type="password" id="user-pass" placeholder="Password" required autofocus />
+        <$:view $path="inputbox" type="password" id="user-repeatpass" placeholder="Repeat Password" required autofocus />
+
+        <$:view $path="button" class="btn-primary btn-block" type="submit" placeholder="Repeat Password" required autofocus><i class="fas fa-user-plus"></i> Sign Up</$:view>
+
+        <a href="#" id="cancel_signup"><i class="fas fa-angle-left"></i> Back</a>
+    </$:view>
+    <br>
+</div>
+${#section footer}
+${#section scripts}
+<script>
+    require(["safepoint/support/login"]);
+</script>
+${#section css}
+<link rel='stylesheet' href='/stylesheets/login.css' />

@@ -25,6 +25,7 @@ DS.webRoot = cwd;
 import * as env from "./environment";
 import fs = require('fs');
 import express = require('express');
+import * as sessions from './sessions';
 import { Socket } from "net";
 import * as templateEngine from "./t.html";
 import { viewsRoot, HttpContext, ViewData } from './t.html';
@@ -36,6 +37,10 @@ import { isNullOrUndefined } from 'util';
 // ... get a new express app instance ...
 
 var app = express();
+
+// ... set up sessions ...
+
+sessions.initializeSessionStorage(app);
 
 // ... apply the basic templating engine ...
 

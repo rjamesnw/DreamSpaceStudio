@@ -1,0 +1,4 @@
+<select class="${[@]('class').add('form-control')}" ${[@](['class', 'type' ])}>
+    ${.caption && `<option value="*">`+.caption+`</option>` || ""}
+    ${.content}${#render content?}
+</select>

@@ -1,5 +1,15 @@
 // CDS specific types.
 
+export interface ISite {
+    id: number;
+    name: string;
+    display: string;
+    acronym: string;
+    domain: string;
+    support_number: string;
+    ldap_path: string;
+}
+
 export class Staff {
     id?: number;
     username: string;

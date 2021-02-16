@@ -1,4 +1,4 @@
-import { Analysis, AnalysisMessageState, IAnalysis, IAnalysisMessage } from './cds';
+import { Analysis, AnalysisMessageState, IAnalysis, IAnalysisMessage } from './cds.shared';
 
 interface IAnalysisMap {
     element?: any; // (the element on the browser where this analysis is rendered [HTMLElement])

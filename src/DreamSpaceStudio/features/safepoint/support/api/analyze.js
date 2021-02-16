@@ -2,37 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.post = exports.get = void 0;
 const util_1 = require("util");
-const cds_1 = require("../cds");
-var cds_db = new DS.DB.MSSQL.MSSQLAdapter({
-    user: process.env.CDS_MSSQL_USER,
-    password: process.env.CDS_MSSQL_PASS,
-    server: process.env.CDS_MSSQL_HOST + (process.env.CDS_MSSQL_INSTANCE ? '\\' + process.env.CDS_MSSQL_INSTANCE : ''),
-    database: process.env.CDS_MSSQL_DB_NAME,
-    options: {
-        encrypt: false // Set this to true if you're on Windows Azure (default is false)
-    }
-});
-var cds_conn;
-var sp_db = new DS.DB.MSSQL.MSSQLAdapter({
-    user: process.env.SP_MSSQL_USER,
-    password: process.env.SP_MSSQL_PASS,
-    server: process.env.SP_MSSQL_HOST + (process.env.SP_MSSQL_INSTANCE ? '\\' + process.env.SP_MSSQL_INSTANCE : ''),
-    database: process.env.SP_MSSQL_DB_NAME,
-    options: {
-        encrypt: false // Set this to true if you're on Windows Azure (default is false)
-    }
-});
-var sp_conn;
-async function _getCDSConnection() {
-    //if (this._BotPalConn && (this._BotPalConn.connection.state == 'connected' || this._BotPalConn.connection.state == 'authenticated'))
-    //    return this._BotPalConn;
-    return cds_conn || (cds_conn = await cds_db.createConnection()); // (uses the environment default values)
-}
-async function _getSPConnection() {
-    //if (this._BotPalConn && (this._BotPalConn.connection.state == 'connected' || this._BotPalConn.connection.state == 'authenticated'))
-    //    return this._BotPalConn;
-    return sp_conn || (sp_conn = await sp_db.createConnection()); // (uses the environment default values)
-}
+const cds_shared_1 = require("../cds.shared");
+const cds_1 = require("./cds");
 //let newFile = new TTSFile();
 //newFile.filename = DS.Path.getName(targetFilename);
 //newFile.voice_code = DS.StringUtils.isEmptyOrWhitespace(voiceCode) ? null : voiceCode;
@@ -43,16 +14,17 @@ async function _getSPConnection() {
 async function get(req, res, next) {
     var _a, _b;
     var json, results = [], state;
+    var session = req.session;
     try {
         var username = req.query.username;
         var incidentNum = req.query.incidentNum && +req.query.incidentNum || void 0;
-        var sites_id = 1;
-        var staffResuts = await cds_db.query("SELECT * FROM staff where sites_id = @sites_id and username=@username", {
-            sites_id,
-            username
-        });
+        var sites_id = +session.sites_id;
+        if (!sites_id)
+            throw "No valid site ID exists in the session. Please login first.";
+        cds_1.setSiteID(sites_id);
+        var staffResuts = await cds_1.getStaff(username);
         if (!staffResuts.response.length) {
-            let analysis = results[results.length] = new cds_1.Analysis(null);
+            let analysis = results[results.length] = new cds_shared_1.Analysis(null);
             analysis.username = username;
             analysis.incidentNum = incidentNum;
             var msg = `User is not added to CDS and does not have access to login ${analysis.correctThisLink('fixMissingCDSUser')}.`;
@@ -60,27 +32,15 @@ async function get(req, res, next) {
         }
         else
             for (var staff of staffResuts.response) {
-                let analysis = results[results.length] = new cds_1.Analysis(staff);
+                let analysis = results[results.length] = new cds_shared_1.Analysis(staff);
                 analysis.username = staff.username;
                 analysis.staff_id = staff.id;
                 analysis.incidentNum = incidentNum;
                 console.log("Checking staff:" + staff.display + "...");
-                var allDepartments = await cds_db.query(`select units_departments.id, units_departments.name, units_departments.display as department, programs.display as program
-                FROM units_departments 
-                LEFT OUTER JOIN programs ON programs.id = units_departments.programs_id
-                where units_departments.sites_id=@sites_id and not units_departments.is_inactive=1
-                order by department`, { sites_id });
+                var allDepartments = await cds_1.getDepartments();
                 analysis.departments = allDepartments.response;
-                var directors = await cds_db.query(`select map_directors_units_departments.directors_id, map_directors_units_departments.units_departments_id as id, programs.display as program, units_departments.display as department
-                FROM map_directors_units_departments LEFT OUTER JOIN units_departments ON units_departments.id = map_directors_units_departments.units_departments_id 
-                LEFT OUTER JOIN staff ON staff.id = map_directors_units_departments.directors_id
-                LEFT OUTER JOIN programs ON programs.id = units_departments.programs_id
-                where staff.id = @staff_id`, { staff_id: staff.id });
-                var supervisors = await cds_db.query(`select map_supervisors_units_departments.supervisors_id, map_supervisors_units_departments.units_departments_id as id, programs.display as program, units_departments.display as department
-                FROM map_supervisors_units_departments LEFT OUTER JOIN units_departments ON units_departments.id = map_supervisors_units_departments.units_departments_id 
-                LEFT OUTER JOIN staff ON staff.id = map_supervisors_units_departments.supervisors_id
-                LEFT OUTER JOIN programs ON programs.id = units_departments.programs_id
-                where staff.id = @staff_id`, { staff_id: staff.id });
+                var directors = await cds_1.getDirectorDepartments(staff.id);
+                var supervisors = await cds_1.getSupervisorDepartments(staff.id);
                 if (directors.response.length) {
                     analysis.add("User is a director.");
                     analysis.directorOf = directors.response;
@@ -91,7 +51,7 @@ async function get(req, res, next) {
                 }
                 if (!analysis.directorOf && !analysis.supervisorOf)
                     analysis.add("User is not a supervisor or director.");
-                var delegates = await sp_db.query(`select * from InvolvedUnitsDepartmentsDelegates where StaffID = @staff_id`, { staff_id: staff.id, sites_id });
+                var delegates = await cds_1.getDelegatedUnitsDepartments(staff.id);
                 if (!delegates.response.length)
                     analysis.add("User is not a delegate.");
                 else {
@@ -100,18 +60,12 @@ async function get(req, res, next) {
                         analysis.error("This user should not be a delegate AND also a supervisor or director."
                             + ` Making a supervisor or director a delegate of another unit/department may cause problems accessing incidents ${analysis.correctThisLink('fixSupDirAsDel')}.`);
                 }
-                var specAuthUsers = await sp_db.query(`select * from SpecialAuthorityUsers where StaffID = @staff_id`, { staff_id: staff.id });
+                var specAuthUsers = await cds_1.getSpecialAuthority(staff.id);
                 let sa = specAuthUsers.response[0];
-                var incidents = incidentNum && await sp_db.query(`select IncidentID, Status, IsInactive, IncidentSeverities.Description as SeverityDescription, IncidentSeverityGroups.Name as Severity, IncidentSeverityGroups.Display as SeverityDisplay FROM Incidents
-                  left join IncidentSeverities on IncidentSeverities.IncidentSeverityID=Incidents.IncidentSeverityID
-                  left join IncidentSeverityGroups on IncidentSeverityGroups.IncidentSeverityGroupID=IncidentSeverities.IncidentSeverityGroupID
-                  where Incidents.IncidentID=@incidentid and SiteID=@sites_id`, { incidentid: incidentNum, sites_id });
+                var incidents = incidentNum && await cds_1.getIncident(incidentNum);
                 var incident = ((_a = incidents === null || incidents === void 0 ? void 0 : incidents.response) === null || _a === void 0 ? void 0 : _a.length) ? incidents.response[0] : null;
                 if (incident) {
-                    var involvedUnitDepartments = await sp_db.query(`select InvolvedUnitsDepartments.*, dep.display as Department, prog.display as Program FROM InvolvedUnitsDepartments
-                    left join srhccardiac6.cds.dbo.units_departments as dep on dep.id=UnitDepartmentID
-                    left join srhccardiac6.cds.dbo.programs as prog on prog.id=programs_id
-                    where IncidentID=@incidentid`, { incidentid: incidentNum });
+                    var involvedUnitDepartments = await cds_1.getIncidentInvolvedUnitsDepartments(incidentNum);
                     if (!((_b = involvedUnitDepartments === null || involvedUnitDepartments === void 0 ? void 0 : involvedUnitDepartments.response) === null || _b === void 0 ? void 0 : _b.length))
                         analysis.warning("There are no units or departments associated with that incident. No one will be able to open it.");
                     else {
@@ -121,21 +75,20 @@ async function get(req, res, next) {
                         var authorized = !analysis.directorOf ? false : analysis.directorOf.some(d => involvedUnitDepartments.response.some(i => i.UnitDepartmentID == d.id));
                         var authorized = authorized || !analysis.supervisorOf ? authorized : analysis.supervisorOf.some(d => involvedUnitDepartments.response.some(i => i.UnitDepartmentID == d.id));
                         if (authorized) {
-                            state = cds_1.AnalysisMessageState.NoIssue;
+                            state = cds_shared_1.AnalysisMessageState.NoIssue;
                             var msg = "User is a part of at least one unit or department associated with the incident";
-                            var specialAuthorityAssignees = await sp_db.query(`select * from SpecialAuthorityAssignees
-                            where IncidentID=@incidentid and SpecialAuthorityID=@specialAuthorityID`, { incidentid: incidentNum, specialAuthorityID: sa.SpecialAuthorityID });
+                            var specialAuthorityAssignees = await cds_1.getAssignedSpecialAuthorities(incidentNum, sa.SpecialAuthorityID);
                             if (specialAuthorityAssignees.response.length) {
                                 msg += " and should be able to open it.";
                                 if (specialAuthorityAssignees.response[0].DoneReviewing)
                                     msg += " User is also done reviewing the incident.";
                                 else {
-                                    state = cds_1.AnalysisMessageState.Warning;
+                                    state = cds_shared_1.AnalysisMessageState.Warning;
                                     msg += " User has not yet completed reviewing the incident.";
                                 }
                             }
                             else {
-                                state = cds_1.AnalysisMessageState.Error;
+                                state = cds_shared_1.AnalysisMessageState.Error;
                                 msg += ` but will not be able to open it, as they were not part of any related department when the incident was created (<a href="#" onclick="${analysis.actionLink('fixMissingSpecialAuth')}">correct this</a>).`;
                             }
                             analysis.add(msg, state);
@@ -152,13 +105,13 @@ async function get(req, res, next) {
                     if (authorized) {
                         analysis.add(`User will not get notifications unless the severity is '${sa.MinimumAlertSeverityRequired}' or greater.`);
                         if (incident) {
-                            state = cds_1.AnalysisMessageState.NoIssue;
+                            state = cds_shared_1.AnalysisMessageState.NoIssue;
                             var msg = `The incident has a severity of '${incident.SeverityDisplay}'.`;
-                            var incidentSL = cds_1.Severities[incident.Severity];
-                            var saSL = cds_1.Severities[sa.MinimumAlertSeverityRequired];
+                            var incidentSL = cds_shared_1.Severities[incident.Severity];
+                            var saSL = cds_shared_1.Severities[sa.MinimumAlertSeverityRequired];
                             if (incidentSL < saSL) {
                                 msg += ` Since the severity is less than what the special authority notification level, they will not get a notification.`;
-                                state = cds_1.AnalysisMessageState.Warning;
+                                state = cds_shared_1.AnalysisMessageState.Warning;
                             }
                             else
                                 msg += ` Since the severity is equal or greater than the special authority notification level, they should have gotten a notification.`;
@@ -179,7 +132,6 @@ async function get(req, res, next) {
             }
         res.status(200).json(results);
         //? res.end();
-        return Promise.resolve();
     }
     catch (ex) {
         return Promise.reject(ex);
@@ -201,7 +153,7 @@ async function post(req, res, next) {
                     return next(DS.Exception.error("analysis.post()", "'staff_id' missing."));
                 if (!analysis.specialAuthorityID)
                     return next(DS.Exception.error("analysis.post()", "'specialAuthorityID' missing."));
-                let conn = await _getSPConnection();
+                let conn = await getSPConnection();
                 let newAssignedSpecialAuth = {
                     IncidentID: analysis.incidentNum,
                     DoneReviewing: false,
@@ -220,7 +172,7 @@ async function post(req, res, next) {
                     return next(DS.Exception.error("analysis.post()", "'lastName' missing."));
                 if (!analysis.email)
                     return next(DS.Exception.error("analysis.post()", "'email' missing."));
-                let conn = await _getCDSConnection();
+                let conn = await getCDSConnection();
                 let newStaff = {
                     username: analysis.username,
                     email: analysis.email,

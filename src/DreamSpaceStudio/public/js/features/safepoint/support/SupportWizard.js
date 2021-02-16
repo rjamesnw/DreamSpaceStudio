@@ -1,4 +1,4 @@
-define(["require", "exports", "./cds"], function (require, exports, cds_1) {
+define(["require", "exports", "./cds.shared"], function (require, exports, cds_shared_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.SupportWizard = void 0;
@@ -11,7 +11,7 @@ define(["require", "exports", "./cds"], function (require, exports, cds_1) {
         var msg = analysis.messages[msgIndex];
         if (!msg)
             return alert(`Internal error: analytics with ID '${id}' does not have a message at index ${msgIndex}.`);
-        if (msg.state == cds_1.AnalysisMessageState.Fixed)
+        if (msg.state == cds_shared_1.AnalysisMessageState.Fixed)
             alert(`You already corrected this. Click the [Analyze] button to refresh.`);
         else {
             var msgMap = uiMapping.get(msg);
@@ -42,7 +42,7 @@ define(["require", "exports", "./cds"], function (require, exports, cds_1) {
                             alert(result.message);
                         else
                             alert("Fixed.");
-                        msg.state = cds_1.AnalysisMessageState.Fixed;
+                        msg.state = cds_shared_1.AnalysisMessageState.Fixed;
                         msgMap.element.style.backgroundColor = '#f0fcf0';
                     }
                 }
@@ -162,30 +162,30 @@ define(["require", "exports", "./cds"], function (require, exports, cds_1) {
             if (results.length) {
                 this.resultsContainer.innerHTML = ""; // (clear)
                 for (let result of results) {
-                    var analysis = cds_1.Analysis.from(result);
+                    var analysis = cds_shared_1.Analysis.from(result);
                     analytics[analysis.id] = analysis; // (keep track in order to refer back)
                     var adiv = document.createElement("div");
                     if (analysis.staff)
                         adiv.innerHTML = `<h4>${analysis.staff.display} (ID: ${analysis.staff.id}, ${analysis.staff.email})</h4>`;
                     uiMapping.set(analysis, { element: adiv });
-                    adiv.className = "alert alert-" + (analysis.state == cds_1.AnalysisMessageState.Error ? "danger" : analysis.state == cds_1.AnalysisMessageState.Warning ? "warning" : "success");
+                    adiv.className = "alert alert-" + (analysis.state == cds_shared_1.AnalysisMessageState.Error ? "danger" : analysis.state == cds_shared_1.AnalysisMessageState.Warning ? "warning" : "success");
                     let msg;
                     if (analysis.directorOf) {
                         msg = "<br/><bold>Departments user is a director for:</bold><ul>";
                         analysis.directorOf.forEach(v => {
                             msg += `${v.id} - ${v.department} (${v.program})\r\n`;
                         });
-                        analysis.messages.push({ message: msg + "</ul>", state: cds_1.AnalysisMessageState.NoIssue });
+                        analysis.messages.push({ message: msg + "</ul>", state: cds_shared_1.AnalysisMessageState.NoIssue });
                     }
                     if (analysis.supervisorOf) {
                         msg = "<br/><bold>Departments user is a supervisor for:</bold><ul>";
                         analysis.supervisorOf.forEach(v => {
                             msg += `${v.id} - ${v.department} (${v.program})\r\n`;
                         });
-                        analysis.messages.push({ message: msg + "</ul>", state: cds_1.AnalysisMessageState.NoIssue });
+                        analysis.messages.push({ message: msg + "</ul>", state: cds_shared_1.AnalysisMessageState.NoIssue });
                     }
                     msg = `<bold><a href="#" onclick="${analysis.actionLink('updateAsSupervisorDirector')}">Change Units/Departments</a></bold>`;
-                    analysis.messages.push({ message: msg, state: cds_1.AnalysisMessageState.NoIssue });
+                    analysis.messages.push({ message: msg, state: cds_shared_1.AnalysisMessageState.NoIssue });
                     analysis.messages.forEach(v => {
                         let msgDiv = document.createElement("div");
                         msgDiv.innerHTML = v.message.replace(/\n/g, "<br/>\r\n");

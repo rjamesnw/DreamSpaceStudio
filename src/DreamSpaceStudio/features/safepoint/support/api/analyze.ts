@@ -6,43 +6,9 @@ import { isArray } from 'util';
 import {
     Analysis, Director, IDepartment, IDelegate, ISpecialAuthority, IIncident, Staff, Supervisor, Severities,
     IncidentStatus, IInvolvedUnitDepartment, ISpecialAuthorityAssignees, AnalysisMessageState, IAnalysis
-} from '../cds';
+} from '../cds.shared';
+import { getDepartments, getStaff, getDirectorDepartments, setSiteID, getSupervisorDepartments, getDelegatedUnitsDepartments, getSpecialAuthority, getIncident, getIncidentInvolvedUnitsDepartments, getAssignedSpecialAuthorities } from './cds';
 
-var cds_db = new DS.DB.MSSQL.MSSQLAdapter({
-    user: process.env.CDS_MSSQL_USER,
-    password: process.env.CDS_MSSQL_PASS,
-    server: process.env.CDS_MSSQL_HOST + (process.env.CDS_MSSQL_INSTANCE ? '\\' + process.env.CDS_MSSQL_INSTANCE : ''), // You can use 'localhost\\instance' to connect to named instance
-    database: process.env.CDS_MSSQL_DB_NAME,
-
-    options: {
-        encrypt: false // Set this to true if you're on Windows Azure (default is false)
-    }
-});
-var cds_conn: DS.DB.MSSQL.MSSQLConnection;
-
-var sp_db = new DS.DB.MSSQL.MSSQLAdapter({
-    user: process.env.SP_MSSQL_USER,
-    password: process.env.SP_MSSQL_PASS,
-    server: process.env.SP_MSSQL_HOST + (process.env.SP_MSSQL_INSTANCE ? '\\' + process.env.SP_MSSQL_INSTANCE : ''), // You can use 'localhost\\instance' to connect to named instance
-    database: process.env.SP_MSSQL_DB_NAME,
-
-    options: {
-        encrypt: false // Set this to true if you're on Windows Azure (default is false)
-    }
-});
-var sp_conn: DS.DB.MSSQL.MSSQLConnection;
-
-async function _getCDSConnection() {
-    //if (this._BotPalConn && (this._BotPalConn.connection.state == 'connected' || this._BotPalConn.connection.state == 'authenticated'))
-    //    return this._BotPalConn;
-    return cds_conn || (cds_conn = await cds_db.createConnection()); // (uses the environment default values)
-}
-
-async function _getSPConnection() {
-    //if (this._BotPalConn && (this._BotPalConn.connection.state == 'connected' || this._BotPalConn.connection.state == 'authenticated'))
-    //    return this._BotPalConn;
-    return sp_conn || (sp_conn = await sp_db.createConnection()); // (uses the environment default values)
-}
 
 //let newFile = new TTSFile();
 //newFile.filename = DS.Path.getName(targetFilename);
@@ -54,16 +20,19 @@ async function _getSPConnection() {
 
 export async function get(req: express.Request, res: express.Response, next: express.NextFunction): Promise<void> {
     var json: string, results: Analysis[] = [], state: AnalysisMessageState;
+    var session: typeof req.session & IndexedObject = req.session;
 
     try {
         var username = <string>req.query.username;
         var incidentNum = req.query.incidentNum && +req.query.incidentNum || void 0;
-        var sites_id = 1;
+        var sites_id = +session.sites_id;
 
-        var staffResuts = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<Staff>>cds_db.query("SELECT * FROM staff where sites_id = @sites_id and username=@username", {
-            sites_id,
-            username
-        });
+        if (!sites_id)
+            throw "No valid site ID exists in the session. Please login first.";
+
+        setSiteID(sites_id);
+
+        var staffResuts = await getStaff(username);
 
         if (!staffResuts.response.length) {
             let analysis = results[results.length] = new Analysis(null);
@@ -82,28 +51,13 @@ export async function get(req: express.Request, res: express.Response, next: exp
 
                 console.log("Checking staff:" + staff.display + "...");
 
-                var allDepartments = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IDepartment>>cds_db.query(`select units_departments.id, units_departments.name, units_departments.display as department, programs.display as program
-                FROM units_departments 
-                LEFT OUTER JOIN programs ON programs.id = units_departments.programs_id
-                where units_departments.sites_id=@sites_id and not units_departments.is_inactive=1
-                order by department`,
-                    { sites_id });
+                var allDepartments = await getDepartments();
 
                 analysis.departments = allDepartments.response;
 
-                var directors = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IDepartment>>cds_db.query(`select map_directors_units_departments.directors_id, map_directors_units_departments.units_departments_id as id, programs.display as program, units_departments.display as department
-                FROM map_directors_units_departments LEFT OUTER JOIN units_departments ON units_departments.id = map_directors_units_departments.units_departments_id 
-                LEFT OUTER JOIN staff ON staff.id = map_directors_units_departments.directors_id
-                LEFT OUTER JOIN programs ON programs.id = units_departments.programs_id
-                where staff.id = @staff_id`,
-                    { staff_id: staff.id });
+                var directors = await getDirectorDepartments(staff.id);
 
-                var supervisors = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IDepartment>>cds_db.query(`select map_supervisors_units_departments.supervisors_id, map_supervisors_units_departments.units_departments_id as id, programs.display as program, units_departments.display as department
-                FROM map_supervisors_units_departments LEFT OUTER JOIN units_departments ON units_departments.id = map_supervisors_units_departments.units_departments_id 
-                LEFT OUTER JOIN staff ON staff.id = map_supervisors_units_departments.supervisors_id
-                LEFT OUTER JOIN programs ON programs.id = units_departments.programs_id
-                where staff.id = @staff_id`,
-                    { staff_id: staff.id });
+                var supervisors = await getSupervisorDepartments(staff.id);
 
                 if (directors.response.length) {
                     analysis.add("User is a director.");
@@ -118,8 +72,7 @@ export async function get(req: express.Request, res: express.Response, next: exp
                 if (!analysis.directorOf && !analysis.supervisorOf)
                     analysis.add("User is not a supervisor or director.");
 
-                var delegates = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IDelegate>>sp_db.query(`select * from InvolvedUnitsDepartmentsDelegates where StaffID = @staff_id`,
-                    { staff_id: staff.id, sites_id });
+                var delegates = await getDelegatedUnitsDepartments(staff.id);
 
                 if (!delegates.response.length)
                     analysis.add("User is not a delegate.");
@@ -130,33 +83,14 @@ export async function get(req: express.Request, res: express.Response, next: exp
                             + ` Making a supervisor or director a delegate of another unit/department may cause problems accessing incidents ${analysis.correctThisLink('fixSupDirAsDel')}.`);
                 }
 
-                var specAuthUsers = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<ISpecialAuthority>>sp_db.query(`select * from SpecialAuthorityUsers where StaffID = @staff_id`,
-                    { staff_id: staff.id });
+                var specAuthUsers = await getSpecialAuthority(staff.id);
                 let sa = specAuthUsers.response[0];
 
-                interface IIncidentResult {
-                    IncidentID: number;
-                    Status: string;
-                    IsInactive: boolean;
-                    SeverityDescription: string;
-                    Severity: string;
-                    SeverityDisplay: string;
-                }
-
-                var incidents = incidentNum && await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IIncidentResult>>sp_db.query(`select IncidentID, Status, IsInactive, IncidentSeverities.Description as SeverityDescription, IncidentSeverityGroups.Name as Severity, IncidentSeverityGroups.Display as SeverityDisplay FROM Incidents
-                  left join IncidentSeverities on IncidentSeverities.IncidentSeverityID=Incidents.IncidentSeverityID
-                  left join IncidentSeverityGroups on IncidentSeverityGroups.IncidentSeverityGroupID=IncidentSeverities.IncidentSeverityGroupID
-                  where Incidents.IncidentID=@incidentid and SiteID=@sites_id`,
-                    { incidentid: incidentNum, sites_id });
+                var incidents = incidentNum && await getIncident(incidentNum);
                 var incident = incidents?.response?.length ? incidents.response[0] : null;
 
                 if (incident) {
-                    var involvedUnitDepartments = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<IInvolvedUnitDepartment & { Department: string; Program: string; }>>sp_db.query(
-                        `select InvolvedUnitsDepartments.*, dep.display as Department, prog.display as Program FROM InvolvedUnitsDepartments
-                    left join srhccardiac6.cds.dbo.units_departments as dep on dep.id=UnitDepartmentID
-                    left join srhccardiac6.cds.dbo.programs as prog on prog.id=programs_id
-                    where IncidentID=@incidentid`,
-                        { incidentid: incidentNum });
+                    var involvedUnitDepartments = await getIncidentInvolvedUnitsDepartments(incidentNum);
 
                     if (!involvedUnitDepartments?.response?.length)
                         analysis.warning("There are no units or departments associated with that incident. No one will be able to open it.");
@@ -172,9 +106,7 @@ export async function get(req: express.Request, res: express.Response, next: exp
 
                             var msg = "User is a part of at least one unit or department associated with the incident";
 
-                            var specialAuthorityAssignees = await <DS.DB.MSSQL.IMSSQLSelectQueryResult<ISpecialAuthorityAssignees>>sp_db.query(`select * from SpecialAuthorityAssignees
-                            where IncidentID=@incidentid and SpecialAuthorityID=@specialAuthorityID`,
-                                { incidentid: incidentNum, specialAuthorityID: sa.SpecialAuthorityID });
+                            var specialAuthorityAssignees = await getAssignedSpecialAuthorities(incidentNum, sa.SpecialAuthorityID);
 
                             if (specialAuthorityAssignees.response.length) {
                                 msg += " and should be able to open it.";
@@ -236,8 +168,6 @@ export async function get(req: express.Request, res: express.Response, next: exp
 
         res.status(200).json(results);
         //? res.end();
-
-        return Promise.resolve();
     }
     catch (ex) {
         return Promise.reject(ex);
@@ -254,7 +184,7 @@ export async function post(req: express.Request, res: express.Response, next: ex
                 if (!analysis.staff_id) return next(DS.Exception.error("analysis.post()", "'staff_id' missing."));
                 if (!analysis.specialAuthorityID) return next(DS.Exception.error("analysis.post()", "'specialAuthorityID' missing."));
 
-                let conn = await _getSPConnection();
+                let conn = await getSPConnection();
 
                 let newAssignedSpecialAuth = <ISpecialAuthorityAssignees>{
                     IncidentID: analysis.incidentNum,
@@ -274,7 +204,7 @@ export async function post(req: express.Request, res: express.Response, next: ex
                 if (!analysis.lastName) return next(DS.Exception.error("analysis.post()", "'lastName' missing."));
                 if (!analysis.email) return next(DS.Exception.error("analysis.post()", "'email' missing."));
 
-                let conn = await _getCDSConnection();
+                let conn = await getCDSConnection();
 
                 let newStaff = <Staff>{
                     username: analysis.username,

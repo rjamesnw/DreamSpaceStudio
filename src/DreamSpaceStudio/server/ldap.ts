@@ -17,17 +17,24 @@ export async function login(username: string, password: string, ldapPath: string
                 attributes: ['objectGUID']
             };
 
-            client.search('', opts, function (err, search) {
+            var base = 'CN=users,' + DS.Path.getName(ldapPath);
+
+            client.search(base, opts, function (err, search) {
                 if (err) return rej(err);
 
                 var user: ldap.SearchEntryObject;
 
-                search.on('error', rej);
-                search.on('end', () => res(user));
+                search.on('error', serr => {
+                    (client.unbind(), rej(serr))
+                });
+                search.on('end', () => {
+                    res(user);
+                });
                 search.on('searchEntry', function (entry) {
+                    user = entry.object;
                     console.log("LDAP User: " + JSON.stringify(user));
                     res(user);
-                    client.
+                    client.unbind();
                     search.removeAllListeners();
                 });
             });

@@ -32,7 +32,7 @@ async function doLogin(e: JQuery.ClickEvent) {
     else {
         if (results.message) alert(results.message);
 
-        location.href = "safepoint/support";
+        location.href = "index";
     }
 }
 

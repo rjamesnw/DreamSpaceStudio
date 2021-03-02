@@ -8,7 +8,7 @@
     <LastActiveSolutionConfig>Debug|Any CPU</LastActiveSolutionConfig>
     <SaveNodeJsSettingsInProjectFile>True</SaveNodeJsSettingsInProjectFile>
     <TypeScriptBuildMode>true</TypeScriptBuildMode>
-    <LaunchUrl>http://localhost:45000/safepoint/support</LaunchUrl>
+    <LaunchUrl>http://localhost:45000/safepoint/support/login</LaunchUrl>
     <NodeExePath>
     </NodeExePath>
     <NodeExeArguments>
@@ -215,8 +215,13 @@
     <Content Include="botpal\services\apis\tts\ITTSSAPI.ts" />
     <Content Include="botpal\services\apis\tts\Ivona.ts" />
     <Content Include="botpal\utility\Point3D.ts" />
+    <Content Include="favicon.ico" />
     <Content Include="features\components\icon.t.html" />
     <Content Include="features\components\select.t.html" />
+    <Content Include="features\ide\login.t.html" />
+    <Content Include="features\ide\loginpanel.t.html" />
+    <Content Include="features\ide\swagger-ui\index.html" />
+    <Content Include="features\ide\swagger-ui\swagger-custom.css" />
     <Content Include="features\mirandus\index.t.html" />
     <Content Include="features\safepoint\support\api\tsconfig_.json" />
     <Content Include="features\safepoint\support\index.t.html" />
@@ -259,7 +264,6 @@
     <Content Include="features\components\label.t.html" />
     <Content Include="features\components\button.t.html" />
     <Content Include="features\components\panel.t.html" />
-    <Content Include="features\ide\login.t.html" />
     <Content Include="features\ide\workflow\index.t.html" />
     <Content Include="features\layout.t.html" />
     <Content Include="features\ide\index.t.html">
@@ -285,6 +289,7 @@
     <Folder Include="botpal\services\apis\tts\" />
     <Folder Include="botpal\services\tts\" />
     <Folder Include="features\ide\editor\" />
+    <Folder Include="features\ide\swagger-ui\" />
     <Folder Include="features\ide\_modules_\" />
     <Folder Include="actions\" />
     <Folder Include="botpal\" />

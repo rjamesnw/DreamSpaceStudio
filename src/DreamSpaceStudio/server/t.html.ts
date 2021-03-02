@@ -111,7 +111,7 @@ export class HttpContext {
     get finalViewPath(): string {
         return this.expandViewPath(this.viewPath);
     }
-    /** The unexpanded path to the view being rendered.
+    /** The unexpanded path to the view being rendered. This includes the name/filename of the view.
      * @see finalViewPath
      */
     viewPath?: string;
@@ -122,18 +122,21 @@ export class HttpContext {
     /** An accumulation of named contexts while parsing a previous view. */
     sectionManager?: SectionManager;
 
+    /** @see redirect() */
+    _redirectURL?: string;
+
     /** Expands the path against the registered base paths in this view context. 
      * Only the first name in the relative path is expanded if a match is found in 'basePaths'.
      */
     expandViewPath(viewPath: string): string {
-        if (typeof viewPath != 'string' || viewPath[0] == '/' || viewPath[0] == '\\')
-            return viewPath;
-        var i = viewPath.indexOf('/');
-        i < 0 && (i = viewPath.indexOf('\\'));
-        if (i > 0) { // ('i' can't be 0, otherwise the name is empty)
-            var name = viewPath.substr(0, i);
-            if (name in this.basePaths)
-                return this.basePaths[name] + viewPath.substr(i);
+        if (typeof viewPath == 'string' && viewPath[0] != '/' && viewPath[0] != '\\') {
+            var i = viewPath.indexOf('/');
+            i < 0 && (i = viewPath.indexOf('\\'));
+            if (i > 0) { // ('i' can't be 0, otherwise the name is empty)
+                var name = viewPath.substr(0, i);
+                if (name in this.basePaths)
+                    return this.basePaths[name] + viewPath.substr(i);
+            }
         }
         return viewPath;
     }
@@ -164,6 +167,11 @@ export class HttpContext {
             this.basePaths = DS.Utilities.clone(requestOrCtx.basePaths, DS.Utilities.RecursionMode.None); // (inherit the base path mappings also)
         }
     }
+
+    /** If called then view rendering will cancel and a redirect response will be sent.
+     * Note: This must be requested before anything else renders, such as the layout page. Once a response is sent calling this may cause errors.
+     */
+    redirect(targetPath: string) { this._redirectURL = targetPath; }
 }
 
 export interface Renderer { (): string | Promise<string> }
@@ -294,6 +302,11 @@ export var __express = function (this: IExpressViewContext, filePath: string, op
 
         if (!httpContext.viewPath)
             httpContext.viewPath = this.name;
+
+        // ... if the user did not enter the file name with the path add a '/' to flag the path as a directory-only path (default file 'index.t.html' should be detected already) ...
+        var filename = DS.Path.getName(filePath).split('.')[0].toLowerCase();
+        if (!httpContext.viewPath.toLowerCase().endsWith(filename))
+            httpContext.viewPath = DS.Path.combine(httpContext.viewPath, '/');
 
         //x var viewsRootPath = viewsRoot;
         //x if (!httpContext.viewPath && filePath.toLowerCase().indexOf(viewsRootPath.toLowerCase()) == 0)
@@ -561,6 +574,9 @@ export var __express = function (this: IExpressViewContext, filePath: string, op
 
                             if (!outputExpr)
                                 value = void 0;
+
+                            if (httpContext._redirectURL)
+                                return httpContext.response.redirect(httpContext._redirectURL);
                         }
 
                         if (!isNullOrUndefined(value))

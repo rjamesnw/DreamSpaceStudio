@@ -1,7 +1,9 @@
+${if (!httpContext.request.session.sites_id) httpContext.redirect('login'); }
 ${#layout}
-${#base "^" "../components"}
+${#base "^" "../../components"}
 ${# .title='SafePoint Support Wizard'}
 <div>
+    <div class="float-right"><a href="login">Login</a></div>
     Use this support wizard to help you find possible issues with SafePoint incidents.<br /><br />
     ${#view ^/inputbox|[@].type='text'; [@].name="userID"; [@].id="$userID"; [@].placeholder="Enter the user's Windows username"; [@].value="";}<br />
     ${#view ^/inputbox|[@].type='text'; [@].name="incidentID"; [@].id="$incidentID"; [@].placeholder="Enter the incident number"; [@].value=""}<br />

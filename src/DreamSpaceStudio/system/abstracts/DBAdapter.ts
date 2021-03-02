@@ -78,8 +78,10 @@
         }
 
         /** A base class to help support various databases. */
-        export abstract class DBAdapter<TConfig = any> {
+        export abstract class DBAdapter<TConfig = any, TPool = any> {
             configuration: TConfig;
+            connectionPool: TPool;
+
             constructor(config: TConfig) { this.configuration = config; }
 
             abstract createConnection(): Promise<DBConnection>;

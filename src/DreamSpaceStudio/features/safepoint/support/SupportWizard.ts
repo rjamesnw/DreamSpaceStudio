@@ -1,4 +1,4 @@
-import { Analysis, AnalysisMessageState, IAnalysis, IAnalysisMessage } from './cds.shared';
+import { Analysis, AnalysisMessageState, IAnalysis, IAnalysisMessage, validateNewUserDetails } from './cds.shared';
 
 interface IAnalysisMap {
     element?: any; // (the element on the browser where this analysis is rendered [HTMLElement])
@@ -62,9 +62,25 @@ async function fixit(id: string, msgIndex: number, serverFuncName: string, apiPa
     }
 };
 
-interface ISelection { name: string, id?: string, caption: string, value: string, tag?: any, selected?: boolean }
+interface ISelection {
+    name: string;
+    id?: string;
+    caption: string;
+    value: string;
+    tag?: any;
+    selected?: boolean;
+    header?: boolean; // (true for tabular options that should be rendered as table headers)
+}
 
-interface IFormControl { name: string, id?: string, caption?: string, placeHolder?: string, type?: DS.HTML.InputElementTypes, selections?: ISelection[] }
+interface IFormControl {
+    name: string;
+    id?: string;
+    caption?: string;
+    placeHolder?: string;
+    columns?: string[];
+    type?: DS.HTML.InputElementTypes;
+    selections?: (ISelection | ISelection[])[];
+}
 
 function makeFormControl(ctrl: IFormControl): string {
     var body = "", groupType = "form-group", label = true;
@@ -75,6 +91,24 @@ function makeFormControl(ctrl: IFormControl): string {
                 body += `<button type="button" class="list-group-item list-group-item-action ${s.selected ? 'active' : ''}" id="${s.id ?? s.name}" name="${s.name ?? s.id}">${s.caption ?? ""}</button>\r\n`
             );
         groupType = "list-group";
+    } else if (ctrl?.type == DS.HTML.InputElementTypes.tabularOptions) {
+        body += `<table class="table table-striped"><thead><tr>\r\n`;
+        if (ctrl.columns)
+            ctrl.columns.forEach(s => body += `<th scope="col">${s}</th>\r\n`);
+        body += `</tr></thead><tbody>`;
+        if (ctrl.selections)
+            ctrl.selections.forEach(s => {
+                body += `<tr>\r\n`;
+                let colSelections = Array.isArray(s) ? s : [s];
+                colSelections.forEach((v, i) =>
+                    body += v.header ? `<th scope="row">${v.caption}</th>\r\n`
+                        : `<td><input type="checkbox" class="form-check-input" id = "${v.id ?? v.name}" name="${v.name ?? ctrl.name ?? ctrl.id}" value="${DS.StringUtils.toString(v.value)}" ${v.selected ? 'checked' : ''} title="${ctrl.columns[i]}"></td>\r\n`
+                );
+                body += `</tr/>\r\n`;
+            });
+        body += `</tbody></table>\r\n`;
+        groupType = "";
+        label = false;
     } else if (ctrl?.type == DS.HTML.InputElementTypes.multilist) {
         if (ctrl.selections)
             ctrl.selections.forEach(s =>
@@ -82,7 +116,7 @@ function makeFormControl(ctrl: IFormControl): string {
             );
         groupType = "list-group";
     } else {
-        body = `<input class="form-control" type="${ctrl.type}" id="${ctrl.id ?? ctrl.name}" name="${ctrl.name ?? ctrl.id}" placeholder="${ctrl.placeHolder ?? ""}">\r\nd`;
+        body = `<input class="form-control" type="${ctrl.type}" id="${ctrl.id ?? ctrl.name}" name="${ctrl.name ?? ctrl.id}" placeholder="${ctrl.placeHolder ?? ""}">\r\n`;
     }
 
     var html = `<div class="${groupType}">\r\n`;
@@ -110,18 +144,19 @@ DS.Globals.setValue("SupportWizard", "fixSupDirAsDel", async (id: string, msgInd
     await fixit(id, msgIndex, serverFuncName, `support/analyze?cmd=${serverFuncName}`, "This fix will clear all delegate entries for the user, since they should not exist. Continue?");
 });
 
+DS.Globals.setValue("SupportWizard", "removeSpecialAuth", async (id: string, msgIndex: number, serverFuncName: string) => {
+    await fixit(id, msgIndex, serverFuncName, `support/analyze?cmd=${serverFuncName}`, "Remove user's special authority role?");
+});
 
 
 DS.Globals.setValue("SupportWizard", "fixMissingCDSUser", async (id: string, msgIndex: number, serverFuncName: string) => {
-    await fixit(id, msgIndex, serverFuncName, `support/analyze?cmd=${serverFuncName}`, "Add the user to CDS so they can login?", () => {
-        let data = {
-            firstName: (<HTMLInputElement>document.getElementById('firstName')).value.trim(),
-            lastName: (<HTMLInputElement>document.getElementById('lastName')).value.trim(),
-            email: (<HTMLInputElement>document.getElementById('email')).value.trim(),
-        };
-        if (!data.firstName) return new DS.Exception('Please enter a first name.');
-        if (!data.lastName) return new DS.Exception('Please enter a last name.');
-        if (!DS.Data.Validations.isValidEmailAddress(data.email)) return new DS.Exception('Please enter a valid email.');
+    await fixit(id, msgIndex, serverFuncName, `support/analyze?cmd=${serverFuncName}`, "Add the user to CDS so they can login?", (analysis) => {
+        let data = validateNewUserDetails(
+            (<HTMLInputElement>document.getElementById('$userID')).value,
+            (<HTMLInputElement>document.getElementById('firstName')).value,
+            (<HTMLInputElement>document.getElementById('lastName')).value,
+            (<HTMLInputElement>document.getElementById('email')).value
+        )
         return data;
     }, (analysis, msg) => {
         return buildForm("Add User", [
@@ -130,6 +165,10 @@ DS.Globals.setValue("SupportWizard", "fixMissingCDSUser", async (id: string, msg
             { name: "email", placeHolder: "Email" }
         ], "Add", id, msgIndex, serverFuncName);
     });
+});
+
+DS.Globals.setValue("SupportWizard", "addWBUser", async (id: string, msgIndex: number, serverFuncName: string) => {
+    await fixit(id, msgIndex, serverFuncName, `support/analyze?cmd=${serverFuncName}`, "Add the user to the Whiteboard so they can login?");
 });
 
 DS.Globals.setValue("SupportWizard", "updateAsSupervisorDirector", async (id: string, msgIndex: number, serverFuncName: string) => {
@@ -145,12 +184,26 @@ DS.Globals.setValue("SupportWizard", "updateAsSupervisorDirector", async (id: st
     }, (analysis, msg) => {
         return buildForm(`Change Units/Departments for ${analysis.staff?.display}`, [
             {
-                name: "directorFor", caption: "Director For", type: DS.HTML.InputElementTypes.multilist,
-                selections: analysis.departments.map(d => <ISelection>{ id: '' + (d.name ?? '') + '_' + d.id, caption: d.department + ` (${d.program})`, value: '' + d.id, selected: !!analysis.directorOf?.some(d2 => d2.id == d.id) })
-            },
-            {
-                name: "supervisorFor", caption: "Supervisor For", type: DS.HTML.InputElementTypes.multilist,
-                selections: analysis.departments.map(d => <ISelection>{ id: '' + (d.name ?? '') + '_' + d.id, caption: d.department + ` (${d.program})`, value: '' + d.id, selected: !!analysis.supervisorOf?.some(d2 => d2.id == d.id) })
+                name: "directorSupervisorFor",
+                caption: "Select departments user is a director or supervisor of:",
+                type: DS.HTML.InputElementTypes.tabularOptions,
+                columns: ["", "Director", "Supervisor"],
+                selections: analysis.departments.map(d => <ISelection[]>[{
+                    caption: d.department + ` (${d.program})`,
+                    header: true
+                }, {
+                    name: 'directorFor',
+                    id: 'director_' + (d.name ?? '') + '_' + d.id,
+                    caption: d.department + ` (${d.program})`,
+                    value: '' + d.id,
+                    selected: !!analysis.directorOf?.some(d2 => d2.id == d.id)
+                }, {
+                    name: 'supervisorFor',
+                    id: 'supervisor_' + (d.name ?? '') + '_' + d.id,
+                    caption: d.department + ` (${d.program})`,
+                        value: '' + d.id,
+                        selected: !!analysis.supervisorOf?.some(d2 => d2.id == d.id)
+                }])
             }
         ], "Update", id, msgIndex, serverFuncName);
     });
@@ -209,7 +262,7 @@ export class SupportWizard {
 
                 adiv.className = "alert alert-" + (analysis.state == AnalysisMessageState.Error ? "danger" : analysis.state == AnalysisMessageState.Warning ? "warning" : "success");
 
-                let msg: string;
+                let msg = "";
 
                 if (analysis.directorOf) {
                     msg = "<br/><bold>Departments user is a director for:</bold><ul>";
@@ -227,8 +280,10 @@ export class SupportWizard {
                     analysis.messages.push({ message: msg + "</ul>", state: AnalysisMessageState.NoIssue })
                 }
 
-                msg = `<bold><a href="#" onclick="${analysis.actionLink('updateAsSupervisorDirector')}">Change Units/Departments</a></bold>`;
-                analysis.messages.push({ message: msg, state: AnalysisMessageState.NoIssue })
+                if (analysis.staff_id) {
+                    msg = `<bold><a href="#" onclick="${analysis.actionLink('updateAsSupervisorDirector')}">Change Units/Departments</a></bold>`;
+                    analysis.messages.push({ message: msg, state: AnalysisMessageState.NoIssue })
+                }
 
                 analysis.messages.forEach(v => {
                     let msgDiv = document.createElement("div");

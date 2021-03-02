@@ -4666,6 +4666,9 @@ var DS;
         StringUtils.pad = pad;
         /** Appends the suffix string to the end of the source string, optionally using a delimiter if the source is not empty.
           * Note: If any argument is not a string, the value is converted into a string.
+          * @param source The first string to combine.
+          * @param suffix The second string to combine.
+          * @param delimiter A string that joins the two strings, whivh is only added if both string parameters are not undefined, null, or empty.  If missing, the two strings are simply joined togehter.
           */
         function append(source, suffix, delimiter) {
             if (source === void 0)
@@ -5009,7 +5012,8 @@ var DS;
             InputElementTypes["url"] = "url";
             InputElementTypes["week"] = "week";
             InputElementTypes["list"] = "list";
-            InputElementTypes["multilist"] = "multilist"; // (special type - will create a multiple selection list)
+            InputElementTypes["multilist"] = "multilist";
+            InputElementTypes["tabularOptions"] = "tabularOptions"; // (special type - will create a table of values with selects on the left and check boxes on the right)
         })(InputElementTypes = HTML.InputElementTypes || (HTML.InputElementTypes = {}));
         // --------------------------------------------------------------------------------------------------------------------
         /** Removes the '<!-- -->' comment sequence from the ends of the specified HTML. */

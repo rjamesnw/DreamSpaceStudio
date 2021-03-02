@@ -1,0 +1,81 @@
+${#base "^" "../components" }
+${#layout ^/panel}
+${# .title='Login' }
+
+<div id="logreg-forms">
+    <$:view $path="^/form" class="form-signin">
+        <h1 class="h3 mb-3 font-weight-normal" style="text-align: center"> Sign in</h1>
+        <div class="social-login">
+            <$:view $path="button" class="facebook-btn social-btn">
+                <span><i class="fab fa-facebook-f"></i> Sign in with Facebook</span>
+            </$:view>
+            <$:view $path="button" class="google-btn social-btn">
+                <span><i class="fab fa-google-plus-g"></i> Sign in with Google+</span>
+            </$:view>
+        </div>
+        <p style="text-align:center"> OR  </p>
+        ${#view inputbox|[@].type='email'; [@].name="email"; [@].id="4807AB8F16F04B0A948B3CF46ECBE2BA"; [@].placeholder='Email'}<br />
+        ${#view inputbox|[@].type='password'; [@].name="password"; [@].id="02B4F5FEDEA347F09711801624A7AE7A"; [@].placeholder='Password'}
+
+        <$:view $path="button" name="login" id='796486E7796B459099A9B2730F5AC5D7' class='btn-success btn-block'>
+            <i class="fas fa-sign-in-alt"></i> Sign in
+        </$:view>
+        <a href="#" id="forgot_pswd">Forgot password?</a>
+        <hr>
+        <$:view $path="button" class='btn-primary btn-block' id='btn-signup'>
+            <i class="fas fa-user-plus"></i> Sign up New Account
+        </$:view>
+    </$:view>
+    <$:view $path="^/form" action="/reset/password/" class="form-reset">
+        <$:view $path="inputbox" type="email" id="resetEmail" placeholder="Email address" required="" autofocus="" />
+        <$:view $path="button" type="submit" class="btn-primary btn-block">Reset Password</$:view>
+        <a href="#" id="cancel_reset"><i class="fas fa-angle-left"></i> Back</a>
+    </$:view>
+    <$:view $path="^/form" action="/signup/" class="form-signup">
+        <div class="social-login">
+            <$:view $path="button" type="button" class="facebook-btn social-btn"><span><i class="fab fa-facebook-f"></i> Sign up with Facebook</span></$:view>
+        </div>
+        <div class="social-login">
+            <$:view $path="button" type="button" class="google-btn social-btn"><span><i class="fab fa-google-plus-g"></i> Sign up with Google+</span></$:view>
+        </div>
+
+        <p style="text-align:center">OR</p>
+
+        <$:view $path="inputbox" type="text" id="user-name" placeholder="Full name" required autofocus />
+        <$:view $path="inputbox" type="email" id="user-email" placeholder="Email address" required autofocus />
+        <$:view $path="inputbox" type="password" id="user-pass" placeholder="Password" required autofocus />
+        <$:view $path="inputbox" type="password" id="user-repeatpass" placeholder="Repeat Password" required autofocus />
+
+        <$:view $path="button" class="btn-primary btn-block" type="submit" placeholder="Repeat Password" required autofocus><i class="fas fa-user-plus"></i> Sign Up</$:view>
+
+        <a href="#" id="cancel_signup"><i class="fas fa-angle-left"></i> Back</a>
+    </$:view>
+    <br>
+</div>
+${#section footer}
+${#section scripts}
+<script>
+    function toggleResetPswd(e) {
+        e.preventDefault();
+        $('#logreg-forms .form-signin').toggle(); // display:block or none
+        $('#logreg-forms .form-reset').toggle(); // display:block or none
+    }
+
+    function toggleSignUp(e) {
+        e.preventDefault();
+        $('#logreg-forms .form-signin').toggle(); // display:block or none
+        $('#logreg-forms .form-signup').toggle(); // display:block or none
+    }
+
+    function onReady() {
+        // Login Register Form
+        $('#logreg-forms #forgot_pswd').click(toggleResetPswd);
+        $('#logreg-forms #cancel_reset').click(toggleResetPswd);
+        $('#logreg-forms #btn-signup').click(toggleSignUp);
+        $('#logreg-forms #cancel_signup').click(toggleSignUp);
+    }
+
+    $(onReady);
+</script>
+${#section css}
+<link rel='stylesheet' href='/stylesheets/login.css' />

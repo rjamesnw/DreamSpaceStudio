@@ -60,13 +60,33 @@ define(["require", "exports", "./cds.shared"], function (require, exports, cds_s
                 ctrl.selections.forEach(s => { var _a, _b, _c; return body += `<button type="button" class="list-group-item list-group-item-action ${s.selected ? 'active' : ''}" id="${(_a = s.id) !== null && _a !== void 0 ? _a : s.name}" name="${(_b = s.name) !== null && _b !== void 0 ? _b : s.id}">${(_c = s.caption) !== null && _c !== void 0 ? _c : ""}</button>\r\n`; });
             groupType = "list-group";
         }
+        else if ((ctrl === null || ctrl === void 0 ? void 0 : ctrl.type) == DS.HTML.InputElementTypes.tabularOptions) {
+            body += `<table class="table table-striped"><thead><tr>\r\n`;
+            if (ctrl.columns)
+                ctrl.columns.forEach(s => body += `<th scope="col">${s}</th>\r\n`);
+            body += `</tr></thead><tbody>`;
+            if (ctrl.selections)
+                ctrl.selections.forEach(s => {
+                    body += `<tr>\r\n`;
+                    let colSelections = Array.isArray(s) ? s : [s];
+                    colSelections.forEach((v, i) => {
+                        var _a, _b, _c;
+                        return body += v.header ? `<th scope="row">${v.caption}</th>\r\n`
+                            : `<td><input type="checkbox" class="form-check-input" id = "${(_a = v.id) !== null && _a !== void 0 ? _a : v.name}" name="${(_c = (_b = v.name) !== null && _b !== void 0 ? _b : ctrl.name) !== null && _c !== void 0 ? _c : ctrl.id}" value="${DS.StringUtils.toString(v.value)}" ${v.selected ? 'checked' : ''} title="${ctrl.columns[i]}"></td>\r\n`;
+                    });
+                    body += `</tr/>\r\n`;
+                });
+            body += `</tbody></table>\r\n`;
+            groupType = "";
+            label = false;
+        }
         else if ((ctrl === null || ctrl === void 0 ? void 0 : ctrl.type) == DS.HTML.InputElementTypes.multilist) {
             if (ctrl.selections)
                 ctrl.selections.forEach(s => { var _a, _b, _c, _d, _e; return body += `<div class="form-check"><input type="checkbox" class="form-check-input" id="${(_a = s.id) !== null && _a !== void 0 ? _a : s.name}" name="${(_c = (_b = s.name) !== null && _b !== void 0 ? _b : ctrl.name) !== null && _c !== void 0 ? _c : ctrl.id}" value="${DS.StringUtils.toString(s.value)}" ${s.selected ? 'checked' : ''}><label class="form-check-label" for="${(_d = s.id) !== null && _d !== void 0 ? _d : s.name}">${(_e = s.caption) !== null && _e !== void 0 ? _e : ""}</label></div>\r\n`; });
             groupType = "list-group";
         }
         else {
-            body = `<input class="form-control" type="${ctrl.type}" id="${(_a = ctrl.id) !== null && _a !== void 0 ? _a : ctrl.name}" name="${(_b = ctrl.name) !== null && _b !== void 0 ? _b : ctrl.id}" placeholder="${(_c = ctrl.placeHolder) !== null && _c !== void 0 ? _c : ""}">\r\nd`;
+            body = `<input class="form-control" type="${ctrl.type}" id="${(_a = ctrl.id) !== null && _a !== void 0 ? _a : ctrl.name}" name="${(_b = ctrl.name) !== null && _b !== void 0 ? _b : ctrl.id}" placeholder="${(_c = ctrl.placeHolder) !== null && _c !== void 0 ? _c : ""}">\r\n`;
         }
         var html = `<div class="${groupType}">\r\n`;
         if (label)
@@ -86,19 +106,12 @@ define(["require", "exports", "./cds.shared"], function (require, exports, cds_s
     DS.Globals.setValue("SupportWizard", "fixSupDirAsDel", async (id, msgIndex, serverFuncName) => {
         await fixit(id, msgIndex, serverFuncName, `support/analyze?cmd=${serverFuncName}`, "This fix will clear all delegate entries for the user, since they should not exist. Continue?");
     });
+    DS.Globals.setValue("SupportWizard", "removeSpecialAuth", async (id, msgIndex, serverFuncName) => {
+        await fixit(id, msgIndex, serverFuncName, `support/analyze?cmd=${serverFuncName}`, "Remove user's special authority role?");
+    });
     DS.Globals.setValue("SupportWizard", "fixMissingCDSUser", async (id, msgIndex, serverFuncName) => {
-        await fixit(id, msgIndex, serverFuncName, `support/analyze?cmd=${serverFuncName}`, "Add the user to CDS so they can login?", () => {
-            let data = {
-                firstName: document.getElementById('firstName').value.trim(),
-                lastName: document.getElementById('lastName').value.trim(),
-                email: document.getElementById('email').value.trim(),
-            };
-            if (!data.firstName)
-                return new DS.Exception('Please enter a first name.');
-            if (!data.lastName)
-                return new DS.Exception('Please enter a last name.');
-            if (!DS.Data.Validations.isValidEmailAddress(data.email))
-                return new DS.Exception('Please enter a valid email.');
+        await fixit(id, msgIndex, serverFuncName, `support/analyze?cmd=${serverFuncName}`, "Add the user to CDS so they can login?", (analysis) => {
+            let data = cds_shared_1.validateNewUserDetails(document.getElementById('$userID').value, document.getElementById('firstName').value, document.getElementById('lastName').value, document.getElementById('email').value);
             return data;
         }, (analysis, msg) => {
             return buildForm("Add User", [
@@ -107,6 +120,9 @@ define(["require", "exports", "./cds.shared"], function (require, exports, cds_s
                 { name: "email", placeHolder: "Email" }
             ], "Add", id, msgIndex, serverFuncName);
         });
+    });
+    DS.Globals.setValue("SupportWizard", "addWBUser", async (id, msgIndex, serverFuncName) => {
+        await fixit(id, msgIndex, serverFuncName, `support/analyze?cmd=${serverFuncName}`, "Add the user to the Whiteboard so they can login?");
     });
     DS.Globals.setValue("SupportWizard", "updateAsSupervisorDirector", async (id, msgIndex, serverFuncName) => {
         await fixit(id, msgIndex, serverFuncName, `support/analyze?cmd=${serverFuncName}`, "Change departments for this user?", () => {
@@ -122,12 +138,29 @@ define(["require", "exports", "./cds.shared"], function (require, exports, cds_s
             var _a;
             return buildForm(`Change Units/Departments for ${(_a = analysis.staff) === null || _a === void 0 ? void 0 : _a.display}`, [
                 {
-                    name: "directorFor", caption: "Director For", type: DS.HTML.InputElementTypes.multilist,
-                    selections: analysis.departments.map(d => { var _a, _b; return ({ id: '' + ((_a = d.name) !== null && _a !== void 0 ? _a : '') + '_' + d.id, caption: d.department + ` (${d.program})`, value: '' + d.id, selected: !!((_b = analysis.directorOf) === null || _b === void 0 ? void 0 : _b.some(d2 => d2.id == d.id)) }); })
-                },
-                {
-                    name: "supervisorFor", caption: "Supervisor For", type: DS.HTML.InputElementTypes.multilist,
-                    selections: analysis.departments.map(d => { var _a, _b; return ({ id: '' + ((_a = d.name) !== null && _a !== void 0 ? _a : '') + '_' + d.id, caption: d.department + ` (${d.program})`, value: '' + d.id, selected: !!((_b = analysis.supervisorOf) === null || _b === void 0 ? void 0 : _b.some(d2 => d2.id == d.id)) }); })
+                    name: "directorSupervisorFor",
+                    caption: "Select departments user is a director or supervisor of:",
+                    type: DS.HTML.InputElementTypes.tabularOptions,
+                    columns: ["", "Director", "Supervisor"],
+                    selections: analysis.departments.map(d => {
+                        var _a, _b, _c, _d;
+                        return [{
+                                caption: d.department + ` (${d.program})`,
+                                header: true
+                            }, {
+                                name: 'directorFor',
+                                id: 'director_' + ((_a = d.name) !== null && _a !== void 0 ? _a : '') + '_' + d.id,
+                                caption: d.department + ` (${d.program})`,
+                                value: '' + d.id,
+                                selected: !!((_b = analysis.directorOf) === null || _b === void 0 ? void 0 : _b.some(d2 => d2.id == d.id))
+                            }, {
+                                name: 'supervisorFor',
+                                id: 'supervisor_' + ((_c = d.name) !== null && _c !== void 0 ? _c : '') + '_' + d.id,
+                                caption: d.department + ` (${d.program})`,
+                                value: '' + d.id,
+                                selected: !!((_d = analysis.supervisorOf) === null || _d === void 0 ? void 0 : _d.some(d2 => d2.id == d.id))
+                            }];
+                    })
                 }
             ], "Update", id, msgIndex, serverFuncName);
         });
@@ -169,7 +202,7 @@ define(["require", "exports", "./cds.shared"], function (require, exports, cds_s
                         adiv.innerHTML = `<h4>${analysis.staff.display} (ID: ${analysis.staff.id}, ${analysis.staff.email})</h4>`;
                     uiMapping.set(analysis, { element: adiv });
                     adiv.className = "alert alert-" + (analysis.state == cds_shared_1.AnalysisMessageState.Error ? "danger" : analysis.state == cds_shared_1.AnalysisMessageState.Warning ? "warning" : "success");
-                    let msg;
+                    let msg = "";
                     if (analysis.directorOf) {
                         msg = "<br/><bold>Departments user is a director for:</bold><ul>";
                         analysis.directorOf.forEach(v => {
@@ -184,8 +217,10 @@ define(["require", "exports", "./cds.shared"], function (require, exports, cds_s
                         });
                         analysis.messages.push({ message: msg + "</ul>", state: cds_shared_1.AnalysisMessageState.NoIssue });
                     }
-                    msg = `<bold><a href="#" onclick="${analysis.actionLink('updateAsSupervisorDirector')}">Change Units/Departments</a></bold>`;
-                    analysis.messages.push({ message: msg, state: cds_shared_1.AnalysisMessageState.NoIssue });
+                    if (analysis.staff_id) {
+                        msg = `<bold><a href="#" onclick="${analysis.actionLink('updateAsSupervisorDirector')}">Change Units/Departments</a></bold>`;
+                        analysis.messages.push({ message: msg, state: cds_shared_1.AnalysisMessageState.NoIssue });
+                    }
                     analysis.messages.forEach(v => {
                         let msgDiv = document.createElement("div");
                         msgDiv.innerHTML = v.message.replace(/\n/g, "<br/>\r\n");

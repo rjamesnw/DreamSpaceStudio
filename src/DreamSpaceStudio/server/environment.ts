@@ -1,5 +1,5 @@
 import dotenv = require('dotenv');
-var loadConfigResult = dotenv.config();
+var loadConfigResult = dotenv.config({ path: ".srhc.env" });
 if (loadConfigResult.error)
     console.log("Could not load environment file (.env):" + loadConfigResult.error + "\r\nSince the file is optional, this error will be logged and ignored.");
 else

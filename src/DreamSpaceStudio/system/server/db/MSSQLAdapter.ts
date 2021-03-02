@@ -32,8 +32,6 @@ namespace DS.DB.MSSQL {
     export type IColumnOptions = import("mssql").IColumnOptions;
     export type ISqlType = import("mssql").ISqlType;
 
-    export var connectionPool: ConnectionPool;
-
     function _defaultConfig(): ConnectionConfig {
         return {
             user: process.env.MSSQL_USER,
@@ -47,34 +45,41 @@ namespace DS.DB.MSSQL {
         };
     }
 
-    export function configureConnectionPool(config = _defaultConfig()) {
-        connectionPool = new mssql.ConnectionPool(config);
-    }
-
-    export async function getMSSQLConnection(config = _defaultConfig()) {
-        try {
-            if (!connectionPool)
-                configureConnectionPool(config);
-
-            if (!connectionPool.connected)
-                await connectionPool.connect();
-
-            log('getMSSQLConnection()', 'Connected to MSSQL database.')
-
-            return connectionPool;
-        } catch (err) {
-            console.error(err);
-            throw Exception.error('getMSSQLConnection()', 'Error connecting to MSSQL database.', this, err);
-        }
-    }
-
-    export class MSSQLAdapter extends DBAdapter<ConnectionConfig> {
+    export class MSSQLAdapter extends DBAdapter<ConnectionConfig, ConnectionPool> {
         constructor(config = _defaultConfig()) {
             super(config);
         }
 
+        /**
+          * Returns a MSSQL connection from the connection pool using the specified configuration, or a default one if not specified.
+          */
+        private async _getConnection() {
+            try {
+                if (!this.connectionPool)
+                    this.connectionPool = new mssql.ConnectionPool(this.configuration || (this.configuration = _defaultConfig()));
+
+                if (!this.connectionPool.connected)
+                    await this.connectionPool.connect();
+
+                log('getMSSQLConnection()', 'Connected to MSSQL database.')
+
+                return this.connectionPool;
+            } catch (err) {
+                console.error(err);
+                throw Exception.error('getMSSQLConnection()', 'Error connecting to MSSQL database.', this, err);
+            }
+        }
+
         async createConnection() {
-            return new MSSQLConnection(this, await getMSSQLConnection(this.configuration)); // (create from the default pool)
+            return new MSSQLConnection(this, await this._getConnection()); // (create from the default pool)
+        }
+
+        async closeConnectionPool() {
+            if (this.connectionPool) {
+                if (this.connectionPool.connected || this.connectionPool.connecting)
+                    await this.connectionPool.close();
+                this.connectionPool = null;
+            }
         }
 
         getSQLErrorMessage(err: RequestError) {
@@ -192,11 +197,7 @@ namespace DS.DB.MSSQL {
         }
 
         async end() {
-            if (connectionPool) {
-                if (connectionPool.connected || connectionPool.connecting)
-                    await connectionPool.close();
-                connectionPool = null;
-            }
+            await this.connection.close();
         }
     }
 

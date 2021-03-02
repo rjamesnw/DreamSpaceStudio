@@ -53,6 +53,9 @@ namespace DS {
 
         /** Appends the suffix string to the end of the source string, optionally using a delimiter if the source is not empty.
           * Note: If any argument is not a string, the value is converted into a string.
+          * @param source The first string to combine.
+          * @param suffix The second string to combine.
+          * @param delimiter A string that joins the two strings, whivh is only added if both string parameters are not undefined, null, or empty.  If missing, the two strings are simply joined togehter.
           */
         export function append(source: string, suffix?: string, delimiter?: string): string {
             if (source === void 0) source = "";
@@ -396,7 +399,8 @@ namespace DS {
             url = "url",
             week = "week",
             list = "list", // (special type - will create a select list)
-            multilist = "multilist" // (special type - will create a multiple selection list)
+            multilist = "multilist", // (special type - will create a multiple selection list)
+            tabularOptions = "tabularOptions" // (special type - will create a table of values with selects on the left and check boxes on the right)
         }
 
         // --------------------------------------------------------------------------------------------------------------------

@@ -32,7 +32,7 @@ define(["require", "exports", "./globals"], function (require, exports, globals_
         else {
             if (results.message)
                 alert(results.message);
-            location.href = "safepoint/support";
+            location.href = "index";
         }
     }
     function onReady() {

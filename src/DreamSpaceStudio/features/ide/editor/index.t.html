@@ -1,8 +1,16 @@
 ${#layout}
+${#base "^" "../../components"}
 ${# .title='Home'}
 <div>
-    <button id="btnNewUseCase" class="btn btn-primary">New Use Case</button>
-    <br />
-    <br />
-    <div id="container" style="width:400px;height:200px;border:1px solid grey"></div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-3" style="background-color: lightgreen">
+                File Tree
+            </div>
+            <div class="col" style="background-color: lightblue">
+                Contents of selection, with editor, is applicable.
+            </div>
+        </div>
+
+    </div>
 </div>

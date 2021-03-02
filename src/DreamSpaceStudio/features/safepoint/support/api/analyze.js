@@ -37,6 +37,13 @@ async function get(req, res, next) {
                 analysis.staff_id = staff.id;
                 analysis.incidentNum = incidentNum;
                 console.log("Checking staff:" + staff.display + "...");
+                if (sites_id == 3) {
+                    var wbUser = await cds_1.getWhiteboardUser(analysis.username);
+                    if (wbUser.response.length)
+                        analysis.add("User has access to the ER Whiteboard.");
+                    else
+                        analysis.add(`User does not have access to the ER Whiteboard (<a href="#" onclick="${analysis.actionLink('addWBUser')}">add them</a>).`);
+                }
                 var allDepartments = await cds_1.getDepartments();
                 analysis.departments = allDepartments.response;
                 var directors = await cds_1.getDirectorDepartments(staff.id);
@@ -100,7 +107,7 @@ async function get(req, res, next) {
                 if (!sa)
                     analysis.add("User is not a special authority.");
                 else {
-                    analysis.add("User is a special authority.");
+                    analysis.add(`User is a special authority (<a href="#" onclick="${analysis.actionLink('removeSpecialAuth')}">correct this</a>).`);
                     analysis.specialAuthorityID = sa.SpecialAuthorityID;
                     if (authorized) {
                         analysis.add(`User will not get notifications unless the severity is '${sa.MinimumAlertSeverityRequired}' or greater.`);
@@ -129,6 +136,7 @@ async function get(req, res, next) {
                     if (incident.IsInactive == true)
                         analysis.warning(" The incident is inactive and can no longer be opened.");
                 }
+                break;
             }
         res.status(200).json(results);
         //? res.end();
@@ -140,7 +148,7 @@ async function get(req, res, next) {
 exports.get = get;
 ;
 async function post(req, res, next) {
-    var _a, _b, _c, _d;
+    var _a;
     var cmd = req.query.cmd, analysis = req.body;
     try {
         switch (cmd) {
@@ -153,44 +161,31 @@ async function post(req, res, next) {
                     return next(DS.Exception.error("analysis.post()", "'staff_id' missing."));
                 if (!analysis.specialAuthorityID)
                     return next(DS.Exception.error("analysis.post()", "'specialAuthorityID' missing."));
-                let conn = await getSPConnection();
-                let newAssignedSpecialAuth = {
+                let updateResult = cds_1.addSpecialAuthorityAssignee({
                     IncidentID: analysis.incidentNum,
                     DoneReviewing: false,
                     SpecialAuthorityID: analysis.specialAuthorityID
-                };
-                var updateResult = await conn.updateOrInsert(newAssignedSpecialAuth, "SpecialAuthorityAssignees");
+                });
                 res.status(200).json(new DS.IO.Response(null));
                 break;
             }
             case "fixMissingCDSUser": {
-                if (!analysis.username)
-                    return next(DS.Exception.error("analysis.post()", "'username' missing."));
-                if (!analysis.firstName)
-                    return next(DS.Exception.error("analysis.post()", "'firstName' missing."));
-                if (!analysis.lastName)
-                    return next(DS.Exception.error("analysis.post()", "'lastName' missing."));
-                if (!analysis.email)
-                    return next(DS.Exception.error("analysis.post()", "'email' missing."));
-                let conn = await getCDSConnection();
-                let newStaff = {
-                    username: analysis.username,
-                    email: analysis.email,
-                    first_name: analysis.firstName,
-                    last_name: analysis.lastName,
-                    display: analysis.firstName + " " + analysis.lastName,
-                    name: analysis.firstName + analysis.lastName,
-                    is_inactive: false,
-                    sites_id: 1
-                };
-                var updateResult = await conn.updateOrInsert(newStaff, "staff");
+                try {
+                    var staff = cds_shared_1.validateNewUserDetails(analysis.username, analysis.first_name, analysis.last_name, analysis.email);
+                    if (staff instanceof Error)
+                        return next(staff); // (DS.Exception inherits from Error)
+                }
+                catch (err) {
+                    return next(err);
+                }
+                let updateResult = await cds_1.addStaff(staff);
                 res.status(200).json(new DS.IO.Response(null));
                 break;
             }
             case "fixSupDirAsDel": {
                 if (!analysis.staff_id)
                     return next(DS.Exception.error("analysis.post()", "'staff_id' missing."));
-                await sp_db.query(`delete from InvolvedUnitsDepartmentsDelegates where StaffID=@staff_id`, { staff_id: analysis.staff_id });
+                await cds_1.deleteAllDepartmentsForDelegate(analysis.staff_id);
                 res.status(200).json(new DS.IO.Response(null));
                 break;
             }
@@ -201,76 +196,28 @@ async function post(req, res, next) {
                     return next(DS.Exception.error("analysis.post()", "'directorDepartments' array missing."));
                 if (!util_1.isArray(analysis.supervisorDepartments))
                     return next(DS.Exception.error("analysis.post()", "'supervisorDepartments' array missing."));
-                // ... first get the updated list of what departments they are of ...
-                var directorOf = await cds_db.query(`select map_directors_units_departments.directors_id, map_directors_units_departments.units_departments_id as id, programs.display as program, units_departments.display as department
-                FROM map_directors_units_departments LEFT OUTER JOIN units_departments ON units_departments.id = map_directors_units_departments.units_departments_id 
-                LEFT OUTER JOIN staff ON staff.id = map_directors_units_departments.directors_id
-                LEFT OUTER JOIN programs ON programs.id = units_departments.programs_id
-                where staff.id = @staff_id`, { staff_id: analysis.staff_id });
-                var supervisorOf = await cds_db.query(`select map_supervisors_units_departments.supervisors_id, map_supervisors_units_departments.units_departments_id as id, programs.display as program, units_departments.display as department
-                FROM map_supervisors_units_departments LEFT OUTER JOIN units_departments ON units_departments.id = map_supervisors_units_departments.units_departments_id 
-                LEFT OUTER JOIN staff ON staff.id = map_supervisors_units_departments.supervisors_id
-                LEFT OUTER JOIN programs ON programs.id = units_departments.programs_id
-                where staff.id = @staff_id`, { staff_id: analysis.staff_id });
-                // ... remove the missing ones ....
-                if ((_a = directorOf.response) === null || _a === void 0 ? void 0 : _a.length) {
-                    let removeCount = 0;
-                    await Promise.all(directorOf.response.map(async (d) => {
-                        if (analysis.directorDepartments.indexOf(d.id) < 0) {
-                            // ... missing from the list, so remove it ...
-                            await cds_db.query(`delete from map_directors_units_departments where directors_id=@staff_id and units_departments_id=@units_departments_id`, { staff_id: analysis.staff_id, units_departments_id: d.id });
-                            ++removeCount;
-                        }
-                    }));
-                    if (removeCount == directorOf.response.length) {
-                        // ... no longer a director of anything, so remove that also ...
-                        await cds_db.query(`delete from directors where staff_id=@staff_id`, { staff_id: analysis.staff_id });
-                    }
-                }
-                if ((_b = supervisorOf.response) === null || _b === void 0 ? void 0 : _b.length) {
-                    let removeCount = 0;
-                    await Promise.all(supervisorOf.response.map(async (d) => {
-                        if (analysis.supervisorDepartments.indexOf(d.id) < 0) {
-                            // ... missing from the list, so remove it ...
-                            await cds_db.query(`delete from map_supervisors_units_departments where supervisors_id=@staff_id and units_departments_id=@units_departments_id`, { staff_id: analysis.staff_id, units_departments_id: d.id });
-                            ++removeCount;
-                        }
-                    }));
-                    if (removeCount == supervisorOf.response.length) {
-                        // ... no longer a supervisor of anything, so remove that also ...
-                        await cds_db.query(`delete from supervisors where staff_id=@staff_id`, { staff_id: analysis.staff_id });
-                    }
-                }
-                // ... add the missing ones ...
-                if (analysis.directorDepartments.length) {
-                    var exists = !!((_c = (await cds_db.query(`select staff_id from directors where staff_id=@staff_id`, { staff_id: analysis.staff_id })).response) === null || _c === void 0 ? void 0 : _c.length);
-                    if (!exists)
-                        await cds_db.query(`insert into directors ({fields}) values ({parameters})`, { staff_id: analysis.staff_id, is_inactive: 0 });
-                    else
-                        await cds_db.query(`update directors set is_inactive=0 where staff_id=@staff_id`, { staff_id: analysis.staff_id });
-                    await Promise.all(analysis.directorDepartments.map(async (id) => {
-                        var _a;
-                        if (!((_a = directorOf.response) === null || _a === void 0 ? void 0 : _a.some(d => d.id == id))) {
-                            // ... missing from the list, so remove it ...
-                            await cds_db.query(`insert into map_directors_units_departments ({fields}) values ({parameters})`, { directors_id: analysis.staff_id, units_departments_id: id });
-                        }
-                    }));
-                }
-                if (analysis.supervisorDepartments.length) {
-                    var exists = !!((_d = (await cds_db.query(`select staff_id from supervisors where staff_id=@staff_id`, { staff_id: analysis.staff_id })).response) === null || _d === void 0 ? void 0 : _d.length);
-                    if (!exists)
-                        await cds_db.query(`insert into supervisors ({fields}) values ({parameters})`, { staff_id: analysis.staff_id, is_inactive: 0 });
-                    else
-                        await cds_db.query(`update supervisors set is_inactive=0 where staff_id=@staff_id`, { staff_id: analysis.staff_id });
-                    await Promise.all(analysis.supervisorDepartments.map(async (id) => {
-                        var _a;
-                        if (!((_a = supervisorOf.response) === null || _a === void 0 ? void 0 : _a.some(d => d.id == id))) {
-                            // ... missing from the list, so remove it ...
-                            await cds_db.query(`insert into map_supervisors_units_departments ({fields}) values ({parameters})`, { supervisors_id: analysis.staff_id, units_departments_id: id });
-                        }
-                    }));
-                }
+                // ... sync the new department selections ....
+                await cds_1.updateDepartmentsFromDirector(analysis.staff_id, analysis.directorDepartments);
+                await cds_1.updateDepartmentsFromSupervisor(analysis.staff_id, analysis.supervisorDepartments);
                 res.status(200).json(new DS.IO.Response(null));
+                break;
+            }
+            case "removeSpecialAuth": {
+                if (!analysis.staff_id)
+                    return next(DS.Exception.error("analysis.post()", "'staff_id' missing."));
+                await cds_1.removeSpecialAuthority(analysis.staff_id);
+                res.status(200).json(new DS.IO.Response(null));
+                break;
+            }
+            case "addWBUser": {
+                if (cds_1.sites_id != 3)
+                    return next(DS.Exception.error("analysis.post()", "Unauthorized site: " + cds_1.sites_id));
+                let staffResponse = await cds_1.getStaff(analysis.username);
+                if (!((_a = staffResponse.response) === null || _a === void 0 ? void 0 : _a.length))
+                    return next(DS.Exception.error("analysis.post()", "User not found in CDS."));
+                let staff = staffResponse.response[0];
+                let result = await cds_1.addWhiteboardUser(staff);
+                res.status(200).json(new DS.IO.Response(`User added. \r\nUsername is '${result.user.UserLoginID}' and password is '${result.user.UserPassword}'.`));
                 break;
             }
             default:

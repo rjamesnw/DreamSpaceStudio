@@ -6,12 +6,16 @@ const MySQLStore = mysql_session(session);
 
 export function initializeSessionStorage(app: express.Express) {
 
-    var sessionStoreOptions = {
+    var sessionStoreOptions = <mysql_session.Options>{
         host: process.env.SESSION_MYSQL_HOST || 'localhost',
         port: +process.env.SESSION_MYSQL_PORT || 3306,
         user: process.env.SESSION_MYSQL_USER || 'sessions',
         password: process.env.SESSION_MYSQL_PASS,
-        database: process.env.SESSION_MYSQL_DB_NAME || 'cds'
+        database: process.env.SESSION_MYSQL_DB_NAME || 'cds',
+        createDatabaseTable: true,
+        schema: {
+            tableName: "sessions"
+        }
     };
 
     var sessionStore = new MySQLStore(sessionStoreOptions);

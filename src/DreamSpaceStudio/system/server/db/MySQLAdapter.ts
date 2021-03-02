@@ -44,37 +44,38 @@ namespace DS.DB.MySQL {
         };
     }
 
-    export var connectionPool: Pool;
-
-    export async function configureConnectionPool(config = _defaultConfig()) {
-        connectionPool = mysql.createPool(config);
-    }
-
-    /**
-     * Returns a MySQL connection from the connection pool using the specified configuration, or a default one if not specified.
-     * @returns
-     */
-    export async function getMySQLConnection(config = _defaultConfig()) {
-        if (!connectionPool)
-            configureConnectionPool(config);
-        return new Promise<PoolConnection>((res, rej) =>
-            connectionPool.getConnection(function (err, conn) {
-                if (err) {
-                    var msg = "Error getting a MySQL connection from the pool: " + JSON.stringify(err);
-                    error('getMySQLConnection()', msg);
-                    return rej(msg);
-                }
-                res(conn);
-            }));
-    };
-
-    export class MySQLAdapter extends DBAdapter<ConnectionConfig> {
+    export class MySQLAdapter extends DBAdapter<ConnectionConfig, Pool> {
         constructor(config = _defaultConfig()) {
             super(config);
         }
 
+        /**
+          * Returns a MySQL connection from the connection pool using the specified configuration, or a default one if not specified.
+          * @returns
+          */
+        private async _getConnection() {
+            if (!this.connectionPool)
+                this.connectionPool = mysql.createPool(this.configuration || (this.configuration = _defaultConfig()));
+            return new Promise<PoolConnection>((res, rej) =>
+                this.connectionPool.getConnection(function (err, conn) {
+                    if (err) {
+                        var msg = "Error getting a MySQL connection from the pool: " + JSON.stringify(err);
+                        error('getMySQLConnection()', msg);
+                        return rej(msg);
+                    }
+                    res(conn);
+                }));
+        };
+
         async createConnection() {
-            return new MySQLConnection(this, await getMySQLConnection(this.configuration)); // (create from the default pool)
+            return new MySQLConnection(this, await this._getConnection()); // (create from the default pool)
+        }
+
+        async closeConnectionPool() {
+            if (this.connectionPool) {
+                this.connectionPool.end();
+                this.connectionPool = null;
+            }
         }
 
         getSQLErrorMessage(err: MysqlError) {

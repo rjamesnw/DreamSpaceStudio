@@ -8,7 +8,7 @@
     <LastActiveSolutionConfig>Debug|Any CPU</LastActiveSolutionConfig>
     <SaveNodeJsSettingsInProjectFile>True</SaveNodeJsSettingsInProjectFile>
     <TypeScriptBuildMode>true</TypeScriptBuildMode>
-    <LaunchUrl>http://localhost:45000/safepoint/support/login</LaunchUrl>
+    <LaunchUrl>http://localhost:1337/ide/editor</LaunchUrl>
     <NodeExePath>
     </NodeExePath>
     <NodeExeArguments>
@@ -16,6 +16,8 @@
     <DebuggerPort>
     </DebuggerPort>
     <Environment>nodemon=node_modules\nodemon\bin\nodemon.js--just_a_note</Environment>
+    <ScriptArguments>
+    </ScriptArguments>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -216,6 +218,7 @@
     <Content Include="botpal\services\apis\tts\Ivona.ts" />
     <Content Include="botpal\utility\Point3D.ts" />
     <Content Include="favicon.ico" />
+    <Content Include="features\components\tree.t.html" />
     <Content Include="features\components\icon.t.html" />
     <Content Include="features\components\select.t.html" />
     <Content Include="features\ide\login.t.html" />

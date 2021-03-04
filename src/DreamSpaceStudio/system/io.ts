@@ -210,7 +210,7 @@ namespace DS {
                 this.message = '' + (message ?? '');
                 this.data = data;
                 this.notSerializable = !!notSerializable;
-                this.error = error ?? void 0;
+                this.error = isNullOrUndefined(error) || error instanceof Exception ? error : new DS.Exception(error);
             }
 
             toString() { return `(${this.status}): ${this.message}`; }

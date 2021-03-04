@@ -16,6 +16,8 @@ interface Array<T> {
      * @returns The result as an array, where the first item is the maximum value found, and the second is the index where it was found (or -1 if not found).
      */
     max(predicate?: (a: T, b: T, aIndex: number, bIndex: number) => number): [T, number];
+    /** Return the last item. */
+    last(): T;
 }
 if (!Array.prototype.remove) // Primarily to help support conversions from C# - also, this should exist anyhow!
     Array.prototype.remove = function (this: Array<any>, item: any) {
@@ -40,6 +42,10 @@ if (!Array.prototype.max) // Primarily to help support conversions from C# - als
             }
         }
         return [maxValue, lastIndex];
+    };
+if (!Array.prototype.last) // Primarily to help support conversions from C# - also, this should exist anyhow!
+    Array.prototype.last = function (this: Array<any>) {
+        return this.length > 0 ? this[this.length - 1] : void 0;
     };
 
 interface String {
@@ -86,6 +92,17 @@ if (!String.prototype.endsWith)
         return this.substr(-str.length) === str;
     };
 
+interface IAsyncFunction<T = any> { (...args: any[]): Promise<T> }
+interface AsyncFunctionConstructor {
+    /**
+     * Creates a new function.
+     * @param args A list of arguments the function accepts.
+     */
+    new(...args: string[]): IAsyncFunction;
+    (...args: string[]): IAsyncFunction;
+    readonly prototype: Function;
+}
+var AsyncFunction: AsyncFunctionConstructor = Object.getPrototypeOf(async function () { }).constructor;
 
 interface IndexedObject<T = any> {
     [name: string]: T;

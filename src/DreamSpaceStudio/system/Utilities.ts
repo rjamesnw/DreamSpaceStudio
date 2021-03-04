@@ -78,15 +78,15 @@
             None,
             /** Detect cyclical cloning by writing to the object and testing for instances already cloned. */
             Fast,
-            /** Same as 'Fast', except the special added property used to detect recursion is deleted. This is a much slower process, but cleans the added propery from the original object. */
+            /** Same as 'Fast', except the special added property used to detect recursion is deleted. This is a much slower process, but cleans the added property from the original object. */
             Clean
         }
 
         /** Makes a deep copy of the specified value and returns it. If the value is not an object, it is returned immediately.
         * @param value The view to clone.
-        * @param recursionMode The method used to detect recursion.
+        * @param recursionMode The method used to detect recursion (defaults to RecursionMode.Fast).
         */
-        export function clone(value: any, recursionMode = RecursionMode.Fast) {
+        export function clone(value: IndexedObject, recursionMode = RecursionMode.Fast): IndexedObject {
             if (typeof value !== 'object') return value;
             var newObject: IndexedObject, p: string, rcCount: number, v: any;
             if (recursionMode == RecursionMode.Fast || recursionMode == RecursionMode.Clean) {

@@ -1,0 +1,10 @@
+<div id="${[@].id||([@].id='jstree')}" class="${[@]('class')}" ${[@](['class', 'id' ])}>${.content}</div>
+<script>
+    require(["jquery", "../jstree/jstree.min"], ($) => {
+        $(() => $("#${[@].id}").jstree(${.data}));
+    });
+</script>
+${#section scripts}
+${#section css}
+<link rel="stylesheet" href="/js/jstree/themes/default/style.min.css" />
+

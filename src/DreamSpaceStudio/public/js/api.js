@@ -39,6 +39,10 @@ if (!Array.prototype.max) // Primarily to help support conversions from C# - als
         }
         return [maxValue, lastIndex];
     };
+if (!Array.prototype.last) // Primarily to help support conversions from C# - also, this should exist anyhow!
+    Array.prototype.last = function () {
+        return this.length > 0 ? this[this.length - 1] : void 0;
+    };
 if (!String.prototype.trimLeftChar)
     String.prototype.trimLeftChar = function (char) {
         var s = this;
@@ -69,6 +73,7 @@ if (!String.prototype.endsWith)
             str = '' + str;
         return this.substr(-str.length) === str;
     };
+var AsyncFunction = Object.getPrototypeOf(async function () { }).constructor;
 var isNode = typeof global == 'object' && !!global.process && !!global.process.versions && !!global.process.versions.node;
 /** The default global namespace name if no name is specified when calling 'registerGlobal()'.
  * To get the actual registered name, see the global property 'DreamSpace.globalNamespaceName' exported from this module.
@@ -482,12 +487,12 @@ var DS;
             RecursionMode[RecursionMode["None"] = 0] = "None";
             /** Detect cyclical cloning by writing to the object and testing for instances already cloned. */
             RecursionMode[RecursionMode["Fast"] = 1] = "Fast";
-            /** Same as 'Fast', except the special added property used to detect recursion is deleted. This is a much slower process, but cleans the added propery from the original object. */
+            /** Same as 'Fast', except the special added property used to detect recursion is deleted. This is a much slower process, but cleans the added property from the original object. */
             RecursionMode[RecursionMode["Clean"] = 2] = "Clean";
         })(RecursionMode = Utilities.RecursionMode || (Utilities.RecursionMode = {}));
         /** Makes a deep copy of the specified value and returns it. If the value is not an object, it is returned immediately.
         * @param value The view to clone.
-        * @param recursionMode The method used to detect recursion.
+        * @param recursionMode The method used to detect recursion (defaults to RecursionMode.Fast).
         */
         function clone(value, recursionMode = RecursionMode.Fast) {
             if (typeof value !== 'object')
@@ -5838,7 +5843,7 @@ var DS;
                 this.message = '' + (message !== null && message !== void 0 ? message : '');
                 this.data = data;
                 this.notSerializable = !!notSerializable;
-                this.error = error !== null && error !== void 0 ? error : void 0;
+                this.error = DS.isNullOrUndefined(error) || error instanceof DS.Exception ? error : new DS.Exception(error);
             }
             toString() { return `(${this.status}): ${this.message}`; }
             toValue() { return this.toString(); }

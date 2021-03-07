@@ -185,8 +185,10 @@ export class HttpContext {
 
 export interface Renderer { (): string | Promise<string> }
 
+const EXPR_CTX_VAR_NAME = "_$";
+
 function createAsyncFunction(expr: string) { return new AsyncFunction("$", "httpContext", "var ctx = httpContext; " + expr); }
-var evalExpr = new Function("$", "expr", "httpContext", "var ctx = httpContext; return eval(expr);");
+var evalExpr = new Function(EXPR_CTX_VAR_NAME, "expr", "httpContext", `var ctx = httpContext, viewData = ${EXPR_CTX_VAR_NAME}; return eval(expr);`);
 
 export class ViewScope {
     /** The section this view is currently writing to. */
@@ -406,11 +408,11 @@ export class SectionManager {
 
 async function _processExpression(httpContext: HttpContext, expr: string, dataContext?: object): Promise<any> {
     try {
-        var compiledExpression = expr.replace(/({){|(})}/g, "$1$2").replace(/\[@]\./g, "$['@'].attributes.").replace(/\[@]\(/g, "$['@'](")
+        var compiledExpression = expr.replace(/({){|(})}/g, "$1$2").replace(/\[@]\./g, EXPR_CTX_VAR_NAME + "['@'].attributes.").replace(/\[@]\(/g, EXPR_CTX_VAR_NAME + "['@'](")
             //.replace(/(\[\[[^\]]*]]|'(?:\\'|[^'])*'|"(?:\\"|[^"])*")|(^|[^a-z0-9_$.)[\]'"`\/\\])(\.|\[(?!\[))/gmi,
             .replace(/(\[\[[^\]]*]]|'(?:\\'|[^'])*'|"(?:\\"|[^"])*"|`(?:\\`|[^`])*`)|(^|[^a-z0-9_$.)[\]'"`\/\\])(\.)/gmi,
                 function (match, p1, p2, p3, offset: number, src: string) {
-                    return p1 ? p1 : p2 + '$' + p3;
+                    return p1 ? p1 : p2 + EXPR_CTX_VAR_NAME + p3;
                     // (when p1 exists it is a string to be skipped (or special double square bracket token ([[...]]), otherwise it is valid view data property reference)
                     // (p2 and p3 match when there's no valid identifier in p1 and only "." or "[]" exists in p2)
                 });
@@ -426,7 +428,7 @@ async function _processExpression(httpContext: HttpContext, expr: string, dataCo
         }
 
         if (value !== null && value !== void 0 && typeof value != 'string')
-            value = '' + value;
+            value = JSON.stringify(value);
 
         return value;
     } catch (ex) {
@@ -493,7 +495,7 @@ export var __express = function (this: IExpressViewContext, filePath: string, op
                 //  It was determined that the fastest option is to use native match()/split() using regex instead to maintain consistent
                 //  speed across the most popular browsers. The template parser does this as well.)
 
-                var tokenRegex = /`(?:\\`|[^`])*?`|\${(?:{{|}}|[^}])*}|<\/?\$:(?:\\>|[^>])*>/g;
+                var tokenRegex = /`(?:\\`|[^`])*?`|\${(?:{{|}}|[^}])*}|<\/?\$:(?:\\>|[^>])*>|<script\s+\$>(?:(?:[^\n]|\n)(?!<\/script>))*\n?<\/script>/g;
                 var textParts = html.split(tokenRegex);
                 var tokens = html.match(tokenRegex);
                 tokens.push(""); // (each iteration will store text+token, and there will always be one less token compared to text parts)
@@ -522,214 +524,226 @@ export var __express = function (this: IExpressViewContext, filePath: string, op
                     let extractStartIndex = 2;
                     let isTokenExpression = token[0] == '$';
                     let isStartServerTagToken = token.substr(0, 3) == "<$:";
+                    let isStartServerScriptElement = token.startsWith("<script ");
                     let isEndServerTagToken = token.substr(0, 4) == "</$:" ? (extractStartIndex = 3, true) : false;
 
-                    if (isTokenExpression || isStartServerTagToken || isEndServerTagToken) {
-                        let expr = token.substring(extractStartIndex, token.length - 1).trimRight(); // (don't trim left: ${ /regex/ } is allowed, and ${/etc} is reserved for closing tokens)
-                        let processExpr = false, outputExpr = true;
-                        let value: string | Renderer = void 0;
+                    if (isTokenExpression || isStartServerTagToken || isEndServerTagToken || isStartServerScriptElement) {
+                        let expr: string;
+                        let value: string | Renderer;
                         let priority = 0; // (true when #include or #view is encountered so we can flag to have those rendered with a higher priority)
-                        let isCommand = expr[0] == '#'; // (true for NON-element tags in the form "${#command}")
-                        let isServerTag = expr[0] == ':'; // (true for "<$:tag>" or "</$:tag>" element tags; note: server tags are tread same as commands)
+                        let processExpr = false, outputExpr = true;
 
-                        if (isCommand || isServerTag) {
-                            // ... this is a special command ...
-                            let cmdSplitIndex = expr.indexOf(' ');
-                            let cmd = cmdSplitIndex >= 0 ? expr.substr(0, cmdSplitIndex).trim() : expr, _cmd = cmd; // ('_cmd' is a normalized command string)
-                            let argStr = cmdSplitIndex >= 0 ? expr.substr(cmdSplitIndex).trim() : "";
-                            //let args = argStr.split(':');
+                        if (isStartServerScriptElement) {
+                            // ... execute this whole script now in the same context as expressions ...
+                            token = token.replace(/^<script.*?>/gi, "").replace(/<\/script>$/gi, "");
+                            expr = token;
+                            processExpr = true;
+                            outputExpr = false;
+                        }
+                        else {
+                            expr = token.substring(extractStartIndex, token.length - 1).trimRight(); // (don't trim left: ${ /regex/ } is allowed, and ${/etc} is reserved for closing tokens)
+                            let isCommand = expr[0] == '#'; // (true for NON-element tags in the form "${#command}")
+                            let isServerTag = expr[0] == ':'; // (true for "<$:tag>" or "</$:tag>" element tags; note: server tags are tread same as commands)
 
-                            if (isServerTag) _cmd = '#' + cmd.substr(1); // (keep things simple and just convert this into a proper command)
+                            if (isCommand || isServerTag) {
+                                // ... this is a special command ...
+                                let cmdSplitIndex = expr.indexOf(' ');
+                                let cmd = cmdSplitIndex >= 0 ? expr.substr(0, cmdSplitIndex).trim() : expr, _cmd = cmd; // ('_cmd' is a normalized command string)
+                                let argStr = cmdSplitIndex >= 0 ? expr.substr(cmdSplitIndex).trim() : "";
+                                //let args = argStr.split(':');
 
-                            try {
-                                switch (_cmd) {
-                                    case "#": expr = argStr; processExpr = true; outputExpr = false; removeEOL = true; break; // (process expression, but don't render the result)
-                                    case "#base": // (maps a name to another path; any names starting with the mapped name is automatically expanded)
-                                        let parts = argStr.split(/\s+/g);
-                                        if (parts.length != 2)
-                                            throw new DS.Exception(`#base expects 2 arguments: one for the name, and one for the path.`);
-                                        let viewData = httpContext.viewData || new ViewData();
-                                        let name = await _processExpression(httpContext, parts[0], viewData);
-                                        let basePath = await _processExpression(httpContext, parts[1], viewData);
-                                        httpContext.basePaths[name] = basePath;
-                                        removeEOL = true;
-                                        break;
+                                if (isServerTag) _cmd = '#' + cmd.substr(1); // (keep things simple and just convert this into a proper command)
 
-                                    case "#layout":
-                                        if (layoutViewName)
-                                            throw new DS.Exception(`A layout was already specified.`);
-                                        layoutViewName = argStr || "/layout"; // (default to the "layout" view when nothing else is specified)
-                                        removeEOL = true;
-                                        break;
+                                try {
+                                    switch (_cmd) {
+                                        case "#": expr = argStr; processExpr = true; outputExpr = false; removeEOL = true; break; // (process expression, but don't render the result)
+                                        case "#base": // (maps a name to another path; any names starting with the mapped name is automatically expanded)
+                                            let parts = argStr.split(/\s+/g);
+                                            if (parts.length != 2)
+                                                throw new DS.Exception(`#base expects 2 arguments: one for the name, and one for the path.`);
+                                            let viewData = httpContext.viewData || new ViewData();
+                                            let name = await _processExpression(httpContext, parts[0], viewData);
+                                            let basePath = await _processExpression(httpContext, parts[1], viewData);
+                                            httpContext.basePaths[name] = basePath;
+                                            removeEOL = true;
+                                            break;
 
-                                    case "#section":
-                                        // ... start creating renderers for a specified section ...
-                                        activeSection = argStr;
-                                        removeEOL = true;
-                                        break;
+                                        case "#layout":
+                                            if (layoutViewName)
+                                                throw new DS.Exception(`A layout was already specified.`);
+                                            layoutViewName = argStr || "/layout"; // (default to the "layout" view when nothing else is specified)
+                                            removeEOL = true;
+                                            break;
 
-                                    case "#render": {
-                                        // ... request to load and render a section in the token's position ...
-                                        let sectionNameToRender = argStr || SectionManager.CONTENT; // ("let" is important here, since it will be locked only to the next async function expression and not shared across all of them, like 'var' would)
-                                        let optional = sectionNameToRender[sectionNameToRender.length - 1] == '?' ?
-                                            (sectionNameToRender = sectionNameToRender.substr(0, sectionNameToRender.length - 1), true)
-                                            : false;
+                                        case "#section":
+                                            // ... start creating renderers for a specified section ...
+                                            activeSection = argStr;
+                                            removeEOL = true;
+                                            break;
 
-                                        // (note: cannot check for sections yet, as child views have to complete first)
+                                        case "#render": {
+                                            // ... request to load and render a section in the token's position ...
+                                            let sectionNameToRender = argStr || SectionManager.CONTENT; // ("let" is important here, since it will be locked only to the next async function expression and not shared across all of them, like 'var' would)
+                                            let optional = sectionNameToRender[sectionNameToRender.length - 1] == '?' ?
+                                                (sectionNameToRender = sectionNameToRender.substr(0, sectionNameToRender.length - 1), true)
+                                                : false;
 
-                                        value = (async (sectionNameToRender: string, optional: boolean) => { // (prevViewScope is the previous view scope at the time of this request, which should always be element or command content, even if empty)
-                                            var value: string | Renderer;
+                                            // (note: cannot check for sections yet, as child views have to complete first)
 
-                                            if (!sectionManager.hasSection(sectionNameToRender))
-                                                if (optional) return "";
-                                                else throw new DS.Exception(`There is no section defined with the name '${sectionNameToRender}'. You can append the '?' character to the name if the section is optional.`);
+                                            value = (async (sectionNameToRender: string, optional: boolean) => { // (prevViewScope is the previous view scope at the time of this request, which should always be element or command content, even if empty)
+                                                var value: string | Renderer;
 
-                                            var section = sectionManager.sections[sectionNameToRender];
+                                                if (!sectionManager.hasSection(sectionNameToRender))
+                                                    if (optional) return "";
+                                                    else throw new DS.Exception(`There is no section defined with the name '${sectionNameToRender}'. You can append the '?' character to the name if the section is optional.`);
 
-                                            if (!section.currentViewScope)
-                                                if (optional) return "";
-                                                else throw new DS.Exception(`The section '${sectionNameToRender}' was already rendered at the current view scope level. You cannot render a section more than once at the same scope level.`);
+                                                var section = sectionManager.sections[sectionNameToRender];
 
-                                            value = await section.currentViewScope.render();
+                                                if (!section.currentViewScope)
+                                                    if (optional) return "";
+                                                    else throw new DS.Exception(`The section '${sectionNameToRender}' was already rendered at the current view scope level. You cannot render a section more than once at the same scope level.`);
 
-                                            section.currentViewScope = null;
+                                                value = await section.currentViewScope.render();
 
-                                            return value;
-                                        }).bind(null, sectionNameToRender, optional);
+                                                section.currentViewScope = null;
 
-                                        if (sectionNameToRender == SectionManager.CONTENT)
-                                            priority = Number.MAX_SAFE_INTEGER - 200; // (after the view and layout max priority, nested 'content' must be next)
-                                        else
-                                            priority = Number.MAX_SAFE_INTEGER - 300; // (after the view, layout, and nested priorities, all other rendered sections are handled in order)
+                                                return value;
+                                            }).bind(null, sectionNameToRender, optional);
 
-                                        removeEOL = true;
+                                            if (sectionNameToRender == SectionManager.CONTENT)
+                                                priority = Number.MAX_SAFE_INTEGER - 200; // (after the view and layout max priority, nested 'content' must be next)
+                                            else
+                                                priority = Number.MAX_SAFE_INTEGER - 300; // (after the view, layout, and nested priorities, all other rendered sections are handled in order)
 
-                                        break;
-                                    }
+                                            removeEOL = true;
 
-                                    case "#include": // (this means the same as '#view', except it inherits the same HttpContext object)
-                                    case "#view": {
-
-                                        let include = _cmd == "#include";
-                                        let selfClosing = isServerTag && argStr[argStr.length - 1] == '/'; // (if true then the view token will not have a closing tag)
-                                        if (selfClosing) argStr = argStr.substr(0, argStr.length - 1).trimRight(); // (remove the slash from args if self closing)
-
-                                        if (isEndServerTagToken) {
-                                            if (sectionManager.getSection(activeSection)?._viewScopes.length < 1)
-                                                throw new DS.Exception("You have an extra close-view server tag (i.e. '</$:view>') that does not have a corresponding '<$:view ...>' tag.");
-                                            sectionManager.pop(activeSection);
-                                            if (argStr)
-                                                throw new DS.Exception("The end server tag (i.e. '</$:view>') cannot contain any additional attributes or text.");
                                             break;
                                         }
-                                        else sectionManager.push(new HttpContext(httpContext, include ? httpContext.viewData : void 0), activeSection); // (all commands and start tags should push the current view and prepare for nested content with a new context and view data; included views render as if in the current view scope)
 
-                                        let viewPath: string, viewHttpContext = sectionManager.getSection(activeSection)?.currentViewScope.httpContext;
+                                        case "#include": // (this means the same as '#view', except it inherits the same HttpContext object)
+                                        case "#view": {
 
-                                        // ... the first '|' character will split the view path from any expression ...
+                                            let include = _cmd == "#include";
+                                            let selfClosing = isServerTag && argStr[argStr.length - 1] == '/'; // (if true then the view token will not have a closing tag)
+                                            if (selfClosing) argStr = argStr.substr(0, argStr.length - 1).trimRight(); // (remove the slash from args if self closing)
 
-                                        if (isServerTag) {
-                                            // ... process the 'argStr' as name=value attributes ...
-                                            var attributes = argStr.match(/[^\t\n\f \/>"'=]*\s*=\s*(?:"[^"]*"|'[^']*')/g); // (https://stackoverflow.com/a/926136/1236397)
-                                            for (let i = 0, n = attributes?.length ?? 0; i < n; ++i) {
-                                                let attribute = attributes[i];
-                                                let equalIndex = attribute.indexOf('='); // (we don't split in case the user has '=' in the value; just get the first '=' found)
-                                                let name = "", value: string;
-                                                if (equalIndex >= 0) {
-                                                    name = attribute.substring(0, equalIndex).trim();
-                                                    value = attribute.substring(equalIndex + 1).trim();
-                                                    // ... trim any quotes off the value ...
-                                                    let quote = value[0];
-                                                    if (quote == '"' || quote == "'") {
-                                                        let endQuote = value[value.length - 1];
-
-                                                        if (quote != endQuote)
-                                                            throw new DS.Exception(`Invalid attribute value: You started with a ${quote == "'" ? 'single' : 'double'} quote and ended with ${quote == "'" ? 'a single quote' : quote == '"' ? 'a double quote' : `'${endQuote}'`}.`);
-
-                                                        value = value.substring(1, value.length - 1);
-                                                    }
-                                                } else name = attribute.trim(); // (allow setting names without values; i.e. 'readonly')
-
-                                                // ... if the value is wrapped in braces '{}' then evaluate it (the name="{'{...}'}" format can work-around this if needed)...
-
-                                                if (value && value[0] == '{' && value[value.length - 1] == '}') {
-                                                    value = value.substring(1, value.length - 1).trim();
-                                                    value = await _processExpression(httpContext, value, httpContext.viewData); // (note: here we use the view data of the parent view [this view], then the result is passed as an attribute value)
-                                                }
-
-                                                if (name[0] == '$') {
-                                                    // ... this is a special parameter ...
-
-                                                    if (name.substr(0, 6) == '$data-') {
-                                                        // ... this is a view-bag (view data) setting ...
-                                                        name = name.substr(6);
-                                                        viewHttpContext.viewData[name] = value;
-                                                    } else {
-                                                        // ... this is a view/include parameter ...
-                                                        switch (name) {
-                                                            case '$path': viewPath = (value || '').trim(); break;
-                                                            case '$': case '$expression': await _processExpression(viewHttpContext, value, viewHttpContext.viewData); break; // (this runs in the nested view context)
-                                                            default: throw new DS.Exception(`The view data parameter '${name}' is not a supported parameter name. Please check for typos.`);
-                                                        }
-                                                    }
-                                                } else
-                                                    viewHttpContext.viewData["@"].attributes[name] = value;
+                                            if (isEndServerTagToken) {
+                                                if (sectionManager.getSection(activeSection)?._viewScopes.length < 1)
+                                                    throw new DS.Exception("You have an extra close-view server tag (i.e. '</$:view>') that does not have a corresponding '<$:view ...>' tag.");
+                                                sectionManager.pop(activeSection);
+                                                if (argStr)
+                                                    throw new DS.Exception("The end server tag (i.e. '</$:view>') cannot contain any additional attributes or text.");
+                                                break;
                                             }
-                                        } else {
-                                            // ... process the 'argStr' as a regular view command expression token (i.e. not a server tag) ...
-                                            cmdSplitIndex = argStr.indexOf('|');
+                                            else sectionManager.push(new HttpContext(httpContext, include ? httpContext.viewData : void 0), activeSection); // (all commands and start tags should push the current view and prepare for nested content with a new context and view data; included views render as if in the current view scope)
 
-                                            if (cmdSplitIndex >= 0) {
-                                                viewPath = argStr.substr(0, cmdSplitIndex).trim();
-                                                expr = argStr.substr(cmdSplitIndex + 1);
-                                                await _processExpression(httpContext, expr, viewHttpContext.viewData);
-                                            } else viewPath = argStr;
-                                        }
+                                            let viewPath: string, viewHttpContext = sectionManager.getSection(activeSection)?.currentViewScope.httpContext;
 
-                                        if (!viewPath)
-                                            throw new DS.Exception("No view path was specified. For server tags, use '$path=\"path/to/view\". For inline tokens, the path should immediately follow the '#view' or '#include' commands (i.e. '${#view path/to/view | optional expressions}').");
+                                            // ... the first '|' character will split the view path from any expression ...
 
-                                        viewHttpContext.viewPath = DS.Path.combine(DS.Path.getPath(httpContext.finalViewPath), httpContext.expandViewPath(viewPath));
-                                        viewHttpContext.viewData.content = sectionManager.getSectionViewScope(activeSection)?.getRenderer();
-                                        // (every #include and #view will have a nested view scope for nested elements as the content, whether used or not, that the nested element can render if supported)
+                                            if (isServerTag) {
+                                                // ... process the 'argStr' as name=value attributes ...
+                                                var attributes = argStr.match(/[^\t\n\f \/>"'=]*\s*=\s*(?:"[^"]*"|'[^']*')/g); // (https://stackoverflow.com/a/926136/1236397)
+                                                for (let i = 0, n = attributes?.length ?? 0; i < n; ++i) {
+                                                    let attribute = attributes[i];
+                                                    let equalIndex = attribute.indexOf('='); // (we don't split in case the user has '=' in the value; just get the first '=' found)
+                                                    let name = "", value: string;
+                                                    if (equalIndex >= 0) {
+                                                        name = attribute.substring(0, equalIndex).trim();
+                                                        value = attribute.substring(equalIndex + 1).trim();
+                                                        // ... trim any quotes off the value ...
+                                                        let quote = value[0];
+                                                        if (quote == '"' || quote == "'") {
+                                                            let endQuote = value[value.length - 1];
 
-                                        value = ((_httpCtx: HttpContext) => {
-                                            return new Promise<string>((res, rej) => {
-                                                // ... request to load and render a view in the token's position ...
-                                                _httpCtx.response.render(_httpCtx.finalViewPath, { context: _httpCtx }, (err, html) => {
-                                                    if (err) return rej(err);
-                                                    // ... this HTML is the parent template to this view that is resolved by now and must be returned ...
-                                                    res(html);
+                                                            if (quote != endQuote)
+                                                                throw new DS.Exception(`Invalid attribute value: You started with a ${quote == "'" ? 'single' : 'double'} quote and ended with ${quote == "'" ? 'a single quote' : quote == '"' ? 'a double quote' : `'${endQuote}'`}.`);
+
+                                                            value = value.substring(1, value.length - 1);
+                                                        }
+                                                    } else name = attribute.trim(); // (allow setting names without values; i.e. 'readonly')
+
+                                                    // ... if the value is wrapped in braces '{}' then evaluate it (the name="{'{...}'}" format can work-around this if needed)...
+
+                                                    if (value && value[0] == '{' && value[value.length - 1] == '}') {
+                                                        value = value.substring(1, value.length - 1).trim();
+                                                        value = await _processExpression(httpContext, value, httpContext.viewData); // (note: here we use the view data of the parent view [this view], then the result is passed as an attribute value)
+                                                    }
+
+                                                    if (name[0] == '$') {
+                                                        // ... this is a special parameter ...
+
+                                                        if (name.substr(0, 6) == '$data-') {
+                                                            // ... this is a view-bag (view data) setting ...
+                                                            name = name.substr(6);
+                                                            viewHttpContext.viewData[name] = value;
+                                                        } else {
+                                                            // ... this is a view/include parameter ...
+                                                            switch (name) {
+                                                                case '$path': viewPath = (value || '').trim(); break;
+                                                                case '$': case '$expression': await _processExpression(viewHttpContext, value, viewHttpContext.viewData); break; // (this runs in the nested view context)
+                                                                default: throw new DS.Exception(`The view data parameter '${name}' is not a supported parameter name. Please check for typos.`);
+                                                            }
+                                                        }
+                                                    } else
+                                                        viewHttpContext.viewData["@"].attributes[name] = value;
+                                                }
+                                            } else {
+                                                // ... process the 'argStr' as a regular view command expression token (i.e. not a server tag) ...
+                                                cmdSplitIndex = argStr.indexOf('|');
+
+                                                if (cmdSplitIndex >= 0) {
+                                                    viewPath = argStr.substr(0, cmdSplitIndex).trim();
+                                                    expr = argStr.substr(cmdSplitIndex + 1);
+                                                    await _processExpression(httpContext, expr, viewHttpContext.viewData);
+                                                } else viewPath = argStr;
+                                            }
+
+                                            if (!viewPath)
+                                                throw new DS.Exception("No view path was specified. For server tags, use '$path=\"path/to/view\". For inline tokens, the path should immediately follow the '#view' or '#include' commands (i.e. '${#view path/to/view | optional expressions}').");
+
+                                            viewHttpContext.viewPath = DS.Path.combine(DS.Path.getPath(httpContext.finalViewPath), httpContext.expandViewPath(viewPath));
+                                            viewHttpContext.viewData.content = sectionManager.getSectionViewScope(activeSection)?.getRenderer();
+                                            // (every #include and #view will have a nested view scope for nested elements as the content, whether used or not, that the nested element can render if supported)
+
+                                            value = ((_httpCtx: HttpContext) => {
+                                                return new Promise<string>((res, rej) => {
+                                                    // ... request to load and render a view in the token's position ...
+                                                    _httpCtx.response.render(_httpCtx.finalViewPath, { context: _httpCtx }, (err, html) => {
+                                                        if (err) return rej(err);
+                                                        // ... this HTML is the parent template to this view that is resolved by now and must be returned ...
+                                                        res(html);
+                                                    });
                                                 });
-                                            });
-                                        }).bind(null, viewHttpContext);
+                                            }).bind(null, viewHttpContext);
 
-                                        priority = Number.MAX_SAFE_INTEGER - 100; // (make sure nested views and includes are always rendered first; '-100' is used to allow users to override if necessary; if and when supported)
+                                            priority = Number.MAX_SAFE_INTEGER - 100; // (make sure nested views and includes are always rendered first; '-100' is used to allow users to override if necessary; if and when supported)
 
-                                        if (!isServerTag || selfClosing) // (only serer tags render content, so pop now if not)
-                                            sectionManager.pop(activeSection);
-                                        else {
-                                            sectionManager.getSection(activeSection).previousViewScope.add(value, priority);
-                                            value = void 0; // (written to the previous view scope, so clear in this pass)
+                                            if (!isServerTag || selfClosing) // (only serer tags render content, so pop now if not)
+                                                sectionManager.pop(activeSection);
+                                            else {
+                                                sectionManager.getSection(activeSection).previousViewScope.add(value, priority);
+                                                value = void 0; // (written to the previous view scope, so clear in this pass)
+                                            }
+
+                                            break;
                                         }
 
-                                        break;
-                                    }
-
-                                    default: {
-                                        if (_cmd[0] == '#')
-                                            throw new DS.Exception(`The command invalid. Please check for typos. Also note that commands are case-sensitive, and usually all lowercase.`);
-                                        // (else we will assume this is an expression and evaluate it; i.e. regex expression [because of '/'])
-                                        processExpr = true;
+                                        default: {
+                                            if (_cmd[0] == '#')
+                                                throw new DS.Exception(`The command invalid. Please check for typos. Also note that commands are case-sensitive, and usually all lowercase.`);
+                                            // (else we will assume this is an expression and evaluate it; i.e. regex expression [because of '/'])
+                                            processExpr = true;
+                                        }
                                     }
                                 }
-                            }
-                            catch (ex) {
-                                throw new DS.Exception(`Invalid token command or server tag '${cmd}' in token '${token}'.`, this, ex);
-                            }
-                        } else processExpr = true;
+                                catch (ex) {
+                                    throw new DS.Exception(`Invalid token command or server tag '${cmd}' in token '${token}'.`, this, ex);
+                                }
+                            } else processExpr = true;
+                        }
 
-                        if (processExpr) {
+                        if (processExpr && !isNullOrUndefined(expr)) {
                             value = await _processExpression(httpContext, expr, httpContext.viewData || new ViewData()); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
 
                             if (!outputExpr)

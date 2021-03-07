@@ -1,7 +1,7 @@
-define(["require", "exports", "./SupportWizard", "./globals"], function (require, exports, SupportWizard_1, globals_1) {
+define(["require", "exports", "./SupportWizard", "../../startup"], function (require, exports, SupportWizard_1, startup_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    globals_1.bootsrap.then(() => {
+    startup_1.startup.then(() => {
         var wizard = new SupportWizard_1.SupportWizard("$userID", "$incidentID", "$analyze", "$results");
     });
 });

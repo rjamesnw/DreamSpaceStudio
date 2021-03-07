@@ -1,4 +1,4 @@
-import { bootsrap } from "./globals";
+import { startup } from "../../startup";
 
 function toggleResetPswd(e: JQuery.ClickEvent) {
     e.preventDefault();
@@ -45,7 +45,7 @@ function onReady() {
     $('#logreg-forms #btn-login').click(doLogin);
 }
 
-bootsrap.then(() => { // (always initialize first, then go from there)
+startup.then(() => { // (always initialize first, then go from there)
     onReady();
 });
 

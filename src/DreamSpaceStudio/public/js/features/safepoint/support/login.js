@@ -1,4 +1,4 @@
-define(["require", "exports", "./globals"], function (require, exports, globals_1) {
+define(["require", "exports", "../../startup"], function (require, exports, startup_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function toggleResetPswd(e) {
@@ -43,7 +43,7 @@ define(["require", "exports", "./globals"], function (require, exports, globals_
         $('#logreg-forms #cancel_signup').click(toggleSignUp);
         $('#logreg-forms #btn-login').click(doLogin);
     }
-    globals_1.bootsrap.then(() => {
+    startup_1.startup.then(() => {
         onReady();
     });
 });

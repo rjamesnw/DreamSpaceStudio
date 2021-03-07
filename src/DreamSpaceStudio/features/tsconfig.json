@@ -11,12 +11,14 @@
       //"requirejs",
       "jquery",
       "popper.js",
-      "bootstrap"
+      "bootstrap",
+      "jstree"
     ] // (include only types we need; prevents node types from being included)
   },
   "include": [
     "../node_modules/monaco-editor/monaco.d.ts",
     "../node_modules/typescript/lib/typescriptServices.d.ts",
+    "../node_modules/@types/jstree/index.d.ts",
     "**/*.ts"
   ],
   "exclude": [ "**/api" ]

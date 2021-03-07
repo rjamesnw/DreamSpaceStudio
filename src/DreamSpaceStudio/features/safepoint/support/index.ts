@@ -1,7 +1,6 @@
 import { SupportWizard } from "./SupportWizard";
-import { bootsrap } from "./globals";
+import { startup } from "../../startup";
 
-bootsrap.then(() => { // (always initialize first, then go from there)
+startup.then(() => { // (always initialize first, then go from there)
     var wizard = new SupportWizard("$userID", "$incidentID", "$analyze", "$results");
 });
-

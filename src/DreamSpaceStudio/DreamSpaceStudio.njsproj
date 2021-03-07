@@ -8,7 +8,7 @@
     <LastActiveSolutionConfig>Debug|Any CPU</LastActiveSolutionConfig>
     <SaveNodeJsSettingsInProjectFile>True</SaveNodeJsSettingsInProjectFile>
     <TypeScriptBuildMode>true</TypeScriptBuildMode>
-    <LaunchUrl>http://localhost:1337/ide/editor</LaunchUrl>
+    <LaunchUrl>http://localhost:1337/ide/explorer</LaunchUrl>
     <NodeExePath>
     </NodeExePath>
     <NodeExeArguments>
@@ -95,6 +95,7 @@
     <TypeScriptCompile Include="features\mirandus\index.ts" />
     <TypeScriptCompile Include="features\safepoint\support\index.ts" />
     <TypeScriptCompile Include="features\mirandus\Manager.ts" />
+    <TypeScriptCompile Include="features\startup.ts" />
     <TypeScriptCompile Include="server\environment.ts" />
     <TypeScriptCompile Include="server\ldap.ts" />
     <TypeScriptCompile Include="server\sessions.ts" />
@@ -102,7 +103,7 @@
     <TypeScriptCompile Include="system\client\Utilities.ts" />
     <TypeScriptCompile Include="system\client\Views.ts" />
     <TypeScriptCompile Include="features\_globals.ts" />
-    <TypeScriptCompile Include="features\ide\editor\index.ts" />
+    <TypeScriptCompile Include="features\ide\explorer\index.ts" />
     <TypeScriptCompile Include="server\htmlreader.ts" />
     <TypeScriptCompile Include="server\routes\api.ts" />
     <TypeScriptCompile Include="server\routes\ide.ts" />
@@ -241,7 +242,7 @@
     <Content Include="tsconfig-server-base.json" />
     <Content Include="actions\_client\tsconfig.json" />
     <Content Include="actions\_server\tsconfig.json" />
-    <Content Include="features\ide\editor\index.t.html" />
+    <Content Include="features\ide\explorer\index.t.html" />
     <Content Include="features\tsconfig.json" />
     <Content Include="ideas.txt" />
     <Content Include="public\stylesheets\login.css" />
@@ -291,7 +292,7 @@
     <Folder Include="botpal\services\apis\" />
     <Folder Include="botpal\services\apis\tts\" />
     <Folder Include="botpal\services\tts\" />
-    <Folder Include="features\ide\editor\" />
+    <Folder Include="features\ide\explorer\" />
     <Folder Include="features\ide\swagger-ui\" />
     <Folder Include="features\ide\_modules_\" />
     <Folder Include="actions\" />

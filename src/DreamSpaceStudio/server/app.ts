@@ -30,6 +30,8 @@ import { Socket } from "net";
 import * as templateEngine from "./t.html";
 import { viewsRoot, HttpContext, ViewData } from './t.html';
 import { isNullOrUndefined } from 'util';
+import swaggerUI = require('swagger-ui-express');
+import { swaggerDocument } from "./swagger";
 
 //x import indexRoutes from './routes/index';
 //x import ideRoutes from './routes/ide';
@@ -45,6 +47,10 @@ sessions.initializeSessionStorage(app);
 // ... apply the basic templating engine ...
 
 templateEngine.apply(app);
+
+ // ... add the swagger docs API ...
+
+app.use('/api-doc', swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 
 // ... get the virtual file system ...
 
@@ -83,8 +89,8 @@ var fm = DS.VirtualFileSystem.FileManager.current;
             // .. this endpoint will handle work-flow requests ...
             var pathNames = DS.Path.getPathNames(req.path);
             if (pathNames.length > 1) {
-                pathNames.shift();
-                pathNames[pathNames.length] = pathNames[pathNames.length - 1];
+                if (pathNames[0] == 'api') pathNames.shift(); // (this should usually always be the case)
+                pathNames[pathNames.length] = pathNames[pathNames.length - 1]; // (push the file name up and insert "api" in the path [we always assume the file is in an 'api' folder])
                 pathNames[pathNames.length - 2] = "api";
                 var apiPath = DS.Path.combine(templateEngine.viewsRoot, pathNames.join('/'));
                 try {
@@ -94,8 +100,9 @@ var fm = DS.VirtualFileSystem.FileManager.current;
                     return next(DS.Exception.error("API", `Failed to load API module from '${apiPath}'.`, this, err));
                 }
                 try {
-                    if (typeof module[method] == 'function') {
-                        let result = module[method](req, res, next);
+                    let func = module[method] || module['_' + method] || module[method.toUpperCase()]; // (an underscore or all caps is also used to support conflicting names [for example, 'delete' is a reserved word])
+                    if (typeof func == 'function') {
+                        let result = func(req, res, next);
                         if (result instanceof Promise) // (support functions that are not async)
                             await result;
                     } else {

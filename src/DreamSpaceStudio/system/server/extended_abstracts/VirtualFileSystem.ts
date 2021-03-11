@@ -31,6 +31,15 @@
             }
         }
 
+        export class FileManager extends Abstracts.FileManager {
+            /** Manages the global file system for FlowScript by utilizing local storage space and remote server space.
+             * The file manager tries to keep recently accessed files local (while backed up to remove), and off-loads
+             * less-accessed files to save space.
+             */
+            static get current() { return this._current || (this._current = new FileManager()); }
+            private static _current: FileManager;
+        }
+
         // ========================================================================================================================
     }
 

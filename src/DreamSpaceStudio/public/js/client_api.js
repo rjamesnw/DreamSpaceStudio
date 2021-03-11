@@ -1528,9 +1528,22 @@ var DS;
         }
         IO.closeWait = closeWait;
         // --------------------------------------------------------------------------------------------------------------------
+        /** The URL endpoint for the system API. */
+        IO.apiEndpoint = "/api/system/filesystem";
+        function getAPISession(username, password) {
+            return __awaiter(this, void 0, void 0, function* () {
+            });
+        }
+        IO.getAPISession = getAPISession;
+        /**
+         * Determines if local storage is supported on the device.  For example, it may not be available when browsing in private mode on a mobile device.
+         * @param funcName The name of the function that is calling this function (for the error message).
+         * @param path The path in question (for error reporting).
+         * @param reject Although true/false is returned, you can use this to conveniently reject a promise.
+         */
         function hasStorageSupport(funcName, path, reject) {
             if (!DS.Store.hasLocalStorage) {
-                reject(new DS.Exception("IO.read(): This host does not support local storage, or local storage is disabled.", path));
+                typeof reject == 'function' && reject(new DS.Exception(funcName + ": This host does not support local storage, or local storage is disabled.", path));
                 return false;
             }
             else
@@ -1539,12 +1552,7 @@ var DS;
         /** Loads a file and returns the contents as text. */
         IO.read = function (path) {
             return __awaiter(this, void 0, void 0, function* () {
-                return new Promise((resolve, reject) => {
-                    if (!hasStorageSupport("IO.read()", path, reject))
-                        return;
-                    var content = DS.Store.get(DS.Store.StorageType.Local, path, "DSFS");
-                    return DS.StringUtils.stringToByteArray(content);
-                });
+                var sid = yield getAPISession();
             });
         };
         IO.write = function (path, content) {
@@ -1556,30 +1564,39 @@ var DS;
                 });
             });
         };
-        /** Lists the contents of a directory. */
+        function _getDir(funcName, path) {
+            return __awaiter(this, void 0, void 0, function* () {
+                var fm = DS.VirtualFileSystem.FileManager.current;
+                var dir = yield fm.getDirectory(path); // (resolve the path to a directory first)
+                if (!dir)
+                    throw DS.Exception.error(`IO.${funcName}()`, `There is no directory with the path '${path}'.`, path);
+                return dir;
+            });
+        }
+        /** Lists the files in a directory. */
         IO.getFiles = function (path) {
             return __awaiter(this, void 0, void 0, function* () {
-                return new Promise((resolve, reject) => {
-                    if (!hasStorageSupport("IO.getFiles()", path, reject))
-                        return;
-                });
+                var dir = yield _getDir('getFiles', path); // (resolve the path to a directory first)
+                return dir.getFiles();
             });
         };
-        /** Lists the contents of a directory. */
+        /** Lists the sub-directories in a directory. */
         IO.getDirectories = function (path) {
             return __awaiter(this, void 0, void 0, function* () {
-                return new Promise((resolve, reject) => {
-                    if (!hasStorageSupport("IO.getDirectories()", path, reject))
-                        return;
-                });
+                var dir = yield _getDir('getFiles', path); // (resolve the path to a directory first)
+                return dir.getDirectories();
             });
         };
+        /**
+         * Checks if a directory or file exists.
+         * @param path
+         * @param readAccess
+         * @param writeAccess
+         */
         IO.exists = function (path, readAccess = false, writeAccess = false) {
             return __awaiter(this, void 0, void 0, function* () {
-                return new Promise((resolve, reject) => {
-                    if (!hasStorageSupport("IO.exists()", path, reject))
-                        return;
-                });
+                var fm = DS.VirtualFileSystem.FileManager.current;
+                return fm.root.exists(path);
             });
         };
         // --------------------------------------------------------------------------------------------------------------------

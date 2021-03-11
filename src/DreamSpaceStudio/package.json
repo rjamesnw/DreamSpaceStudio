@@ -22,6 +22,7 @@
     "@types/popper.js": "^1.11.0",
     "@types/request": "^2.48.1",
     "@types/requirejs": "^2.1.32",
+    "@types/swagger-ui-express": "^4.1.2",
     "aws-sdk": "^2.659.0",
     "bootstrap": "^4.3.1",
     "debug": "^2.2.0",
@@ -40,6 +41,7 @@
     "popper.js": "^1.16.1",
     "request": "^2.88.0",
     "requirejs": "^2.3.6",
+    "swagger-ui-express": "^4.1.6",
     "typescript": "^3.8.3",
     "xhr2": "^0.2.0"
   },

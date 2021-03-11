@@ -260,10 +260,10 @@ namespace DS {
         export declare function write(path: string, content: Uint8Array): Promise<void>; // (environment specific implementation)
 
         /** Lists the contents of a directory. */
-        export declare function getFiles(path: string): Promise<string[]>;
+        export declare function getFiles(path: string): Promise<VirtualFileSystem.Abstracts.File[]>;
 
         /** Lists the contents of a directory. */
-        export declare function getDirectories(path: string): Promise<string[]>;
+        export declare function getDirectories(path: string): Promise<VirtualFileSystem.Abstracts.Directory[]>;
 
         /**
          * Returns true if the given file or directory path exists.

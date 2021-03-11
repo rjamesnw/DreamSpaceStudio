@@ -30,7 +30,14 @@
             /** Holds the UTC time the item was stored remotely. If this is undefined and the item is not stored locally then the item is only in memory and that could lead to data loss. */
             storedRemotely: Date;
 
-            /** The last time this*/
+            /** Returns true if this item tracks a server side item. Items stored server side will always have the `storedRemotely` date and time set. 
+             * The main use for this flag is to refresh local child items for directories that exist server side, in case of any manual changes.
+             */
+            get isServerItem() { return !!this.storedRemotely; }
+
+            /** The last time this item as touched.
+             * @see touch()
+             */
             get lastAccessed() { return this._lastAccessed; }
 
             /** Updates the 'lastAccessed' date+time value to the current value. Touching this directory item also refreshes the dates of all parent items. 
@@ -164,20 +171,51 @@
                     super(fileManager, parent);
                 }
 
-                getFile(filePath: string): File {
+                /**
+                 * Get a file relative to this one.
+                 * @param path A file path. Can be relative or absolute.
+                 */
+                getFile(filePath: string): Promise<File> {
                     var item = this.resolve(filePath);
                     if (!(item instanceof File)) return null;
                     return item;
                 }
 
-                getDirectory(path: string): Directory {
+                /**
+                 * Get a directory relative to this one.
+                 * @param path A directory path. Can be relative or absolute.
+                 */
+                getDirectory(path: string): Promise<Directory> {
                     var item = this.resolve(path);
                     if (!(item instanceof Directory)) return null;
                     return item;
                 }
 
+                /**
+                 * Gets all files in this directory.
+                 * @param path A file path. Can be relative or absolute.
+                 */
+                getFiles(): Promise<File[]> {
+                    var files: File[] = [];
+                    for (var item of this._childItems)
+                        if (item instanceof File)
+                            files.push(item);
+                    return files;
+                }
+
+                /**
+                 * Gets all directories under this one.
+                 */
+                getDirectories(): Promise<Directory[]> {
+                    var directories: Directory[] = [];
+                    for (var item of this._childItems)
+                        if (item instanceof Directory)
+                            directories.push(item);
+                    return directories;
+                }
+
                 /** Creates a directory under the user root endpoint. */
-                createDirectory(path: string): Directory {
+                createDirectory(path: string): Promise<Directory> {
                     if (path === void 0 || path === null || !this.hasChildren) return null;
                     var parts = Path.getPathNames(path), item: Directory = this; // (if path is empty it should default to this directory)
                     for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
@@ -193,7 +231,7 @@
                     return item;
                 }
 
-                createFile(filePath: string, contents?: string): File {
+                createFile(filePath: string, contents?: string): Promise<File> {
                     var filename = Path.getName(filePath);
                     var directoryPath = Path.getPath(filePath);
                     if (!filename) throw "A file name is required.";
@@ -203,7 +241,7 @@
 
                 /** Adds the given item under this item.
                   */
-                add<T extends DirectoryItem>(item: T): T {
+                add<T extends DirectoryItem>(item: T): Promise<T> {
                     if (item === void 0 || item === null)
                         throw "Cannot add an empty item name/path to '" + this.absolutePath + "'.";
                     if (this.exists(item))
@@ -237,13 +275,13 @@
                 }
 
                 /** Removes an item under this item. If nothing was removed, then null is returned, otherwise the removed item is returned (not the item passed in). */
-                remove<T extends DirectoryItem>(item: T): T;
+                remove<T extends DirectoryItem>(item: T): Promise<T>;
                 /** Removes an item under this item.  If nothing was removed, then null is returned, otherwise the removed item is returned.
                  *  You can provide a nested item path if desired. For example, if the current item is 'A/B' within the 'A/B/C/D' namespace,
                  *  then you could pass in 'C/D'.
                   */
-                remove(name: string): DirectoryItem;
-                remove(itemOrName: any): DirectoryItem {
+                remove(name: string): Promise<DirectoryItem>;
+                remove(itemOrName: any): Promise<DirectoryItem> {
                     if (itemOrName === void 0 || itemOrName === null)
                         throw "Cannot remove an empty name/path from directory '" + this.absolutePath + "'.";
 
@@ -366,110 +404,95 @@
                     return ResourceTypes.Application_JSON;
                 }
             }
+
+            /** Manages files in a virtual file system. This allows project files to be stored locally and synchronized with the server when a connection is available.
+             * For off-line storage to work, the browser must support local storage.
+             * Note: The 'FlowScript.currentUser' object determines the user-specific root directory for projects.
+             */
+            export abstract class FileManager {
+                static _filesByGUID: { [guid: string]: DirectoryItem } = {}; // (references files by GUID for faster lookup)
+
+                static getFileByID(id: string) { return this._filesByGUID[id]; }
+
+                // --------------------------------------------------------------------------------------------------------------------
+
+                /** Just a local property that checks for and returns 'FlowScript.currentUser'. */
+                static get currentUser() { if (User.current) return User.current; throw "'There is no current user! User.changeCurrentUser()' must be called first."; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
+
+                /** The root directory represents the API endpoint at 'FileManager.apiEndpoint'. */
+                readonly root: Abstracts.Directory;
+
+                // --------------------------------------------------------------------------------------------------------------------
+
+                constructor() {
+                    this.root = Abstracts.Directory.onCreateDirectory(this);
+                }
+
+                /** Triggered when a directory item (i.e. directory or file) is about to be added to the system. 
+                 * To abort you can:
+                 *   1. throw an exception - the error message (reason) will be displayed to the user.
+                 *   2. return an explicit 'false' value, which will prevent the item from adding without a reason.
+                 *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being added.
+                 */
+                protected onItemAdding(item: DirectoryItem): void | boolean | string {
+                    if (item._id in FileManager._filesByGUID)
+                        throw `A directory item with this GUID '${item._id}' (name: '${FileManager._filesByGUID[item._id].name}') already exists.  Please remove the file first before adding it again.`;
+                }
+
+                /** Triggered when a directory item (i.e. directory or file) gets added to the system. */
+                protected onItemAdded(item: DirectoryItem) {
+                    FileManager._filesByGUID[item._id] = item;
+                }
+
+                /** Triggered when a directory item (i.e. directory or file) id about to be removed from the system.
+                 * To abort you can:
+                 *   1. throw an exception - the error message (reason) will be displayed to the user.
+                 *   2. return an explicit 'false' value, which will prevent the item from getting removed without a reason.
+                 *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being removed.
+                 */
+                protected onItemRemoving(item: DirectoryItem): void | boolean | string {
+                    if (!(item._id in FileManager._filesByGUID))
+                        throw `Cannot remove directory item: No entry with GUID '${item._id}' (name: '${item.name}') was previously added.  This error is thrown to maintain the integrity of the virtual file system, as only existing items should ever be removed.`;
+                }
+
+                /** Triggered when a directory item (i.e. directory or file) gets removed from the system. */
+                protected onItemRemoved(item: DirectoryItem) {
+                    if (item._id in FileManager._filesByGUID)
+                        delete FileManager._filesByGUID[item._id]; // (speed is not a huge importance here, otherwise we can just set it to 'void 0')
+                }
+
+                /** Gets a directory under the current user root endpoint.
+                 * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+                 */
+                getDirectory(path?: string, userId?: string): Promise<Abstracts.Directory> {
+                    return this.root.getDirectory(combine(userId || FileManager.currentUser._id, path));
+                }
+
+                /** Creates a directory under the current user root endpoint. 
+                 * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+                 */
+                createDirectory(path: string, userId?: string): Promise<Abstracts.Directory> {
+                    return this.root.createDirectory(combine(userId || FileManager.currentUser._id, path));
+                }
+
+                /** Gets a file under the current user root endpoint.  
+                 * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+                 */
+                getFile(filePath: string, userId?: string): Promise<Abstracts.File> {
+                    return this.root.getFile(combine(userId || FileManager.currentUser._id, filePath));
+                }
+
+                /** Creates a file under the current user root endpoint.  
+                 * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+                 */
+                createFile(filePath: string, contents?: string, userId?: string): Promise<Abstracts.File> {
+                    return this.root.createFile(combine(userId || FileManager.currentUser._id, filePath), contents);
+                }
+
+                // --------------------------------------------------------------------------------------------------------------------
+            }
+
         }
-
-        /** Manages files in a virtual file system. This allows project files to be stored locally and synchronized with the server when a connection is available.
-         * For off-line storage to work, the browser must support local storage.
-         * Note: The 'FlowScript.currentUser' object determines the user-specific root directory for projects.
-         */
-        export class FileManager {
-            static _filesByGUID: { [guid: string]: DirectoryItem } = {}; // (references files by GUID for faster lookup)
-
-            static getFileByID(id: string) { return this._filesByGUID[id]; }
-
-            /** Manages the global file system for FlowScript by utilizing local storage space and remote server space.
-             * The file manager tries to keep recently accessed files local (while backed up to remove), and off-loads
-             * less-accessed files to save space.
-             */
-            static get current() { return this._current || (this._current = new FileManager()); }
-            private static _current: FileManager;
-
-            // --------------------------------------------------------------------------------------------------------------------
-
-            /** The URL endpoint for the FlowScript project files API. */
-            static apiEndpoint = "/api/files";
-
-            /** Just a local property that checks for and returns 'FlowScript.currentUser'. */
-            static get currentUser() { if (User.current) return User.current; throw "'There is no current user! User.changeCurrentUser()' must be called first."; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
-
-            /** The API endpoint to the directory for the current user. */
-            static get currentUserEndpoint() { return combine(this.apiEndpoint, FileManager.currentUser._id); }
-
-            /** The root directory represents the API endpoint at 'FileManager.apiEndpoint'. */
-            readonly root: Abstracts.Directory;
-
-            // --------------------------------------------------------------------------------------------------------------------
-
-            constructor(
-                /** The URL endpoint for the FlowScript project files API. Defaults to 'FileManager.apiEndpoint'. */
-                public apiEndpoint = FileManager.apiEndpoint) {
-                this.root = Abstracts.Directory.onCreateDirectory(this);
-            }
-
-            /** Triggered when a directory item (i.e. directory or file) is about to be added to the system. 
-             * To abort you can:
-             *   1. throw an exception - the error message (reason) will be displayed to the user.
-             *   2. return an explicit 'false' value, which will prevent the item from adding without a reason.
-             *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being added.
-             */
-            protected onItemAdding(item: DirectoryItem): void | boolean | string {
-                if (item._id in FileManager._filesByGUID)
-                    throw `A directory item with this GUID '${item._id}' (name: '${FileManager._filesByGUID[item._id].name}') already exists.  Please remove the file first before adding it again.`;
-            }
-
-            /** Triggered when a directory item (i.e. directory or file) gets added to the system. */
-            protected onItemAdded(item: DirectoryItem) {
-                FileManager._filesByGUID[item._id] = item;
-            }
-
-            /** Triggered when a directory item (i.e. directory or file) id about to be removed from the system.
-             * To abort you can:
-             *   1. throw an exception - the error message (reason) will be displayed to the user.
-             *   2. return an explicit 'false' value, which will prevent the item from getting removed without a reason.
-             *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being removed.
-             */
-            protected onItemRemoving(item: DirectoryItem): void | boolean | string {
-                if (!(item._id in FileManager._filesByGUID))
-                    throw `Cannot remove directory item: No entry with GUID '${item._id}' (name: '${item.name}') was previously added.  This error is thrown to maintain the integrity of the virtual file system, as only existing items should ever be removed.`;
-            }
-
-            /** Triggered when a directory item (i.e. directory or file) gets removed from the system. */
-            protected onItemRemoved(item: DirectoryItem) {
-                if (item._id in FileManager._filesByGUID)
-                    delete FileManager._filesByGUID[item._id]; // (speed is not a huge importance here, otherwise we can just set it to 'void 0')
-            }
-
-            /** Gets a directory under the current user root endpoint.
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            getDirectory(path?: string, userId?: string): Abstracts.Directory {
-                return this.root.getDirectory(combine(userId || FileManager.currentUser._id, path));
-            }
-
-            /** Creates a directory under the current user root endpoint. 
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            createDirectory(path: string, userId?: string): Abstracts.Directory {
-                return this.root.createDirectory(combine(userId || FileManager.currentUser._id, path));
-            }
-
-            /** Gets a file under the current user root endpoint.  
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            getFile(filePath: string, userId?: string): Abstracts.File {
-                return this.root.getFile(combine(userId || FileManager.currentUser._id, filePath));
-            }
-
-            /** Creates a file under the current user root endpoint.  
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            createFile(filePath: string, contents?: string, userId?: string): Abstracts.File {
-                return this.root.createFile(combine(userId || FileManager.currentUser._id, filePath), contents);
-            }
-
-            // --------------------------------------------------------------------------------------------------------------------
-        }
-
         // ========================================================================================================================
 
         /** Combine two paths into one. */

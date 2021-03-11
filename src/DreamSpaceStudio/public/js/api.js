@@ -5932,7 +5932,13 @@ var DS;
                 this._fileManager = fileManager;
                 this.parent = parent;
             }
-            /** The last time this*/
+            /** Returns true if this item tracks a server side item. Items stored server side will always have the `storedRemotely` date and time set.
+             * The main use for this flag is to refresh local child items for directories that exist server side, in case of any manual changes.
+             */
+            get isServerItem() { return !!this.storedRemotely; }
+            /** The last time this item as touched.
+             * @see touch()
+             */
             get lastAccessed() { return this._lastAccessed; }
             /** Updates the 'lastAccessed' date+time value to the current value. Touching this directory item also refreshes the dates of all parent items.
              * When the date of an item changes after a touch, it starts the process of reviewing and synchronizing with the back-end.
@@ -6018,17 +6024,46 @@ var DS;
                 static set onCreateDirectory(value) { if (typeof value != 'function')
                     throw "Directory.onCreateDirectory: Set failed - value is not a function."; this._onCreateDirectory = value; }
                 get hasChildren() { return !!(this._childItems && this._childItems.length); }
+                /**
+                 * Get a file relative to this one.
+                 * @param path A file path. Can be relative or absolute.
+                 */
                 getFile(filePath) {
                     var item = this.resolve(filePath);
                     if (!(item instanceof File))
                         return null;
                     return item;
                 }
+                /**
+                 * Get a directory relative to this one.
+                 * @param path A directory path. Can be relative or absolute.
+                 */
                 getDirectory(path) {
                     var item = this.resolve(path);
                     if (!(item instanceof Directory))
                         return null;
                     return item;
+                }
+                /**
+                 * Gets all files in this directory.
+                 * @param path A file path. Can be relative or absolute.
+                 */
+                getFiles() {
+                    var files = [];
+                    for (var item of this._childItems)
+                        if (item instanceof File)
+                            files.push(item);
+                    return files;
+                }
+                /**
+                 * Gets all directories under this one.
+                 */
+                getDirectories() {
+                    var directories = [];
+                    for (var item of this._childItems)
+                        if (item instanceof Directory)
+                            directories.push(item);
+                    return directories;
                 }
                 /** Creates a directory under the user root endpoint. */
                 createDirectory(path) {
@@ -6191,10 +6226,7 @@ var DS;
          */
         class FileManager {
             // --------------------------------------------------------------------------------------------------------------------
-            constructor(
-            /** The URL endpoint for the FlowScript project files API. Defaults to 'FileManager.apiEndpoint'. */
-            apiEndpoint = FileManager.apiEndpoint) {
-                this.apiEndpoint = apiEndpoint;
+            constructor() {
                 this.root = Abstracts.Directory.onCreateDirectory(this);
             }
             static getFileByID(id) { return this._filesByGUID[id]; }
@@ -6203,11 +6235,12 @@ var DS;
              * less-accessed files to save space.
              */
             static get current() { return this._current || (this._current = new FileManager()); }
+            // --------------------------------------------------------------------------------------------------------------------
             /** Just a local property that checks for and returns 'FlowScript.currentUser'. */
             static get currentUser() { if (DS.User.current)
                 return DS.User.current; throw "'There is no current user! User.changeCurrentUser()' must be called first."; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
             /** The API endpoint to the directory for the current user. */
-            static get currentUserEndpoint() { return combine(this.apiEndpoint, FileManager.currentUser._id); }
+            static get currentUserEndpoint() { return combine(DS.IO.apiEndpoint, FileManager.currentUser._id); }
             /** Triggered when a directory item (i.e. directory or file) is about to be added to the system.
              * To abort you can:
              *   1. throw an exception - the error message (reason) will be displayed to the user.
@@ -6263,9 +6296,6 @@ var DS;
             }
         }
         FileManager._filesByGUID = {}; // (references files by GUID for faster lookup)
-        // --------------------------------------------------------------------------------------------------------------------
-        /** The URL endpoint for the FlowScript project files API. */
-        FileManager.apiEndpoint = "/api/files";
         VirtualFileSystem.FileManager = FileManager;
         // ========================================================================================================================
         /** Combine two paths into one. */

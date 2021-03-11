@@ -96,9 +96,12 @@
     <TypeScriptCompile Include="features\safepoint\support\index.ts" />
     <TypeScriptCompile Include="features\mirandus\Manager.ts" />
     <TypeScriptCompile Include="features\startup.ts" />
+    <TypeScriptCompile Include="features\system\api\files.ts" />
+    <TypeScriptCompile Include="features\system\api\file.swagger.ts" />
     <TypeScriptCompile Include="server\environment.ts" />
     <TypeScriptCompile Include="server\ldap.ts" />
     <TypeScriptCompile Include="server\sessions.ts" />
+    <TypeScriptCompile Include="server\swagger.ts" />
     <TypeScriptCompile Include="system\abstracts\DBAdapter.ts" />
     <TypeScriptCompile Include="system\client\Utilities.ts" />
     <TypeScriptCompile Include="system\client\Views.ts" />
@@ -298,9 +301,11 @@
     <Folder Include="actions\" />
     <Folder Include="botpal\" />
     <Folder Include="features\mirandus\" />
+    <Folder Include="features\system\" />
     <Folder Include="features\safepoint\support\api\" />
     <Folder Include="features\safepoint\" />
     <Folder Include="features\safepoint\support\" />
+    <Folder Include="features\system\api\" />
     <Folder Include="solutions\" />
     <Folder Include="system\server\db\" />
     <Folder Include="versions\" />

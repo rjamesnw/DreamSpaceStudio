@@ -1,40 +1,23 @@
-using CoreXT.Entities;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+import { NamedApplicationEntity } from "./Common/NamedApplicationEntity";
 
-namespace CDS.Entities
-{
-    [Table("applications")]
-    public partial class Application : NamedApplicationEntity
-    {
+@table("applications")
+export class Application extends NamedApplicationEntity {
+    url_dev: string;
+    url_prod: string;
 
-        //? [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public Application()
-        {
-        }
+    get Application_Membership_Role_Maps(): Iterable<Application_Membership_Role_Map> { return null; }
+    get SubscriptionProperties(): Iterable<SubscriptionProperty> { return null; }
 
-        [Column("url_dev")]
-        public string DevURL { get; set; }
+    //[NotMapped]
+    //get Iterable<SubscriptionModel> SubscriptionModels { get { return EntityMap.Get(ref _SubscriptionModels, this, Subscription_Models_Applications_Maps = Subscription_Models_Applications_Maps.EnsureEntityCollection()); } }
+    //EntityMap<Application, Subscription_Models_Applications_Map, SubscriptionModel> _SubscriptionModels;
 
-        [Column("url_prod")]
-        public string ProdURL { get; set; }
+    get Subscription_Models_Applications_Maps(): Iterable<Subscription_Models_Applications_Map> { return null; }
 
+    get Organization_User_Application_Membership_Maps(): Iterable<Organization_User_Application_Membership_Map> { return null; }
 
-        public virtual ICollection<Application_Membership_Role_Map> Application_Membership_Role_Maps { get; set; }
-
-        public virtual ICollection<SubscriptionProperty> SubscriptionProperties { get; set; }
-
-        [NotMapped]
-        public virtual ICollection<SubscriptionModel> SubscriptionModels { get { return EntityMap.Get(ref _SubscriptionModels, this, Subscription_Models_Applications_Maps = Subscription_Models_Applications_Maps.EnsureEntityCollection()); } }
-        EntityMap<Application, Subscription_Models_Applications_Map, SubscriptionModel> _SubscriptionModels;
-        public virtual ICollection<Subscription_Models_Applications_Map> Subscription_Models_Applications_Maps { get; set; }
-
-        public virtual ICollection<Organization_User_Application_Membership_Map> Organization_User_Application_Membership_Maps { get; set; }
-
-        //public Application Include(string v)
-        //{
-        //    throw new NotImplementedException();
-        //}
-    }
+    //public Application Include(string v)
+    //{
+    //    throw new NotImplementedException();
+    //}
 }

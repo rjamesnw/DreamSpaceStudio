@@ -67,6 +67,8 @@ class DbSet {
         this.type = type;
         /** A collection of entities associated with this DbSet instance. */
         this.items = new Map();
+        /** Provides a fast way to find existing objects without needing to hit the database. */
+        this._keyMap = {};
         if (!type)
             throw DS.Exception.argumentUndefinedOrNull('DbSet()', 'type', this);
         if (typeof type != 'function')

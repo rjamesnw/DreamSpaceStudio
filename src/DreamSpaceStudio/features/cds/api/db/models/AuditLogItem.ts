@@ -1,19 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace CDS.Entities
-{
-    [Table("audit_log")]
-    public partial class AuditLogItem: ApplicationEntity
+    @table("audit_log")
+    export class AuditLogItem extends  ApplicationEntity
     {
-        [ForeignKey(nameof(Action))]
-        [Column("actions_id")]
-        public ulong ActionsID { get; set; }
+        @foreignKey(DS.Utilities.nameof(() => Action))
+        actions_id: number;
 
-        [Column("details")]
-        public string Details { get; set; }
+        [Column("")]
+        details: string;
 
         [Column("ip")]
         public string IP { get; set; }
@@ -25,5 +17,3 @@ namespace CDS.Entities
 
         public virtual Action Action { get; set; }
     }
-
-}

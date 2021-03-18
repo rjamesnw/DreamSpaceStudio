@@ -61,6 +61,9 @@ export class DbSet<T extends IndexedObject = IndexedObject> {
     /** A collection of entities associated with this DbSet instance. */
     items = new Map<T, EntityState>();
 
+    /** Provides a fast way to find existing objects without needing to hit the database. */
+    private _keyMap: IndexedObject<EntityState> = {};
+
     constructor(public readonly type: IType<T>) {
         if (!type) throw DS.Exception.argumentUndefinedOrNull('DbSet()', 'type', this);
         if (typeof type != 'function') throw DS.Exception.invalidArgument('DbSet()', 'type', this);

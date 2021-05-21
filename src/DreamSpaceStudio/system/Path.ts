@@ -98,7 +98,7 @@ namespace DS {
            * Combines a path with either the base site path or a current alternative path. The following logic is followed for combining 'path':
            * 1. If it starts with '~/' or '~' is will be relative to 'baseURL'.
            * 2. If it starts with '/' it is relative to the server root 'protocol://server:port' (using current or base path, but with the path part ignored).
-           * 3. If it starts without a path separator, or is empty, then it is combined as relative to 'currentResourceURL'.
+           * 3. If it starts with './', or without a path separator, or is empty, then it is combined as relative to 'currentResourceURL'.
            * Note: if 'currentResourceURL' is empty, then 'baseURL' is assumed.
            * @param {string} currentResourceURL An optional path that specifies a resource location to take into consideration when resolving relative paths.
            * If not specified, this is 'location.href' by default.
@@ -110,15 +110,16 @@ namespace DS {
             if (currentResourceURL) currentResourceURL = parse(currentResourceURL).getResourceURL();
             path = StringUtils.toString(path).trim();
             if (!path) return currentResourceURL || baseURL;
-            if (path.charAt(0) == '/' || path.charAt(0) == '\\') {
+            if (path[0] == '/' || path[0] == '\\') {
                 // ... resolve to the root of the host; determine current or base, whichever is available ...
                 var parts = currentResourceURL && parse(currentResourceURL) || null;
                 if (parts && (parts.protocol || parts.hostName))
                     return combine(getRoot(parts), path);
                 else
                     return combine(getRoot(baseURL), path);
-            }
-            if (path.charAt(0) == '~') return combine(baseURL, path);
+            } else while (path[0] == '.' && (path[1] == '/' || path[1] == '\\'))
+                path = path.substr(2);
+            if (path[0] == '~') return combine(baseURL, path);
             // ... check if path is already absolute with a protocol ...
             var parts = parse(path);
             if (parts.protocol || parts.hostName) return path; // (already absolute)

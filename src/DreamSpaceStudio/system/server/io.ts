@@ -19,13 +19,13 @@ namespace DS {
                 var fs: typeof import("fs") = require("fs");
                 fs.writeFile(path, content, null, (err) => {
                     if (err) return reject(err);
-                    resolve();
+                    resolve(true);
                 });
             });
         }
 
         /** Lists the contents of a directory. */
-        IO.getFiles = async function (path: string): Promise<string[]> {
+        IO.getFiles = async function (path: string): Promise<VirtualFileSystem.Abstracts.File[]> {
             return new Promise<any>((resolve, reject) => {
                 var fs: typeof import("fs") = require("fs");
                 fs.readFile(path, (err, data) => {
@@ -36,7 +36,7 @@ namespace DS {
         }
 
         /** Lists the contents of a directory. */
-        IO.getDirectories = async function (path: string): Promise<string[]> {
+        IO.getDirectories = async function (path: string): Promise<VirtualFileSystem.Abstracts.Directory[]> {
             return new Promise<any>((resolve, reject) => {
                 var fs: typeof import("fs") = require("fs");
                 fs.readFile(path, (err, data) => {

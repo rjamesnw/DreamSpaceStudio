@@ -11,8 +11,8 @@ export interface IDataTemplate {
 
 export interface IHTMLParseResult { rootElements: VDOM.Node[]; templates: { [id: string]: IDataTemplate; } }
 
-var nameOf_Templating_Phrase_phraseType = DS.nameof(() => Templating.Phrase.prototype.phraseType)
-var nameOf_Templating_Header_headerLevel = DS.nameof(() => Templating.Header.prototype.headerLevel)
+var nameOf_Templating_Phrase_phraseType = DS.Utilities.nameof(() => Templating.Phrase.prototype.phraseType)
+var nameOf_Templating_Header_headerLevel = DS.Utilities.nameof(() => Templating.Header.prototype.headerLevel)
 
 /** Parses HTML to create a graph object tree, and also returns any templates found.
 * This concept is similar to using XAML to load objects in WPF. As such, you have the option to use an HTML template, or dynamically build your
@@ -25,8 +25,8 @@ var nameOf_Templating_Header_headerLevel = DS.nameof(() => Templating.Header.pro
 * @param {boolean} strictMode If true, then the parser will produce errors on ill-formed HTML (eg. 'attribute=' with no value).
 * This can greatly help keep your html clean, AND identify possible areas of page errors.  If strict formatting is not important, pass in false.
 */
-export async function parse(html: string = null, strictMode?: boolean): Promise<IResponse<IHTMLParseResult>> {
-    var response: IResponse<IHTMLParseResult>;
+export async function parse(html: string = null, strictMode?: boolean): Promise<DS.IO.IResponse<IHTMLParseResult>> {
+    var response: DS.IO.IResponse<IHTMLParseResult>;
 
     var log = DS.Diagnostics.log("Parse HTML", "Parsing HTML template ...").beginCapture();
     log.write("Template: " + html);
@@ -170,10 +170,10 @@ export async function parse(html: string = null, strictMode?: boolean): Promise<
                                 nodeType = <TNodeFactoryType>DS.Utilities.dereferencePropertyPath(vnodeItemType, VDOM);
 
                                 if (nodeType === void 0)
-                                    throw DS.Exception.from("The node item type '" + vnodeItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " was not found.");
+                                    throw new DS.Exception("The node item type '" + vnodeItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " was not found.");
 
                                 if (typeof nodeType !== 'function' || typeof VDOM.HTMLElement.defaultHTMLTagName === void 0)
-                                    throw DS.Exception.from("The node item type '" + vnodeItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " does not resolve to a valid VDOM class type.");
+                                    throw new DS.Exception("The node item type '" + vnodeItemType + "' for tag '<" + currentTagName + "' on line " + htmlReader.getCurrentLineNumber() + " does not resolve to a valid VDOM class type.");
                             }
 
                             if (nodeType == null) {
@@ -239,7 +239,7 @@ export async function parse(html: string = null, strictMode?: boolean): Promise<
                                 immediateChildTemplates = processTags(nodeItem); // ('graphItem' was just created for the last tag read, but the end tag is still yet to be read)
                                 // (the previous call will continue until an end tag is found, in which case it returns that tag to be handled by this parent level)
                                 if (htmlReader.tagName != nodeItem.tagName) // (the previous level should be parsed now, and the current tag should be an end tag that doesn't match anything in the immediate nested level, which should be the end tag for this parent tag)
-                                    throw DS.Exception.from("The closing tag '</" + htmlReader.tagName + ">' was unexpected for current tag '<" + nodeItem.tagName + ">' on line " + htmlReader.getCurrentLineNumber() + ".");
+                                    throw new DS.Exception("The closing tag '</" + htmlReader.tagName + ">' was unexpected for current tag '<" + nodeItem.tagName + ">' on line " + htmlReader.getCurrentLineNumber() + ".");
                                 continue; // (need to continue on the last item read before returning)
                             }
 
@@ -261,11 +261,12 @@ export async function parse(html: string = null, strictMode?: boolean): Promise<
 
     log.write("HTML template parsing complete.").endCapture();
 
-    response = {
-        statusCode: HttpStatus.OK,
-        notSerializable: true,
-        data: { rootElements: rootElements, templates: globalTemplatesReference }
-    };
+    response = new DS.IO.Response(
+        null,
+        { rootElements: rootElements, templates: globalTemplatesReference },
+        DS.IO.HttpStatus.OK,
+        true
+    );
 
     return response;
 }

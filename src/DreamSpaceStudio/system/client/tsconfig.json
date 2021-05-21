@@ -11,7 +11,7 @@
     "outFile": "../../public/js/client_api.js",
     "target": "es6",
     "lib": [ "es6", "dom" ],
-    "types": [ "node", "request" ] // (include only types we need; prevents node types from being included)
+    "types": [ ] // (include only types we need; prevents node types from being included)
   },
   "include": [
     "Events.ts",
@@ -20,7 +20,6 @@
   ],
   "exclude": [
     "node_modules",
-    "projects",
     "./*.d.ts"
   ]
 }

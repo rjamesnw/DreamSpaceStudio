@@ -24,4 +24,4 @@ export interface IHTMLParseResult {
 * @param {boolean} strictMode If true, then the parser will produce errors on ill-formed HTML (eg. 'attribute=' with no value).
 * This can greatly help keep your html clean, AND identify possible areas of page errors.  If strict formatting is not important, pass in false.
 */
-export declare function parse(html?: string, strictMode?: boolean): Promise<IResponse<IHTMLParseResult>>;
+export declare function parse(html?: string, strictMode?: boolean): Promise<DS.IO.IResponse<IHTMLParseResult>>;

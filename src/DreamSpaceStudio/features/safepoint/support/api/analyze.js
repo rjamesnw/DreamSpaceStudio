@@ -84,8 +84,8 @@ async function get(req, res, next) {
                         if (authorized) {
                             state = cds_shared_1.AnalysisMessageState.NoIssue;
                             var msg = "User is a part of at least one unit or department associated with the incident";
-                            var specialAuthorityAssignees = await cds_1.getAssignedSpecialAuthorities(incidentNum, sa.SpecialAuthorityID);
-                            if (specialAuthorityAssignees.response.length) {
+                            var specialAuthorityAssignees = sa && await cds_1.getAssignedSpecialAuthorities(incidentNum, sa.SpecialAuthorityID) || null;
+                            if (specialAuthorityAssignees === null || specialAuthorityAssignees === void 0 ? void 0 : specialAuthorityAssignees.response.length) {
                                 msg += " and should be able to open it.";
                                 if (specialAuthorityAssignees.response[0].DoneReviewing)
                                     msg += " User is also done reviewing the incident.";

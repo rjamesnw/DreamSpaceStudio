@@ -23,7 +23,7 @@
         }
 
         export class DirectoryItem extends TrackableObject {
-            readonly _fileManager: FileManager;
+            readonly _fileManager: Abstracts.FileManager;
 
             /** Holds the UTC time the item was stored locally. If this is undefined then the item is in memory only, which might result in data loss if not stored on the server. */
             storedLocally: Date;
@@ -85,7 +85,7 @@
 
             // --------------------------------------------------------------------------------------------------------------------
 
-            constructor(fileManager: FileManager, parent?: DirectoryItem) {
+            constructor(fileManager: Abstracts.FileManager, parent?: DirectoryItem) {
                 super();
                 this._fileManager = fileManager;
                 this.parent = parent;
@@ -98,17 +98,16 @@
             /** Checks if a namespace item exists.  You can also provide a nested item path.
               * For example, if the current item is 'A.B' within the 'A.B.C.D' namespace, then you could pass in 'C.D'.
               */
-            exists(name: string, ignore?: DirectoryItem): boolean;
-            /** Checks if the given namespace item exists under this item.
-              */
-            exists(item: DirectoryItem, ignore?: DirectoryItem): boolean;
-            exists(nameOrItem: DirectoryItem | string, ignore?: DirectoryItem): boolean {
+            async exists(name: string, ignore?: DirectoryItem): Promise<boolean>;
+            /** Checks if the given namespace item exists under this item. */
+            async exists(item: DirectoryItem, ignore?: DirectoryItem): Promise<boolean>;
+            async exists(nameOrItem: DirectoryItem | string, ignore?: DirectoryItem): Promise<boolean> {
                 if (nameOrItem === void 0 || nameOrItem === null || !this.hasChildren) return false;
                 if (typeof nameOrItem === 'object' && nameOrItem instanceof DirectoryItem) {
                     var item = this._childItemsByName[nameOrItem._name];
                     return !!item && item != ignore;
                 }
-                var t = this.resolve(nameOrItem);
+                var t = await this.resolve(nameOrItem);
                 return !!t && t != ignore;
             }
 
@@ -117,18 +116,19 @@
               * If not found, then null is returned.
               * @param {function} typeFilter The type that the returned item must be a derivative of.
               */
-            resolve<T extends DirectoryItem>(itemPath: string, typeFilter?: new (...args: any[]) => T): T {
-                if (itemPath === void 0 || itemPath === null || !this.hasChildren) return null;
-                var parts = Path.getPathNames(itemPath), t: DirectoryItem = this;
-                for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
-                    // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
-                    var item = t._childItemsByName[parts[i]];
-                    if (!item)
-                        return null;
-                    else
-                        t = item;
-                }
-                return <T>(typeFilter ? (t instanceof typeFilter ? t : null) : t);
+            resolve<T extends DirectoryItem>(itemPath: string, typeFilter?: new (...args: any[]) => T): Promise<T> {
+                throw DS.Exception.notImplemented("DirectoryItem.resolve()");
+                //if (itemPath === void 0 || itemPath === null || !this.hasChildren) return null;
+                //var parts = Path.getPathNames(itemPath), t: DirectoryItem = this;
+                //for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
+                //    // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
+                //    var item = t._childItemsByName[parts[i]];
+                //    if (!item)
+                //        return null;
+                //    else
+                //        t = item;
+                //}
+                //return <T>(typeFilter ? (t instanceof typeFilter ? t : null) : t);
             }
 
             getJSONStructure<T extends typeof DirectoryItem>(typeFilter?: T) {
@@ -175,8 +175,8 @@
                  * Get a file relative to this one.
                  * @param path A file path. Can be relative or absolute.
                  */
-                getFile(filePath: string): Promise<File> {
-                    var item = this.resolve(filePath);
+                async getFile(filePath: string): Promise<File> {
+                    var item = await this.resolve(filePath);
                     if (!(item instanceof File)) return null;
                     return item;
                 }
@@ -185,8 +185,8 @@
                  * Get a directory relative to this one.
                  * @param path A directory path. Can be relative or absolute.
                  */
-                getDirectory(path: string): Promise<Directory> {
-                    var item = this.resolve(path);
+                async getDirectory(path: string): Promise<Directory> {
+                    var item = await this.resolve(path);
                     if (!(item instanceof Directory)) return null;
                     return item;
                 }
@@ -195,7 +195,7 @@
                  * Gets all files in this directory.
                  * @param path A file path. Can be relative or absolute.
                  */
-                getFiles(): Promise<File[]> {
+                async getFiles(): Promise<File[]> {
                     var files: File[] = [];
                     for (var item of this._childItems)
                         if (item instanceof File)
@@ -206,7 +206,7 @@
                 /**
                  * Gets all directories under this one.
                  */
-                getDirectories(): Promise<Directory[]> {
+                async getDirectories(): Promise<Directory[]> {
                     var directories: Directory[] = [];
                     for (var item of this._childItems)
                         if (item instanceof Directory)
@@ -215,7 +215,7 @@
                 }
 
                 /** Creates a directory under the user root endpoint. */
-                createDirectory(path: string): Promise<Directory> {
+                async createDirectory(path: string): Promise<Directory> {
                     if (path === void 0 || path === null || !this.hasChildren) return null;
                     var parts = Path.getPathNames(path), item: Directory = this; // (if path is empty it should default to this directory)
                     for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
@@ -231,17 +231,17 @@
                     return item;
                 }
 
-                createFile(filePath: string, contents?: string): Promise<File> {
+                async createFile(filePath: string, contents?: string): Promise<File> {
                     var filename = Path.getName(filePath);
                     var directoryPath = Path.getPath(filePath);
                     if (!filename) throw "A file name is required.";
-                    var dir = this.createDirectory(directoryPath);
+                    var dir = await this.createDirectory(directoryPath);
                     return File.onCreateFile(this._fileManager, dir, contents);
                 }
 
                 /** Adds the given item under this item.
                   */
-                add<T extends DirectoryItem>(item: T): Promise<T> {
+                async add<T extends DirectoryItem>(item: T): Promise<T> {
                     if (item === void 0 || item === null)
                         throw "Cannot add an empty item name/path to '" + this.absolutePath + "'.";
                     if (this.exists(item))
@@ -275,13 +275,13 @@
                 }
 
                 /** Removes an item under this item. If nothing was removed, then null is returned, otherwise the removed item is returned (not the item passed in). */
-                remove<T extends DirectoryItem>(item: T): Promise<T>;
+                async remove<T extends DirectoryItem>(item: T): Promise<T>;
                 /** Removes an item under this item.  If nothing was removed, then null is returned, otherwise the removed item is returned.
                  *  You can provide a nested item path if desired. For example, if the current item is 'A/B' within the 'A/B/C/D' namespace,
                  *  then you could pass in 'C/D'.
                   */
-                remove(name: string): Promise<DirectoryItem>;
-                remove(itemOrName: any): Promise<DirectoryItem> {
+                async remove(name: string): Promise<DirectoryItem>;
+                async remove(itemOrName: any): Promise<DirectoryItem> {
                     if (itemOrName === void 0 || itemOrName === null)
                         throw "Cannot remove an empty name/path from directory '" + this.absolutePath + "'.";
 
@@ -299,7 +299,7 @@
                         parent = this;
                     }
                     else {
-                        var t = this.resolve(itemOrName);
+                        var t = await this.resolve(itemOrName);
                         if (t) parent = t.parent;
                     }
 
@@ -416,7 +416,7 @@
 
                 // --------------------------------------------------------------------------------------------------------------------
 
-                /** Just a local property that checks for and returns 'FlowScript.currentUser'. */
+                /** Just a local property that checks for and returns 'User.current'. */
                 static get currentUser() { if (User.current) return User.current; throw "'There is no current user! User.changeCurrentUser()' must be called first."; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
 
                 /** The root directory represents the API endpoint at 'FileManager.apiEndpoint'. */

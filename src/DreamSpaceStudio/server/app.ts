@@ -1,13 +1,13 @@
 ﻿// ----------------------------------------------------------------------------------------------------------------------------
 // Trap any uncaught errors so we can better report/display/log them before the window shuts down.
 
-process.on('uncaughtException', function (err) {
+process.on('uncaughtException', function (err: Error) {
     console.error("Uncaught Exception: " + (err && err.stack || err));
     //while (true); // not needed, since express keeps the message loop active
 });
 
-process.on('unhandledRejection', function (err) {
-    console.error("Unhandled Rejection: " + err);
+process.on('unhandledRejection', function (err: Error) {
+    console.error("Unhandled Rejection: " + (err && err.stack || err));
     //wait(); // not needed, since express keeps the message loop active
 });
 

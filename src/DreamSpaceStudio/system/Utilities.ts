@@ -43,6 +43,20 @@
     export namespace Utilities {
         // --------------------------------------------------------------------------------------------------------------------
 
+        /**
+         * Returns a number with the maximum fractional digits.
+         * @param value
+         * @param fractionalDigits
+         */
+        export function precision(value: number, fractionalDigits = 2, round = true) {
+            let shiftFactor = Math.pow(10, fractionalDigits);
+            value *= shiftFactor;
+            value = round ? Math.round(value) : Math.floor(value);
+            return value / shiftFactor;
+        }
+
+        // --------------------------------------------------------------------------------------------------------------------
+
         /** Escapes a RegEx string so it behaves like a normal string. This is useful for RexEx string based operations, such as 'replace()'. */
         export function escapeRegex(regExStr: string): string {
             return regExStr.replace(/([-[\]{}()*+?.,\\/^$|#])/g, "\\$1"); // TODO: Verify completeness.
@@ -218,8 +232,11 @@
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        /** Returns the name of a namespace or variable reference at runtime. */
-        export function nameof(selector: () => any, fullname = false): string {
+        /** Returns the name of a namespace or variable reference at runtime.
+         * @param selector A lambda that references the name to return as a string.
+         * @param fullname If false (the default) then only the name after the last dot reference is returned, otherwise the whole path reference is returned as a string.
+         */
+        export function nameof(selector: (...args: any[]) => any, fullname = false): string {
             var s = '' + selector;
             //var m = s.match(/return\s*([A-Z.]+)/i) || s.match(/=>\s*{?\s*([A-Z.]+)/i) || s.match(/function.*?{\s*([A-Z.]+)/i);
             var m = s.match(/return\s+([A-Z0-9$_.]+)/i) || s.match(/.*?(?:=>|function.*?{)\s*([A-Z0-9$_.]+)/i);

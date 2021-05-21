@@ -69,7 +69,7 @@ namespace DS {
            * @param {string} resourceName An optional resource name to append to the end of the resulting path.
            */
         getResourcePath(resourceName?: string) {
-            var m = (this.path || "").match(/.*[\/\\]/);
+            var m = (this.path || "").match(/.*[\/\\.]/);
             return (m && m[0] || "") + (resourceName !== void 0 && resourceName !== null ? StringUtils.toString(resourceName) : "");
         }
 

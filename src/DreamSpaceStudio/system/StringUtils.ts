@@ -7,6 +7,30 @@ namespace DS {
 
     /** Contains a few utility functions for working with strings. */
     export namespace StringUtils {
+        /**
+         * Returns the given numeric value appended with the plural form of a word given a numeric value. 
+         * @param n The value to test.
+         * @param singular The singular form of the word.
+         * @param plural The plural for of the word, or text to append when plural. The default is "s".
+        * @param append If true (the default) then 'plural' is the text to append when plural (such as "s"). If false, then it replaces the singular word.
+         */
+        export function _s(n: number, singular: string, plural = "s", append = true) {
+            return n + ' ' + (n == 1 ? singular : append ? singular + plural : plural);
+        }
+
+        /**
+         * Removes either single or double quotes from both ends of the given string.  The string is trimmed of whitespace first, if any, before removing.
+         * @param str The string to trim quotes from.
+         * @param trim If true (the default), then whitespace is trimmed first.
+         */
+        export function unquote(str: string, trim = true) {
+            if (!str || typeof str != 'string') return str;
+            if (trim) str = str.trim();
+            if (str[0] == '"' && str[str.length - 1] == '"' || str[0] == "'" && str[str.length - 1] == "'")
+                return str.substr(1, str.length - 2);
+            return str;
+        }
+
         /** Replaces one string with another in a given string.
             * This function is optimized to select the faster method in the current browser. For instance, 'split()+join()' is
             * faster in Chrome, and RegEx based 'replace()' in others.

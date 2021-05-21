@@ -3,7 +3,7 @@ namespace DS {
     export type TExecutor = (resolve: (value?: boolean | PromiseLike<boolean>) => void, reject: (reason?: any) => void) => void;
 
     /**
-     * Creates a promise that is resolved when some state is set. This allows a task to stay dormant until some external state changes.
+     * A base class to certain specialized promises.
      */
     export class SpecializedPromise<T = any, TData = any> extends Promise<T> {
         /** 
@@ -53,8 +53,10 @@ namespace DS {
         }
 
         protected doResolve(value?: T) {
-            this._completed = true;
-            this._resolve && this._resolve(value);
+            if (!this._completed) {
+                this._completed = true;
+                this._resolve && this._resolve(value);
+            }
         }
 
         protected _cleanUp() {
@@ -87,6 +89,10 @@ namespace DS {
         }
     }
 
+    /**
+     * Creates a promise that allows timing out.
+     * You cannot reset the state once it times out.  You'll need to create a new instance.
+     */
     export class TimeBasedPromise<T = any, TData = any> extends SpecializedPromise<T, TData> {
         protected _time: number; // (in milliseconds)
         protected _timerHandle: any;
@@ -119,6 +125,7 @@ namespace DS {
 
     /**
      * Creates a promise that is resolved when some state is set. This allows a task to stay dormant until some external state changes.
+     * You cannot reset the state once triggered.  You'll need to create a new instance.
      */
     export class StatePromise<TState = boolean, TData = any> extends TimeBasedPromise<boolean, TData> {
         /** 
@@ -129,8 +136,7 @@ namespace DS {
         set state(v) {
             if (this.#_state === void 0) {
                 this.#_state = v;
-                if (this._completed)
-                    this.doResolve(true);
+                this.doResolve(true);
             }
         }
         #_state: TState;

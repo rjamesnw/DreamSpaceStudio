@@ -125,7 +125,7 @@ function deepClone(v, cloneWeakMap) {
         clone = new o.constructor();
     }
     catch (err) {
-        throw new Error(`deepClone(): Could not create instance for constructor '${DS.getFunctionName(o.constructor)}' (parameters may be required).\r\n${err}`);
+        throw new Error(`deepClone(): Could not create instance for constructor '${DS.Utilities.getFunctionName(o.constructor)}' (parameters may be required).\r\n${err}`);
     }
     cloneWeakMap.set(v, clone);
     for (var p in o)
@@ -270,29 +270,26 @@ class Element extends Node {
 }
 exports.Element = Element;
 /** Represents a single parsed HTML element. */
-let HTMLElement = /** @class */ (() => {
-    class HTMLElement extends Element {
-        constructor(
-        /** The node name.*/
-        nodeName = HTMLElement.defaultHTMLTagName, 
-        /** The node type.*/
-        nodeType = NodeTypes.ELEMENT_NODE, 
-        /** The element attributes.*/
-        attributes, 
-        /** The element CSS classes.*/
-        className, 
-        /** The element namespace prefix.*/
-        prefix) {
-            super(nodeName, nodeType, attributes);
-            this.className = className;
-            this.prefix = prefix;
-        }
+class HTMLElement extends Element {
+    constructor(
+    /** The node name.*/
+    nodeName = HTMLElement.defaultHTMLTagName, 
+    /** The node type.*/
+    nodeType = NodeTypes.ELEMENT_NODE, 
+    /** The element attributes.*/
+    attributes, 
+    /** The element CSS classes.*/
+    className, 
+    /** The element namespace prefix.*/
+    prefix) {
+        super(nodeName, nodeType, attributes);
+        this.className = className;
+        this.prefix = prefix;
     }
-    /** Each new instance will initially set its '__htmlTag' property to this value. */
-    HTMLElement.defaultHTMLTagName = "div";
-    return HTMLElement;
-})();
+}
 exports.HTMLElement = HTMLElement;
+/** Each new instance will initially set its '__htmlTag' property to this value. */
+HTMLElement.defaultHTMLTagName = "div";
 class CharacterData extends Node {
     constructor(
     /** The node name.*/

@@ -120,7 +120,7 @@ type NonFunctionProperties<T> = Pick<T, NonFunctionPropertyNames<T>>;
 
 interface Promise<T = void> { }
 
-type Action2<T, T2> = (a: T, b: T2) => T;
+type Action2<T, T2> = (a: T, b: T2) => void;
 type Action<T = void> = (a: T) => void;
 
 type Func2<T, T2, R> = (a: T, b: T2) => R;
@@ -437,7 +437,7 @@ namespace DS {
 
             log("DreamSpace.init()", "Initialized and ready.");
 
-            initCompleted();
+            initCompleted(void 0);
         });
     }
 

@@ -1,16 +1,19 @@
-﻿import { ApplicationEntity } from "./ApplicationEntity"
-
+﻿import { AppPartition } from "../AppPartition";
+import { ApplicationEntity } from "./ApplicationEntity"
+import { column, navigation } from "./DbSet";
 
 /// <summary>
 /// The base type for all entities that are partitioned within the application, effectively creating VIRTUAL application database "instances".
 /// </summary>
 export abstract class PartitionedApplicationEntity extends ApplicationEntity {
-    [Required]
-    [ForeignKey(nameof(AppPartition))]
-    [ReadOnly(true)]
+    @required
+    @foreignKey(nameof(AppPartition))
+    @readOnly(true)
+    @column()
     app_partitions_id: number;
 
-    get AppPartition(): AppPartition;
+    @navigation(<IType<PartitionedApplicationEntity>>PartitionedApplicationEntity, "app_partitions_id", AppPartition)
+    get AppPartition(): AppPartition { return null; };
 
     validate(apiAction: APIActions): ModelStateDictionary {
         var modeState = base.Validate(apiAction);

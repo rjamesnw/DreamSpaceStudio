@@ -1,20 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+import { column, navigation, table } from "./Common/DbSet";
+import { NamedApplicationEntity } from "./Common/NamedApplicationEntity";
+import { Application_Membership_Role_Map } from "./Maps/Application_Membership_Role_Map";
 
-namespace CDS.Entities
-{
-    [Table("roles")]
-    public partial class Role: NamedApplicationEntity
-    {
-        public Role()
-        {
-        }
+@table("roles")
+export class Role extends NamedApplicationEntity {
+    @column()
+    description: string;
 
-        [Column("description")]
-        public string Description { get; set; }
-
-        public virtual ICollection<Application_Membership_Role_Map> Application_Membership_Role_Mapping { get; set; }
-    }
+    Application_Membership_Role_Mapping: Iterable<Application_Membership_Role_Map>;
 }

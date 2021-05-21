@@ -1552,39 +1552,38 @@ var DS;
         /** Loads a file and returns the contents as text. */
         IO.read = function (path) {
             return __awaiter(this, void 0, void 0, function* () {
-                var sid = yield getAPISession();
+                throw DS.Exception.notImplemented("IO.read()");
+                //var sid = await getAPISession();
             });
         };
         IO.write = function (path, content) {
             return __awaiter(this, void 0, void 0, function* () {
-                return new Promise((resolve, reject) => {
-                    if (!hasStorageSupport("IO.write()", path, reject))
-                        return;
-                    DS.Store.set(DS.Store.StorageType.Local, path, DS.StringUtils.byteArrayToString(content), "DSFS");
-                });
+                //return new Promise<any>((resolve, reject) => {
+                //    if (!hasStorageSupport("IO.write()", path, reject)) return;
+                //    Store.set(Store.StorageType.Local, path, StringUtils.byteArrayToString(content), "DSFS");
+                //});
+                throw DS.Exception.notImplemented("IO.write()");
             });
         };
-        function _getDir(funcName, path) {
-            return __awaiter(this, void 0, void 0, function* () {
-                var fm = DS.VirtualFileSystem.FileManager.current;
-                var dir = yield fm.getDirectory(path); // (resolve the path to a directory first)
-                if (!dir)
-                    throw DS.Exception.error(`IO.${funcName}()`, `There is no directory with the path '${path}'.`, path);
-                return dir;
-            });
-        }
+        //? async function _getDir(fm: DS.VirtualFileSystem.Abstracts.FileManager, funcName: string, path: string) {
+        //    var dir = await fm.getDirectory(path); // (resolve the path to a directory first)
+        //    if (!dir) throw DS.Exception.error(`IO.${funcName}()`, `There is no directory with the path '${path}'.`, path);
+        //    return dir;
+        //}
         /** Lists the files in a directory. */
         IO.getFiles = function (path) {
             return __awaiter(this, void 0, void 0, function* () {
-                var dir = yield _getDir('getFiles', path); // (resolve the path to a directory first)
-                return dir.getFiles();
+                //var dir = await _getDir(fm, 'getFiles', path); // (resolve the path to a directory first)
+                //return dir.getFiles();
+                throw DS.Exception.notImplemented("IO.getFiles()");
             });
         };
         /** Lists the sub-directories in a directory. */
         IO.getDirectories = function (path) {
             return __awaiter(this, void 0, void 0, function* () {
-                var dir = yield _getDir('getFiles', path); // (resolve the path to a directory first)
-                return dir.getDirectories();
+                //var dir = await _getDir(fm, 'getFiles', path); // (resolve the path to a directory first)
+                //return dir.getDirectories();
+                throw DS.Exception.notImplemented("IO.getDirectories()");
             });
         };
         /**
@@ -1595,8 +1594,9 @@ var DS;
          */
         IO.exists = function (path, readAccess = false, writeAccess = false) {
             return __awaiter(this, void 0, void 0, function* () {
-                var fm = DS.VirtualFileSystem.FileManager.current;
-                return fm.root.exists(path);
+                //var fm = DS.VirtualFileSystem.FileManager.current;
+                //return fm.root.exists(path);
+                throw DS.Exception.notImplemented("IO.read()");
             });
         };
         // --------------------------------------------------------------------------------------------------------------------

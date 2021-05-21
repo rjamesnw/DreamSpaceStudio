@@ -37,7 +37,7 @@ namespace DS {
                 throw new Exception("Cannot load configuration: A filename is required.", this);
 
             if (!this._file)
-                this._file = this.directory.createFile(this.configFilename);
+                this._file = await this.directory.createFile(this.configFilename);
 
             var content = (await this._file.read()).text;
 
@@ -66,7 +66,7 @@ namespace DS {
                 throw new Exception("Cannot save configuration: A filename is required.", this);
 
             if (!this._file)
-                this._file = this.directory.createFile(this.configFilename);
+                this._file = await this.directory.createFile(this.configFilename);
 
             var configObject = this.saveConfigToObject();
 

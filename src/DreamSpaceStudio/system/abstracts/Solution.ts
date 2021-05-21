@@ -9,7 +9,7 @@
         projects?: (ISavedProject | string)[];
         //comments: string[];
     }
-    
+
     /** The system.json file contains the entire list of solutions in the system, including system-related settings.
      */
     export interface ISystem {
@@ -69,10 +69,22 @@
                 return null;
             }
 
-            constructor(fileManager = VirtualFileSystem.FileManager.current) {
+            constructor() {
                 super();
                 this.configFilename = Solution.CONFIG_FILENAME;
-                this.directory = fileManager.createDirectory(VirtualFileSystem.combine("solutions", this._id));
+            }
+
+            /**
+             * Creates and returns a 'solutions' directory in the root of the given file manager and returns it.
+             * @param fileManager
+             */
+            async addToDirectory(parent: VirtualFileSystem.Abstracts.Directory, solutionDircetoryName = "solutions") {
+                var _this = <Writeable<this>>this;
+                if (this.directory?.parent)
+                    (<VirtualFileSystem.Abstracts.Directory>this.directory.parent).remove(this.directory);
+                _this.directory = await parent.getDirectory(solutionDircetoryName);
+                if (this.directory) return this.directory;
+                return _this.directory = await parent.createDirectory(VirtualFileSystem.combine("solutions", this._id));
             }
 
             /**
@@ -242,7 +254,7 @@
             /** Triggers the process to load all the solution details in the '/solutions' folder by first calling 'Solutions.getSolutions()'
              * to get the IDs from 'solutions.json'. While all solution configurations are loaded, the contained projects are not.
              */
-            static async refresh(fm = VirtualFileSystem.FileManager.current): Promise<typeof Solutions> {
+            static async refresh(fm: VirtualFileSystem.Abstracts.FileManager): Promise<typeof Solutions> {
                 var solutions = await Solutions.getSolutions();
                 var unloadedSolutions: Solution[] = [];
 

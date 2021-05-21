@@ -1,30 +1,19 @@
-using CoreXT.Entities;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+import { ApplicationEntity } from "./Common/ApplicationEntity";
+import { column, table } from "./Common/DbSet";
 
-namespace CDS.Entities
+@table("users")
+export class User extends ApplicationEntity
 {
-    [Table("users")]
-    public partial class User : ApplicationEntity
-    {
-        //? //? [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public User()
-        {
-        }
+        @column("first_name")
+        firstName: string;
 
-        [Column("first_name")]
-        public string FirstName { get; set; }
+        @column("last_name")
+        lastName: string;
 
-        [Column("last_name")]
-        public string LastName { get; set; }
-
-        [Column("alias")]
-        public string Alias { get; set; }
+        alias: string;
 
         [Column("email")]
-        public string Email { get; set; }
+        email: string = void 0;
 
         [Column("phone")]
         public string Phone { get; set; }

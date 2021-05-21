@@ -328,7 +328,7 @@ var DS;
                 await (cbs[i]() || Promise.resolve());
             __onInitCallbacks = null; // (make sure init() is not called again)
             DS.log("DreamSpace.init()", "Initialized and ready.");
-            initCompleted();
+            initCompleted(void 0);
         });
     }
     DS.init = init;
@@ -451,6 +451,19 @@ var DS;
     /** One or more utility functions to ease development within DreamSpace environments. */
     let Utilities;
     (function (Utilities) {
+        // --------------------------------------------------------------------------------------------------------------------
+        /**
+         * Returns a number with the maximum fractional digits.
+         * @param value
+         * @param fractionalDigits
+         */
+        function precision(value, fractionalDigits = 2, round = true) {
+            let shiftFactor = Math.pow(10, fractionalDigits);
+            value *= shiftFactor;
+            value = round ? Math.round(value) : Math.floor(value);
+            return value / shiftFactor;
+        }
+        Utilities.precision = precision;
         // --------------------------------------------------------------------------------------------------------------------
         /** Escapes a RegEx string so it behaves like a normal string. This is useful for RexEx string based operations, such as 'replace()'. */
         function escapeRegex(regExStr) {
@@ -626,7 +639,10 @@ var DS;
         }
         Utilities.createGUID = createGUID;
         // --------------------------------------------------------------------------------------------------------------------
-        /** Returns the name of a namespace or variable reference at runtime. */
+        /** Returns the name of a namespace or variable reference at runtime.
+         * @param selector A lambda that references the name to return as a string.
+         * @param fullname If false (the default) then only the name after the last dot reference is returned, otherwise the whole path reference is returned as a string.
+         */
         function nameof(selector, fullname = false) {
             var s = '' + selector;
             //var m = s.match(/return\s*([A-Z.]+)/i) || s.match(/=>\s*{?\s*([A-Z.]+)/i) || s.match(/function.*?{\s*([A-Z.]+)/i);
@@ -2135,7 +2151,7 @@ var DS;
 (function (DS) {
     var __state;
     /**
-     * Creates a promise that is resolved when some state is set. This allows a task to stay dormant until some external state changes.
+     * A base class to certain specialized promises.
      */
     class SpecializedPromise extends Promise {
         constructor(executor) {
@@ -2173,8 +2189,10 @@ var DS;
          */
         get failed() { return !!this._failed; }
         doResolve(value) {
-            this._completed = true;
-            this._resolve && this._resolve(value);
+            if (!this._completed) {
+                this._completed = true;
+                this._resolve && this._resolve(value);
+            }
         }
         _cleanUp() {
             this._resolve = null;
@@ -2204,6 +2222,10 @@ var DS;
         }
     }
     DS.SpecializedPromise = SpecializedPromise;
+    /**
+     * Creates a promise that allows timing out.
+     * You cannot reset the state once it times out.  You'll need to create a new instance.
+     */
     class TimeBasedPromise extends SpecializedPromise {
         constructor(executor) {
             super(executor);
@@ -2230,6 +2252,7 @@ var DS;
     DS.TimeBasedPromise = TimeBasedPromise;
     /**
      * Creates a promise that is resolved when some state is set. This allows a task to stay dormant until some external state changes.
+     * You cannot reset the state once triggered.  You'll need to create a new instance.
      */
     class StatePromise extends TimeBasedPromise {
         constructor(executorOrTimeout) {
@@ -2248,8 +2271,7 @@ var DS;
         set state(v) {
             if (__classPrivateFieldGet(this, __state) === void 0) {
                 __classPrivateFieldSet(this, __state, v);
-                if (this._completed)
-                    this.doResolve(true);
+                this.doResolve(true);
             }
         }
         /**
@@ -2472,7 +2494,7 @@ var DS;
             if (!this._file && !this.configFilename)
                 throw new DS.Exception("Cannot load configuration: A filename is required.", this);
             if (!this._file)
-                this._file = this.directory.createFile(this.configFilename);
+                this._file = await this.directory.createFile(this.configFilename);
             var content = (await this._file.read()).text;
             try {
                 var configObject = JSON.parse(content);
@@ -2492,7 +2514,7 @@ var DS;
             if (!this._file && !this.configFilename)
                 throw new DS.Exception("Cannot save configuration: A filename is required.", this);
             if (!this._file)
-                this._file = this.directory.createFile(this.configFilename);
+                this._file = await this.directory.createFile(this.configFilename);
             var configObject = this.saveConfigToObject();
             this._file.text = JSON.stringify(configObject);
             await this._file.save();
@@ -3584,7 +3606,7 @@ var DS;
            * Combines a path with either the base site path or a current alternative path. The following logic is followed for combining 'path':
            * 1. If it starts with '~/' or '~' is will be relative to 'baseURL'.
            * 2. If it starts with '/' it is relative to the server root 'protocol://server:port' (using current or base path, but with the path part ignored).
-           * 3. If it starts without a path separator, or is empty, then it is combined as relative to 'currentResourceURL'.
+           * 3. If it starts with './', or without a path separator, or is empty, then it is combined as relative to 'currentResourceURL'.
            * Note: if 'currentResourceURL' is empty, then 'baseURL' is assumed.
            * @param {string} currentResourceURL An optional path that specifies a resource location to take into consideration when resolving relative paths.
            * If not specified, this is 'location.href' by default.
@@ -3598,7 +3620,7 @@ var DS;
             path = DS.StringUtils.toString(path).trim();
             if (!path)
                 return currentResourceURL || baseURL;
-            if (path.charAt(0) == '/' || path.charAt(0) == '\\') {
+            if (path[0] == '/' || path[0] == '\\') {
                 // ... resolve to the root of the host; determine current or base, whichever is available ...
                 var parts = currentResourceURL && parse(currentResourceURL) || null;
                 if (parts && (parts.protocol || parts.hostName))
@@ -3606,7 +3628,10 @@ var DS;
                 else
                     return combine(getRoot(baseURL), path);
             }
-            if (path.charAt(0) == '~')
+            else
+                while (path[0] == '.' && (path[1] == '/' || path[1] == '\\'))
+                    path = path.substr(2);
+            if (path[0] == '~')
                 return combine(baseURL, path);
             // ... check if path is already absolute with a protocol ...
             var parts = parse(path);
@@ -4623,6 +4648,32 @@ var DS;
     /** Contains a few utility functions for working with strings. */
     let StringUtils;
     (function (StringUtils) {
+        /**
+         * Returns the given numeric value appended with the plural form of a word given a numeric value.
+         * @param n The value to test.
+         * @param singular The singular form of the word.
+         * @param plural The plural for of the word, or text to append when plural. The default is "s".
+        * @param append If true (the default) then 'plural' is the text to append when plural (such as "s"). If false, then it replaces the singular word.
+         */
+        function _s(n, singular, plural = "s", append = true) {
+            return n + ' ' + (n == 1 ? singular : append ? singular + plural : plural);
+        }
+        StringUtils._s = _s;
+        /**
+         * Removes either single or double quotes from both ends of the given string.  The string is trimmed of whitespace first, if any, before removing.
+         * @param str The string to trim quotes from.
+         * @param trim If true (the default), then whitespace is trimmed first.
+         */
+        function unquote(str, trim = true) {
+            if (!str || typeof str != 'string')
+                return str;
+            if (trim)
+                str = str.trim();
+            if (str[0] == '"' && str[str.length - 1] == '"' || str[0] == "'" && str[str.length - 1] == "'")
+                return str.substr(1, str.length - 2);
+            return str;
+        }
+        StringUtils.unquote = unquote;
         /** Replaces one string with another in a given string.
             * This function is optimized to select the faster method in the current browser. For instance, 'split()+join()' is
             * faster in Chrome, and RegEx based 'replace()' in others.
@@ -5790,7 +5841,7 @@ var DS;
            * @param {string} resourceName An optional resource name to append to the end of the resulting path.
            */
         getResourcePath(resourceName) {
-            var m = (this.path || "").match(/.*[\/\\]/);
+            var m = (this.path || "").match(/.*[\/\\.]/);
             return (m && m[0] || "") + (resourceName !== void 0 && resourceName !== null ? DS.StringUtils.toString(resourceName) : "");
         }
         /**
@@ -5969,14 +6020,14 @@ var DS;
             /** The full path + item name. */
             get absolutePath() { return this._parent && this._parent.absolutePath + '/' + this._name || this._name; }
             toString() { return this.absolutePath; }
-            exists(nameOrItem, ignore) {
+            async exists(nameOrItem, ignore) {
                 if (nameOrItem === void 0 || nameOrItem === null || !this.hasChildren)
                     return false;
                 if (typeof nameOrItem === 'object' && nameOrItem instanceof DirectoryItem) {
                     var item = this._childItemsByName[nameOrItem._name];
                     return !!item && item != ignore;
                 }
-                var t = this.resolve(nameOrItem);
+                var t = await this.resolve(nameOrItem);
                 return !!t && t != ignore;
             }
             /** Resolves a namespace path under this item.  You can provide a nested path if desired.
@@ -5985,18 +6036,18 @@ var DS;
               * @param {function} typeFilter The type that the returned item must be a derivative of.
               */
             resolve(itemPath, typeFilter) {
-                if (itemPath === void 0 || itemPath === null || !this.hasChildren)
-                    return null;
-                var parts = DS.Path.getPathNames(itemPath), t = this;
-                for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
-                    // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
-                    var item = t._childItemsByName[parts[i]];
-                    if (!item)
-                        return null;
-                    else
-                        t = item;
-                }
-                return (typeFilter ? (t instanceof typeFilter ? t : null) : t);
+                throw DS.Exception.notImplemented("DirectoryItem.resolve()");
+                //if (itemPath === void 0 || itemPath === null || !this.hasChildren) return null;
+                //var parts = Path.getPathNames(itemPath), t: DirectoryItem = this;
+                //for (var i = (parts[0] ? 0 : 1), n = parts.length; i < n; ++i) {
+                //    // (note: 'parts[0]?0:1' is testing if the first entry is empty, which then starts at the next one [to support '/X/Y'])
+                //    var item = t._childItemsByName[parts[i]];
+                //    if (!item)
+                //        return null;
+                //    else
+                //        t = item;
+                //}
+                //return <T>(typeFilter ? (t instanceof typeFilter ? t : null) : t);
             }
             getJSONStructure(typeFilter) {
                 JSON.stringify(this, (k, v) => {
@@ -6028,8 +6079,8 @@ var DS;
                  * Get a file relative to this one.
                  * @param path A file path. Can be relative or absolute.
                  */
-                getFile(filePath) {
-                    var item = this.resolve(filePath);
+                async getFile(filePath) {
+                    var item = await this.resolve(filePath);
                     if (!(item instanceof File))
                         return null;
                     return item;
@@ -6038,8 +6089,8 @@ var DS;
                  * Get a directory relative to this one.
                  * @param path A directory path. Can be relative or absolute.
                  */
-                getDirectory(path) {
-                    var item = this.resolve(path);
+                async getDirectory(path) {
+                    var item = await this.resolve(path);
                     if (!(item instanceof Directory))
                         return null;
                     return item;
@@ -6048,7 +6099,7 @@ var DS;
                  * Gets all files in this directory.
                  * @param path A file path. Can be relative or absolute.
                  */
-                getFiles() {
+                async getFiles() {
                     var files = [];
                     for (var item of this._childItems)
                         if (item instanceof File)
@@ -6058,7 +6109,7 @@ var DS;
                 /**
                  * Gets all directories under this one.
                  */
-                getDirectories() {
+                async getDirectories() {
                     var directories = [];
                     for (var item of this._childItems)
                         if (item instanceof Directory)
@@ -6066,7 +6117,7 @@ var DS;
                     return directories;
                 }
                 /** Creates a directory under the user root endpoint. */
-                createDirectory(path) {
+                async createDirectory(path) {
                     if (path === void 0 || path === null || !this.hasChildren)
                         return null;
                     var parts = DS.Path.getPathNames(path), item = this; // (if path is empty it should default to this directory)
@@ -6082,17 +6133,17 @@ var DS;
                     }
                     return item;
                 }
-                createFile(filePath, contents) {
+                async createFile(filePath, contents) {
                     var filename = DS.Path.getName(filePath);
                     var directoryPath = DS.Path.getPath(filePath);
                     if (!filename)
                         throw "A file name is required.";
-                    var dir = this.createDirectory(directoryPath);
+                    var dir = await this.createDirectory(directoryPath);
                     return File.onCreateFile(this._fileManager, dir, contents);
                 }
                 /** Adds the given item under this item.
                   */
-                add(item) {
+                async add(item) {
                     if (item === void 0 || item === null)
                         throw "Cannot add an empty item name/path to '" + this.absolutePath + "'.";
                     if (this.exists(item))
@@ -6117,7 +6168,7 @@ var DS;
                         this._fileManager['onItemAdded'](this);
                     return item;
                 }
-                remove(itemOrName) {
+                async remove(itemOrName) {
                     if (itemOrName === void 0 || itemOrName === null)
                         throw "Cannot remove an empty name/path from directory '" + this.absolutePath + "'.";
                     if (!this.hasChildren)
@@ -6132,7 +6183,7 @@ var DS;
                         parent = this;
                     }
                     else {
-                        var t = this.resolve(itemOrName);
+                        var t = await this.resolve(itemOrName);
                         if (t)
                             parent = t.parent;
                     }
@@ -6219,84 +6270,77 @@ var DS;
                 }
             }
             Abstracts.File = File;
+            /** Manages files in a virtual file system. This allows project files to be stored locally and synchronized with the server when a connection is available.
+             * For off-line storage to work, the browser must support local storage.
+             * Note: The 'FlowScript.currentUser' object determines the user-specific root directory for projects.
+             */
+            class FileManager {
+                // --------------------------------------------------------------------------------------------------------------------
+                constructor() {
+                    this.root = Abstracts.Directory.onCreateDirectory(this);
+                }
+                static getFileByID(id) { return this._filesByGUID[id]; }
+                // --------------------------------------------------------------------------------------------------------------------
+                /** Just a local property that checks for and returns 'User.current'. */
+                static get currentUser() { if (DS.User.current)
+                    return DS.User.current; throw "'There is no current user! User.changeCurrentUser()' must be called first."; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
+                /** Triggered when a directory item (i.e. directory or file) is about to be added to the system.
+                 * To abort you can:
+                 *   1. throw an exception - the error message (reason) will be displayed to the user.
+                 *   2. return an explicit 'false' value, which will prevent the item from adding without a reason.
+                 *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being added.
+                 */
+                onItemAdding(item) {
+                    if (item._id in FileManager._filesByGUID)
+                        throw `A directory item with this GUID '${item._id}' (name: '${FileManager._filesByGUID[item._id].name}') already exists.  Please remove the file first before adding it again.`;
+                }
+                /** Triggered when a directory item (i.e. directory or file) gets added to the system. */
+                onItemAdded(item) {
+                    FileManager._filesByGUID[item._id] = item;
+                }
+                /** Triggered when a directory item (i.e. directory or file) id about to be removed from the system.
+                 * To abort you can:
+                 *   1. throw an exception - the error message (reason) will be displayed to the user.
+                 *   2. return an explicit 'false' value, which will prevent the item from getting removed without a reason.
+                 *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being removed.
+                 */
+                onItemRemoving(item) {
+                    if (!(item._id in FileManager._filesByGUID))
+                        throw `Cannot remove directory item: No entry with GUID '${item._id}' (name: '${item.name}') was previously added.  This error is thrown to maintain the integrity of the virtual file system, as only existing items should ever be removed.`;
+                }
+                /** Triggered when a directory item (i.e. directory or file) gets removed from the system. */
+                onItemRemoved(item) {
+                    if (item._id in FileManager._filesByGUID)
+                        delete FileManager._filesByGUID[item._id]; // (speed is not a huge importance here, otherwise we can just set it to 'void 0')
+                }
+                /** Gets a directory under the current user root endpoint.
+                 * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+                 */
+                getDirectory(path, userId) {
+                    return this.root.getDirectory(combine(userId || FileManager.currentUser._id, path));
+                }
+                /** Creates a directory under the current user root endpoint.
+                 * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+                 */
+                createDirectory(path, userId) {
+                    return this.root.createDirectory(combine(userId || FileManager.currentUser._id, path));
+                }
+                /** Gets a file under the current user root endpoint.
+                 * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+                 */
+                getFile(filePath, userId) {
+                    return this.root.getFile(combine(userId || FileManager.currentUser._id, filePath));
+                }
+                /** Creates a file under the current user root endpoint.
+                 * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
+                 */
+                createFile(filePath, contents, userId) {
+                    return this.root.createFile(combine(userId || FileManager.currentUser._id, filePath), contents);
+                }
+            }
+            FileManager._filesByGUID = {}; // (references files by GUID for faster lookup)
+            Abstracts.FileManager = FileManager;
         })(Abstracts = VirtualFileSystem.Abstracts || (VirtualFileSystem.Abstracts = {}));
-        /** Manages files in a virtual file system. This allows project files to be stored locally and synchronized with the server when a connection is available.
-         * For off-line storage to work, the browser must support local storage.
-         * Note: The 'FlowScript.currentUser' object determines the user-specific root directory for projects.
-         */
-        class FileManager {
-            // --------------------------------------------------------------------------------------------------------------------
-            constructor() {
-                this.root = Abstracts.Directory.onCreateDirectory(this);
-            }
-            static getFileByID(id) { return this._filesByGUID[id]; }
-            /** Manages the global file system for FlowScript by utilizing local storage space and remote server space.
-             * The file manager tries to keep recently accessed files local (while backed up to remove), and off-loads
-             * less-accessed files to save space.
-             */
-            static get current() { return this._current || (this._current = new FileManager()); }
-            // --------------------------------------------------------------------------------------------------------------------
-            /** Just a local property that checks for and returns 'FlowScript.currentUser'. */
-            static get currentUser() { if (DS.User.current)
-                return DS.User.current; throw "'There is no current user! User.changeCurrentUser()' must be called first."; } // (added for convenience, and to make sure TS knows it needs to be defined before this class)
-            /** The API endpoint to the directory for the current user. */
-            static get currentUserEndpoint() { return combine(DS.IO.apiEndpoint, FileManager.currentUser._id); }
-            /** Triggered when a directory item (i.e. directory or file) is about to be added to the system.
-             * To abort you can:
-             *   1. throw an exception - the error message (reason) will be displayed to the user.
-             *   2. return an explicit 'false' value, which will prevent the item from adding without a reason.
-             *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being added.
-             */
-            onItemAdding(item) {
-                if (item._id in FileManager._filesByGUID)
-                    throw `A directory item with this GUID '${item._id}' (name: '${FileManager._filesByGUID[item._id].name}') already exists.  Please remove the file first before adding it again.`;
-            }
-            /** Triggered when a directory item (i.e. directory or file) gets added to the system. */
-            onItemAdded(item) {
-                FileManager._filesByGUID[item._id] = item;
-            }
-            /** Triggered when a directory item (i.e. directory or file) id about to be removed from the system.
-             * To abort you can:
-             *   1. throw an exception - the error message (reason) will be displayed to the user.
-             *   2. return an explicit 'false' value, which will prevent the item from getting removed without a reason.
-             *   2. return an explicit string value as a reason (to be displayed to the user), which will prevent the item from being removed.
-             */
-            onItemRemoving(item) {
-                if (!(item._id in FileManager._filesByGUID))
-                    throw `Cannot remove directory item: No entry with GUID '${item._id}' (name: '${item.name}') was previously added.  This error is thrown to maintain the integrity of the virtual file system, as only existing items should ever be removed.`;
-            }
-            /** Triggered when a directory item (i.e. directory or file) gets removed from the system. */
-            onItemRemoved(item) {
-                if (item._id in FileManager._filesByGUID)
-                    delete FileManager._filesByGUID[item._id]; // (speed is not a huge importance here, otherwise we can just set it to 'void 0')
-            }
-            /** Gets a directory under the current user root endpoint.
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            getDirectory(path, userId) {
-                return this.root.getDirectory(combine(userId || FileManager.currentUser._id, path));
-            }
-            /** Creates a directory under the current user root endpoint.
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            createDirectory(path, userId) {
-                return this.root.createDirectory(combine(userId || FileManager.currentUser._id, path));
-            }
-            /** Gets a file under the current user root endpoint.
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            getFile(filePath, userId) {
-                return this.root.getFile(combine(userId || FileManager.currentUser._id, filePath));
-            }
-            /** Creates a file under the current user root endpoint.
-             * @param userId This is optional, and exists only to reference files imported from other users. When undefined/null, the current user is assumed.
-             */
-            createFile(filePath, contents, userId) {
-                return this.root.createFile(combine(userId || FileManager.currentUser._id, filePath), contents);
-            }
-        }
-        FileManager._filesByGUID = {}; // (references files by GUID for faster lookup)
-        VirtualFileSystem.FileManager = FileManager;
         // ========================================================================================================================
         /** Combine two paths into one. */
         function combine(path1, path2) {
@@ -6318,14 +6362,13 @@ var DS;
         * When a project instance is created, the default 'Solution.onCreateProject' handler is used, which can be overridden for derived project types.
         */
         class Solution extends DS.ConfigBaseObject {
-            constructor(fileManager = DS.VirtualFileSystem.FileManager.current) {
+            constructor() {
                 super();
                 this._projects = []; // (the loaded projects that are currently active)
                 this._userIDs = []; // (the loaded projects that are currently active)
                 /** A list of user IDs and assigned roles for this project. */
                 this.userSecurity = new DS.UserAccess();
                 this.configFilename = Solution.CONFIG_FILENAME;
-                this.directory = fileManager.createDirectory(DS.VirtualFileSystem.combine("solutions", this._id));
             }
             /** The function used to create project instances when a project is created from saved project data.
              * Host programs can overwrite this event property with a handler to create and return derived types instead (such as ProjectUI.ts).
@@ -6344,6 +6387,20 @@ var DS;
                     if ((p = this._projects[i]).isStartup)
                         return p;
                 return null;
+            }
+            /**
+             * Creates and returns a 'solutions' directory in the root of the given file manager and returns it.
+             * @param fileManager
+             */
+            async addToDirectory(parent, solutionDircetoryName = "solutions") {
+                var _a;
+                var _this = this;
+                if ((_a = this.directory) === null || _a === void 0 ? void 0 : _a.parent)
+                    this.directory.parent.remove(this.directory);
+                _this.directory = await parent.getDirectory(solutionDircetoryName);
+                if (this.directory)
+                    return this.directory;
+                return _this.directory = await parent.createDirectory(DS.VirtualFileSystem.combine("solutions", this._id));
             }
             /**
              * Creates a new project with the given title and description.
@@ -6464,7 +6521,7 @@ var DS;
             /** Triggers the process to load all the solution details in the '/solutions' folder by first calling 'Solutions.getSolutions()'
              * to get the IDs from 'solutions.json'. While all solution configurations are loaded, the contained projects are not.
              */
-            static async refresh(fm = DS.VirtualFileSystem.FileManager.current) {
+            static async refresh(fm) {
                 var solutions = await Solutions.getSolutions();
                 var unloadedSolutions = [];
                 if (solutions && solutions.forEach)
@@ -6532,7 +6589,6 @@ var DS;
                 if (!DS.Path.isValidFileName(name))
                     throw "The project title '" + name + "' must also be a valid file name. Don't include special directory characters, such as: \\ / ? % * ";
                 this.configFilename = Project.CONFIG_FILENAME;
-                this.directory = this.solution.directory.createDirectory(DS.VirtualFileSystem.combine("projects", this._id)); // (the path is "User ID"/"project's unique ID"/ )
             }
             // --------------------------------------------------------------------------------------------------------------------
             // Create a type of trash-bin to hold expressions so the user can restore them, or delete permanently.
@@ -6543,6 +6599,11 @@ var DS;
             get expressionBin() { return this._expressionBin; }
             /** Returns the expression that was picked by the user for some operation. In the future this may also be used during drag-n-drop operations. */
             get pickedItem() { return this._pickedItem; }
+            async getProjectsDirectory() {
+                if (this.directory)
+                    return this.directory;
+                return this.directory = await this.solution.directory.createDirectory(DS.VirtualFileSystem.combine("projects", this._id)); // (the path is "User ID"/"project's unique ID"/ )
+            }
             // --------------------------------------------------------------------------------------------------------------------
             /** Saves the project values to an object - typically prior to serialization. */
             saveConfigToObject(target) {
@@ -6559,21 +6620,22 @@ var DS;
              * is no free space in the local store, the system will try to sync with a remote store.  If that fails, the
              * data will only be in memory and a UI warning will display.
              */
-            saveToStorage(source = this.saveConfigToObject()) {
+            async saveToStorage(source = this.saveConfigToObject()) {
                 if (!source)
                     return; // (nothing to do)
+                await this.getProjectsDirectory();
                 if (Array.isArray(source.workflows))
                     for (var i = 0, n = source.workflows.length; i < n; ++i) {
                         var workflow = source.workflows[i];
                         if (typeof workflow == 'object' && workflow.$id) {
                             source.workflows[i] = workflow.$id; // (replaced the object entry with the ID before saving the project graph later; these will be files instead)
                             var wfJSON = workflow && JSON.stringify(workflow) || null;
-                            var file = this.directory.createFile((workflow.name || workflow.$id) + ".wf.json", wfJSON); // (wf: Workflow file)
+                            var file = await this.directory.createFile((workflow.name || workflow.$id) + ".wf.json", wfJSON); // (wf: Workflow file)
                             this.files[file.absolutePath.toLocaleLowerCase()] = file;
                         }
                     }
                 var projectJSON = JSON.stringify(source);
-                file = this.directory.createFile(this._id + ".dsp.json", projectJSON); // (dsp: DreamSpace Project file)
+                file = await this.directory.createFile(this._id + ".dsp.json", projectJSON); // (dsp: DreamSpace Project file)
                 this.files[file.absolutePath.toLocaleLowerCase()] = file;
             }
             /** Loads and merges/replaces the project values from an object - typically prior to serialization.
@@ -7610,7 +7672,7 @@ var DS;
             this.originalFile = originalFile;
             __version.set(this, void 0);
         }
-        get filename() { var file = DS.VirtualFileSystem.FileManager.getFileByID(this._originalFileID); return file && file.name || ''; }
+        get filename() { var file = DS.VirtualFileSystem.Abstracts.FileManager.getFileByID(this._originalFileID); return file && file.name || ''; }
         /** Returns true if this version is the current version.  Current versions remain in their proper locations and do not
          * exist in the 'versions' repository.
          */

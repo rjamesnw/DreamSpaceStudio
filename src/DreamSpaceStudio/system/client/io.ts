@@ -71,33 +71,36 @@ namespace DS {
 
         /** Loads a file and returns the contents as text. */
         IO.read = async function (path: string): Promise<Uint8Array> {
-            var sid = await getAPISession();
+            throw DS.Exception.notImplemented("IO.read()");
+            //var sid = await getAPISession();
         }
 
         IO.write = async function (path: string, content: Uint8Array): Promise<void> {
-            return new Promise<any>((resolve, reject) => {
-                if (!hasStorageSupport("IO.write()", path, reject)) return;
-                Store.set(Store.StorageType.Local, path, StringUtils.byteArrayToString(content), "DSFS");
-            });
+            //return new Promise<any>((resolve, reject) => {
+            //    if (!hasStorageSupport("IO.write()", path, reject)) return;
+            //    Store.set(Store.StorageType.Local, path, StringUtils.byteArrayToString(content), "DSFS");
+            //});
+            throw DS.Exception.notImplemented("IO.write()");
         }
 
-        async function _getDir(funcName: string, path: string) {
-            var fm = DS.VirtualFileSystem.FileManager.current;
-            var dir = await fm.getDirectory(path); // (resolve the path to a directory first)
-            if (!dir) throw DS.Exception.error(`IO.${funcName}()`, `There is no directory with the path '${path}'.`, path);
-            return dir;
-        }
+        //? async function _getDir(fm: DS.VirtualFileSystem.Abstracts.FileManager, funcName: string, path: string) {
+        //    var dir = await fm.getDirectory(path); // (resolve the path to a directory first)
+        //    if (!dir) throw DS.Exception.error(`IO.${funcName}()`, `There is no directory with the path '${path}'.`, path);
+        //    return dir;
+        //}
 
         /** Lists the files in a directory. */
         IO.getFiles = async function (path: string): Promise<VirtualFileSystem.Abstracts.File[]> {
-            var dir = await _getDir('getFiles', path); // (resolve the path to a directory first)
-            return dir.getFiles();
+            //var dir = await _getDir(fm, 'getFiles', path); // (resolve the path to a directory first)
+            //return dir.getFiles();
+            throw DS.Exception.notImplemented("IO.getFiles()");
         }
 
         /** Lists the sub-directories in a directory. */
         IO.getDirectories = async function (path: string): Promise<VirtualFileSystem.Abstracts.Directory[]> {
-            var dir = await _getDir('getFiles', path); // (resolve the path to a directory first)
-            return dir.getDirectories();
+            //var dir = await _getDir(fm, 'getFiles', path); // (resolve the path to a directory first)
+            //return dir.getDirectories();
+            throw DS.Exception.notImplemented("IO.getDirectories()");
         }
 
         /**
@@ -107,8 +110,9 @@ namespace DS {
          * @param writeAccess
          */
         IO.exists = async function (path: string, readAccess = false, writeAccess = false): Promise<boolean> {
-            var fm = DS.VirtualFileSystem.FileManager.current;
-            return fm.root.exists(path);
+            //var fm = DS.VirtualFileSystem.FileManager.current;
+            //return fm.root.exists(path);
+            throw DS.Exception.notImplemented("IO.read()");
         }
 
         // --------------------------------------------------------------------------------------------------------------------

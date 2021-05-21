@@ -1,19 +1,20 @@
-    @table("audit_log")
-    export class AuditLogItem extends  ApplicationEntity
-    {
-        @foreignKey(DS.Utilities.nameof(() => Action))
-        actions_id: number;
+import { Action } from "./Action";
+import { ApplicationEntity } from "./Common/ApplicationEntity";
+import { User } from "./User";
+import { column, table } from "./Common/DbSet";
 
-        [Column("")]
-        details: string;
+@table("audit_log")
+export class AuditLogItem extends ApplicationEntity {
+    @foreignKey(DS.Utilities.nameof(() => Action))
+    @column("actions_id")
+    actionsID: number;
+    @column("details")
+    details: string;
+    @column("ip")
+    ip: string;
+    @column("host")
+    host: string;
 
-        [Column("ip")]
-        public string IP { get; set; }
-
-        [Column("host")]
-        public string Host { get; set; }
-
-        public virtual User User { get; set; }
-
-        public virtual Action Action { get; set; }
-    }
+    get User(): User { return null; }
+    get Action(): Action { return null; }
+}

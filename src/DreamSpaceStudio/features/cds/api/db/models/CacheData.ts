@@ -1,37 +1,28 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+import { column, table } from "./Common/DbSet";
 
-namespace CDS.Entities
-{
-    /// <summary>
-    /// Stores system-wide cache data in a database to be shared across multiple website instances.
-    /// </summary>
-    [Table("system_cache")]
-    public partial class CacheData
-    {
-        [Key]
-        [Required]
-        [MaxLength(255)]
-        public string key { get; set; }
+/** Stores system-wide cache data in a database to be shared across multiple website instances. */
+@table("system_cache")
+export class CacheData {
+    @key()
+    @required()
+    @maxLength(255)
+    key: string;
 
-        [Required]
-        [Column("value")]
-        public byte[] Value { get; set; }
+    @required()
+    @column()
+    value: Uint8Array;
 
-        [Required]
-        [Column("created")]
-        public DateTimeOffset Created { get; set; }
+    @required()
+    @column()
+    created: Date;
 
-        [Required]
-        [Column("updated")]
-        public DateTimeOffset Updated { get; set; }
+    @required()
+    @column()
+    updated: Date;
 
-        [Column("expires")]
-        public DateTimeOffset? Expires { get; set; }
+    @column()
+    expires: Date;
 
-        [Column("timeout")]
-        public int? Timeout { get; set; }
-    }
+    @column()
+    timeout: number;
 }

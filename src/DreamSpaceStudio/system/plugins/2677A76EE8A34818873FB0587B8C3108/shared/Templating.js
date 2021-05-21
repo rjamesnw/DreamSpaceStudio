@@ -53,12 +53,12 @@ class TemplateElement extends VDOM_1.HTMLElement {
             return;
         this.tagName = (this.tagName || "").toLowerCase();
         //??args = <string[]><any>arguments;
-        if (args.length == 1 && typeof args[0] != 'undefined' && typeof args[0] != 'string' && args[0].length)
+        if (args.length == 1 && Array.isArray(args[0]))
             args = args[0]; // (first parameter is an array of supported type names)
         for (var i = 0; i < args.length; i++)
             if (this.tagName == args[i])
                 return true;
-        throw DS.Exception.from("The node type name '" + this.tagName + "' is not supported for this template type.");
+        throw new DS.Exception("The node type name '" + this.tagName + "' is not supported for this template type.");
     }
     /** Call this to validate unsupported element types. */
     assertUnsupportedNodeTypes(...args) {
@@ -66,11 +66,11 @@ class TemplateElement extends VDOM_1.HTMLElement {
             return;
         this.tagName = (this.tagName || "").toLowerCase();
         //??args = <string[]><any>arguments;
-        if (args.length == 1 && typeof args[0] != 'undefined' && typeof args[0] != 'string' && args[0].length)
+        if (args.length == 1 && Array.isArray(args[0]))
             args = args[0]; // (first parameter is an array of unsupported type names)
         for (var i = 0; i < args.length; i++)
             if (this.tagName == args[i])
-                throw DS.Exception.from("The node type name '" + this.tagName + "' is not supported for this template type.");
+                throw new DS.Exception("The node type name '" + this.tagName + "' is not supported for this template type.");
     }
 }
 exports.TemplateElement = TemplateElement;
@@ -140,11 +140,11 @@ class Header extends TemplateElement {
         super('h' + headerLevel);
         this.headerLevel = headerLevel;
         if (headerLevel < 1 || headerLevel > 6)
-            throw DS.Exception.from("HTML only supports header levels 1 through 6.");
+            throw new DS.Exception("HTML only supports header levels 1 through 6.");
     }
     validate() {
         if (this.headerLevel < 1 || this.headerLevel > 6)
-            throw DS.Exception.from("HTML only supports header levels 1 through 6.");
+            throw new DS.Exception("HTML only supports header levels 1 through 6.");
         this.assertSupportedElementTypes("h1", "h2", "h3", "h4", "h5", "h6");
     }
     get outerHTML() {

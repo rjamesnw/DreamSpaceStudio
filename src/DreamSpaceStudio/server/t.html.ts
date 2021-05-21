@@ -187,7 +187,7 @@ export interface Renderer { (): string | Promise<string> }
 
 const EXPR_CTX_VAR_NAME = "_$";
 
-function createAsyncFunction(expr: string) { return new AsyncFunction("$", "httpContext", "var ctx = httpContext; " + expr); }
+function createAsyncFunction(expr: string) { return new AsyncFunction(EXPR_CTX_VAR_NAME, "httpContext", "var ctx = httpContext; " + expr); }
 var evalExpr = new Function(EXPR_CTX_VAR_NAME, "expr", "httpContext", `var ctx = httpContext, viewData = ${EXPR_CTX_VAR_NAME}; return eval(expr);`);
 
 export class ViewScope {
@@ -428,7 +428,10 @@ async function _processExpression(httpContext: HttpContext, expr: string, dataCo
         }
 
         if (value !== null && value !== void 0 && typeof value != 'string')
-            value = JSON.stringify(value);
+            if (typeof value == 'object' && Object.prototype.hasOwnProperty.call(value, 'toString'))
+                value = value.toString(); // (required because the attribute rendering can return object literals with a 'toString' function on the instance)
+            else
+                value = JSON.stringify(value);
 
         return value;
     } catch (ex) {

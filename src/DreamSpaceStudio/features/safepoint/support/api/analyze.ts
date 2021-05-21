@@ -114,9 +114,9 @@ export async function get(req: express.Request, res: express.Response, next: exp
 
                             var msg = "User is a part of at least one unit or department associated with the incident";
 
-                            var specialAuthorityAssignees = await getAssignedSpecialAuthorities(incidentNum, sa.SpecialAuthorityID);
+                            var specialAuthorityAssignees = sa && await getAssignedSpecialAuthorities(incidentNum, sa.SpecialAuthorityID) || null;
 
-                            if (specialAuthorityAssignees.response.length) {
+                            if (specialAuthorityAssignees?.response.length) {
                                 msg += " and should be able to open it.";
                                 if (specialAuthorityAssignees.response[0].DoneReviewing)
                                     msg += " User is also done reviewing the incident.";

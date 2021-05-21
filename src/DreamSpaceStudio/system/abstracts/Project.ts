@@ -62,7 +62,11 @@
                 if (!Path.isValidFileName(name))
                     throw "The project title '" + name + "' must also be a valid file name. Don't include special directory characters, such as: \\ / ? % * ";
                 this.configFilename = Project.CONFIG_FILENAME;
-                this.directory = this.solution.directory.createDirectory(VirtualFileSystem.combine("projects", this._id)); // (the path is "User ID"/"project's unique ID"/ )
+            }
+
+            async getProjectsDirectory() {
+                if (this.directory) return this.directory;
+                return this.directory = await this.solution.directory.createDirectory(VirtualFileSystem.combine("projects", this._id)); // (the path is "User ID"/"project's unique ID"/ )
             }
 
             // --------------------------------------------------------------------------------------------------------------------
@@ -88,8 +92,10 @@
              * is no free space in the local store, the system will try to sync with a remote store.  If that fails, the
              * data will only be in memory and a UI warning will display.
              */
-            saveToStorage(source = this.saveConfigToObject()) {
+            async saveToStorage(source = this.saveConfigToObject()) {
                 if (!source) return; // (nothing to do)
+
+                await this.getProjectsDirectory();
 
                 if (Array.isArray(source.workflows))
                     for (var i = 0, n = source.workflows.length; i < n; ++i) {
@@ -100,14 +106,14 @@
 
                             var wfJSON = workflow && JSON.stringify(workflow) || null;
 
-                            var file = this.directory.createFile((workflow.name || workflow.$id) + ".wf.json", wfJSON); // (wf: Workflow file)
+                            var file = await this.directory.createFile((workflow.name || workflow.$id) + ".wf.json", wfJSON); // (wf: Workflow file)
                             this.files[file.absolutePath.toLocaleLowerCase()] = file;
                         }
                     }
 
                 var projectJSON = JSON.stringify(source);
 
-                file = this.directory.createFile(this._id + ".dsp.json", projectJSON); // (dsp: DreamSpace Project file)
+                file = await this.directory.createFile(this._id + ".dsp.json", projectJSON); // (dsp: DreamSpace Project file)
                 this.files[file.absolutePath.toLocaleLowerCase()] = file;
             }
 

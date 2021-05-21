@@ -100,3 +100,117 @@ export class DbSet<T extends IndexedObject = IndexedObject> {
         return entity;
     }
 }
+
+// ============================================================================================================================
+// Decorators that will help define the model for the DbSet.
+
+export class ColumnInfo {
+    isForeignKey: boolean;
+    constructor(public tableInfo: TableInfo, public name: string) { }
+}
+
+export class TableInfo {
+    /** Associates table column details with model property names as the keys. */
+    columns: IndexedObject<ColumnInfo> = {};
+    /** References column from another model type info that represents the foreign key for the model associated via the navigational property. */
+    navigations: IndexedObject<{ type: IType, foreignKeyName: string, parentType: IType, parentKeyName: string, parentNavPropertyName: string }> = {};
+
+    /** Returns the name of the model type. */
+    get typeName() { return DS.Utilities.getTypeName(this.type, false); }
+
+    constructor(
+        /** The underlying model type this info represents. */
+        public type: IType,
+        /** The table name this model represents. */
+        public name: string,
+        /** The parent model info that helps define the current model. */
+        public parentInfo: TableInfo
+    ) { }
+}
+
+export interface ITableType extends IType {
+    __tableInfo__: TableInfo;
+}
+
+export function table(name: string) {
+    return (target: IType) => {
+        (<ITableType>target).__tableInfo__ = new TableInfo(target, name, (<ITableType>target).__tableInfo__);
+        // (the static table info is inherited by the sub-types, so we need to explicitly set the table info and reference any
+        //  prior references to create an inheritance chain)
+    };
+}
+
+/**
+ * Returns the table information associated with a model type or model instance (assuming the constructor has not been replaced with a custom value).
+ * @param typeOrPrototype The type to get TableInfo for.
+ * @param required If true (default) then an error is throw if the type is missing.  If false, the return is undefined if missing.
+ */
+export function getTableInfo(typeOrPrototype: object, required = true): TableInfo {
+    var info = 'constructor' in typeOrPrototype ? (<ITableType>typeOrPrototype.constructor)?.__tableInfo__ : (<ITableType>typeOrPrototype).__tableInfo__;
+    if (!info) throw DS.Exception.error('@column()', `A '@table(name)' decorator is required first on the model class '${DS.Utilities.getTypeName(typeOrPrototype, false)}'.`)
+    return info;
+}
+
+export function column(name?: string) {
+    return (prototype: object, propertyKey: string, descriptor?: PropertyDescriptor) => {
+        var info = getTableInfo(prototype);
+        // (by default the constructor for a prototype is the same as the type that owns it)
+        info.columns[propertyKey] = new ColumnInfo(info, name ?? propertyKey);
+    };
+}
+
+//export function foreignKey(name?: string) {
+//    return (prototype: object, propertyKey: string, descriptor?: PropertyDescriptor) => {
+//        var info = getTableInfo(prototype);
+//        // (by default the constructor for a prototype is the same as the type that owns it)
+//        info.columns[propertyKey] = new ColumnInfo(info, name ?? propertyKey);
+//    };
+//}
+
+/**
+ * When defining a navigational property you must specify the target model type and foreign key name first, followed by the
+ * parent model it is a child of and the parent key (which defaults to just 'id', as is most common).
+ * @param modelType
+ * @param foreignKeyName
+ * @param parentModelType
+ * @param parentKeyName
+ */
+export function navigation<TChild extends object, TParent extends object>(thisType: IType<TChild>, foreignKeyNameSelector: (_: TChild) => TChild[keyof TChild], parentModelType?: IType<TParent>, parentNavPropertyNameSelector?: (_: TParent) => TParent[keyof TParent], parentKeyNameSelector?: (_: TParent) => TParent[keyof TParent]) {
+    return (prototype: object, propertyKey: string, descriptor?: PropertyDescriptor) => {
+        var info = getTableInfo(prototype); // (get table info for the associated model)
+        //var navModelInfo = modelInfoMap.get(modelType.prototype);
+        //if (!navModelInfo) throw DS.Exception.error('@navigation()', "A '@table(name)' decorator is required first on the target model type for the navigational property.")
+        //var fkCol = navModelInfo.columns[<any>foreignKeyName];
+        //if (!fkCol) throw DS.Exception.error('@navigation()', `A '@column(name)' decorator is required first on the '${foreignKeyName}' foreign key of model type '${navModelInfo.typeName}' befre.`)
+        //fkCol.isForeignKey = true;
+        if (thisType != info.type) throw DS.Exception.error("@navigation()", "The child model type (first parameter) does not match the type of the model it is in.");
+        info.navigations[propertyKey] = {
+            type: info.type,
+            foreignKeyName: DS.Utilities.nameof(foreignKeyNameSelector),
+            parentType: parentModelType ?? info.type,
+            parentKeyName: DS.Utilities.nameof(parentKeyNameSelector) ?? "id",
+            parentNavPropertyName: DS.Utilities.nameof(parentNavPropertyNameSelector)
+        };
+        // (note: we cannot check if the other column was defined yet, as the class type may not yet be define in cases of cyclical referencing)
+    };
+}
+export function navigation_<TChild extends IType<any>, TParent extends object>(foreignKeyNameSelector: (_: TChild) => TChild[keyof TChild], parentModelType?: IType<TParent>, parentNavPropertyNameSelector?: (_: TParent) => TParent[keyof TParent], parentKeyNameSelector?: (_: TParent) => TParent[keyof TParent])
+    : (thisType: TChild) => TChild {
+    return (thisType: TChild) => {
+        var info = getTableInfo(thisType); // (get table info for the associated model)
+        //var navModelInfo = modelInfoMap.get(modelType.prototype);
+        //if (!navModelInfo) throw DS.Exception.error('@navigation()', "A '@table(name)' decorator is required first on the target model type for the navigational property.")
+        //var fkCol = navModelInfo.columns[<any>foreignKeyName];
+        //if (!fkCol) throw DS.Exception.error('@navigation()', `A '@column(name)' decorator is required first on the '${foreignKeyName}' foreign key of model type '${navModelInfo.typeName}' befre.`)
+        //fkCol.isForeignKey = true;
+        if (thisType != info.type) throw DS.Exception.error("@navigation()", "The child model type (first parameter) does not match the type of the model it is in.");
+        info.navigations[propertyKey] = {
+            type: info.type,
+            foreignKeyName: DS.Utilities.nameof(foreignKeyNameSelector),
+            parentType: parentModelType ?? info.type,
+            parentKeyName: DS.Utilities.nameof(parentKeyNameSelector) ?? "id",
+            parentNavPropertyName: DS.Utilities.nameof(parentNavPropertyNameSelector)
+        };
+        // (note: we cannot check if the other column was defined yet, as the class type may not yet be define in cases of cyclical referencing)
+    };
+}

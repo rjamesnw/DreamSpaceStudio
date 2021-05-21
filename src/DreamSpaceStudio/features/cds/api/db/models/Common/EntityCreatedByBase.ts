@@ -1,4 +1,7 @@
-﻿import { EnabledEntityBase } from "./EnabledEntityBase";
+﻿import { User } from "../User";
+import { EnabledEntityBase } from "./EnabledEntityBase";
+import { APIActions } from "./EntityBase";
+import { ModelStateDictionary } from "./ModelStateDictionary";
 
 /// <summary>
 /// The base type for all entities that track which user created them.
@@ -7,22 +10,22 @@ export abstract class EntityCreatedByBase extends EnabledEntityBase {
     /// <summary>
     /// The ID of the user who created this record entry.
     /// </summary>
-    [Required]
-    [ForeignKey(nameof(CreatedBy))]
-    [ReadOnly(true)]
-    [Column("users_id")]
+    @required()
+    @foreignKey(nameof(CreatedBy))
+    @readOnly(true)
+    @column("users_id")
     users_id: number;
 
     /// <summary>
     /// The user that created this record entry.
     /// </summary>
-    get createdBy(): User;
+    get createdBy(): User { return null; }
 
     validate(apiAction: APIActions): ModelStateDictionary {
-        var modeState = base.Validate(apiAction);
+        var modeState = super.validate(apiAction);
         switch (apiAction) {
             case APIActions.Create:
-                if (!(UsersID > 0))
+                if (!(this.users_id > 0))
                     modeState.AddModelError(TableJsonConverter.CLRNameToJSName(nameof(UsersID)), "A first name is required.");
                 break;
             case APIActions.Read:

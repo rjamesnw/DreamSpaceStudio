@@ -20,7 +20,7 @@ namespace DS {
         /** The original file name if changed, since replaced files may have the ISO UTC date-time stamp appended. */
         readonly _originalFileID: string;
 
-        get filename() { var file = VirtualFileSystem.FileManager.getFileByID(this._originalFileID); return file && file.name || ''; }
+        get filename() { var file = VirtualFileSystem.Abstracts.FileManager.getFileByID(this._originalFileID); return file && file.name || ''; }
 
         /** Returns true if this version is the current version.  Current versions remain in their proper locations and do not
          * exist in the 'versions' repository.
@@ -103,11 +103,11 @@ namespace DS {
         static versionsBasePath: string = "versions";
         readonly versions: FileVersion[] = [];
 
-        readonly _fs: VirtualFileSystem.FileManager;
+        readonly _fs: VirtualFileSystem.Abstracts.FileManager;
 
         private _fileToVersionMap = <{ [fileGuid: string]: FileVersion }>{}; // (maps a file GUID to a file version for quick lookup)
 
-        constructor(fs?: VirtualFileSystem.FileManager) {
+        constructor(fs?: VirtualFileSystem.Abstracts.FileManager) {
             super();
             this._fs = fs;
         }

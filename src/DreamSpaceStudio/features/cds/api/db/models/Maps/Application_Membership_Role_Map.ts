@@ -1,29 +1,27 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+import { Application } from "../Application";
+import { column, navigation, navigation_, table } from "../Common/DbSet";
+import { MapEntity } from "../Common/MapEntity";
+import { Membership } from "../Membership";
+import { Role } from "../Role";
 
-namespace CDS.Entities
-{
-    [Table("map_applications_memberships_roles")]
-    public partial class Application_Membership_Role_Map: MapEntity
-    {
-        [ForeignKey(nameof(Application))]
-        [Column("applications_id")]
-        public ulong ApplicationsID { get; set; }
+@table("map_applications_memberships_roles")
+@navigation_(_ => _.applicationsID, Application, _ => _.Application_Membership_Role_Mapping, _ => _.id)
+export class Application_Membership_Role_Map extends MapEntity {
+    @column("applications_id")
+    applicationsID: number;
 
-        [ForeignKey(nameof(Membership))]
-        [Column("memberships_id")]
-        public ulong MembershipsID { get; set; }
+    @column("memberships_id")
+    membershipsID: number;
 
-        [ForeignKey(nameof(Role))]
-        [Column("roles_id")]
-        public ulong RolesID { get; set; }
+    @column("roles_id")
+    rolesID: number;
 
-        public virtual Application Application { get; set; }
+    @navigation(Application_Membership_Role_Map, _ => _.applicationsID, Application, _ => _.Application_Membership_Role_Mapping, _ => _.id)
+    Application: Application;
 
-        public virtual Membership Membership { get; set; }
+    @navigation(Application_Membership_Role_Map, _ => _.membershipsID, Membership, _ => _.Application_Membership_Role_Mapping, _ => _.id)
+    Membership: Membership;
 
-        public virtual Role Role { get; set; }
-    }
+    @navigation(Application_Membership_Role_Map, _ => _.rolesID, Role, _ => _.Application_Membership_Role_Mapping, _ => _.id)
+    Role: Role;
 }

@@ -7,11 +7,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EnabledEntityBase = void 0;
+const DbSet_1 = require("./DbSet");
 const EntityCreatedBase_1 = require("./EntityCreatedBase");
 class EnabledEntityBase extends EntityCreatedBase_1.EntityCreatedBase {
 }
 __decorate([
-    column
+    DbSet_1.column()
 ], EnabledEntityBase.prototype, "disabled", void 0);
 exports.EnabledEntityBase = EnabledEntityBase;
 //# sourceMappingURL=EnabledEntityBase.js.map

@@ -102,6 +102,7 @@
     <TypeScriptCompile Include="features\cds\api\db\models\Common\EntityCreatedByBase.ts" />
     <TypeScriptCompile Include="features\cds\api\db\models\Common\EnumEntity.ts" />
     <TypeScriptCompile Include="features\cds\api\db\models\Common\MapEntity.ts" />
+    <TypeScriptCompile Include="features\cds\api\db\models\Common\ModelStateDictionary.ts" />
     <TypeScriptCompile Include="features\cds\api\db\models\Common\NamedApplicationEntity.ts" />
     <TypeScriptCompile Include="features\cds\api\db\models\Common\NamedUIDEntityBase.ts" />
     <TypeScriptCompile Include="features\cds\api\db\models\Common\PartitionedApplicationEntity.ts" />

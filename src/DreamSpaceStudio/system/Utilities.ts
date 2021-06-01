@@ -55,6 +55,28 @@
             return value / shiftFactor;
         }
 
+        /** Returns the time in milliseconds since 00:00:00.000. */
+        export function getTimeSinceMidnight(d: Date) {
+            var e = new Date(d);
+            return +d - e.setHours(0, 0, 0, 0);
+        }
+
+        /** Returns the time today in milliseconds since 00:00:00.000. */
+        export function getTimeToday() {
+            return getTimeSinceMidnight(new Date());
+        }
+
+        /** Converts time elapsed in milliseconds to a more readable display string. */
+        export function timeElapsedToString(ms: number) {
+            var str: string;
+            if (ms > DS.Time.__millisecondsPerDay) { str = "day"; ms /= (DS.Time.__millisecondsPerDay); }
+            else if (ms > DS.Time.__millisecondsPerHour) { str = "hour"; ms /= (DS.Time.__millisecondsPerHour); }
+            else if (ms > DS.Time.__millisecondsPerMinute) { str = "minute"; ms /= (DS.Time.__millisecondsPerMinute); }
+            else if (ms > DS.Time.__millisecondsPerSecond) { str = "second"; ms /= (DS.Time.__millisecondsPerMinute); }
+            else str = "millisecond";
+            return DS.StringUtils._s(+ms || 0, str);
+        }
+
         // --------------------------------------------------------------------------------------------------------------------
 
         /** Escapes a RegEx string so it behaves like a normal string. This is useful for RexEx string based operations, such as 'replace()'. */
@@ -361,7 +383,7 @@
         type PrimitiveJSTypes = 'string' | 'number' | 'bigint' | 'boolean' | 'symbol' | 'undefined' | 'object' | 'function';
 
         /**
-         * Returns the propery names of the values that match the given type.
+         * Returns the property names of the values that match the given type.
          * @param o The object to check.
          * @param typeName The type to filter on.
          * @param ownProperties
@@ -385,7 +407,7 @@
 
         /**
          * Returns true if the value equates to 'true', 'yes', 'y', 1, 'ok', 'pass', 'on'.
-         * Returns false if the value equates to 'fase', 'no', 'n', 0, 'cancel', 'fail', 'off'.
+         * Returns false if the value equates to 'false', 'no', 'n', 0, 'cancel', 'fail', 'off'.
          * Note: This does NOT use "truthy" or "falsy" to equate true and false. The value has to be explicitly stated.
          * @param value The value to check for true or false meanings.
          * @param defaultValue The default boolean value if nothing is a match.

@@ -12,6 +12,11 @@ namespace DS {
         export function getUTCTimestamp() { // TODO: Consider merging/including this with TimeSpan.
             return new Date().toISOString().replace(/[^0-9]/g, "").substr(0, 14);
         }
+
+        /** Returns a Date from a Unix-style timestamp string, similar to what is used with MySQL databases. */
+        export function fromUTCTimestamp(timestamp: string) {
+            return new Date(timestamp?.replace(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, "$1-$2-$3T$4:$5:$6Z"));
+        }
     }
 
     /** 

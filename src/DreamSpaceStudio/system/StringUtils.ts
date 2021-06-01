@@ -12,10 +12,12 @@ namespace DS {
          * @param n The value to test.
          * @param singular The singular form of the word.
          * @param plural The plural for of the word, or text to append when plural. The default is "s".
-        * @param append If true (the default) then 'plural' is the text to append when plural (such as "s"). If false, then it replaces the singular word.
+         * @param append If true (the default) then 'plural' is the text to append when plural (such as "s"). If false, then it replaces the singular word.
+         * @param decimals See Utilities.precision()
+         * @param round See Utilities.precision()
          */
-        export function _s(n: number, singular: string, plural = "s", append = true) {
-            return n + ' ' + (n == 1 ? singular : append ? singular + plural : plural);
+        export function _s(n: number, singular: string, plural = "s", append = true, decimals?: number, round?: boolean) {
+            return Utilities.precision(n, decimals, round) + ' ' + (n == 1 ? singular : append ? singular + plural : plural);
         }
 
         /**
@@ -53,24 +55,23 @@ namespace DS {
           */
         export function pad(str: any, fixedLength: number, leftPadChar: string, rightPadChar?: string): string {
             if (str === void 0) str = "";
-            if (leftPadChar === void 0 || leftPadChar === null) leftPadChar = "";
-            if (rightPadChar === void 0 || rightPadChar === null) rightPadChar = "";
 
-            var s = "" + str, targetLength = fixedLength > 0 ? fixedLength : 0, remainder = targetLength - s.length,
-                lchar = "" + leftPadChar, rchar = "" + rightPadChar,
-                llen: number, rlen: number, lpad: string = "", rpad: string = "";
+            var s = "" + str, targetLength = fixedLength > 0 ? fixedLength : 0;
+            var remainder = targetLength - s.length;
+            var lchar = DS.StringUtils.toString(leftPadChar), rchar = DS.StringUtils.toString(rightPadChar);
+            var llen = 0, rlen = 0, lpad: string = "", rpad: string = "";
 
             if (remainder <= 0 || (!lchar && !rchar)) return str;
 
             if (lchar && rchar) {
                 llen = Math.floor(remainder / 2);
-                rlen = targetLength - llen;
+                rlen = remainder - llen;
             }
             else if (lchar) llen = remainder;
-            else if (rchar) rlen = remainder;
+            else rlen = remainder;
 
-            lpad = DS.global.Array(llen).join(lchar); // (https://stackoverflow.com/a/24398129/1236397)
-            rpad = DS.global.Array(rlen).join(rchar);
+            lpad = DS.global.Array(llen + 1).join(lchar); // (https://stackoverflow.com/a/24398129/1236397)
+            rpad = DS.global.Array(rlen + 1).join(rchar);
 
             return lpad + s + rpad;
         }
@@ -79,7 +80,7 @@ namespace DS {
           * Note: If any argument is not a string, the value is converted into a string.
           * @param source The first string to combine.
           * @param suffix The second string to combine.
-          * @param delimiter A string that joins the two strings, whivh is only added if both string parameters are not undefined, null, or empty.  If missing, the two strings are simply joined togehter.
+          * @param delimiter A string that joins the two strings, which is only added if both string parameters are not undefined, null, or empty.  If missing, the two strings are simply joined together.
           */
         export function append(source: string, suffix?: string, delimiter?: string): string {
             if (source === void 0) source = "";

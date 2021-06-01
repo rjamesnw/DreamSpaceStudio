@@ -42,7 +42,7 @@ var DS;
                 return str;
             if (lchar && rchar) {
                 llen = Math.floor(remainder / 2);
-                rlen = targetLength - llen;
+                rlen = remainder - llen;
             }
             else if (lchar)
                 llen = remainder;

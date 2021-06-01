@@ -464,6 +464,41 @@ var DS;
             return value / shiftFactor;
         }
         Utilities.precision = precision;
+        /** Returns the time in milliseconds since 00:00:00.000. */
+        function getTimeSinceMidnight(d) {
+            var e = new Date(d);
+            return +d - e.setHours(0, 0, 0, 0);
+        }
+        Utilities.getTimeSinceMidnight = getTimeSinceMidnight;
+        /** Returns the time today in milliseconds since 00:00:00.000. */
+        function getTimeToday() {
+            return getTimeSinceMidnight(new Date());
+        }
+        Utilities.getTimeToday = getTimeToday;
+        /** Converts time elapsed in milliseconds to a more readable display string. */
+        function timeElapsedToString(ms) {
+            var str;
+            if (ms > DS.Time.__millisecondsPerDay) {
+                str = "day";
+                ms /= (DS.Time.__millisecondsPerDay);
+            }
+            else if (ms > DS.Time.__millisecondsPerHour) {
+                str = "hour";
+                ms /= (DS.Time.__millisecondsPerHour);
+            }
+            else if (ms > DS.Time.__millisecondsPerMinute) {
+                str = "minute";
+                ms /= (DS.Time.__millisecondsPerMinute);
+            }
+            else if (ms > DS.Time.__millisecondsPerSecond) {
+                str = "second";
+                ms /= (DS.Time.__millisecondsPerMinute);
+            }
+            else
+                str = "millisecond";
+            return DS.StringUtils._s(+ms || 0, str);
+        }
+        Utilities.timeElapsedToString = timeElapsedToString;
         // --------------------------------------------------------------------------------------------------------------------
         /** Escapes a RegEx string so it behaves like a normal string. This is useful for RexEx string based operations, such as 'replace()'. */
         function escapeRegex(regExStr) {
@@ -783,7 +818,7 @@ var DS;
         // --------------------------------------------------------------------------------------------------------------------
         /**
          * Returns true if the value equates to 'true', 'yes', 'y', 1, 'ok', 'pass', 'on'.
-         * Returns false if the value equates to 'fase', 'no', 'n', 0, 'cancel', 'fail', 'off'.
+         * Returns false if the value equates to 'false', 'no', 'n', 0, 'cancel', 'fail', 'off'.
          * Note: This does NOT use "truthy" or "falsy" to equate true and false. The value has to be explicitly stated.
          * @param value The value to check for true or false meanings.
          * @param defaultValue The default boolean value if nothing is a match.
@@ -4653,10 +4688,12 @@ var DS;
          * @param n The value to test.
          * @param singular The singular form of the word.
          * @param plural The plural for of the word, or text to append when plural. The default is "s".
-        * @param append If true (the default) then 'plural' is the text to append when plural (such as "s"). If false, then it replaces the singular word.
+         * @param append If true (the default) then 'plural' is the text to append when plural (such as "s"). If false, then it replaces the singular word.
+         * @param decimals See Utilities.precision()
+         * @param round See Utilities.precision()
          */
-        function _s(n, singular, plural = "s", append = true) {
-            return n + ' ' + (n == 1 ? singular : append ? singular + plural : plural);
+        function _s(n, singular, plural = "s", append = true, decimals, round) {
+            return DS.Utilities.precision(n, decimals, round) + ' ' + (n == 1 ? singular : append ? singular + plural : plural);
         }
         StringUtils._s = _s;
         /**
@@ -4700,23 +4737,22 @@ var DS;
         function pad(str, fixedLength, leftPadChar, rightPadChar) {
             if (str === void 0)
                 str = "";
-            if (leftPadChar === void 0 || leftPadChar === null)
-                leftPadChar = "";
-            if (rightPadChar === void 0 || rightPadChar === null)
-                rightPadChar = "";
-            var s = "" + str, targetLength = fixedLength > 0 ? fixedLength : 0, remainder = targetLength - s.length, lchar = "" + leftPadChar, rchar = "" + rightPadChar, llen, rlen, lpad = "", rpad = "";
+            var s = "" + str, targetLength = fixedLength > 0 ? fixedLength : 0;
+            var remainder = targetLength - s.length;
+            var lchar = DS.StringUtils.toString(leftPadChar), rchar = DS.StringUtils.toString(rightPadChar);
+            var llen = 0, rlen = 0, lpad = "", rpad = "";
             if (remainder <= 0 || (!lchar && !rchar))
                 return str;
             if (lchar && rchar) {
                 llen = Math.floor(remainder / 2);
-                rlen = targetLength - llen;
+                rlen = remainder - llen;
             }
             else if (lchar)
                 llen = remainder;
-            else if (rchar)
+            else
                 rlen = remainder;
-            lpad = DS.global.Array(llen).join(lchar); // (https://stackoverflow.com/a/24398129/1236397)
-            rpad = DS.global.Array(rlen).join(rchar);
+            lpad = DS.global.Array(llen + 1).join(lchar); // (https://stackoverflow.com/a/24398129/1236397)
+            rpad = DS.global.Array(rlen + 1).join(rchar);
             return lpad + s + rpad;
         }
         StringUtils.pad = pad;
@@ -4724,7 +4760,7 @@ var DS;
           * Note: If any argument is not a string, the value is converted into a string.
           * @param source The first string to combine.
           * @param suffix The second string to combine.
-          * @param delimiter A string that joins the two strings, whivh is only added if both string parameters are not undefined, null, or empty.  If missing, the two strings are simply joined togehter.
+          * @param delimiter A string that joins the two strings, which is only added if both string parameters are not undefined, null, or empty.  If missing, the two strings are simply joined together.
           */
         function append(source, suffix, delimiter) {
             if (source === void 0)
@@ -5450,6 +5486,11 @@ var DS;
             return new Date().toISOString().replace(/[^0-9]/g, "").substr(0, 14);
         }
         Time.getUTCTimestamp = getUTCTimestamp;
+        /** Returns a Date from a Unix-style timestamp string, similar to what is used with MySQL databases. */
+        function fromUTCTimestamp(timestamp) {
+            return new Date(timestamp === null || timestamp === void 0 ? void 0 : timestamp.replace(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, "$1-$2-$3T$4:$5:$6Z"));
+        }
+        Time.fromUTCTimestamp = fromUTCTimestamp;
     })(Time = DS.Time || (DS.Time = {}));
     /**
      * Represents a span of time (not a date). Calculation of dates usually relies on calendar rules.  A time-span object

@@ -9,8 +9,7 @@ define(["require", "exports", "babylonjs"], function (require, exports, babylonj
                 throw new DS.Exception(`TownStarPlanner(): Could not find canvas element with ID ${elementId}.`);
             // the canvas/window resize event handler
             window.addEventListener('resize', () => {
-                var _a;
-                (_a = this._engine) === null || _a === void 0 ? void 0 : _a.resize();
+                this._engine?.resize();
             });
         }
         createScene() {

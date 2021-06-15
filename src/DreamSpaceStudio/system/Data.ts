@@ -47,7 +47,7 @@ namespace DS {
             /** A more powerful version of the built-in JSON.stringify() function that uses the same function to respect the
             * built-in rules while also limiting depth and supporting cyclical references.
             */
-            export function stringify(val: any, depth: number, replacer: (this: any, key: string, value: any) => any, space?: string | number, onGetObjID?: (val: IndexedObject) => string): string {
+            export function stringify(val: any, depth = Number.MAX_SAFE_INTEGER, replacer?: (this: any, key: string, value: any) => any, space?: string | number, onGetObjID?: (val: IndexedObject) => string): string {
                 depth = isNaN(+depth) ? 1 : depth;
                 var recursMap = new WeakMap();
                 function _build(val: any, depth: number, o?: any, a?: boolean, r?: boolean) {

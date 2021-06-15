@@ -7,13 +7,11 @@ namespace DS {
 
         constructor(ms: number); // (this just hides the execute parameter)
         constructor(executorOrDelay?: number | TExecutor) {
-            super(executorOrDelay);
+            super(typeof executorOrDelay == 'function' ? <any>executorOrDelay : void 0);
             // (note: '.then()', etc., will also create an instance of this and pass in executor, so we need to respect that and return a normal promise)
-            if (typeof executorOrDelay == 'number') {
-                this._setTimer(executorOrDelay);
-            }
-            else if (executorOrDelay === void 0 || executorOrDelay == null)
-                throw Exception.argumentRequired('DelayedPromise()', 'ms');
+
+            if (typeof executorOrDelay == 'number')
+                this._setTimer(executorOrDelay); // (we do it manually since the timeout is not an error)
             else if (typeof executorOrDelay !== 'function')
                 throw Exception.invalidArgument('DelayedPromise()', 'ms');
         }

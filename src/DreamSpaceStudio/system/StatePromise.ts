@@ -41,6 +41,11 @@ namespace DS {
         /** Any user-specific data that needs to be associated with this promise. */
         data?: TData;
 
+        /**
+         * Constructs a new StatePromise instance.
+         * @param {TData} data A user-defined data value.
+         */
+        constructor(data?: TData); // (this just hides the execute parameter)
         constructor(executor?: TExecutor | any) {
             super(typeof executor == 'function' ? executor : ((res, rej) => { _res = res; _rej = rej; }));
             // (note: '.then()', etc., will also create an instance of this and pass in executor, so we need to respect that and return a normal promise)
@@ -49,6 +54,7 @@ namespace DS {
                 var _rej: typeof SpecializedPromise.prototype._reject; // (this will be hoisted and available to the promise executor)
                 this._resolve = _res;
                 this._reject = _rej;
+                this.data = executor;
             }
         }
 
@@ -97,9 +103,19 @@ namespace DS {
         protected _time: number; // (in milliseconds)
         protected _timerHandle: any;
 
-        constructor(executor?: TExecutor | any) {
-            super(executor);
+        /**
+         * Constructs a new StatePromise instance.
+         * @param {TData} data A user-defined data value.
+         */
+        constructor(timeout: number, data?: TData); // (this just hides the execute parameter)
+        constructor(executor?: TExecutor | any, data?: TData) {
+            super(typeof executor == 'function' ? executor : data);
             // (note: '.then()', etc., will also create an instance of this and pass in executor, so we need to respect that and return a normal promise)
+            if (executor && typeof executor != 'function') {
+                var t = +executor;
+                if (!t) throw "TimeBasedPromise(): Invalid timeout value+ " + executor;
+                this._setTimer(t, () => this.error = 'Timed out.');
+            }
         }
 
         /**
@@ -108,8 +124,8 @@ namespace DS {
          * @param callback The callback to execute. If not supplied the promise resolves automatically once the time elapses.
          */
         protected _setTimer(time: number, callback?: Action) {
-            this._time = time;
-            if (time > 0)
+            this._time = +time || 0;
+            if (this._time > 0)
                 this._timerHandle = setTimeout(callback ?? this.doResolve.bind(this), this._time);
         }
 
@@ -134,7 +150,7 @@ namespace DS {
          */
         get state() { return this.#_state; }
         set state(v) {
-            if (this.#_state === void 0) {
+            if (this.#_state !== v) {
                 this.#_state = v;
                 this.doResolve(true);
             }
@@ -145,13 +161,12 @@ namespace DS {
          * Constructs a new StatePromise instance.
          * @param {number} timeout An optional timeout period, in milliseconds, after which a rejection occurs.
          */
-        constructor(timeout?: number); // (this just hides the execute parameter)
-        constructor(executorOrTimeout?: number | TExecutor) {
-            super(executorOrTimeout);
+        constructor(initialState?: TState, timeout?: number, data?: TData); // (this just hides the execute parameter)
+        constructor(executorOrState?: TState | TExecutor, timeout?: number, data?: TData) {
+            super(typeof executorOrState == 'function' ? <any>executorOrState : timeout, data);
+            if (typeof executorOrState != 'function')
+                this.#_state = executorOrState;
             // (note: '.then()', etc., will also create an instance of this and pass in executor, so we need to respect that and return a normal promise)
-            if (typeof executorOrTimeout == 'number') {
-                this._setTimer(executorOrTimeout, () => this.error = 'Timed out.');
-            }
         }
 
         /** 

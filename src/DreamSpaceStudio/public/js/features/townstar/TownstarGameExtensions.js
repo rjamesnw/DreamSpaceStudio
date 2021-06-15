@@ -1,3 +1,4 @@
+/// <reference path="./TownstarTypes.d.ts" />
 // How to install manually:
 //
 // 1. Run the Town Star game.
@@ -27,7 +28,7 @@
 // ==UserScript==
 // @name         Town Star Extension Scripts
 // @description  Scripts to extends Town Star.
-// @version      1.8.0
+// @version      1.12.5
 // @author       General Fault
 // @match        *://*.sandbox-games.com/*
 // @run-at document-idle
@@ -37,8 +38,9 @@
 // @supportURL   https://discord.gg/eZmpyHxfnW
 // ==/UserScript==
 //
-// Release notes: Fixes bugs and adds a new UI for target amounts.
-var townstarExtensionsVersion = "1.8.0";
+// Release notes 1: Fixes bugs and adds a new UI for turning on/off selling globally, and include server data being played on.
+// Release notes 2: Made the currency and item statistics more reliable.
+var townstarExtensionsVersion = "1.12.5";
 var townstarExtensionsBotHost = "https://havenbot.ngrok.io"; // "http://localhost:5531";
 var TSAPI;
 var TownstarExtensions;
@@ -76,7 +78,7 @@ var TownstarExtensions;
         static _touch() {
             if (this._saveTimer)
                 clearTimeout(this._saveTimer);
-            this._saveTimer = setTimeout(this.save.bind(this), 1000); // (wait until writing is completed, then save after 1 sec)
+            this._saveTimer = setTimeout(this.save.bind(API), 1000); // (wait until writing is completed, then save after 1 sec)
         }
         static save() {
             if (this._saveTimer) {
@@ -84,7 +86,11 @@ var TownstarExtensions;
                 this._saveTimer = void 0;
             }
             try {
-                localStorage.setItem("tse_api", JSON.stringify(this.settings));
+                var content = JSON.stringify(this.settings);
+                console.log("Saving settings ...");
+                console.log(content);
+                localStorage.setItem("tse_api", content);
+                console.log("Settings saved.");
             }
             catch (err) {
                 throw "Failed to save to local storage (FYI, may not work in private browsing mode): " + err;
@@ -139,14 +145,14 @@ var TownstarExtensions;
         ;
         static checkJimmyPrompt() {
             var element = document.getElementsByClassName('hud-jimmy-button')?.[0];
-            if (element?.style.display != 'none') {
+            if (element && element.style.display != 'none') {
                 element.click();
                 document.getElementById('Deliver-Request')?.getElementsByClassName('yes')?.[0]?.click();
             }
         }
         static checkAirDrop() {
             var element = document.getElementsByClassName('hud-airdrop-button')?.[0];
-            if (element?.style.display != 'none') {
+            if (element && element.style.display != 'none') {
                 element.click();
                 document.getElementsByClassName('air-drop')?.[0]?.getElementsByClassName('yes')?.[0]?.click();
             }
@@ -232,7 +238,7 @@ var TownstarExtensions;
             configScrn.style.display = "flex";
             console.log("Config window opened.");
         }
-        static getWages() { return +(HUD?.instance?.laborCost?.innerText.replace(/,/g, "")) ?? 0; }
+        static getWages() { return Game.town.GetTotalLaborCost(); } //x +(HUD?.instance?.laborCost?.innerText.replace(/,/g, "")) ?? 0; }
         static getStoredCrafts() {
             return Game.town.GetStoredCrafts();
             //x return typeof HUD.instance.lastStorageJson == 'object' ? HUD.instance.lastStorageJson : JSON.parse(HUD.instance.lastStorageJson);
@@ -270,7 +276,8 @@ var TownstarExtensions;
                         else
                             var amount = 10;
                         let user = this.users[otherTrade.userId] || (this.users[otherTrade.userId] = { transactions: [] }); //.find(item => item.product.toUpperCase() == otherTown.craftType.toUpperCase())
-                        let transactionDetail = { town, trade: otherTrade };
+                        let transactionDetail = { town, trade: {} };
+                        Object.assign(transactionDetail.trade, otherTrade).path = void 0; // (path can be large, don't include it)
                         user.transactions.push(transactionDetail); //[otherTrade.craftType] || (user.products[otherTrade.craftType] = { count: 0, first: 0, perMin: 0, perHour: 0 });
                         if (API.isHosting)
                             API.batchTransactions.push(transactionDetail); // (note: this gets cleared frequently as it is sent)
@@ -291,6 +298,10 @@ var TownstarExtensions;
         }
         static _startProcess() {
             // ... trigger onTimer events for all extensions ...
+            if (!userVerified) {
+                this.stop();
+                return console.error("Access denied. Please make sure you are whitelisted. Visit the Haven #bot-commands channel for more details.");
+            }
             for (var extName in this.extensions) {
                 var ext = this.extensions[extName];
                 if (!ext.process && ext.extension.onTimer)
@@ -317,6 +328,8 @@ var TownstarExtensions;
             if (--this.pingDelay < 0) {
                 this.pingDelay = 60; // (create a small delay between pings)
                 var response = await API.askBot("Ping", Game.userId, TownstarExtensions.version, Game.townName, navigator.userAgent || navigator.vendor || window.opera);
+                if (!response.validUser)
+                    userVerified = false;
                 var isHosting = response.isHosting || false;
                 if (isHosting && !API.isHosting) // (if we just become the host, send all transactions we recorded as the first batch to make sure none were missed)
                     Object.keys(this.users).forEach(id => this.users[id].transactions && this.batchTransactions.push(...this.users[id].transactions));
@@ -355,7 +368,13 @@ var TownstarExtensions;
             }
         }
         static async _sendGameUpdates() {
-            await this.askBot("Game Update", { userId: Game.userId, transactions: this.batchTransactions, leaders: await this.getLeaderBoard(0, 10000), craftData: Game.craftData, objectData: Game.objectData });
+            await this.askBot("Game Update", {
+                userId: Game.userId,
+                transactions: this.batchTransactions,
+                leaders: await this.getLeaderBoard(0, 10000),
+                craftData: Game.craftData, objectData: Game.objectData,
+                gameData: Game.gameData
+            });
             this.batchTransactions.length = 0;
         }
         static onKeyEvent(e) {
@@ -497,7 +516,7 @@ var TownstarExtensions;
     /** This is toggled by the host for clients responsible to send game updates.  If a host goes offline, the next available game client is selected. */
     API.isHosting = false;
     API.configSections = new Map();
-    API.settings = JSON.parse(localStorage.getItem("tse_api") || "{}");
+    API.settings = {};
     API.users = {};
     API.batchTransactions = []; // (to be sent if we are the host; batched to prevent hitting the server too frequently)
     API.pingDelay = 0;
@@ -507,6 +526,12 @@ var TownstarExtensions;
     (function (API) {
         if (typeof debugging != 'undefined' && debugging)
             debugger;
+        try {
+            API.settings = JSON.parse(localStorage.getItem("tse_api") || "{}");
+        }
+        catch {
+            API.settings = {}; // (settings corrupted, create a new object)
+        }
         // ... get the timer started for the extensions ...
         if (oldGameExt) {
             console.log("Replacing previous API instance...");
@@ -534,7 +559,6 @@ var TownstarExtensions;
     }
     TownstarExtensions.start = start;
     TownstarExtensions.ts = () => 1;
-    // ====================================================================================================================
     class Analyzer {
         constructor(replacing) {
             this.currencyTrends = []; // each second (record up to 5 mins worth)
@@ -542,12 +566,11 @@ var TownstarExtensions;
             this.avgTrends = {}; // (records the calculate trends per item for the hud)
             this.counter = 0; // (delay is if nothing is available to sell, so there's a longer wait to try again)
             this.negativeIncomeCounter = 0; // (when this hits a threshold, the game will pause as something is wrong)
-            this.span = 30; // (in minutes)
+            this.span = 60 * 2; // (in minutes)
             this.minGas = 0;
             this.minGasCurrency = 10000; // (will pause if < min gas and currency is met)
             this.negativeIncomeThreshold = 60 * 60; // (in seconds [counts of 'negativeIncomeCounter']; the game will pause if negative for too long; defaults to 1 hour)
             this.fistTimeRefresh = true;
-            this.incomeChangeAvg = 0;
             this.started = false;
             if (replacing) {
                 this.currencyTrends = replacing.currencyTrends.slice();
@@ -598,19 +621,33 @@ var TownstarExtensions;
             var table = this.makeTable(Game.craftData, "Name,CityPoints,CityPrice,Class,CraftingText,HexColor,Id,OnDestroy,ProximityBonus,ProximityPenalty,ProximityReverse,Req1,Req2,Req3,Time0,Time1,Time2,Time3,Type,Value1,Value2,Value3");
             return this.exportTable(table);
         }
-        getChangeAvg(trends) {
+        /** Calculate the average over a periood of time, or all time of not specified. */
+        getChangeAvg(trends, timeLimit) {
             if (!trends || !trends.length)
-                return 0;
-            var offsetAvg = 0;
-            for (var i = 0, n = trends.length - 2; i < n; ++i)
-                offsetAvg += trends[i + 1] - trends[i];
-            return offsetAvg /= trends.length;
+                return null;
+            var offsetAvg = 0, count = 0, minTime = Date.now(), maxTime = 0;
+            for (var i = trends.length - 1; i >= 0; --i) { // (start at latest time and walk backwards)
+                let trend = trends[i];
+                if (!(timeLimit > 0) || Date.now() - trend.time <= timeLimit) {
+                    if (trend.amount != 0) {
+                        offsetAvg += trend.amount;
+                        if (trend.time < minTime)
+                            minTime = trend.time;
+                        if (trend.time > maxTime)
+                            maxTime = trend.time;
+                        ++count;
+                    }
+                }
+                else
+                    break; // (the end of the array is more recent, so we can abort early if the time is outside timeLimit)
+            }
+            return { avg: count ? offsetAvg /= count : 0, timespan: maxTime - minTime };
         }
         rotateSVG(el, deg) {
             el.setAttribute("transform", "rotate(" + deg + ")");
         }
         addArrow(name, bankContainer, avgTrend, extent, isItem) {
-            var trendNormal = Math.abs(avgTrend / extent * 60 * TownstarExtensions.ts());
+            var trendNormal = Math.abs(avgTrend / extent * 60);
             trendNormal = (trendNormal <= 1 ? trendNormal : 1) * Math.sign(avgTrend);
             if (isItem) {
                 var r = Math.round(Math.abs(trendNormal) * 15);
@@ -643,7 +680,7 @@ var TownstarExtensions;
             var arrow = trendsContainer.querySelector(".arrow");
             // var arrowHead = trendsContainer.querySelector("#arrowHead");
             // var line = trendsContainer.querySelector("#line");
-            var trendPerSec = avgTrend * TownstarExtensions.ts();
+            var trendPerSec = avgTrend;
             var msg = `Trend per sec: ${trendPerSec.toFixed(2)} / per min: ${(trendPerSec * 60).toFixed(2)} / per hour: ${(trendPerSec * 60 * 60).toFixed(2)}`;
             var wages = API.getWages();
             if (isItem) {
@@ -674,11 +711,33 @@ var TownstarExtensions;
             }
             // ... do the same for the main capital funds ...
             var bankContainer = document.querySelector(`.bank.cash`);
-            if (bankContainer && this.currencyTrends.length > 2) {
+            if (bankContainer && this.currencyTrends.length > 2 && this.incomeChangeInfo_min && this.incomeChangeInfo_min.timespan) {
                 var wages = API.getWages();
-                this.addArrow("capital", bankContainer, this.incomeChangeAvg, wages, false);
+                var avgTrend = this.incomeChangeInfo_min.avg / (this.incomeChangeInfo_min.timespan / 60000);
+                this.addArrow("capital", bankContainer, avgTrend, wages, false);
             }
             this.fistTimeRefresh = false;
+        }
+        _TS_StorageObjectLogic_AddCraft(t, e) {
+            console.log(`${e} ${t} was added.`);
+            if (!this.itemTrends[t])
+                this.itemTrends[t] = [];
+            this.itemTrends[t].push({ amount: e, time: Date.now() });
+        }
+        _TS_StorageObjectLogic_RemoveCraft(t, e) {
+            console.log(`${e} ${t} was removed.`);
+            if (!this.itemTrends[t])
+                this.itemTrends[t] = [];
+            this.itemTrends[t].push({ amount: -e, time: Date.now() });
+        }
+        _TS_Game_AddCurrency(t) {
+            t >= 0 ? console.log(`${t} currency was added.`) : console.log(`${t} currency was removed.`);
+            var laborCost = Game.town.GetTotalLaborCost(); // (should be the same as t when wages are subtracted)
+            var isWageReduction = t == -laborCost && (Game.town.laborTick >= 60 || !Game.town.laborPaid);
+            if (t > 0 || isWageReduction) {
+                var currencyTrends = this.currencyTrends;
+                currencyTrends.push({ amount: t, time: Date.now() }); // track currency trends
+            }
         }
         *onTimer() {
             if (!API.townExists)
@@ -686,59 +745,66 @@ var TownstarExtensions;
             var currencyTrends = this.currencyTrends;
             var itemTrends = this.itemTrends;
             var avgTrends = this.avgTrends;
+            if (this.counter % 10 == 0) { // (no need to do this too often)
+                if (currencyTrends.length > 2) {
+                    this.incomeChangeInfo_min = this.getChangeAvg(currencyTrends, 2 * 60 * 1000);
+                    this.incomeChangeInfo_hrs = this.getChangeAvg(currencyTrends, 120 * 60 * 1000);
+                    let wages = API.getWages();
+                    console.log(Array(50).join("-"));
+                    let timespanInMins = this.incomeChangeInfo_min.timespan / 60000;
+                    let timespanInHrs = this.incomeChangeInfo_min.timespan / (60000 * 60);
+                    console.log("Income trend (per min): " + (this.incomeChangeInfo_min.avg / timespanInMins).toFixed(3) + " / (hrs): " + (this.incomeChangeInfo_hrs.avg / timespanInHrs).toFixed(3));
+                    console.log("Capital duration at current wage " + wages + " (mins): " + (Game.currency / wages / TownstarExtensions.ts()).toFixed(3) + " / (hrs): " + (Game.currency / wages / 60 / TownstarExtensions.ts()).toFixed(3));
+                }
+                // ... get same for each item also ...
+                // TODO: Track PRODUCTION rates, not just trends.
+                for (var p in itemTrends) {
+                    let trends = itemTrends[p];
+                    if (trends.length > 1) {
+                        let changeAvgInfo = this.getChangeAvg(trends, 60000 * 60);
+                        if (changeAvgInfo && changeAvgInfo.timespan) {
+                            let timespanInMins = changeAvgInfo.timespan / 60000;
+                            let currentTrend = changeAvgInfo.avg / timespanInMins;
+                            avgTrends[p] = p in avgTrends ? ((avgTrends[p] || 0) + currentTrend) / 2 : currentTrend;
+                            console.log(`Current trend for '${p}' (per min over 5 mins): ` + (avgTrends[p]).toFixed(3));
+                        }
+                    }
+                }
+            }
+            ++this.counter;
             while (currencyTrends.length > 0 && currencyTrends.length > this.span * 60)
                 currencyTrends.shift();
-            //? if (!currencyTrends.length || currencyTrends.length > 0 && currencyTrends[currencyTrends.length-1] != Game.currency) // (only store changed values)
-            currencyTrends.push(Game.currency); // track currency trends
+            currencyTrends.push({ amount: 0, time: Date.now() }); // (keep pushing entries to signal nothing happening over time)
             var crafts = API.getStoredCrafts();
             if (crafts)
                 for (var p in crafts) {
                     var trends = itemTrends[p] || (itemTrends[p] = []);
                     while (trends.length > 0 && trends.length > this.span * 60)
                         trends.shift();
-                    itemTrends[p].push(crafts[p]);
+                    trends.push({ amount: 0, time: Date.now() }); // (keep pushing entries to signal nothing happening over time)
                 }
-            if (currencyTrends.length > 2 && this.counter % 10 == 0) {
-                this.incomeChangeAvg = this.getChangeAvg(currencyTrends);
-                var wages = API.getWages();
-                console.log(Array(50).join("-"));
-                console.log("Income trend (per min): " + (this.incomeChangeAvg * 60 * TownstarExtensions.ts()).toFixed(3));
-                console.log("Capital duration at current wage " + wages + " (mins): " + (Game.currency / wages / TownstarExtensions.ts()).toFixed(3) + " / (hrs): " + (Game.currency / wages / 60 / TownstarExtensions.ts()).toFixed(3));
-                // ... get same for each item ...
-                for (var p in itemTrends) {
-                    var trends = itemTrends[p];
-                    if (trends.length > 1) {
-                        var changeAvg = this.getChangeAvg(trends);
-                        avgTrends[p] = p in avgTrends ? ((avgTrends[p] || 0) + changeAvg) / 2 : changeAvg;
-                        console.log(`Trend for '${p}' (per min): ` + (changeAvg * 60 * TownstarExtensions.ts()).toFixed(3));
-                    }
-                }
-            }
-            ++this.counter;
             // if (seller.getGas() <= analyzer.minGas && Game.currency <= analyzer.minGasCurrency) {
             // 	console.log(`Pausing the game: Min gas was reached at ${seller.getGas()} and currency is <= ${analyzer.minGasCurrency}.`);
             // 	console.log(`Counter is now reset. Unpause to continue. The game will pause if the threshold is reached again.`);
             // 	negativeIncomeCounter = 0; // (reset the counter to allow the user more time to fix it, after they continue)
             // 	debugger; // (gas has run out, stop everything [temporary - TODO: base on long time trend])
             // }  
-            if (this.incomeChangeAvg < 0 && this.negativeIncomeThreshold > 0) {
-                ++this.negativeIncomeCounter;
-                if (this.negativeIncomeCounter >= this.negativeIncomeThreshold) {
-                    console.log(`Pausing the game: Threshold of ${this.negativeIncomeThreshold} seconds was reached due to constant negative income of ${this.incomeChangeAvg}.`);
-                    console.log(`Counter is now reset. Unpause to continue. The game will pause if the threshold is reached again.`);
-                    this.negativeIncomeCounter = 0; // (reset the counter to allow the user more time to fix it, after they continue)
-                    debugger; // (gas has run out, stop everything [temporary - TODO: base on long time trend])
-                }
-                else if (this.negativeIncomeCounter >= this.negativeIncomeThreshold * 0.5 && this.negativeIncomeCounter % 10 == 0) {
-                    console.log(`!!! WARNING: Currency is negative 50% of the time.  The game may pause soon. !!!`);
-                    console.log(`!!! Currently ${this.negativeIncomeCounter} of threshold ${this.negativeIncomeThreshold} !!!`);
-                }
-            }
-            else {
-                if (this.negativeIncomeCounter > 0)
-                    console.log("Currency was on a negative trend for awhile, but recovered.");
-                this.negativeIncomeCounter = 0;
-            }
+            // if (this.incomeChangeInfo < 0 && this.negativeIncomeThreshold > 0) {
+            //     ++this.negativeIncomeCounter;
+            //     if (this.negativeIncomeCounter >= this.negativeIncomeThreshold) {
+            //         console.log(`Pausing the game: Threshold of ${this.negativeIncomeThreshold} seconds was reached due to constant negative income of ${this.incomeChangeInfo}.`);
+            //         console.log(`Counter is now reset. Unpause to continue. The game will pause if the threshold is reached again.`);
+            //         this.negativeIncomeCounter = 0; // (reset the counter to allow the user more time to fix it, after they continue)
+            //         debugger; // (gas has run out, stop everything [temporary - TODO: base on long time trend])
+            //     } else if (this.negativeIncomeCounter >= this.negativeIncomeThreshold * 0.5 && this.negativeIncomeCounter % 10 == 0) {
+            //         console.log(`!!! WARNING: Currency is negative 50% of the time.  The game may pause soon. !!!`);
+            //         console.log(`!!! Currently ${this.negativeIncomeCounter} of threshold ${this.negativeIncomeThreshold} !!!`);
+            //     }
+            // } else {
+            //     if (this.negativeIncomeCounter > 0)
+            //         console.log("Currency was on a negative trend for awhile, but recovered.");
+            //     this.negativeIncomeCounter = 0;
+            // }
             this.refreshHUDTrends();
         }
         /** Resets the analyzer to start over. */
@@ -746,7 +812,7 @@ var TownstarExtensions;
             this.currencyTrends = [];
             this.itemTrends = {};
             this.avgTrends = {};
-            this.incomeChangeAvg = 0;
+            this.incomeChangeInfo_min = null;
             this.negativeIncomeCounter = 0;
         }
         getConfig() {
@@ -760,6 +826,25 @@ var TownstarExtensions;
         start() {
             if (!this.started) {
                 this.started = true;
+                if (!TownstarExtensions._original_TS_StorageObjectLogic_AddCraft)
+                    TownstarExtensions._original_TS_StorageObjectLogic_AddCraft = TS_StorageObjectLogic.prototype.AddCraft;
+                if (!TownstarExtensions._original_TS_StorageObjectLogic_RemoveCraft)
+                    TownstarExtensions._original_TS_StorageObjectLogic_RemoveCraft = TS_StorageObjectLogic.prototype.RemoveCraft;
+                if (!TownstarExtensions._TS_Game_AddCurrency)
+                    TownstarExtensions._TS_Game_AddCurrency = TS_Game.prototype.addCurrency;
+                var _this = this;
+                TS_StorageObjectLogic.prototype.AddCraft = function _AddCraft(t, e) {
+                    _this._TS_StorageObjectLogic_AddCraft(t, e);
+                    return TownstarExtensions._original_TS_StorageObjectLogic_AddCraft.apply(this, arguments);
+                };
+                TS_StorageObjectLogic.prototype.RemoveCraft = function _RemoveCraft(t, e) {
+                    _this._TS_StorageObjectLogic_RemoveCraft(t, e);
+                    return TownstarExtensions._original_TS_StorageObjectLogic_RemoveCraft.apply(this, arguments);
+                };
+                TS_Game.prototype.addCurrency = function _addCurrency(t) {
+                    _this._TS_Game_AddCurrency(t);
+                    return TownstarExtensions._TS_Game_AddCurrency.apply(this, arguments);
+                };
                 console.log("Analyzing started.");
                 return true;
             }
@@ -952,8 +1037,8 @@ var TownstarExtensions;
                     delete this.items[p]; // (remove invalid entries)
                 else {
                     // ... also set the building types that create it ...
-                    var buildingType = Object.keys(Game.objectData).filter(n => ('' + Game.objectData[n].Crafts).split(',').indexOf(p) >= 0)[0];
-                    this.items[p].building = Game.objectData[buildingType];
+                    var buildingTypes = Object.keys(Game.objectData).filter(n => ('' + Game.objectData[n].Crafts).split(',').indexOf(p) >= 0);
+                    this.items[p].buildings = buildingTypes.map(t => Game.objectData[t]);
                 }
             }
             console.log("Items data ready.");
@@ -1093,7 +1178,7 @@ var TownstarExtensions;
                 .sort((a, b) => b.value - a.value);
         }
         *onTimer() {
-            if (!API.townExists)
+            if (!API.townExists || !API.get("enableSelling", true))
                 return;
             this.processNeighborDeliveries(); // (this will not affect selling nor the user input, so check this asap)
             if (Math.random() > 0.25)
@@ -1166,11 +1251,11 @@ var TownstarExtensions;
                     var q = API.getItemQuantity(name);
                     if (okToSell(q, itemSettings)) { // (still ok to sell? make sure, as a item may have been taken by this point, and we don't want to force it when low)
                         yield this.sell();
-                        yield console.log(`Resetting trends for '${name}' ....`);
-                        if (typeof Analyzer != 'undefined' && Analyzer.current) {
-                            Analyzer.current.itemTrends[name] = []; // (if the analyzer exists, we need to reset the trends for this item automatically since it will be off after a sale, and that is expected.)
-                            Analyzer.current.avgTrends[name] = 0;
-                        }
+                        //x yield console.log(`Resetting trends for '${name}' ....`);
+                        //x if (typeof Analyzer != 'undefined' && Analyzer.current) {
+                        //x     Analyzer.current.itemTrends[name] = []; // (if the analyzer exists, we need to reset the trends for this item automatically since it will be off after a sale, and that is expected.)
+                        //x     Analyzer.current.avgTrends[name] = 0;
+                        //x }
                     }
                     else
                         console.log(`No longer ok to sell.`);
@@ -1183,7 +1268,7 @@ var TownstarExtensions;
         }
         getConfig() {
             if (!this.configPanel) {
-                console.log("Creating new Seller config section ...");
+                console.log("Creating new Seller config panel ...");
                 // ... the config window doesn't exist yet ...
                 let configPanel = document.createElement('div');
                 let elements = [];
@@ -1265,6 +1350,7 @@ var TownstarExtensions;
     (function (Seller) {
         API.register("Seller", Seller);
     })(Seller = TownstarExtensions.Seller || (TownstarExtensions.Seller = {}));
+    const FUNC_NAME_REGEX = /^(?:function|class)\s*(\S+)\s*\(/i; // (note: never use the 'g' flag here, or '{regex}.exec()' will only work once every two calls [attempts to traverse])
     class TownManager {
         constructor() {
             this._tasks = [];
@@ -1305,6 +1391,7 @@ var TownstarExtensions;
             if (this._tasks.length) {
                 var task = this._removeTask(0);
                 var object = Game.town.objectDict[task.location];
+                console.log(`Doing task for location ${task.location}: ${('' + task.action).match(/[^(]+/)?.[0]}, Request: ${task.request}, Craft: ${task.craftType}, Priority: ${task.priority}`);
                 task.action.call(this, task, object);
             }
         }
@@ -1338,18 +1425,20 @@ var TownstarExtensions;
                                 //    console.log(`Target ${item.name} reached, will try to stop production ...`);
                                 //else
                                 //    console.log(`${item.name} is getting too low, will try to get more ...`);
-                                var buildingName = item.settings.building?.Name;
                                 var targetCraft = item.name;
                                 if (item.name == "Wood") { // (need to handle wood a special way)
-                                    buildingName = "Windmill";
+                                    var buildings = [Game.objectData["Windmill"]];
                                     targetCraft = ""; // (any)
                                     targetReached = !targetReached; // (invert this for wood - if we need more, turn off, not on!)
                                 }
-                                if (buildingName != buildingObject.objData.Name)
+                                else
+                                    buildings = [...item.settings.buildings];
+                                var buildingMatch = buildings.find(b => b.Name == buildingObject.objData.Name);
+                                if (!buildingMatch)
                                     continue; // (nothing to do with this building, move on)
                                 //var handled = true;
                                 if (targetReached) {
-                                    if ((!targetCraft || buildingObject.logicObject.data.craft == targetCraft) && buildingObject.data.state == "WaitForReqs") {
+                                    if ((!targetCraft || buildingObject.logicObject.data.craft == targetCraft) && buildingObject.data.state != "Produce") {
                                         this.addTask(this._task_turn_off, targetCraft, "stop", buildingObject);
                                     }
                                     //else handled = false;
@@ -1360,7 +1449,7 @@ var TownstarExtensions;
                                         this.addTask(this._task_turn_on, targetCraft, "start", buildingObject);
                                     }
                                     else
-                                        console.log(`A ${buildingName.replace(/_/g, ' ')} could not be turned on as the craft type is unknown.`);
+                                        console.log(`A ${buildingMatch.Name.replace(/_/g, ' ')} could not be turned on as the craft type is unknown.`);
                                 }
                                 //if (!handled)
                                 //    console.log("No building found that can be turned on/off to help with that.");
@@ -1384,11 +1473,16 @@ var TownstarExtensions;
         getConfig() {
             if (!this.configPanel) {
                 var configPanel = document.createElement('div');
-                var title = API.createTitleElement("Auto Complete Constructions");
-                var input = API.createCheckboxElement(API.get("autoCompleteConstruction", false));
-                input.onchange = (ev) => { ev.stopPropagation(); API.set("autoCompleteConstruction", input.checked); }; // what if the property doesnt exist!
-                configPanel.appendChild(title);
-                configPanel.appendChild(input);
+                var title1 = API.createTitleElement("Enable Selling");
+                var input1 = API.createCheckboxElement(API.get("enableSelling", true));
+                input1.onchange = (ev) => { ev.stopPropagation(); API.set("enableSelling", input1.checked); }; // what if the property doesnt exist!
+                configPanel.appendChild(title1);
+                configPanel.appendChild(input1);
+                var title2 = API.createTitleElement("Auto Complete Constructions");
+                var input2 = API.createCheckboxElement(API.get("autoCompleteConstruction", false));
+                input2.onchange = (ev) => { ev.stopPropagation(); API.set("autoCompleteConstruction", input2.checked); }; // what if the property doesnt exist!
+                configPanel.appendChild(title2);
+                configPanel.appendChild(input2);
             }
             this.configPanel = configPanel;
             return this.configPanel;
@@ -1438,7 +1532,6 @@ function tryStart() {
 setTimeout(tryStart, 1000);
 // ====================================================================================================================
 (function (TownstarExtensions) {
-    TownstarExtensions.ts = () => 1;
     //(<any>API).removeAllEdgeRequirements = function () {
     //    for (var p in Game.objectData)
     //        if ("EdgeRequirements" in Game.objectData[p]) Game.objectData[p].EdgeRequirements = "None";

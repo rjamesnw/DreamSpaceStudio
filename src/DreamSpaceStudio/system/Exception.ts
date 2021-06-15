@@ -28,7 +28,7 @@ namespace DS {
         * @param {Exception} innerException An optional exception that is the cause of the current new exception.
         * @param {boolean} log True to automatically create a corresponding log entry (default), or false to skip.
         */
-        constructor(message: string | Error | Exception | Diagnostics.LogItem, source?: any, innerException?: Exception, log?: boolean) {
+        constructor(message: string | Error | Exception | Diagnostics.LogItem, source?: any, innerException?: string | Error | Exception, log?: boolean) {
             super();
 
             // ... support LogItem objects natively as the exception message source ...

@@ -1,15 +1,15 @@
-var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
-    if (!privateMap.has(receiver)) {
-        throw new TypeError("attempted to get private field on non-instance");
-    }
-    return privateMap.get(receiver);
-};
 var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
     if (!privateMap.has(receiver)) {
         throw new TypeError("attempted to set private field on non-instance");
     }
     privateMap.set(receiver, value);
     return value;
+};
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to get private field on non-instance");
+    }
+    return privateMap.get(receiver);
 };
 // ###########################################################################################################################
 // These are functions for bootstrapping the core system.  It helps to set up common types and functions that will be needed,
@@ -2198,6 +2198,7 @@ var DS;
                 var _rej; // (this will be hoisted and available to the promise executor)
                 this._resolve = _res;
                 this._reject = _rej;
+                this.data = executor;
             }
         }
         /**
@@ -2262,9 +2263,15 @@ var DS;
      * You cannot reset the state once it times out.  You'll need to create a new instance.
      */
     class TimeBasedPromise extends SpecializedPromise {
-        constructor(executor) {
-            super(executor);
+        constructor(executor, data) {
+            super(typeof executor == 'function' ? executor : data);
             // (note: '.then()', etc., will also create an instance of this and pass in executor, so we need to respect that and return a normal promise)
+            if (executor && typeof executor != 'function') {
+                var t = +executor;
+                if (!t)
+                    throw "TimeBasedPromise(): Invalid timeout value+ " + executor;
+                this._setTimer(t, () => this.error = 'Timed out.');
+            }
         }
         /**
          * Called 'setTimeout()' with the specified time, in milliseconds, along with the callback function.
@@ -2272,8 +2279,8 @@ var DS;
          * @param callback The callback to execute. If not supplied the promise resolves automatically once the time elapses.
          */
         _setTimer(time, callback) {
-            this._time = time;
-            if (time > 0)
+            this._time = +time || 0;
+            if (this._time > 0)
                 this._timerHandle = setTimeout(callback !== null && callback !== void 0 ? callback : this.doResolve.bind(this), this._time);
         }
         /** Clears any timer handles and resets some internal values. */
@@ -2290,13 +2297,12 @@ var DS;
      * You cannot reset the state once triggered.  You'll need to create a new instance.
      */
     class StatePromise extends TimeBasedPromise {
-        constructor(executorOrTimeout) {
-            super(executorOrTimeout);
+        constructor(executorOrState, timeout, data) {
+            super(typeof executorOrState == 'function' ? executorOrState : timeout, data);
             __state.set(this, void 0);
+            if (typeof executorOrState != 'function')
+                __classPrivateFieldSet(this, __state, executorOrState);
             // (note: '.then()', etc., will also create an instance of this and pass in executor, so we need to respect that and return a normal promise)
-            if (typeof executorOrTimeout == 'number') {
-                this._setTimer(executorOrTimeout, () => this.error = 'Timed out.');
-            }
         }
         /**
          * Any user-specific state value that will resolve this promise.
@@ -2304,7 +2310,7 @@ var DS;
          */
         get state() { return __classPrivateFieldGet(this, __state); }
         set state(v) {
-            if (__classPrivateFieldGet(this, __state) === void 0) {
+            if (__classPrivateFieldGet(this, __state) !== v) {
                 __classPrivateFieldSet(this, __state, v);
                 this.doResolve(true);
             }
@@ -2618,7 +2624,7 @@ var DS;
             /** A more powerful version of the built-in JSON.stringify() function that uses the same function to respect the
             * built-in rules while also limiting depth and supporting cyclical references.
             */
-            function stringify(val, depth, replacer, space, onGetObjID) {
+            function stringify(val, depth = Number.MAX_SAFE_INTEGER, replacer, space, onGetObjID) {
                 depth = isNaN(+depth) ? 1 : depth;
                 var recursMap = new WeakMap();
                 function _build(val, depth, o, a, r) {
@@ -2944,13 +2950,10 @@ var DS;
      */
     class DelayedPromise extends DS.TimeBasedPromise {
         constructor(executorOrDelay) {
-            super(executorOrDelay);
+            super(typeof executorOrDelay == 'function' ? executorOrDelay : void 0);
             // (note: '.then()', etc., will also create an instance of this and pass in executor, so we need to respect that and return a normal promise)
-            if (typeof executorOrDelay == 'number') {
-                this._setTimer(executorOrDelay);
-            }
-            else if (executorOrDelay === void 0 || executorOrDelay == null)
-                throw DS.Exception.argumentRequired('DelayedPromise()', 'ms');
+            if (typeof executorOrDelay == 'number')
+                this._setTimer(executorOrDelay); // (we do it manually since the timeout is not an error)
             else if (typeof executorOrDelay !== 'function')
                 throw DS.Exception.invalidArgument('DelayedPromise()', 'ms');
         }

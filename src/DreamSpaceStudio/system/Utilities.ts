@@ -269,7 +269,7 @@
 
         // --------------------------------------------------------------------------------------------------------------------
 
-        export var FUNC_NAME_REGEX = /^(?:function|class)\s*(\S+)\s*\(/i; // (note: never use the 'g' flag here, or '{regex}.exec()' will only work once every two calls [attempts to traverse])
+        export const FUNC_NAME_REGEX = /^(?:function|class)\s*(\S+)\s*\(/i; // (note: never use the 'g' flag here, or '{regex}.exec()' will only work once every two calls [attempts to traverse])
 
         /** Attempts to pull the function name from the function object, and returns an empty string if none could be determined. */
         export function getFunctionName(func: Function): string {

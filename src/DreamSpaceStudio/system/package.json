@@ -1,0 +1,14 @@
+{
+    "name": "dreamspace",
+    "version": "0.1.0",
+    "description": "DreamSpace Framework",
+    "author": {
+        "name": "Inossis"
+    },
+    "devDependencies": {
+        "@types/node": "^14.14.39",
+        "@types/mssql": "^6.0.7",
+        "@types/mysql": "^2.15.18"
+    },
+    "dependencies": {}
+}

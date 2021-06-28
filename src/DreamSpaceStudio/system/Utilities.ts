@@ -43,6 +43,17 @@
     export namespace Utilities {
         // --------------------------------------------------------------------------------------------------------------------
 
+        /** Returns the date part as a fixed string size in the format YYYY-MM-DD (time and timezone is removed). If no date is specified, the current date is assumed. */
+        export function getDateOnlyString(date = new Date()) {
+            return `${date.getFullYear()}-${DS.StringUtils.pad(1 + date.getMonth(), 2, '0')}-${DS.StringUtils.pad(date.getDate(), 2, '0')}`;
+        }
+
+        /** Returns the time part as a fixed string size in the format hh:mm:ss._ms (date and timezone is removed). If no date is specified, the current date is assumed. */
+        export function getTimeOnlyString(date = new Date(), includeMilliseconds = true) {
+            return `${DS.StringUtils.pad(date.getHours(), 2, '0')}:${DS.StringUtils.pad(date.getMinutes(), 2, '0')}:${DS.StringUtils.pad(date.getSeconds(), 2, '0')}`
+                + (includeMilliseconds ? `.${DS.StringUtils.pad(date.getMilliseconds(), 3, '0')}` : '');
+        }
+
         /**
          * Returns a number with the maximum fractional digits.
          * @param value

@@ -75,18 +75,20 @@ namespace DS {
         }
 
         /**
-        * Appends 'path2' to 'path1', inserting a path separator character (/) if required.
-        * Set 'normalizePathSeparators' to true to normalize any '\' path characters to '/' instead.
+        * Appends URL-based 'path2' to 'path1', inserting a path separator character (/) if required.
+        * @param separator When this is set, any '\' or '/' characters are replaced by it. The default separator is '/'.
         */
-        export function combine(path1: string, path2: string, normalizePathSeparators = false): string {
-            if (typeof path1 != 'string') path1 = StringUtils.toString(path1);
-            if (typeof path2 != 'string') path2 = StringUtils.toString(path2);
-            if (path2.charAt(0) == '~') path2 = path2.substr(1);
-            if (!path2) return path1;
-            if (!path1) return path2;
-            if (path1.charAt(path1.length - 1) != '/' && path1.charAt(path1.length - 1) != '\\') path1 += '/';
-            var combinedPath = path1 + ((path2.charAt(0) == '/' || path2.charAt(0) == '\\') ? path2.substr(1) : path2);
-            return normalizePathSeparators ? combinedPath.split('\\').join('/') : combinedPath;
+        export function combine(path1: string, path2: string, separator = '/'): string {
+            if (typeof path1 != 'string') path1 = StringUtils.toString(path1).trim();
+            if (typeof path2 != 'string') path2 = StringUtils.toString(path2).trim();
+            if (path2[0] == '~') path2 = path2.substr(1); // (support appending .Net MVC style paths [just removes it])
+            var separator1 = path1[path1.length - 1] == '/' || path1[path1.length - 1] == '\\';
+            var separator2 = path2[0] == '/' || path1[0] == '\\';
+            if (separator1 && (!path2 || separator2)) path1 = path1.substr(0, path1.length - 1);
+            else if (separator2 && !path1) path2 = path2.substr(1);
+            else if (path1 && path2 && !separator1 && !separator2) path1 += separator;
+            var combinedPath = path1 && path2 ? path1 + path2 : path1 || path2;
+            return separator ? combinedPath.replace(/\\|\//g, separator) : combinedPath;
         }
 
         /** Returns the protocol + host + port parts of the given absolute URL. */
@@ -96,7 +98,7 @@ namespace DS {
 
         /** 
            * Combines a path with either the base site path or a current alternative path. The following logic is followed for combining 'path':
-           * 1. If it starts with '~/' or '~' is will be relative to 'baseURL'.
+           * 1. If it starts with '\~/' or '\~' it will be relative to 'baseURL'.
            * 2. If it starts with '/' it is relative to the server root 'protocol://server:port' (using current or base path, but with the path part ignored).
            * 3. If it starts with './', or without a path separator, or is empty, then it is combined as relative to 'currentResourceURL'.
            * Note: if 'currentResourceURL' is empty, then 'baseURL' is assumed.

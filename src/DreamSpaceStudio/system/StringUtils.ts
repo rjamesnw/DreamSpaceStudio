@@ -83,12 +83,11 @@ namespace DS {
           * @param delimiter A string that joins the two strings, which is only added if both string parameters are not undefined, null, or empty.  If missing, the two strings are simply joined together.
           */
         export function append(source: string, suffix?: string, delimiter?: string): string {
-            if (source === void 0) source = "";
-            else if (typeof source != 'string') source = toString(source);
+            if (typeof source != 'string') source = toString(source);
             if (typeof suffix != 'string') suffix = toString(suffix);
-            if (delimiter === void 0 || delimiter === null) delimiter = '';
-            else if (typeof delimiter != 'string') delimiter = toString(delimiter);
             if (!source) return suffix;
+            if (!suffix) return source;
+            if (typeof delimiter != 'string') delimiter = toString(delimiter);
             return source + delimiter + suffix;
         }
 

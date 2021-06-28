@@ -19,11 +19,11 @@ namespace DS {
     /** Controls how the event progression occurs. */
     export enum EventModes {
         /** Trigger event on the way up to the target. */
-        Capture,
+        Capture = 1, // (flag)
         /** Trigger event on the way down from the target. */
-        Bubble,
+        Bubble = 2, // (flag)
         /** Trigger event on both the way up to the target, then back down again. */
-        CaptureAndBubble
+        CaptureAndBubble = 3 // (flag)
     };
 
     type THandlerInfo<TCallback extends EventHandler = EventHandler> = IDelegate<object, TCallback> & { $__eventMode?: EventModes };
@@ -53,9 +53,10 @@ namespace DS {
         /** Return the underlying event name for this event object. */
         getEventName() { return this.__eventName; }
 
-        /** If this is true, then any new handler added will automatically be triggered as well.
-        * This is handy in cases where an application state is persisted, and future handlers should always execute. */
+        /** If this is true, then any new handler added will automatically be triggered as well using the last arguments given to a recent dispatch, if any.
+        * This is handy in cases where an application state is persisted, and future handlers added should always execute. This is accomplished by triggering an immediate timer event to execute after the current execution completes. */
         autoTrigger: boolean = false;
+        private __lastDispatchArgs: string[];
 
         /** Returns true if handlers exist on this event object instance. */
         hasHandlers(): boolean { return !!this.__listeners.length; }
@@ -193,7 +194,16 @@ namespace DS {
             if (this._getHandlerIndex(<any>handler) == -1) {
                 var delegate: THandlerInfo<TCallback> = handler instanceof Delegate ? <IDelegate<object, TCallback>>handler : new Delegate(this, <TCallback>handler);
                 delegate.$__eventMode = eventMode;
-                this.__listeners.push(delegate);
+                if (this.autoTrigger)
+                    setTimeout(() => {
+                        let cancelled = false;
+                        if (delegate.$__eventMode & EventModes.Capture)
+                            cancelled = this.onDispatchEvent(this.__lastDispatchArgs, EventModes.Capture, [delegate]);
+                        if (!cancelled && delegate.$__eventMode & EventModes.Bubble)
+                            cancelled = this.onDispatchEvent(this.__lastDispatchArgs, EventModes.Bubble, [delegate]);
+                    }, 0);
+                else
+                    this.__listeners.push(delegate);
             }
             return this;
         }
@@ -207,8 +217,11 @@ namespace DS {
           * @param {string[]} args Custom arguments that will be passed on to the event handlers.
           */
         dispatchEvent(triggerState: any = null, ...args: any[]): boolean { // TODO: Don't' use '...args'
+
             if (!this.setTriggerState(triggerState))
                 return; // (no change in state, so ignore this request)
+
+            this.__lastDispatchArgs = [...args];
 
             // ... for capture phases, start at the bottom and work up; but need to build the chain first (http://stackoverflow.com/a/10654134/1236397) ...
             // ('this.__parent' checks for event-instance-only chained events, whereas 'this.owner.parent' iterates events using the a parent-child dependency hierarchy from the owner)
@@ -229,6 +242,10 @@ namespace DS {
                 }
             }
 
+            return this._doDispatchEventChain(eventChain, args);
+        }
+
+        private _doDispatchEventChain(eventChain: IEventDispatcher<any, any>[], args: any[]) {
             var cancelled = false;
 
             // ... do capture phase (root, towards target) ...
@@ -255,17 +272,24 @@ namespace DS {
             return Exception.error("{EventDispatcher}.dispatchEvent():", "Error in event " + this.__eventName + " on object type '" + Utilities.getTypeName(this.owner) + "': " + msg, { exception: error, event: this, handler: this.__handlerCallInProgress });
         }
 
-        /** Calls the event handlers that match the event mode on the current event instance. */
-        protected onDispatchEvent(args: any[], mode: EventModes): boolean {
+        /**
+         * Calls the event handlers that match the event mode on the current event instance. 
+         * @param args The arguments send to the handler.
+         * @param mode Capturing vs bubbling phase.
+         * @param listeners An optional list of listeners to use if overriding the current ones (such as with auto triggers). Defaults to the underlying handlers within the even instance.
+         * @returns True if not cancelled during the even executions.
+         */
+        protected onDispatchEvent(args: any[], mode: EventModes, listeners = this.__listeners): boolean {
+            if (DS.isNullOrUndefined(args)) args = [];
             args.push(this); // (add this event instance to the end of the arguments list to allow an optional target parameters to get a reference to the calling event)
             this.__cancelled = false;
             this.__dispatchInProgress = true;
 
             try {
-                for (var i = 0, n = this.__listeners.length; i < n; ++i) {
-                    var delegate = this.__listeners[i];
+                for (var i = 0, n = listeners.length; i < n; ++i) {
+                    var delegate = listeners[i];
                     var cancelled = false;
-                    if (delegate.$__eventMode == mode && delegate) {
+                    if (delegate && delegate.$__eventMode & mode) {
                         this.__handlerCallInProgress = delegate;
                         if (this.__eventTriggerHandler)
                             cancelled = this.__eventTriggerHandler(this, delegate, args, delegate.$__eventMode) === false; // (call any special trigger handler)
@@ -403,7 +427,7 @@ namespace DS {
             this.canCancel = canCancel;
         }
 
-        private static [DS.staticConstructor]() { // (A static constructor that will be executed when the factory is registered)
+        protected static [DS.staticConstructor]() { // (A static constructor that will be executed when the factory is registered)
 
             function getTriggerFunc(this: EventDispatcher, args: any[]) {
                 //x args.push(void 0, this); // (add 2 optional items on end)
@@ -440,7 +464,7 @@ namespace DS {
         }
     }
 
-    (<any>EventDispatcher)[DS.staticConstructor](); // ('any' is used because the static constructor is private)
+    EventDispatcher[DS.staticConstructor]();
 
     export interface IEventDispatcher<TOwner extends object, TCallback extends EventHandler> extends EventDispatcher<TOwner, TCallback> { }
 

@@ -18,6 +18,7 @@
 **/public/js/**/*.d.ts
 decl/
 node-modules/
+public/
 monaco-editor/
 **/libs/V8.NET/
 *.git

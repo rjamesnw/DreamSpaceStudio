@@ -1,6 +1,5 @@
 import fs = require('fs') // this engine requires the fs module
 import { Request, Response } from 'express-serve-static-core';
-import { isNullOrUndefined, isUndefined } from 'util';
 
 /** The absolute root path of the views folder. By default this is 'features' (relative from 'DS.webRoot'). 
  * What is features?  You can search more on "Feature Slices for ASP.NET Core MVC" as an example, but the concept of 
@@ -10,6 +9,8 @@ import { isNullOrUndefined, isUndefined } from 'util';
  * For features, use folders as categories, or with views that contain multiple code files.
  */
 export var viewsRoot = DS.Path.combine(DS.webRoot, "features");
+
+export function setViewsRoot(viewsRootPath: string) { viewsRoot = viewsRootPath; }
 
 interface IViewAttributeFunction {
     attributes: IndexedObject;
@@ -27,8 +28,8 @@ export function createCallableViewAttributes(): IViewAttributeFunction {
             let attrName: string = p1;
             if (!attrName) throw new DS.Exception("An attribute name is required.");
             value = attributes[attrName];
-            let p2Defined = !isNullOrUndefined(p2);
-            let p3Defined = !isNullOrUndefined(p3);
+            let p2Defined = !DS.isNullOrUndefined(p2);
+            let p3Defined = !DS.isNullOrUndefined(p3);
             if (p2Defined || p3Defined) {
                 if (p2Defined)
                     s = DS.StringUtils.append(DS.nud(p2, ''), DS.nud(value, ''), ' ');
@@ -45,7 +46,7 @@ export function createCallableViewAttributes(): IViewAttributeFunction {
                     var namesList = DS.StringUtils.toString(namesListStr).split(' ');
                     for (var i = 0, n = namesList.length; i < n; ++i) {
                         var name = namesList[i];
-                        if (!isNullOrUndefined(name)) {
+                        if (!DS.isNullOrUndefined(name)) {
                             name = DS.StringUtils.toString(name);
                             var names = this.toString().toLowerCase().split(' ');
                             if (names.indexOf(name.toLowerCase()) < 0)
@@ -58,7 +59,7 @@ export function createCallableViewAttributes(): IViewAttributeFunction {
                     var namesList = DS.StringUtils.toString(namesListStr).split(' ');
                     for (var i = 0, n = namesList.length; i < n; ++i) {
                         var name = namesList[i];
-                        if (!isNullOrUndefined(name)) {
+                        if (!DS.isNullOrUndefined(name)) {
                             name = DS.StringUtils.toString(name);
                             let _name_lc = ('' + name).toLowerCase();
                             var names: string[] = this.toString().split(' ');
@@ -205,7 +206,7 @@ export class ViewScope {
 
     /** Adds a new renderer or static string to the list of items to render for this section. */
     add(value: Renderer | string, priority = 0) {
-        if (!isNullOrUndefined(value))
+        if (!DS.isNullOrUndefined(value))
             if (this.renderers)
                 this.renderers.push({ index: this.renderers.length, renderer: value, priority });
             else
@@ -257,7 +258,7 @@ export class Section {
 
     /** Adds a new renderer or static string to the list of items to render for this section. */
     add(value: Renderer | string, priority = 0) {
-        if (!isNullOrUndefined(value)) {
+        if (!DS.isNullOrUndefined(value)) {
             if (!this.currentViewScope)
                 this.push(this.manager.httpContext); // (if add is called without a current scope, assume one from the root context by default)
             this.currentViewScope.add(value, priority);
@@ -746,7 +747,7 @@ export var __express = function (this: IExpressViewContext, filePath: string, op
                             } else processExpr = true;
                         }
 
-                        if (processExpr && !isNullOrUndefined(expr)) {
+                        if (processExpr && !DS.isNullOrUndefined(expr)) {
                             value = await _processExpression(httpContext, expr, httpContext.viewData || new ViewData()); //DS.Utilities.dereferencePropertyPath(path, viewData, true);
 
                             if (!outputExpr)
@@ -756,7 +757,7 @@ export var __express = function (this: IExpressViewContext, filePath: string, op
                                 return httpContext.response.redirect(httpContext._redirectURL);
                         }
 
-                        if (!isNullOrUndefined(value))
+                        if (!DS.isNullOrUndefined(value))
                             sectionManager.add(value, activeSection, priority);
                     }
                     else

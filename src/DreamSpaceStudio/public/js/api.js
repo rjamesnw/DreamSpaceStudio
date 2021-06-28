@@ -452,6 +452,17 @@ var DS;
     let Utilities;
     (function (Utilities) {
         // --------------------------------------------------------------------------------------------------------------------
+        /** Returns the date part as a fixed string size in the format YYYY-MM-DD (time and timezone is removed). If no date is specified, the current date is assumed. */
+        function getDateOnlyString(date = new Date()) {
+            return `${date.getFullYear()}-${DS.StringUtils.pad(1 + date.getMonth(), 2, '0')}-${DS.StringUtils.pad(date.getDate(), 2, '0')}`;
+        }
+        Utilities.getDateOnlyString = getDateOnlyString;
+        /** Returns the time part as a fixed string size in the format hh:mm:ss._ms (date and timezone is removed). If no date is specified, the current date is assumed. */
+        function getTimeOnlyString(date = new Date(), includeMilliseconds = true) {
+            return `${DS.StringUtils.pad(date.getHours(), 2, '0')}:${DS.StringUtils.pad(date.getMinutes(), 2, '0')}:${DS.StringUtils.pad(date.getSeconds(), 2, '0')}`
+                + (includeMilliseconds ? `.${DS.StringUtils.pad(date.getMilliseconds(), 3, '0')}` : '');
+        }
+        Utilities.getTimeOnlyString = getTimeOnlyString;
         /**
          * Returns a number with the maximum fractional digits.
          * @param value
@@ -3615,24 +3626,26 @@ var DS;
         }
         Path.getName = getName;
         /**
-        * Appends 'path2' to 'path1', inserting a path separator character (/) if required.
-        * Set 'normalizePathSeparators' to true to normalize any '\' path characters to '/' instead.
+        * Appends URL-based 'path2' to 'path1', inserting a path separator character (/) if required.
+        * @param separator When this is set, any '\' or '/' characters are replaced by it. The default separator is '/'.
         */
-        function combine(path1, path2, normalizePathSeparators = false) {
+        function combine(path1, path2, separator = '/') {
             if (typeof path1 != 'string')
-                path1 = DS.StringUtils.toString(path1);
+                path1 = DS.StringUtils.toString(path1).trim();
             if (typeof path2 != 'string')
-                path2 = DS.StringUtils.toString(path2);
-            if (path2.charAt(0) == '~')
+                path2 = DS.StringUtils.toString(path2).trim();
+            if (path2[0] == '~')
+                path2 = path2.substr(1); // (support appending .Net MVC style paths [just removes it])
+            var separator1 = path1[path1.length - 1] == '/' || path1[path1.length - 1] == '\\';
+            var separator2 = path2[0] == '/' || path1[0] == '\\';
+            if (separator1 && (!path2 || separator2))
+                path1 = path1.substr(0, path1.length - 1);
+            else if (separator2 && !path1)
                 path2 = path2.substr(1);
-            if (!path2)
-                return path1;
-            if (!path1)
-                return path2;
-            if (path1.charAt(path1.length - 1) != '/' && path1.charAt(path1.length - 1) != '\\')
-                path1 += '/';
-            var combinedPath = path1 + ((path2.charAt(0) == '/' || path2.charAt(0) == '\\') ? path2.substr(1) : path2);
-            return normalizePathSeparators ? combinedPath.split('\\').join('/') : combinedPath;
+            else if (path1 && path2 && !separator1 && !separator2)
+                path1 += separator;
+            var combinedPath = path1 && path2 ? path1 + path2 : path1 || path2;
+            return separator ? combinedPath.replace(/\\|\//g, separator) : combinedPath;
         }
         Path.combine = combine;
         /** Returns the protocol + host + port parts of the given absolute URL. */
@@ -3642,7 +3655,7 @@ var DS;
         Path.getRoot = getRoot;
         /**
            * Combines a path with either the base site path or a current alternative path. The following logic is followed for combining 'path':
-           * 1. If it starts with '~/' or '~' is will be relative to 'baseURL'.
+           * 1. If it starts with '\~/' or '\~' it will be relative to 'baseURL'.
            * 2. If it starts with '/' it is relative to the server root 'protocol://server:port' (using current or base path, but with the path part ignored).
            * 3. If it starts with './', or without a path separator, or is empty, then it is combined as relative to 'currentResourceURL'.
            * Note: if 'currentResourceURL' is empty, then 'baseURL' is assumed.
@@ -4766,18 +4779,16 @@ var DS;
           * @param delimiter A string that joins the two strings, which is only added if both string parameters are not undefined, null, or empty.  If missing, the two strings are simply joined together.
           */
         function append(source, suffix, delimiter) {
-            if (source === void 0)
-                source = "";
-            else if (typeof source != 'string')
+            if (typeof source != 'string')
                 source = toString(source);
             if (typeof suffix != 'string')
                 suffix = toString(suffix);
-            if (delimiter === void 0 || delimiter === null)
-                delimiter = '';
-            else if (typeof delimiter != 'string')
-                delimiter = toString(delimiter);
             if (!source)
                 return suffix;
+            if (!suffix)
+                return source;
+            if (typeof delimiter != 'string')
+                delimiter = toString(delimiter);
             return source + delimiter + suffix;
         }
         StringUtils.append = append;
@@ -7334,11 +7345,11 @@ var DS;
     let EventModes;
     (function (EventModes) {
         /** Trigger event on the way up to the target. */
-        EventModes[EventModes["Capture"] = 0] = "Capture";
+        EventModes[EventModes["Capture"] = 1] = "Capture";
         /** Trigger event on the way down from the target. */
-        EventModes[EventModes["Bubble"] = 1] = "Bubble";
+        EventModes[EventModes["Bubble"] = 2] = "Bubble";
         /** Trigger event on both the way up to the target, then back down again. */
-        EventModes[EventModes["CaptureAndBubble"] = 2] = "CaptureAndBubble";
+        EventModes[EventModes["CaptureAndBubble"] = 3] = "CaptureAndBubble"; // (flag)
     })(EventModes = DS.EventModes || (DS.EventModes = {}));
     ;
     /**
@@ -7356,8 +7367,8 @@ var DS;
             super();
             this.__associations = new WeakMap(); // (a mapping between an external object and this event instance - typically used to associated this event with an external object OTHER than the owner)
             this.__listeners = []; // (this is typed "any object type" to allow using delegate handler function objects later on)
-            /** If this is true, then any new handler added will automatically be triggered as well.
-            * This is handy in cases where an application state is persisted, and future handlers should always execute. */
+            /** If this is true, then any new handler added will automatically be triggered as well using the last arguments given to a recent dispatch, if any.
+            * This is handy in cases where an application state is persisted, and future handlers added should always execute. This is accomplished by triggering an immediate timer event to execute after the current execution completes. */
             this.autoTrigger = false;
             /** If true, then handlers are called only once, then removed (default is false). */
             this.removeOnTrigger = false;
@@ -7481,7 +7492,16 @@ var DS;
             if (this._getHandlerIndex(handler) == -1) {
                 var delegate = handler instanceof DS.Delegate ? handler : new DS.Delegate(this, handler);
                 delegate.$__eventMode = eventMode;
-                this.__listeners.push(delegate);
+                if (this.autoTrigger)
+                    setTimeout(() => {
+                        let cancelled = false;
+                        if (delegate.$__eventMode & EventModes.Capture)
+                            cancelled = this.onDispatchEvent(this.__lastDispatchArgs, EventModes.Capture, [delegate]);
+                        if (!cancelled && delegate.$__eventMode & EventModes.Bubble)
+                            cancelled = this.onDispatchEvent(this.__lastDispatchArgs, EventModes.Bubble, [delegate]);
+                    }, 0);
+                else
+                    this.__listeners.push(delegate);
             }
             return this;
         }
@@ -7496,6 +7516,7 @@ var DS;
         dispatchEvent(triggerState = null, ...args) {
             if (!this.setTriggerState(triggerState))
                 return; // (no change in state, so ignore this request)
+            this.__lastDispatchArgs = [...args];
             // ... for capture phases, start at the bottom and work up; but need to build the chain first (http://stackoverflow.com/a/10654134/1236397) ...
             // ('this.__parent' checks for event-instance-only chained events, whereas 'this.owner.parent' iterates events using the a parent-child dependency hierarchy from the owner)
             var parent = this.__parent || this.owner && this.owner.parent || null;
@@ -7510,6 +7531,9 @@ var DS;
                     parent = parent['__parent'];
                 }
             }
+            return this._doDispatchEventChain(eventChain, args);
+        }
+        _doDispatchEventChain(eventChain, args) {
             var cancelled = false;
             // ... do capture phase (root, towards target) ...
             for (var n = eventChain.length, i = n - 1; i >= 0; --i) {
@@ -7534,16 +7558,24 @@ var DS;
                 msg += "\r\nInner error: " + DS.getErrorMessage(error);
             return DS.Exception.error("{EventDispatcher}.dispatchEvent():", "Error in event " + this.__eventName + " on object type '" + DS.Utilities.getTypeName(this.owner) + "': " + msg, { exception: error, event: this, handler: this.__handlerCallInProgress });
         }
-        /** Calls the event handlers that match the event mode on the current event instance. */
-        onDispatchEvent(args, mode) {
+        /**
+         * Calls the event handlers that match the event mode on the current event instance.
+         * @param args The arguments send to the handler.
+         * @param mode Capturing vs bubbling phase.
+         * @param listeners An optional list of listeners to use if overriding the current ones (such as with auto triggers). Defaults to the underlying handlers within the even instance.
+         * @returns True if not cancelled during the even executions.
+         */
+        onDispatchEvent(args, mode, listeners = this.__listeners) {
+            if (DS.isNullOrUndefined(args))
+                args = [];
             args.push(this); // (add this event instance to the end of the arguments list to allow an optional target parameters to get a reference to the calling event)
             this.__cancelled = false;
             this.__dispatchInProgress = true;
             try {
-                for (var i = 0, n = this.__listeners.length; i < n; ++i) {
-                    var delegate = this.__listeners[i];
+                for (var i = 0, n = listeners.length; i < n; ++i) {
+                    var delegate = listeners[i];
                     var cancelled = false;
-                    if (delegate.$__eventMode == mode && delegate) {
+                    if (delegate && delegate.$__eventMode & mode) {
                         this.__handlerCallInProgress = delegate;
                         if (this.__eventTriggerHandler)
                             cancelled = this.__eventTriggerHandler(this, delegate, args, delegate.$__eventMode) === false; // (call any special trigger handler)
@@ -7685,7 +7717,7 @@ var DS;
         }
     }
     DS.EventDispatcher = EventDispatcher;
-    EventDispatcher[DS.staticConstructor](); // ('any' is used because the static constructor is private)
+    EventDispatcher[DS.staticConstructor]();
     class EventObject {
         /** Call this if you wish to implement 'changing' events for supported properties.
         * If any event handler cancels the event, then 'false' will be returned.
